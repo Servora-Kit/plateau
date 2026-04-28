@@ -96,7 +96,7 @@ LIMIT %d
 	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
-			r.log.Warnf("failed to close rows: %v", closeErr)
+			r.log.WithContext(ctx).Warnf("failed to close rows: %v", closeErr)
 		}
 	}()
 
@@ -120,7 +120,7 @@ LIMIT %d
 			&success, &errorCode, &errorMessage,
 			&traceID, &requestID, &detail,
 		); err != nil {
-			r.log.Warnf("failed to scan row: %v", err)
+			r.log.WithContext(ctx).Warnf("failed to scan row: %v", err)
 			continue
 		}
 		items = append(items, &auditsvcpb.AuditEventItem{
