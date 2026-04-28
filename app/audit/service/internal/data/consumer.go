@@ -88,20 +88,20 @@ func (c *Consumer) Stop(_ context.Context) error {
 func (c *Consumer) handle(ctx context.Context, evt broker.Event) error {
 	msg := evt.Message()
 	if msg == nil {
-		c.log.Warn("received nil message, skipping")
+		c.log.WithContext(ctx).Warn("received nil message, skipping")
 		_ = evt.Ack()
 		return nil
 	}
 
 	var auditEvt auditv1.AuditEvent
 	if err := proto.Unmarshal(msg.Body, &auditEvt); err != nil {
-		c.log.Warnf("failed to unmarshal audit event: %v", err)
+		c.log.WithContext(ctx).Warnf("failed to unmarshal audit event: %v", err)
 		_ = evt.Ack() // skip bad messages
 		return nil
 	}
 
 	if err := validateEvent(&auditEvt); err != nil {
-		c.log.Warnf("invalid audit event: %v", err)
+		c.log.WithContext(ctx).Warnf("invalid audit event: %v", err)
 		_ = evt.Ack()
 		return nil
 	}

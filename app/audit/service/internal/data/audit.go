@@ -9,7 +9,7 @@ import (
 
 	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
-	"github.com/Servora-Kit/servora/obs/logging"
+	logger "github.com/Servora-Kit/servora/obs/logging"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
