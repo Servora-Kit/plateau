@@ -11,7 +11,7 @@ import (
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
-	"github.com/Servora-Kit/servora/platform/bootstrap"
+	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/infra/broker"
 	brokerkafka "github.com/Servora-Kit/servora/infra/broker/kafka"
 	"github.com/Servora-Kit/servora/obs/logging"

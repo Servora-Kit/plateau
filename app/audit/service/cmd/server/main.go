@@ -5,7 +5,7 @@ import (
 	"flag"
 
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
-	"github.com/Servora-Kit/servora/platform/bootstrap"
+	"github.com/Servora-Kit/servora/core/bootstrap"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

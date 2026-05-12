@@ -17,8 +17,8 @@ import (
 	"github.com/Servora-Kit/servora/infra/broker/kafka"
 	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/Servora-Kit/servora/obs/telemetry"
-	"github.com/Servora-Kit/servora/platform/bootstrap"
-	"github.com/Servora-Kit/servora/platform/registry"
+	"github.com/Servora-Kit/servora/core/bootstrap"
+	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 )
