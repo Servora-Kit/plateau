@@ -2,13 +2,16 @@ package data
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
+	"time"
 
-	auditv1 "github.com/Servora-Kit/servora/api/gen/go/servora/audit/v1"
 	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
-	"github.com/Servora-Kit/servora/obs/logging"
-	"google.golang.org/protobuf/proto"
+	logger "github.com/Servora-Kit/servora/obs/logging"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 const defaultTopic = "servora.audit.events"
@@ -93,44 +96,119 @@ func (c *Consumer) handle(ctx context.Context, evt broker.Event) error {
 		return nil
 	}
 
-	var auditEvt auditv1.AuditEvent
-	if err := proto.Unmarshal(msg.Body, &auditEvt); err != nil {
-		c.log.WithContext(ctx).Warnf("failed to unmarshal audit event: %v", err)
+	ce, err := decodeCloudEvent(msg)
+	if err != nil {
+		c.log.WithContext(ctx).Warnf("failed to decode CloudEvent: %v", err)
 		_ = evt.Ack() // skip bad messages
 		return nil
 	}
 
-	if err := validateEvent(&auditEvt); err != nil {
-		c.log.WithContext(ctx).Warnf("invalid audit event: %v", err)
+	if err := validateEvent(ce); err != nil {
+		c.log.WithContext(ctx).Warnf("invalid CloudEvent: %v", err)
 		_ = evt.Ack()
 		return nil
 	}
 
-	c.writer.Add(&auditEvt, evt)
+	c.writer.Add(ce, evt)
 	return nil
 }
 
-// validateEvent checks required fields.
-func validateEvent(e *auditv1.AuditEvent) error {
-	if e.EventId == "" {
-		return errorf("missing event_id")
+// decodeCloudEvent reconstructs a cloudevents.Event from a broker.Message using
+// the CloudEvents Kafka protocol binding. Structured mode is recognised by
+// content-type = application/cloudevents+json; otherwise binary mode is assumed
+// where ce_* headers carry the context attributes and the body is the payload.
+func decodeCloudEvent(msg *broker.Message) (*cloudevents.Event, error) {
+	ct := strings.ToLower(headerLookup(msg.Headers, "content-type"))
+	if strings.HasPrefix(ct, "application/cloudevents+json") {
+		ev := cloudevents.NewEvent()
+		if err := json.Unmarshal(msg.Body, &ev); err != nil {
+			return nil, fmt.Errorf("structured cloudevent: %w", err)
+		}
+		return &ev, nil
 	}
-	if e.EventType == 0 {
-		return errorf("missing event_type")
+
+	ev := cloudevents.NewEvent()
+	dataContentType := ""
+	for k, v := range msg.Headers {
+		lk := strings.ToLower(k)
+		switch lk {
+		case "content-type":
+			dataContentType = v
+		case "ce_id", "ce-id":
+			ev.SetID(v)
+		case "ce_source", "ce-source":
+			ev.SetSource(v)
+		case "ce_specversion", "ce-specversion":
+			ev.SetSpecVersion(v)
+		case "ce_type", "ce-type":
+			ev.SetType(v)
+		case "ce_subject", "ce-subject":
+			ev.SetSubject(v)
+		case "ce_time", "ce-time":
+			if t, err := time.Parse(time.RFC3339Nano, v); err == nil {
+				ev.SetTime(t)
+			}
+		case "ce_dataschema", "ce-dataschema":
+			ev.SetDataSchema(v)
+		case "ce_datacontenttype", "ce-datacontenttype":
+			dataContentType = v
+		default:
+			if name, ok := trimCEPrefix(lk); ok {
+				ev.SetExtension(name, v)
+			}
+		}
 	}
-	if e.OccurredAt == nil {
-		return errorf("missing occurred_at")
+
+	if ev.SpecVersion() == "" {
+		ev.SetSpecVersion(cloudevents.VersionV1)
 	}
-	if e.Service == "" {
-		return errorf("missing service")
+	if dataContentType == "" {
+		dataContentType = "application/octet-stream"
+	}
+	if len(msg.Body) > 0 {
+		if err := ev.SetData(dataContentType, msg.Body); err != nil {
+			return nil, fmt.Errorf("set data: %w", err)
+		}
+	}
+	return &ev, nil
+}
+
+func headerLookup(h broker.Headers, key string) string {
+	if h == nil {
+		return ""
+	}
+	for k, v := range h {
+		if strings.EqualFold(k, key) {
+			return v
+		}
+	}
+	return ""
+}
+
+func trimCEPrefix(lowerKey string) (string, bool) {
+	switch {
+	case strings.HasPrefix(lowerKey, "ce_"):
+		return lowerKey[3:], true
+	case strings.HasPrefix(lowerKey, "ce-"):
+		return lowerKey[3:], true
+	default:
+		return "", false
+	}
+}
+
+// validateEvent checks required CloudEvents context attributes.
+func validateEvent(e *cloudevents.Event) error {
+	if e.ID() == "" {
+		return errors.New("validation: missing id")
+	}
+	if e.Type() == "" {
+		return errors.New("validation: missing type")
+	}
+	if e.Source() == "" {
+		return errors.New("validation: missing source")
+	}
+	if e.Time().IsZero() {
+		return errors.New("validation: missing time")
 	}
 	return nil
 }
-
-func errorf(msg string) error {
-	return &validationError{msg: msg}
-}
-
-type validationError struct{ msg string }
-
-func (e *validationError) Error() string { return "validation: " + e.msg }

@@ -2,25 +2,33 @@ package data
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
-	auditv1 "github.com/Servora-Kit/servora/api/gen/go/servora/audit/v1"
 	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
-	"github.com/Servora-Kit/servora/obs/logging"
+	"github.com/Servora-Kit/servora/obs/audit"
+	logger "github.com/Servora-Kit/servora/obs/logging"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 const flushOnStopTimeout = 10 * time.Second
 
-// pendingEvent bundles a deserialized event with its Kafka event handle for Ack/Nack.
+// pendingEvent bundles a decoded CloudEvent with its Kafka event handle.
 type pendingEvent struct {
-	event    *auditv1.AuditEvent
+	event    *cloudevents.Event
 	kafkaEvt broker.Event
 }
 
-// BatchWriter buffers AuditEvent records and flushes them to ClickHouse in batches.
+// BatchWriter buffers CloudEvent records and flushes them to ClickHouse in batches.
 type BatchWriter struct {
 	data      *Data
 	log       *logger.Helper
@@ -93,7 +101,7 @@ func (w *BatchWriter) Stop() {
 }
 
 // Add appends an event to the buffer. If the buffer reaches batchSize, triggers an immediate flush.
-func (w *BatchWriter) Add(evt *auditv1.AuditEvent, kafkaEvt broker.Event) {
+func (w *BatchWriter) Add(evt *cloudevents.Event, kafkaEvt broker.Event) {
 	w.mu.Lock()
 	w.buffer = append(w.buffer, pendingEvent{event: evt, kafkaEvt: kafkaEvt})
 	shouldFlush := len(w.buffer) >= w.batchSize
@@ -108,6 +116,12 @@ func (w *BatchWriter) Add(evt *auditv1.AuditEvent, kafkaEvt broker.Event) {
 }
 
 // flush writes all buffered events to ClickHouse and Ack/Nack their Kafka handles.
+//
+// Column projection from CloudEvents to audit_events:
+//   - id/type/specversion/time/subject → event_id/event_type/event_version/occurred_at/target_id
+//   - source ("/pkg.Service/Method") → service (pkg.Service) + operation (full path)
+//   - extensions authid/authtype/severitytext/errormessage/traceparent → actor_*/error_*/trace_id
+//   - data payload → detail column as JSON (see detailJSON)
 func (w *BatchWriter) flush(ctx context.Context) {
 	w.mu.Lock()
 	if len(w.buffer) == 0 {
@@ -136,54 +150,33 @@ func (w *BatchWriter) flush(ctx context.Context) {
 	}
 
 	for _, p := range batch {
-		detail := detailJSON(p.event)
 		e := p.event
-
-		occurredAt := e.OccurredAt.AsTime()
-
-		var actorID, actorType, actorDisplayName string
-		if e.Actor != nil {
-			actorID = e.Actor.Id
-			actorType = e.Actor.Type
-			actorDisplayName = e.Actor.DisplayName
-		}
-
-		var targetType, targetID, targetName string
-		if e.Target != nil {
-			targetType = e.Target.Type
-			targetID = e.Target.Id
-			targetName = e.Target.Name
-		}
-
-		var success bool
-		var errorCode, errorMessage string
-		if e.Result != nil {
-			success = e.Result.Success
-			errorCode = e.Result.ErrorCode
-			errorMessage = e.Result.ErrorMessage
-		}
+		exts := e.Extensions()
+		service, operation := splitOperation(e.Source())
+		errMsg := extString(exts, audit.ExtErrorMessage)
+		success := errMsg == "" && !strings.EqualFold(extString(exts, audit.ExtSeverityText), "ERROR")
 
 		if err := chBatch.Append(
-			e.EventId,
-			e.EventType.String(),
-			e.EventVersion,
-			occurredAt,
-			e.Service,
-			e.Operation,
-			actorID,
-			actorType,
-			actorDisplayName,
-			targetType,
-			targetID,
-			targetName,
+			e.ID(),
+			e.Type(),
+			e.SpecVersion(),
+			e.Time(),
+			service,
+			operation,
+			extString(exts, audit.ExtAuthID),
+			extString(exts, audit.ExtAuthType),
+			"", // actor_display_name — not carried in CloudEvents context
+			"", // target_type — not carried in CloudEvents context
+			e.Subject(),
+			"", // target_name — not carried in CloudEvents context
 			success,
-			errorCode,
-			errorMessage,
-			e.TraceId,
-			e.RequestId,
-			detail,
+			"", // error_code — not carried in CloudEvents context
+			errMsg,
+			traceIDFromTraceparent(extString(exts, audit.ExtTraceParent)),
+			"", // request_id — not carried in CloudEvents context
+			detailJSON(e),
 		); err != nil {
-			w.log.Warnf("append failed for event %s, aborting batch: %v", e.EventId, err)
+			w.log.Warnf("append failed for event %s, aborting batch: %v", e.ID(), err)
 			_ = chBatch.Abort()
 			w.nackAll(batch)
 			return
@@ -220,37 +213,98 @@ func (w *BatchWriter) nackAll(batch []pendingEvent) {
 	}
 }
 
-// detailJSON serializes the oneof detail field to a JSON string using protojson.
-func detailJSON(e *auditv1.AuditEvent) string {
-	if e == nil {
+func extString(exts map[string]any, name string) string {
+	if v, ok := exts[name]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+		return fmt.Sprint(v)
+	}
+	return ""
+}
+
+// splitOperation parses an RPC operation path "/pkg.Service/Method" into
+// (service="pkg.Service", operation=original). When the source does not match
+// that shape both fields fall back to the raw source string.
+func splitOperation(source string) (string, string) {
+	if source == "" {
+		return "", ""
+	}
+	trimmed := strings.TrimPrefix(source, "/")
+	if i := strings.Index(trimmed, "/"); i > 0 {
+		return trimmed[:i], source
+	}
+	return source, source
+}
+
+// traceIDFromTraceparent extracts the trace-id segment from a W3C traceparent
+// header ("00-<32hex trace-id>-<16hex span-id>-<flags>"). Returns the raw input
+// when the header doesn't match the expected shape so debugging stays possible.
+func traceIDFromTraceparent(tp string) string {
+	if tp == "" {
+		return ""
+	}
+	parts := strings.Split(tp, "-")
+	if len(parts) >= 2 && len(parts[1]) == 32 {
+		return parts[1]
+	}
+	return tp
+}
+
+// detailJSON renders the CloudEvents data payload as a JSON string for the
+// audit_events.detail column. Proto payloads are looked up via the global type
+// registry and re-encoded with protojson; JSON payloads pass through; anything
+// else is wrapped as a base64 envelope so the bytes survive.
+func detailJSON(e *cloudevents.Event) string {
+	data := e.Data()
+	if len(data) == 0 {
 		return "{}"
 	}
-	switch d := e.Detail.(type) {
-	case *auditv1.AuditEvent_AuthnDetail:
-		b, err := protojson.Marshal(d.AuthnDetail)
-		if err != nil {
-			return "{}"
+	contentType := strings.ToLower(e.DataContentType())
+	switch {
+	case strings.HasPrefix(contentType, "application/json"),
+		strings.HasPrefix(contentType, "application/cloudevents+json"):
+		return string(data)
+	case strings.HasPrefix(contentType, "application/protobuf"),
+		strings.HasPrefix(contentType, "application/x-protobuf"):
+		if s, ok := protoToJSON(e.DataSchema(), data); ok {
+			return s
 		}
-		return string(b)
-	case *auditv1.AuditEvent_AuthzDetail:
-		b, err := protojson.Marshal(d.AuthzDetail)
-		if err != nil {
-			return "{}"
-		}
-		return string(b)
-	case *auditv1.AuditEvent_TupleMutationDetail:
-		b, err := protojson.Marshal(d.TupleMutationDetail)
-		if err != nil {
-			return "{}"
-		}
-		return string(b)
-	case *auditv1.AuditEvent_ResourceMutationDetail:
-		b, err := protojson.Marshal(d.ResourceMutationDetail)
-		if err != nil {
-			return "{}"
-		}
-		return string(b)
-	default:
+	}
+	wrapper := map[string]string{
+		"_content_type": e.DataContentType(),
+		"_schema":       e.DataSchema(),
+		"_raw_base64":   base64.StdEncoding.EncodeToString(data),
+	}
+	b, err := json.Marshal(wrapper)
+	if err != nil {
 		return "{}"
 	}
+	return string(b)
+}
+
+// TODO(upstream): move to servora/core/ — this is a generic CloudEvents helper
+// (dataschema URL → registered proto type → JSON), not audit-specific. Reused
+// by any consumer of CloudEvents with application/protobuf payloads.
+func protoToJSON(schemaURL string, data []byte) (string, bool) {
+	fullName := schemaURL
+	if i := strings.LastIndex(schemaURL, "/"); i >= 0 {
+		fullName = schemaURL[i+1:]
+	}
+	if fullName == "" {
+		return "", false
+	}
+	mt, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(fullName))
+	if err != nil {
+		return "", false
+	}
+	msg := mt.New().Interface()
+	if err := proto.Unmarshal(data, msg); err != nil {
+		return "", false
+	}
+	b, err := protojson.Marshal(msg)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
 }
