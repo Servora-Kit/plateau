@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/obs/audit"
 	logger "github.com/Servora-Kit/servora/obs/logging"
@@ -43,18 +43,18 @@ type BatchWriter struct {
 	stopOnce sync.Once
 }
 
-// NewBatchWriter creates a new BatchWriter using config from conf.App.Audit.
-func NewBatchWriter(d *Data, appCfg *conf.App, l logger.Logger) *BatchWriter {
+// NewBatchWriter creates a new BatchWriter using the audit service's local
+// AuditConsumerConfig (batch_size + flush_interval).
+func NewBatchWriter(d *Data, auditCfg *auditsvcpb.AuditConsumerConfig, l logger.Logger) *BatchWriter {
 	batchSize := 100
 	interval := time.Second
 
-	if appCfg != nil && appCfg.Audit != nil {
-		if appCfg.Audit.ConsumerBatchSize > 0 {
-			batchSize = int(appCfg.Audit.ConsumerBatchSize)
+	if auditCfg != nil {
+		if auditCfg.GetConsumerBatchSize() > 0 {
+			batchSize = int(auditCfg.GetConsumerBatchSize())
 		}
-		if appCfg.Audit.ConsumerFlushInterval != nil {
-			d := appCfg.Audit.ConsumerFlushInterval.AsDuration()
-			if d > 0 {
+		if fi := auditCfg.GetConsumerFlushInterval(); fi != nil {
+			if d := fi.AsDuration(); d > 0 {
 				interval = d
 			}
 		}

@@ -5,7 +5,7 @@ import (
 
 	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
-	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/Servora-Kit/servora/obs/telemetry"
 	svrhttp "github.com/Servora-Kit/servora/transport/server/http"
@@ -13,7 +13,7 @@ import (
 )
 
 // NewHTTPServer creates the HTTP server for the audit service.
-func NewHTTPServer(c *conf.Server, trace *conf.Trace, m *telemetry.Metrics, l logger.Logger, svc *service.AuditService) *khttp.Server {
+func NewHTTPServer(c *corev1.Server, trace *corev1.Trace, m *telemetry.Metrics, l logger.Logger, svc *service.AuditService) *khttp.Server {
 	hlog := logger.With(l, "audit/server/http")
 
 	ms := middleware.NewChainBuilder(hlog).
@@ -31,7 +31,6 @@ func NewHTTPServer(c *conf.Server, trace *conf.Trace, m *telemetry.Metrics, l lo
 	}
 	if c != nil && c.Http != nil {
 		opts = append(opts, svrhttp.WithConfig(c.Http))
-		opts = append(opts, svrhttp.WithCORS(c.Http.Cors))
 	}
 
 	return svrhttp.NewServer(opts...)

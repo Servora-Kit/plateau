@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package servora.audit.service.v1;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1;auditsvcpb";
+
+// =============================================================================
+// audit service 私有配置（consumer 侧）
+// framework 侧 AuditContract（servora.extra.audit.v1）只承载 emitter 接入契约，
+// 这里持有 audit service 消费端 + ClickHouse 存储等业务字段。
+// =============================================================================
+
+// AuditConsumerConfig 装载 audit service 自家配置：ClickHouse 存储与批量消费参数。
+// 通过 audit service main.go 内的 ScanConf+wrapper 加载（暂不走 ScanSections，
+// 因为 audit_config.proto 跨仓库 import annotations 需等 servora BSR 推新 label）。
+message AuditConsumerConfig {
+
+  ClickHouse clickhouse = 1;
+  int32 consumer_batch_size = 2;       // 批量写入大小，默认 100
+  google.protobuf.Duration consumer_flush_interval = 3; // 批量刷新间隔，默认 1s
+  int32 retention_days = 4;            // ClickHouse 数据保留天数，默认 90
+}
+
+// ClickHouse 存储配置（仅 audit service 使用）
+message ClickHouse {
+  repeated string addrs = 1;
+  string database = 2;
+  string username = 3;
+  string password = 4;
+  google.protobuf.Duration dial_timeout = 5;
+  google.protobuf.Duration read_timeout = 6;
+  int32 max_open_conns = 7;
+  int32 max_idle_conns = 8;
+  google.protobuf.Duration conn_max_lifetime = 9;
+  bool tls = 10;
+  bool tls_skip_verify = 11;
+  string compress = 12;
+}

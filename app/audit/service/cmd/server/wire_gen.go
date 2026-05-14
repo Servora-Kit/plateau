@@ -8,17 +8,20 @@ package main
 
 import (
 	"context"
+	"github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	"github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
+	"github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
+	"github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
+	"github.com/Servora-Kit/servora/core/bootstrap"
+	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/infra/broker/kafka"
 	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/Servora-Kit/servora/obs/telemetry"
-	"github.com/Servora-Kit/servora/core/bootstrap"
-	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -29,28 +32,28 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(confServer *conf.Server, confRegistry *conf.Registry, confData *conf.Data, app *conf.App, trace *conf.Trace, metrics *conf.Metrics, svcIdentity bootstrap.SvcIdentity, logger log.Logger) (*kratos.App, func(), error) {
-	registrar := registry.NewRegistrar(confRegistry)
+func wireApp(corev1Server *corev1.Server, corev1Registry *corev1.Registry, app *corev1.App, trace *corev1.Trace, metrics *corev1.Metrics, broker *brokerv1.Broker, auditContract *auditv1.AuditContract, auditConsumerConfig *auditsvcpb.AuditConsumerConfig, svcIdentity bootstrap.SvcIdentity, logger log.Logger) (*kratos.App, func(), error) {
+	registrar := registry.NewRegistrar(corev1Registry)
 	telemetryMetrics, err := telemetry.NewMetrics(metrics, app, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	conn, err := data.NewClickHouseClient(confData, logger)
+	conn, err := data.NewClickHouseClient(auditConsumerConfig, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	dataData, cleanup, err := data.NewData(conn, app, logger)
+	dataData, cleanup, err := data.NewData(conn, auditConsumerConfig, logger)
 	if err != nil {
 		return nil, nil, err
 	}
 	auditRepo := data.NewAuditRepo(dataData, logger)
 	auditUsecase := biz.NewAuditUsecase(auditRepo)
 	auditService := service.NewAuditService(auditUsecase)
-	grpcServer := server.NewGRPCServer(confServer, trace, telemetryMetrics, logger, auditService)
-	httpServer := server.NewHTTPServer(confServer, trace, telemetryMetrics, logger, auditService)
-	broker := newKafkaBroker(confData, logger)
-	batchWriter := data.NewBatchWriter(dataData, app, logger)
-	consumer := data.NewConsumer(broker, batchWriter, confData, app, logger)
+	grpcServer := server.NewGRPCServer(corev1Server, trace, telemetryMetrics, logger, auditService)
+	httpServer := server.NewHTTPServer(corev1Server, trace, telemetryMetrics, logger, auditService)
+	brokerBroker := newKafkaBroker(broker, logger)
+	batchWriter := data.NewBatchWriter(dataData, auditConsumerConfig, logger)
+	consumer := data.NewConsumer(brokerBroker, batchWriter, broker, auditContract, logger)
 	kratosApp := newApp(svcIdentity, logger, registrar, grpcServer, httpServer, consumer)
 	return kratosApp, func() {
 		cleanup()
@@ -60,6 +63,6 @@ func wireApp(confServer *conf.Server, confRegistry *conf.Registry, confData *con
 // wire.go:
 
 // newKafkaBroker wraps NewBrokerOptional with a background context for Wire injection.
-func newKafkaBroker(cfg *conf.Data, l logger.Logger) broker.Broker {
+func newKafkaBroker(cfg *brokerv1.Broker, l logger.Logger) broker.Broker {
 	return kafka.NewBrokerOptional(context.Background(), cfg, l)
 }

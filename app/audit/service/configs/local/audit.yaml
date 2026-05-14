@@ -1,0 +1,5 @@
+audit:
+  enabled: true
+  emitter_type: noop
+  topic: servora.audit.events
+  service_name: audit

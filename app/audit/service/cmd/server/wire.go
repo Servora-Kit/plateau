@@ -6,11 +6,14 @@ package main
 import (
 	"context"
 
-	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
+	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
+	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
+	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/infra/broker"
 	brokerkafka "github.com/Servora-Kit/servora/infra/broker/kafka"
@@ -22,11 +25,22 @@ import (
 )
 
 // newKafkaBroker wraps NewBrokerOptional with a background context for Wire injection.
-func newKafkaBroker(cfg *conf.Data, l logger.Logger) broker.Broker {
+func newKafkaBroker(cfg *brokerv1.Broker, l logger.Logger) broker.Broker {
 	return brokerkafka.NewBrokerOptional(context.Background(), cfg, l)
 }
 
-func wireApp(*conf.Server, *conf.Registry, *conf.Data, *conf.App, *conf.Trace, *conf.Metrics, bootstrap.SvcIdentity, log.Logger) (*kratos.App, func(), error) {
+func wireApp(
+	*corev1.Server,
+	*corev1.Registry,
+	*corev1.App,
+	*corev1.Trace,
+	*corev1.Metrics,
+	*brokerv1.Broker,
+	*auditcontractv1.AuditContract,
+	*auditsvcpb.AuditConsumerConfig,
+	bootstrap.SvcIdentity,
+	log.Logger,
+) (*kratos.App, func(), error) {
 	panic(wire.Build(
 		newKafkaBroker,
 		data.ProviderSet,

@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
+	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
 	logger "github.com/Servora-Kit/servora/obs/logging"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -27,18 +28,19 @@ type Consumer struct {
 	subscriber broker.Subscriber
 }
 
-// NewConsumer creates a new Consumer. The topic comes from conf.App.Audit.topic,
-// the consumer group from conf.Data.Kafka.consumer_group. Both fall back to
+// NewConsumer creates a new Consumer. The topic comes from the AuditContract
+// section (servora.extra.audit.v1), the consumer group from the Broker section
+// (servora.extra.broker.v1 → Kafka.consumer_group). Both fall back to
 // hardcoded defaults when unset.
-func NewConsumer(b broker.Broker, writer *BatchWriter, dataCfg *conf.Data, appCfg *conf.App, l logger.Logger) *Consumer {
+func NewConsumer(b broker.Broker, writer *BatchWriter, brokerCfg *brokerv1.Broker, auditCfg *auditcontractv1.AuditContract, l logger.Logger) *Consumer {
 	topic := defaultTopic
 	group := defaultConsumerGroup
 
-	if appCfg != nil && appCfg.Audit != nil && appCfg.Audit.Topic != "" {
-		topic = appCfg.Audit.Topic
+	if auditCfg != nil && auditCfg.GetTopic() != "" {
+		topic = auditCfg.GetTopic()
 	}
-	if dataCfg != nil && dataCfg.Kafka != nil && dataCfg.Kafka.ConsumerGroup != "" {
-		group = dataCfg.Kafka.ConsumerGroup
+	if k := brokerCfg.GetKafka(); k != nil && k.GetConsumerGroup() != "" {
+		group = k.GetConsumerGroup()
 	}
 
 	log := logger.For(l, "consumer/data/audit")

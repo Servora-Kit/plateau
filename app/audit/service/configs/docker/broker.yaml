@@ -1,0 +1,7 @@
+broker:
+  kafka:
+    brokers:
+      - kafka:9092
+    client_id: audit-service
+    consumer_group: audit-consumer
+    required_acks: 1

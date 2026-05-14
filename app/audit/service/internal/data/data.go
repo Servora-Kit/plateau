@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
 	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/google/wire"
 )
@@ -28,7 +28,7 @@ type Data struct {
 
 // NewData initialises the audit data layer: it runs the ClickHouse DDL
 // (idempotent) and owns the connection lifecycle. Mirrors IAM's NewData pattern.
-func NewData(conn driver.Conn, appCfg *conf.App, l logger.Logger) (*Data, func(), error) {
+func NewData(conn driver.Conn, auditCfg *auditsvcpb.AuditConsumerConfig, l logger.Logger) (*Data, func(), error) {
 	log := logger.For(l, "core/data/audit")
 
 	cleanup := func() {
@@ -42,8 +42,8 @@ func NewData(conn driver.Conn, appCfg *conf.App, l logger.Logger) (*Data, func()
 
 	if conn != nil {
 		retentionDays := int32(90)
-		if appCfg != nil && appCfg.Audit != nil && appCfg.Audit.RetentionDays > 0 {
-			retentionDays = appCfg.Audit.RetentionDays
+		if auditCfg != nil && auditCfg.GetRetentionDays() > 0 {
+			retentionDays = auditCfg.GetRetentionDays()
 		}
 		if err := createAuditEventsTable(context.Background(), conn, retentionDays); err != nil {
 			cleanup()
