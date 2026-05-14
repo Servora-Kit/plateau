@@ -4,9 +4,9 @@ go 1.26.1
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.43.0
-	github.com/Servora-Kit/servora v0.5.2
-	github.com/Servora-Kit/servora-platform/api/gen v0.2.2
-	github.com/Servora-Kit/servora/api/gen v0.5.0
+	github.com/Servora-Kit/servora v0.6.0
+	github.com/Servora-Kit/servora-platform/api/gen v0.3.0
+	github.com/Servora-Kit/servora/api/gen v0.6.0
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/go-kratos/kratos/v2 v2.9.2
 	github.com/google/wire v0.7.0

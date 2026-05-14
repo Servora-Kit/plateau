@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: servora/audit/service/v1/audit.proto
+// source: audit/service/v1/audit.proto
 
 package auditsvcpb
 
@@ -50,7 +50,7 @@ type AuditEventItem struct {
 
 func (x *AuditEventItem) Reset() {
 	*x = AuditEventItem{}
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[0]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -62,7 +62,7 @@ func (x *AuditEventItem) String() string {
 func (*AuditEventItem) ProtoMessage() {}
 
 func (x *AuditEventItem) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[0]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -75,7 +75,7 @@ func (x *AuditEventItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuditEventItem.ProtoReflect.Descriptor instead.
 func (*AuditEventItem) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_proto_rawDescGZIP(), []int{0}
+	return file_audit_service_v1_audit_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *AuditEventItem) GetEventId() string {
@@ -219,7 +219,7 @@ type ListAuditEventsRequest struct {
 
 func (x *ListAuditEventsRequest) Reset() {
 	*x = ListAuditEventsRequest{}
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[1]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -231,7 +231,7 @@ func (x *ListAuditEventsRequest) String() string {
 func (*ListAuditEventsRequest) ProtoMessage() {}
 
 func (x *ListAuditEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[1]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -244,7 +244,7 @@ func (x *ListAuditEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAuditEventsRequest.ProtoReflect.Descriptor instead.
 func (*ListAuditEventsRequest) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_proto_rawDescGZIP(), []int{1}
+	return file_audit_service_v1_audit_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ListAuditEventsRequest) GetStartTime() *timestamppb.Timestamp {
@@ -306,7 +306,7 @@ type ListAuditEventsResponse struct {
 
 func (x *ListAuditEventsResponse) Reset() {
 	*x = ListAuditEventsResponse{}
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[2]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -318,7 +318,7 @@ func (x *ListAuditEventsResponse) String() string {
 func (*ListAuditEventsResponse) ProtoMessage() {}
 
 func (x *ListAuditEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[2]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -331,7 +331,7 @@ func (x *ListAuditEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAuditEventsResponse.ProtoReflect.Descriptor instead.
 func (*ListAuditEventsResponse) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_proto_rawDescGZIP(), []int{2}
+	return file_audit_service_v1_audit_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListAuditEventsResponse) GetEvents() []*AuditEventItem {
@@ -361,7 +361,7 @@ type CountAuditEventsRequest struct {
 
 func (x *CountAuditEventsRequest) Reset() {
 	*x = CountAuditEventsRequest{}
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[3]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -373,7 +373,7 @@ func (x *CountAuditEventsRequest) String() string {
 func (*CountAuditEventsRequest) ProtoMessage() {}
 
 func (x *CountAuditEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[3]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -386,7 +386,7 @@ func (x *CountAuditEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CountAuditEventsRequest.ProtoReflect.Descriptor instead.
 func (*CountAuditEventsRequest) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_proto_rawDescGZIP(), []int{3}
+	return file_audit_service_v1_audit_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CountAuditEventsRequest) GetStartTime() *timestamppb.Timestamp {
@@ -433,7 +433,7 @@ type CountAuditEventsResponse struct {
 
 func (x *CountAuditEventsResponse) Reset() {
 	*x = CountAuditEventsResponse{}
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[4]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -445,7 +445,7 @@ func (x *CountAuditEventsResponse) String() string {
 func (*CountAuditEventsResponse) ProtoMessage() {}
 
 func (x *CountAuditEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_proto_msgTypes[4]
+	mi := &file_audit_service_v1_audit_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -458,7 +458,7 @@ func (x *CountAuditEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CountAuditEventsResponse.ProtoReflect.Descriptor instead.
 func (*CountAuditEventsResponse) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_proto_rawDescGZIP(), []int{4}
+	return file_audit_service_v1_audit_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CountAuditEventsResponse) GetTotalCount() int64 {
@@ -468,11 +468,11 @@ func (x *CountAuditEventsResponse) GetTotalCount() int64 {
 	return 0
 }
 
-var File_servora_audit_service_v1_audit_proto protoreflect.FileDescriptor
+var File_audit_service_v1_audit_proto protoreflect.FileDescriptor
 
-const file_servora_audit_service_v1_audit_proto_rawDesc = "" +
+const file_audit_service_v1_audit_proto_rawDesc = "" +
 	"\n" +
-	"$servora/audit/service/v1/audit.proto\x12\x18servora.audit.service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x04\n" +
+	"\x1caudit/service/v1/audit.proto\x12\x10audit.service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x04\n" +
 	"\x0eAuditEventItem\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1d\n" +
 	"\n" +
@@ -510,9 +510,9 @@ const file_servora_audit_service_v1_audit_proto_rawDesc = "" +
 	"\aservice\x18\x05 \x01(\tR\aservice\x12\x1b\n" +
 	"\tpage_size\x18\x06 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\a \x01(\tR\tpageToken\"\x83\x01\n" +
-	"\x17ListAuditEventsResponse\x12@\n" +
-	"\x06events\x18\x01 \x03(\v2(.servora.audit.service.v1.AuditEventItemR\x06events\x12&\n" +
+	"page_token\x18\a \x01(\tR\tpageToken\"{\n" +
+	"\x17ListAuditEventsResponse\x128\n" +
+	"\x06events\x18\x01 \x03(\v2 .audit.service.v1.AuditEventItemR\x06events\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xe1\x01\n" +
 	"\x17CountAuditEventsRequest\x129\n" +
 	"\n" +
@@ -524,45 +524,45 @@ const file_servora_audit_service_v1_audit_proto_rawDesc = "" +
 	"\aservice\x18\x05 \x01(\tR\aservice\";\n" +
 	"\x18CountAuditEventsResponse\x12\x1f\n" +
 	"\vtotal_count\x18\x01 \x01(\x03R\n" +
-	"totalCount2\x86\x02\n" +
-	"\x11AuditQueryService\x12v\n" +
-	"\x0fListAuditEvents\x120.servora.audit.service.v1.ListAuditEventsRequest\x1a1.servora.audit.service.v1.ListAuditEventsResponse\x12y\n" +
-	"\x10CountAuditEvents\x121.servora.audit.service.v1.CountAuditEventsRequest\x1a2.servora.audit.service.v1.CountAuditEventsResponseB\x85\x02\n" +
-	"\x1ccom.servora.audit.service.v1B\n" +
-	"AuditProtoP\x01ZVgithub.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1;auditsvcpb\xa2\x02\x03SAS\xaa\x02\x18Servora.Audit.Service.V1\xca\x02\x18Servora\\Audit\\Service\\V1\xe2\x02$Servora\\Audit\\Service\\V1\\GPBMetadata\xea\x02\x1bServora::Audit::Service::V1b\x06proto3"
+	"totalCount2\xe6\x01\n" +
+	"\x11AuditQueryService\x12f\n" +
+	"\x0fListAuditEvents\x12(.audit.service.v1.ListAuditEventsRequest\x1a).audit.service.v1.ListAuditEventsResponse\x12i\n" +
+	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponseB\xd4\x01\n" +
+	"\x14com.audit.service.v1B\n" +
+	"AuditProtoP\x01ZNgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpb\xa2\x02\x03ASX\xaa\x02\x10Audit.Service.V1\xca\x02\x10Audit\\Service\\V1\xe2\x02\x1cAudit\\Service\\V1\\GPBMetadata\xea\x02\x12Audit::Service::V1b\x06proto3"
 
 var (
-	file_servora_audit_service_v1_audit_proto_rawDescOnce sync.Once
-	file_servora_audit_service_v1_audit_proto_rawDescData []byte
+	file_audit_service_v1_audit_proto_rawDescOnce sync.Once
+	file_audit_service_v1_audit_proto_rawDescData []byte
 )
 
-func file_servora_audit_service_v1_audit_proto_rawDescGZIP() []byte {
-	file_servora_audit_service_v1_audit_proto_rawDescOnce.Do(func() {
-		file_servora_audit_service_v1_audit_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_servora_audit_service_v1_audit_proto_rawDesc), len(file_servora_audit_service_v1_audit_proto_rawDesc)))
+func file_audit_service_v1_audit_proto_rawDescGZIP() []byte {
+	file_audit_service_v1_audit_proto_rawDescOnce.Do(func() {
+		file_audit_service_v1_audit_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_audit_service_v1_audit_proto_rawDesc), len(file_audit_service_v1_audit_proto_rawDesc)))
 	})
-	return file_servora_audit_service_v1_audit_proto_rawDescData
+	return file_audit_service_v1_audit_proto_rawDescData
 }
 
-var file_servora_audit_service_v1_audit_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_servora_audit_service_v1_audit_proto_goTypes = []any{
-	(*AuditEventItem)(nil),           // 0: servora.audit.service.v1.AuditEventItem
-	(*ListAuditEventsRequest)(nil),   // 1: servora.audit.service.v1.ListAuditEventsRequest
-	(*ListAuditEventsResponse)(nil),  // 2: servora.audit.service.v1.ListAuditEventsResponse
-	(*CountAuditEventsRequest)(nil),  // 3: servora.audit.service.v1.CountAuditEventsRequest
-	(*CountAuditEventsResponse)(nil), // 4: servora.audit.service.v1.CountAuditEventsResponse
+var file_audit_service_v1_audit_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_audit_service_v1_audit_proto_goTypes = []any{
+	(*AuditEventItem)(nil),           // 0: audit.service.v1.AuditEventItem
+	(*ListAuditEventsRequest)(nil),   // 1: audit.service.v1.ListAuditEventsRequest
+	(*ListAuditEventsResponse)(nil),  // 2: audit.service.v1.ListAuditEventsResponse
+	(*CountAuditEventsRequest)(nil),  // 3: audit.service.v1.CountAuditEventsRequest
+	(*CountAuditEventsResponse)(nil), // 4: audit.service.v1.CountAuditEventsResponse
 	(*timestamppb.Timestamp)(nil),    // 5: google.protobuf.Timestamp
 }
-var file_servora_audit_service_v1_audit_proto_depIdxs = []int32{
-	5, // 0: servora.audit.service.v1.AuditEventItem.occurred_at:type_name -> google.protobuf.Timestamp
-	5, // 1: servora.audit.service.v1.ListAuditEventsRequest.start_time:type_name -> google.protobuf.Timestamp
-	5, // 2: servora.audit.service.v1.ListAuditEventsRequest.end_time:type_name -> google.protobuf.Timestamp
-	0, // 3: servora.audit.service.v1.ListAuditEventsResponse.events:type_name -> servora.audit.service.v1.AuditEventItem
-	5, // 4: servora.audit.service.v1.CountAuditEventsRequest.start_time:type_name -> google.protobuf.Timestamp
-	5, // 5: servora.audit.service.v1.CountAuditEventsRequest.end_time:type_name -> google.protobuf.Timestamp
-	1, // 6: servora.audit.service.v1.AuditQueryService.ListAuditEvents:input_type -> servora.audit.service.v1.ListAuditEventsRequest
-	3, // 7: servora.audit.service.v1.AuditQueryService.CountAuditEvents:input_type -> servora.audit.service.v1.CountAuditEventsRequest
-	2, // 8: servora.audit.service.v1.AuditQueryService.ListAuditEvents:output_type -> servora.audit.service.v1.ListAuditEventsResponse
-	4, // 9: servora.audit.service.v1.AuditQueryService.CountAuditEvents:output_type -> servora.audit.service.v1.CountAuditEventsResponse
+var file_audit_service_v1_audit_proto_depIdxs = []int32{
+	5, // 0: audit.service.v1.AuditEventItem.occurred_at:type_name -> google.protobuf.Timestamp
+	5, // 1: audit.service.v1.ListAuditEventsRequest.start_time:type_name -> google.protobuf.Timestamp
+	5, // 2: audit.service.v1.ListAuditEventsRequest.end_time:type_name -> google.protobuf.Timestamp
+	0, // 3: audit.service.v1.ListAuditEventsResponse.events:type_name -> audit.service.v1.AuditEventItem
+	5, // 4: audit.service.v1.CountAuditEventsRequest.start_time:type_name -> google.protobuf.Timestamp
+	5, // 5: audit.service.v1.CountAuditEventsRequest.end_time:type_name -> google.protobuf.Timestamp
+	1, // 6: audit.service.v1.AuditQueryService.ListAuditEvents:input_type -> audit.service.v1.ListAuditEventsRequest
+	3, // 7: audit.service.v1.AuditQueryService.CountAuditEvents:input_type -> audit.service.v1.CountAuditEventsRequest
+	2, // 8: audit.service.v1.AuditQueryService.ListAuditEvents:output_type -> audit.service.v1.ListAuditEventsResponse
+	4, // 9: audit.service.v1.AuditQueryService.CountAuditEvents:output_type -> audit.service.v1.CountAuditEventsResponse
 	8, // [8:10] is the sub-list for method output_type
 	6, // [6:8] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name
@@ -570,26 +570,26 @@ var file_servora_audit_service_v1_audit_proto_depIdxs = []int32{
 	0, // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_servora_audit_service_v1_audit_proto_init() }
-func file_servora_audit_service_v1_audit_proto_init() {
-	if File_servora_audit_service_v1_audit_proto != nil {
+func init() { file_audit_service_v1_audit_proto_init() }
+func file_audit_service_v1_audit_proto_init() {
+	if File_audit_service_v1_audit_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_servora_audit_service_v1_audit_proto_rawDesc), len(file_servora_audit_service_v1_audit_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_service_v1_audit_proto_rawDesc), len(file_audit_service_v1_audit_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_servora_audit_service_v1_audit_proto_goTypes,
-		DependencyIndexes: file_servora_audit_service_v1_audit_proto_depIdxs,
-		MessageInfos:      file_servora_audit_service_v1_audit_proto_msgTypes,
+		GoTypes:           file_audit_service_v1_audit_proto_goTypes,
+		DependencyIndexes: file_audit_service_v1_audit_proto_depIdxs,
+		MessageInfos:      file_audit_service_v1_audit_proto_msgTypes,
 	}.Build()
-	File_servora_audit_service_v1_audit_proto = out.File
-	file_servora_audit_service_v1_audit_proto_goTypes = nil
-	file_servora_audit_service_v1_audit_proto_depIdxs = nil
+	File_audit_service_v1_audit_proto = out.File
+	file_audit_service_v1_audit_proto_goTypes = nil
+	file_audit_service_v1_audit_proto_depIdxs = nil
 }

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.9.2
 // - protoc             (unknown)
-// source: servora/audit/service/v1/i_audit.proto
+// source: audit/service/v1/i_audit.proto
 
 package auditsvcpb
 
@@ -19,8 +19,8 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationAuditHTTPServiceCountAuditEvents = "/servora.audit.service.v1.AuditHTTPService/CountAuditEvents"
-const OperationAuditHTTPServiceListAuditEvents = "/servora.audit.service.v1.AuditHTTPService/ListAuditEvents"
+const OperationAuditHTTPServiceCountAuditEvents = "/audit.service.v1.AuditHTTPService/CountAuditEvents"
+const OperationAuditHTTPServiceListAuditEvents = "/audit.service.v1.AuditHTTPService/ListAuditEvents"
 
 type AuditHTTPServiceHTTPServer interface {
 	CountAuditEvents(context.Context, *CountAuditEventsRequest) (*CountAuditEventsResponse, error)

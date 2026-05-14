@@ -6,7 +6,7 @@ package main
 import (
 	"context"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
+	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
@@ -37,7 +37,7 @@ func wireApp(
 	*corev1.Metrics,
 	*brokerv1.Broker,
 	*auditcontractv1.AuditContract,
-	*auditsvcpb.AuditConsumerConfig,
+	*auditconfv1.AuditConsumerConfig,
 	bootstrap.SvcIdentity,
 	log.Logger,
 ) (*kratos.App, func(), error) {

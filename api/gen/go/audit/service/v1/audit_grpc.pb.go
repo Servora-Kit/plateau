@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: servora/audit/service/v1/audit.proto
+// source: audit/service/v1/audit.proto
 
 package auditsvcpb
 
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuditQueryService_ListAuditEvents_FullMethodName  = "/servora.audit.service.v1.AuditQueryService/ListAuditEvents"
-	AuditQueryService_CountAuditEvents_FullMethodName = "/servora.audit.service.v1.AuditQueryService/CountAuditEvents"
+	AuditQueryService_ListAuditEvents_FullMethodName  = "/audit.service.v1.AuditQueryService/ListAuditEvents"
+	AuditQueryService_CountAuditEvents_FullMethodName = "/audit.service.v1.AuditQueryService/CountAuditEvents"
 )
 
 // AuditQueryServiceClient is the client API for AuditQueryService service.
@@ -146,7 +146,7 @@ func _AuditQueryService_CountAuditEvents_Handler(srv interface{}, ctx context.Co
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuditQueryService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "servora.audit.service.v1.AuditQueryService",
+	ServiceName: "audit.service.v1.AuditQueryService",
 	HandlerType: (*AuditQueryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -159,5 +159,5 @@ var AuditQueryService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "servora/audit/service/v1/audit.proto",
+	Metadata: "audit/service/v1/audit.proto",
 }

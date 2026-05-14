@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package servora.audit.service.v1;
+package audit.service.v1;
 
 import "google/api/annotations.proto";
-import "servora/audit/service/v1/audit.proto";
+import "audit/service/v1/audit.proto";
 
-option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1;auditsvcpb";
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpb";
 
 service AuditHTTPService {
   rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse) {

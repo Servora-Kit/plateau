@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
+	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/obs/audit"
 	logger "github.com/Servora-Kit/servora/obs/logging"
@@ -45,7 +45,7 @@ type BatchWriter struct {
 
 // NewBatchWriter creates a new BatchWriter using the audit service's local
 // AuditConsumerConfig (batch_size + flush_interval).
-func NewBatchWriter(d *Data, auditCfg *auditsvcpb.AuditConsumerConfig, l logger.Logger) *BatchWriter {
+func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, l logger.Logger) *BatchWriter {
 	batchSize := 100
 	interval := time.Second
 

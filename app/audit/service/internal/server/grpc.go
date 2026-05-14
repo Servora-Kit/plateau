@@ -3,7 +3,7 @@ package server
 import (
 	kgrpc "github.com/go-kratos/kratos/v2/transport/grpc"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
+	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/logging"

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
+	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
 	logger "github.com/Servora-Kit/servora/obs/logging"
 	"google.golang.org/protobuf/types/known/timestamppb"

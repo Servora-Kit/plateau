@@ -2,11 +2,12 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: servora/audit/service/v1/audit_config.proto
+// source: audit/service/conf/v1/audit_config.proto
 
-package auditsvcpb
+package auditconfv1
 
 import (
+	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
@@ -23,8 +24,7 @@ const (
 )
 
 // AuditConsumerConfig 装载 audit service 自家配置：ClickHouse 存储与批量消费参数。
-// 通过 audit service main.go 内的 ScanConf+wrapper 加载（暂不走 ScanSections，
-// 因为 audit_config.proto 跨仓库 import annotations 需等 servora BSR 推新 label）。
+// 通过 bootstrap.ScanSections 在 "audit_consumer" section 下加载。
 type AuditConsumerConfig struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	Clickhouse            *ClickHouse            `protobuf:"bytes,1,opt,name=clickhouse,proto3" json:"clickhouse,omitempty"`
@@ -37,7 +37,7 @@ type AuditConsumerConfig struct {
 
 func (x *AuditConsumerConfig) Reset() {
 	*x = AuditConsumerConfig{}
-	mi := &file_servora_audit_service_v1_audit_config_proto_msgTypes[0]
+	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -49,7 +49,7 @@ func (x *AuditConsumerConfig) String() string {
 func (*AuditConsumerConfig) ProtoMessage() {}
 
 func (x *AuditConsumerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_config_proto_msgTypes[0]
+	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +62,7 @@ func (x *AuditConsumerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuditConsumerConfig.ProtoReflect.Descriptor instead.
 func (*AuditConsumerConfig) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_config_proto_rawDescGZIP(), []int{0}
+	return file_audit_service_conf_v1_audit_config_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *AuditConsumerConfig) GetClickhouse() *ClickHouse {
@@ -114,7 +114,7 @@ type ClickHouse struct {
 
 func (x *ClickHouse) Reset() {
 	*x = ClickHouse{}
-	mi := &file_servora_audit_service_v1_audit_config_proto_msgTypes[1]
+	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -126,7 +126,7 @@ func (x *ClickHouse) String() string {
 func (*ClickHouse) ProtoMessage() {}
 
 func (x *ClickHouse) ProtoReflect() protoreflect.Message {
-	mi := &file_servora_audit_service_v1_audit_config_proto_msgTypes[1]
+	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -139,7 +139,7 @@ func (x *ClickHouse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClickHouse.ProtoReflect.Descriptor instead.
 func (*ClickHouse) Descriptor() ([]byte, []int) {
-	return file_servora_audit_service_v1_audit_config_proto_rawDescGZIP(), []int{1}
+	return file_audit_service_conf_v1_audit_config_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ClickHouse) GetAddrs() []string {
@@ -226,18 +226,19 @@ func (x *ClickHouse) GetCompress() string {
 	return ""
 }
 
-var File_servora_audit_service_v1_audit_config_proto protoreflect.FileDescriptor
+var File_audit_service_conf_v1_audit_config_proto protoreflect.FileDescriptor
 
-const file_servora_audit_service_v1_audit_config_proto_rawDesc = "" +
+const file_audit_service_conf_v1_audit_config_proto_rawDesc = "" +
 	"\n" +
-	"+servora/audit/service/v1/audit_config.proto\x12\x18servora.audit.service.v1\x1a\x1egoogle/protobuf/duration.proto\"\x85\x02\n" +
-	"\x13AuditConsumerConfig\x12D\n" +
+	"(audit/service/conf/v1/audit_config.proto\x12\x15audit.service.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\x9a\x02\n" +
+	"\x13AuditConsumerConfig\x12A\n" +
 	"\n" +
-	"clickhouse\x18\x01 \x01(\v2$.servora.audit.service.v1.ClickHouseR\n" +
+	"clickhouse\x18\x01 \x01(\v2!.audit.service.conf.v1.ClickHouseR\n" +
 	"clickhouse\x12.\n" +
 	"\x13consumer_batch_size\x18\x02 \x01(\x05R\x11consumerBatchSize\x12Q\n" +
 	"\x17consumer_flush_interval\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\x15consumerFlushInterval\x12%\n" +
-	"\x0eretention_days\x18\x04 \x01(\x05R\rretentionDays\"\xdb\x03\n" +
+	"\x0eretention_days\x18\x04 \x01(\x05R\rretentionDays:\x16\x82\xce\x18\x12\n" +
+	"\x0eaudit_consumer\x10\x01\"\xdb\x03\n" +
 	"\n" +
 	"ClickHouse\x12\x14\n" +
 	"\x05addrs\x18\x01 \x03(\tR\x05addrs\x12\x1a\n" +
@@ -252,33 +253,33 @@ const file_servora_audit_service_v1_audit_config_proto_rawDesc = "" +
 	"\x03tls\x18\n" +
 	" \x01(\bR\x03tls\x12&\n" +
 	"\x0ftls_skip_verify\x18\v \x01(\bR\rtlsSkipVerify\x12\x1a\n" +
-	"\bcompress\x18\f \x01(\tR\bcompressB\x8b\x02\n" +
-	"\x1ccom.servora.audit.service.v1B\x10AuditConfigProtoP\x01ZVgithub.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1;auditsvcpb\xa2\x02\x03SAS\xaa\x02\x18Servora.Audit.Service.V1\xca\x02\x18Servora\\Audit\\Service\\V1\xe2\x02$Servora\\Audit\\Service\\V1\\GPBMetadata\xea\x02\x1bServora::Audit::Service::V1b\x06proto3"
+	"\bcompress\x18\f \x01(\tR\bcompressB\xfa\x01\n" +
+	"\x19com.audit.service.conf.v1B\x10AuditConfigProtoP\x01ZTgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1;auditconfv1\xa2\x02\x03ASC\xaa\x02\x15Audit.Service.Conf.V1\xca\x02\x15Audit\\Service\\Conf\\V1\xe2\x02!Audit\\Service\\Conf\\V1\\GPBMetadata\xea\x02\x18Audit::Service::Conf::V1b\x06proto3"
 
 var (
-	file_servora_audit_service_v1_audit_config_proto_rawDescOnce sync.Once
-	file_servora_audit_service_v1_audit_config_proto_rawDescData []byte
+	file_audit_service_conf_v1_audit_config_proto_rawDescOnce sync.Once
+	file_audit_service_conf_v1_audit_config_proto_rawDescData []byte
 )
 
-func file_servora_audit_service_v1_audit_config_proto_rawDescGZIP() []byte {
-	file_servora_audit_service_v1_audit_config_proto_rawDescOnce.Do(func() {
-		file_servora_audit_service_v1_audit_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_servora_audit_service_v1_audit_config_proto_rawDesc), len(file_servora_audit_service_v1_audit_config_proto_rawDesc)))
+func file_audit_service_conf_v1_audit_config_proto_rawDescGZIP() []byte {
+	file_audit_service_conf_v1_audit_config_proto_rawDescOnce.Do(func() {
+		file_audit_service_conf_v1_audit_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_audit_config_proto_rawDesc), len(file_audit_service_conf_v1_audit_config_proto_rawDesc)))
 	})
-	return file_servora_audit_service_v1_audit_config_proto_rawDescData
+	return file_audit_service_conf_v1_audit_config_proto_rawDescData
 }
 
-var file_servora_audit_service_v1_audit_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_servora_audit_service_v1_audit_config_proto_goTypes = []any{
-	(*AuditConsumerConfig)(nil), // 0: servora.audit.service.v1.AuditConsumerConfig
-	(*ClickHouse)(nil),          // 1: servora.audit.service.v1.ClickHouse
+var file_audit_service_conf_v1_audit_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_audit_service_conf_v1_audit_config_proto_goTypes = []any{
+	(*AuditConsumerConfig)(nil), // 0: audit.service.conf.v1.AuditConsumerConfig
+	(*ClickHouse)(nil),          // 1: audit.service.conf.v1.ClickHouse
 	(*durationpb.Duration)(nil), // 2: google.protobuf.Duration
 }
-var file_servora_audit_service_v1_audit_config_proto_depIdxs = []int32{
-	1, // 0: servora.audit.service.v1.AuditConsumerConfig.clickhouse:type_name -> servora.audit.service.v1.ClickHouse
-	2, // 1: servora.audit.service.v1.AuditConsumerConfig.consumer_flush_interval:type_name -> google.protobuf.Duration
-	2, // 2: servora.audit.service.v1.ClickHouse.dial_timeout:type_name -> google.protobuf.Duration
-	2, // 3: servora.audit.service.v1.ClickHouse.read_timeout:type_name -> google.protobuf.Duration
-	2, // 4: servora.audit.service.v1.ClickHouse.conn_max_lifetime:type_name -> google.protobuf.Duration
+var file_audit_service_conf_v1_audit_config_proto_depIdxs = []int32{
+	1, // 0: audit.service.conf.v1.AuditConsumerConfig.clickhouse:type_name -> audit.service.conf.v1.ClickHouse
+	2, // 1: audit.service.conf.v1.AuditConsumerConfig.consumer_flush_interval:type_name -> google.protobuf.Duration
+	2, // 2: audit.service.conf.v1.ClickHouse.dial_timeout:type_name -> google.protobuf.Duration
+	2, // 3: audit.service.conf.v1.ClickHouse.read_timeout:type_name -> google.protobuf.Duration
+	2, // 4: audit.service.conf.v1.ClickHouse.conn_max_lifetime:type_name -> google.protobuf.Duration
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -286,26 +287,26 @@ var file_servora_audit_service_v1_audit_config_proto_depIdxs = []int32{
 	0, // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_servora_audit_service_v1_audit_config_proto_init() }
-func file_servora_audit_service_v1_audit_config_proto_init() {
-	if File_servora_audit_service_v1_audit_config_proto != nil {
+func init() { file_audit_service_conf_v1_audit_config_proto_init() }
+func file_audit_service_conf_v1_audit_config_proto_init() {
+	if File_audit_service_conf_v1_audit_config_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_servora_audit_service_v1_audit_config_proto_rawDesc), len(file_servora_audit_service_v1_audit_config_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_audit_config_proto_rawDesc), len(file_audit_service_conf_v1_audit_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_servora_audit_service_v1_audit_config_proto_goTypes,
-		DependencyIndexes: file_servora_audit_service_v1_audit_config_proto_depIdxs,
-		MessageInfos:      file_servora_audit_service_v1_audit_config_proto_msgTypes,
+		GoTypes:           file_audit_service_conf_v1_audit_config_proto_goTypes,
+		DependencyIndexes: file_audit_service_conf_v1_audit_config_proto_depIdxs,
+		MessageInfos:      file_audit_service_conf_v1_audit_config_proto_msgTypes,
 	}.Build()
-	File_servora_audit_service_v1_audit_config_proto = out.File
-	file_servora_audit_service_v1_audit_config_proto_goTypes = nil
-	file_servora_audit_service_v1_audit_config_proto_depIdxs = nil
+	File_audit_service_conf_v1_audit_config_proto = out.File
+	file_audit_service_conf_v1_audit_config_proto_goTypes = nil
+	file_audit_service_conf_v1_audit_config_proto_depIdxs = nil
 }

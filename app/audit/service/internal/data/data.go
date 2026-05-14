@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
+	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/google/wire"
 )
@@ -28,7 +28,7 @@ type Data struct {
 
 // NewData initialises the audit data layer: it runs the ClickHouse DDL
 // (idempotent) and owns the connection lifecycle. Mirrors IAM's NewData pattern.
-func NewData(conn driver.Conn, auditCfg *auditsvcpb.AuditConsumerConfig, l logger.Logger) (*Data, func(), error) {
+func NewData(conn driver.Conn, auditCfg *auditconfv1.AuditConsumerConfig, l logger.Logger) (*Data, func(), error) {
 	log := logger.For(l, "core/data/audit")
 
 	cleanup := func() {

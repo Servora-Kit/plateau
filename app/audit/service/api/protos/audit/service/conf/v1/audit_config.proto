@@ -1,10 +1,11 @@
 syntax = "proto3";
 
-package servora.audit.service.v1;
+package audit.service.conf.v1;
 
 import "google/protobuf/duration.proto";
+import "servora/conf/v1/annotations.proto";
 
-option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1;auditsvcpb";
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1;auditconfv1";
 
 // =============================================================================
 // audit service 私有配置（consumer 侧）
@@ -13,9 +14,10 @@ option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/servora/
 // =============================================================================
 
 // AuditConsumerConfig 装载 audit service 自家配置：ClickHouse 存储与批量消费参数。
-// 通过 audit service main.go 内的 ScanConf+wrapper 加载（暂不走 ScanSections，
-// 因为 audit_config.proto 跨仓库 import annotations 需等 servora BSR 推新 label）。
+// 通过 bootstrap.ScanSections 在 "audit_consumer" section 下加载。
 message AuditConsumerConfig {
+  option (servora.conf.v1.section) = { key: "audit_consumer", optional: true };
+
 
   ClickHouse clickhouse = 1;
   int32 consumer_batch_size = 2;       // 批量写入大小，默认 100

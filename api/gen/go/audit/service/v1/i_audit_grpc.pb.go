@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: servora/audit/service/v1/i_audit.proto
+// source: audit/service/v1/i_audit.proto
 
 package auditsvcpb
 
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuditHTTPService_ListAuditEvents_FullMethodName  = "/servora.audit.service.v1.AuditHTTPService/ListAuditEvents"
-	AuditHTTPService_CountAuditEvents_FullMethodName = "/servora.audit.service.v1.AuditHTTPService/CountAuditEvents"
+	AuditHTTPService_ListAuditEvents_FullMethodName  = "/audit.service.v1.AuditHTTPService/ListAuditEvents"
+	AuditHTTPService_CountAuditEvents_FullMethodName = "/audit.service.v1.AuditHTTPService/CountAuditEvents"
 )
 
 // AuditHTTPServiceClient is the client API for AuditHTTPService service.
@@ -142,7 +142,7 @@ func _AuditHTTPService_CountAuditEvents_Handler(srv interface{}, ctx context.Con
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuditHTTPService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "servora.audit.service.v1.AuditHTTPService",
+	ServiceName: "audit.service.v1.AuditHTTPService",
 	HandlerType: (*AuditHTTPServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -155,5 +155,5 @@ var AuditHTTPService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "servora/audit/service/v1/i_audit.proto",
+	Metadata: "audit/service/v1/i_audit.proto",
 }

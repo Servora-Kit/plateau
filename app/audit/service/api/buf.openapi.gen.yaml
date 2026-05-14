@@ -20,7 +20,7 @@ managed:
 inputs:
     - directory: app/audit/service/api/protos
       paths:
-          - app/audit/service/api/protos/servora/audit/service/v1
+          - app/audit/service/api/protos/audit/service/v1
 
 plugins:
     - local: protoc-gen-openapi

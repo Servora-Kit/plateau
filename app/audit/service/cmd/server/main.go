@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/servora/audit/service/v1"
+	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
@@ -48,14 +48,6 @@ func newApp(identity bootstrap.SvcIdentity, l log.Logger, reg registry.Registrar
 	)
 }
 
-// localConfig is the wrapper struct used to extract this service's private
-// AuditConsumerConfig from the merged kratos config via ScanConf. Once the
-// servora BSR label that ships servora/conf/v1/annotations is available, this
-// can move to a (section) annotation on AuditConsumerConfig + ScanSections.
-type localConfig struct {
-	AuditConsumer *auditsvcpb.AuditConsumerConfig `json:"audit_consumer"`
-}
-
 func main() {
 	flag.Parse()
 
@@ -64,17 +56,9 @@ func main() {
 
 		brokerCfg := &brokerv1.Broker{}
 		auditCfg := &auditcontractv1.AuditContract{}
-		if err := bootstrap.ScanSections(runtime, brokerCfg, auditCfg); err != nil {
-			return nil, nil, fmt.Errorf("scan framework sections: %w", err)
-		}
-
-		lc, err := bootstrap.ScanConf[localConfig](runtime)
-		if err != nil {
-			return nil, nil, fmt.Errorf("scan audit_consumer config: %w", err)
-		}
-		consumerCfg := lc.AuditConsumer
-		if consumerCfg == nil {
-			consumerCfg = &auditsvcpb.AuditConsumerConfig{}
+		consumerCfg := &auditconfv1.AuditConsumerConfig{}
+		if err := bootstrap.ScanSections(runtime, brokerCfg, auditCfg, consumerCfg); err != nil {
+			return nil, nil, fmt.Errorf("scan sections: %w", err)
 		}
 
 		return wireApp(
