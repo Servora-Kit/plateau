@@ -14,18 +14,18 @@ import (
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
+	"log/slog"
+
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/infra/broker"
 	brokerkafka "github.com/Servora-Kit/servora/infra/broker/kafka"
-	"github.com/Servora-Kit/servora/obs/logging"
 
 	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
 
 // newKafkaBroker wraps NewBrokerOptional with a background context for Wire injection.
-func newKafkaBroker(cfg *brokerv1.Broker, l logger.Logger) broker.Broker {
+func newKafkaBroker(cfg *brokerv1.Broker, l *slog.Logger) broker.Broker {
 	return brokerkafka.NewBrokerOptional(context.Background(), cfg, l)
 }
 
@@ -39,7 +39,7 @@ func wireApp(
 	*auditcontractv1.AuditContract,
 	*auditconfv1.AuditConsumerConfig,
 	bootstrap.SvcIdentity,
-	log.Logger,
+	*slog.Logger,
 ) (*kratos.App, func(), error) {
 	panic(wire.Build(
 		newKafkaBroker,

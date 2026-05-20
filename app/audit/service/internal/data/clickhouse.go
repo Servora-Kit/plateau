@@ -3,18 +3,18 @@ package data
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	pkgch "github.com/Servora-Kit/servora/infra/db/clickhouse"
-	"github.com/Servora-Kit/servora/obs/logging"
 )
 
 // NewClickHouseClient opens a ClickHouse connection via pkg/db/clickhouse.
 // Returns (nil, nil) when ClickHouse is not configured; returns an error when
 // configured but connection failed — ensuring fail-fast for a core dependency.
-func NewClickHouseClient(cfg *auditconfv1.AuditConsumerConfig, l logger.Logger) (driver.Conn, error) {
+func NewClickHouseClient(cfg *auditconfv1.AuditConsumerConfig, l *slog.Logger) (driver.Conn, error) {
 	conn, err := pkgch.NewConnOptional(context.Background(), toClickHousePkgConfig(cfg.GetClickhouse()), l)
 	if err != nil {
 		return nil, fmt.Errorf("clickhouse client: %w", err)

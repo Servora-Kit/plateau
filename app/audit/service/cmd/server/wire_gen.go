@@ -20,10 +20,9 @@ import (
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/infra/broker/kafka"
-	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/Servora-Kit/servora/obs/telemetry"
 	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
+	"log/slog"
 )
 
 import (
@@ -32,7 +31,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(corev1Server *corev1.Server, corev1Registry *corev1.Registry, app *corev1.App, trace *corev1.Trace, metrics *corev1.Metrics, broker *brokerv1.Broker, auditContract *auditv1.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig, svcIdentity bootstrap.SvcIdentity, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(corev1Server *corev1.Server, corev1Registry *corev1.Registry, app *corev1.App, trace *corev1.Trace, metrics *corev1.Metrics, broker *brokerv1.Broker, auditContract *auditv1.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig, svcIdentity bootstrap.SvcIdentity, logger *slog.Logger) (*kratos.App, func(), error) {
 	registrar := registry.NewRegistrar(corev1Registry)
 	telemetryMetrics, err := telemetry.NewMetrics(metrics, app, logger)
 	if err != nil {
@@ -63,6 +62,6 @@ func wireApp(corev1Server *corev1.Server, corev1Registry *corev1.Registry, app *
 // wire.go:
 
 // newKafkaBroker wraps NewBrokerOptional with a background context for Wire injection.
-func newKafkaBroker(cfg *brokerv1.Broker, l logger.Logger) broker.Broker {
+func newKafkaBroker(cfg *brokerv1.Broker, l *slog.Logger) broker.Broker {
 	return kafka.NewBrokerOptional(context.Background(), cfg, l)
 }

@@ -3,10 +3,10 @@ package data
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
-	"github.com/Servora-Kit/servora/obs/logging"
 	"github.com/google/wire"
 )
 
@@ -23,19 +23,19 @@ var ProviderSet = wire.NewSet(
 // Data holds shared data layer resources for the audit service.
 type Data struct {
 	clickhouse driver.Conn
-	log        *logger.Helper
+	log        *slog.Logger
 }
 
 // NewData initialises the audit data layer: it runs the ClickHouse DDL
 // (idempotent) and owns the connection lifecycle. Mirrors IAM's NewData pattern.
-func NewData(conn driver.Conn, auditCfg *auditconfv1.AuditConsumerConfig, l logger.Logger) (*Data, func(), error) {
-	log := logger.For(l, "core/data/audit")
+func NewData(conn driver.Conn, auditCfg *auditconfv1.AuditConsumerConfig, l *slog.Logger) (*Data, func(), error) {
+	log := l.With("scope", "core/data/audit")
 
 	cleanup := func() {
 		log.Info("closing ClickHouse connection")
 		if conn != nil {
 			if err := conn.Close(); err != nil {
-				log.Warnf("failed to close ClickHouse connection: %v", err)
+				log.Warn("failed to close ClickHouse connection", "err", err)
 			}
 		}
 	}

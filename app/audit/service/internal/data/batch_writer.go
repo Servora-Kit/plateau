@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/obs/audit"
-	logger "github.com/Servora-Kit/servora/obs/logging"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -31,7 +31,7 @@ type pendingEvent struct {
 // BatchWriter buffers CloudEvent records and flushes them to ClickHouse in batches.
 type BatchWriter struct {
 	data      *Data
-	log       *logger.Helper
+	log       *slog.Logger
 	batchSize int
 	interval  time.Duration
 
@@ -45,7 +45,7 @@ type BatchWriter struct {
 
 // NewBatchWriter creates a new BatchWriter using the audit service's local
 // AuditConsumerConfig (batch_size + flush_interval).
-func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, l logger.Logger) *BatchWriter {
+func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, l *slog.Logger) *BatchWriter {
 	batchSize := 100
 	interval := time.Second
 
@@ -62,7 +62,7 @@ func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, l logger
 
 	return &BatchWriter{
 		data:      d,
-		log:       logger.For(l, "batch_writer/data/audit"),
+		log:       l.With("scope", "batch_writer/data/audit"),
 		batchSize: batchSize,
 		interval:  interval,
 		buffer:    make([]pendingEvent, 0, batchSize),
@@ -144,7 +144,7 @@ func (w *BatchWriter) flush(ctx context.Context) {
 
 	chBatch, err := w.data.ClickHouse().PrepareBatch(ctx, "INSERT INTO audit_events")
 	if err != nil {
-		w.log.Warnf("failed to prepare batch: %v", err)
+		w.log.Warn("failed to prepare batch", "err", err)
 		w.nackAll(batch)
 		return
 	}
@@ -176,7 +176,7 @@ func (w *BatchWriter) flush(ctx context.Context) {
 			"", // request_id — not carried in CloudEvents context
 			detailJSON(e),
 		); err != nil {
-			w.log.Warnf("append failed for event %s, aborting batch: %v", e.ID(), err)
+			w.log.Warn("append failed for event, aborting batch", "event_id", e.ID(), "err", err)
 			_ = chBatch.Abort()
 			w.nackAll(batch)
 			return
@@ -184,12 +184,12 @@ func (w *BatchWriter) flush(ctx context.Context) {
 	}
 
 	if err := chBatch.Send(); err != nil {
-		w.log.Warnf("failed to send batch: %v", err)
+		w.log.Warn("failed to send batch", "err", err)
 		w.nackAll(batch)
 		return
 	}
 
-	w.log.Infof("flushed %d events to ClickHouse", len(batch))
+	w.log.Info("flushed events to ClickHouse", "count", len(batch))
 	w.ackAll(batch)
 }
 
@@ -197,7 +197,7 @@ func (w *BatchWriter) ackAll(batch []pendingEvent) {
 	for _, p := range batch {
 		if p.kafkaEvt != nil {
 			if err := p.kafkaEvt.Ack(); err != nil {
-				w.log.Warnf("failed to ack event: %v", err)
+				w.log.Warn("failed to ack event", "err", err)
 			}
 		}
 	}
@@ -207,7 +207,7 @@ func (w *BatchWriter) nackAll(batch []pendingEvent) {
 	for _, p := range batch {
 		if p.kafkaEvt != nil {
 			if err := p.kafkaEvt.Nack(); err != nil {
-				w.log.Warnf("failed to nack event: %v", err)
+				w.log.Warn("failed to nack event", "err", err)
 			}
 		}
 	}

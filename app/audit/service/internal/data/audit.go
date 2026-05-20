@@ -5,26 +5,26 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
-	logger "github.com/Servora-Kit/servora/obs/logging"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // auditRepo provides read access to ClickHouse audit_events.
 type auditRepo struct {
 	data *Data
-	log  *logger.Helper
+	log  *slog.Logger
 }
 
 // NewAuditRepo creates a new AuditRepo. Returns the biz.AuditRepo interface
 // so Wire resolves the dependency without wire.Bind — matching IAM's pattern.
-func NewAuditRepo(d *Data, l logger.Logger) biz.AuditRepo {
+func NewAuditRepo(d *Data, l *slog.Logger) biz.AuditRepo {
 	return &auditRepo{
 		data: d,
-		log:  logger.For(l, "audit/data"),
+		log:  l.With("scope", "audit/data"),
 	}
 }
 
@@ -96,7 +96,7 @@ LIMIT %d
 	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
-			r.log.WithContext(ctx).Warnf("failed to close rows: %v", closeErr)
+			r.log.WarnContext(ctx, "failed to close rows", "err", closeErr)
 		}
 	}()
 
@@ -120,7 +120,7 @@ LIMIT %d
 			&success, &errorCode, &errorMessage,
 			&traceID, &requestID, &detail,
 		); err != nil {
-			r.log.WithContext(ctx).Warnf("failed to scan row: %v", err)
+			r.log.WarnContext(ctx, "failed to scan row", "err", err)
 			continue
 		}
 		items = append(items, &auditsvcpb.AuditEventItem{

@@ -4,15 +4,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
+	kratosv2 "github.com/Servora-Kit/servora/obs/logger/kratosv2"
 
 	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
@@ -30,13 +31,13 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "./configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(identity bootstrap.SvcIdentity, l log.Logger, reg registry.Registrar, gs *grpc.Server, hs *http.Server, consumer *data.Consumer) *kratos.App {
+func newApp(identity bootstrap.SvcIdentity, l *slog.Logger, reg registry.Registrar, gs *grpc.Server, hs *http.Server, consumer *data.Consumer) *kratos.App {
 	return kratos.New(
 		kratos.ID(identity.ID),
 		kratos.Name(identity.Name),
 		kratos.Version(identity.Version),
 		kratos.Metadata(identity.Metadata),
-		kratos.Logger(l),
+		kratos.Logger(kratosv2.Wrap(l)),
 		kratos.Server(gs, hs),
 		kratos.Registrar(reg),
 		kratos.BeforeStart(func(ctx context.Context) error {

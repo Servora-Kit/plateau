@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
 	"github.com/Servora-Kit/servora/infra/broker"
-	logger "github.com/Servora-Kit/servora/obs/logging"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -22,7 +22,7 @@ const defaultConsumerGroup = "audit-consumer"
 type Consumer struct {
 	broker     broker.Broker
 	writer     *BatchWriter
-	log        *logger.Helper
+	log        *slog.Logger
 	topic      string
 	group      string
 	subscriber broker.Subscriber
@@ -32,7 +32,7 @@ type Consumer struct {
 // section (servora.extra.audit.v1), the consumer group from the Broker section
 // (servora.extra.broker.v1 → Kafka.consumer_group). Both fall back to
 // hardcoded defaults when unset.
-func NewConsumer(b broker.Broker, writer *BatchWriter, brokerCfg *brokerv1.Broker, auditCfg *auditcontractv1.AuditContract, l logger.Logger) *Consumer {
+func NewConsumer(b broker.Broker, writer *BatchWriter, brokerCfg *brokerv1.Broker, auditCfg *auditcontractv1.AuditContract, l *slog.Logger) *Consumer {
 	topic := defaultTopic
 	group := defaultConsumerGroup
 
@@ -43,8 +43,8 @@ func NewConsumer(b broker.Broker, writer *BatchWriter, brokerCfg *brokerv1.Broke
 		group = k.GetConsumerGroup()
 	}
 
-	log := logger.For(l, "consumer/data/audit")
-	log.Infof("audit consumer configured: topic=%s group=%s", topic, group)
+	log := l.With("scope", "consumer/data/audit")
+	log.Info("audit consumer configured", "topic", topic, "group", group)
 
 	return &Consumer{
 		broker: b,
@@ -58,7 +58,7 @@ func NewConsumer(b broker.Broker, writer *BatchWriter, brokerCfg *brokerv1.Broke
 // Start subscribes to the Kafka topic and begins the BatchWriter flush loop.
 func (c *Consumer) Start(ctx context.Context) error {
 	if c.broker == nil {
-		c.log.Warn("Kafka broker not configured, audit consumer is disabled")
+		c.log.Warn("kafka broker not configured, audit consumer is disabled")
 		c.writer.Start(ctx)
 		return nil
 	}
@@ -74,7 +74,7 @@ func (c *Consumer) Start(ctx context.Context) error {
 	}
 
 	c.subscriber = sub
-	c.log.Infof("subscribed to audit topic: %s (group: %s)", c.topic, c.group)
+	c.log.Info("subscribed to audit topic", "topic", c.topic, "group", c.group)
 	return nil
 }
 
@@ -82,7 +82,7 @@ func (c *Consumer) Start(ctx context.Context) error {
 func (c *Consumer) Stop(_ context.Context) error {
 	if c.subscriber != nil {
 		if err := c.subscriber.Unsubscribe(true); err != nil {
-			c.log.Warnf("failed to unsubscribe: %v", err)
+			c.log.Warn("failed to unsubscribe", "err", err)
 		}
 	}
 	c.writer.Stop()
@@ -93,20 +93,20 @@ func (c *Consumer) Stop(_ context.Context) error {
 func (c *Consumer) handle(ctx context.Context, evt broker.Event) error {
 	msg := evt.Message()
 	if msg == nil {
-		c.log.WithContext(ctx).Warn("received nil message, skipping")
+		c.log.WarnContext(ctx, "received nil message, skipping")
 		_ = evt.Ack()
 		return nil
 	}
 
 	ce, err := decodeCloudEvent(msg)
 	if err != nil {
-		c.log.WithContext(ctx).Warnf("failed to decode CloudEvent: %v", err)
+		c.log.WarnContext(ctx, "failed to decode CloudEvent", "err", err)
 		_ = evt.Ack() // skip bad messages
 		return nil
 	}
 
 	if err := validateEvent(ce); err != nil {
-		c.log.WithContext(ctx).Warnf("invalid CloudEvent: %v", err)
+		c.log.WarnContext(ctx, "invalid CloudEvent", "err", err)
 		_ = evt.Ack()
 		return nil
 	}
