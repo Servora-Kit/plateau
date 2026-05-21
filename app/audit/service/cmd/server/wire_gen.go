@@ -13,7 +13,6 @@ import (
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
@@ -31,8 +30,15 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(corev1Server *corev1.Server, corev1Registry *corev1.Registry, app *corev1.App, trace *corev1.Trace, metrics *corev1.Metrics, broker *brokerv1.Broker, auditContract *auditv1.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig, svcIdentity bootstrap.SvcIdentity, logger *slog.Logger) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, broker *brokerv1.Broker, auditContract *auditv1.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
+	corev1Bootstrap := runtime.Bootstrap
+	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
+	corev1Server := corev1Bootstrap.Server
+	trace := corev1Bootstrap.Trace
+	metrics := corev1Bootstrap.Metrics
+	app := corev1Bootstrap.App
+	logger := runtime.Logger
 	telemetryMetrics, err := telemetry.NewMetrics(metrics, app, logger)
 	if err != nil {
 		return nil, nil, err
@@ -53,7 +59,7 @@ func wireApp(corev1Server *corev1.Server, corev1Registry *corev1.Registry, app *
 	brokerBroker := newKafkaBroker(broker, logger)
 	batchWriter := data.NewBatchWriter(dataData, auditConsumerConfig, logger)
 	consumer := data.NewConsumer(brokerBroker, batchWriter, broker, auditContract, logger)
-	kratosApp := newApp(svcIdentity, logger, registrar, grpcServer, httpServer, consumer)
+	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, consumer)
 	return kratosApp, func() {
 		cleanup()
 	}, nil

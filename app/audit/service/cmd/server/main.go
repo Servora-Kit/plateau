@@ -4,14 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log/slog"
 
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
-	kratosv2 "github.com/Servora-Kit/servora/obs/logger/kratosv2"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/registry"
@@ -31,13 +29,8 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "./configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(identity bootstrap.SvcIdentity, l *slog.Logger, reg registry.Registrar, gs *grpc.Server, hs *http.Server, consumer *data.Consumer) *kratos.App {
-	return kratos.New(
-		kratos.ID(identity.ID),
-		kratos.Name(identity.Name),
-		kratos.Version(identity.Version),
-		kratos.Metadata(identity.Metadata),
-		kratos.Logger(kratosv2.Wrap(l)),
+func newApp(rt *bootstrap.Runtime, reg registry.Registrar, gs *grpc.Server, hs *http.Server, consumer *data.Consumer) *kratos.App {
+	return rt.NewApp(
 		kratos.Server(gs, hs),
 		kratos.Registrar(reg),
 		kratos.BeforeStart(func(ctx context.Context) error {
@@ -51,24 +44,24 @@ func newApp(identity bootstrap.SvcIdentity, l *slog.Logger, reg registry.Registr
 
 func main() {
 	flag.Parse()
-
-	err := bootstrap.BootstrapAndRun(flagconf, Name, Version, func(runtime *bootstrap.Runtime) (*kratos.App, func(), error) {
-		bc := runtime.Bootstrap
-
-		brokerCfg := &brokerv1.Broker{}
-		auditCfg := &auditcontractv1.AuditContract{}
-		consumerCfg := &auditconfv1.AuditConsumerConfig{}
-		if err := bootstrap.ScanSections(runtime, brokerCfg, auditCfg, consumerCfg); err != nil {
-			return nil, nil, fmt.Errorf("scan sections: %w", err)
-		}
-
-		return wireApp(
-			bc.Server, bc.Registry, bc.App, bc.Trace, bc.Metrics,
-			brokerCfg, auditCfg, consumerCfg,
-			runtime.Identity, runtime.Logger,
-		)
-	})
-	if err != nil {
+	if err := run(); err != nil {
 		panic(err)
 	}
+}
+
+func run() (err error) {
+	rt, err := bootstrap.NewRuntime(flagconf, bootstrap.Name(Name), bootstrap.Version(Version))
+	if err != nil {
+		return err
+	}
+	brokerCfg := &brokerv1.Broker{}
+	auditCfg := &auditcontractv1.AuditContract{}
+	consumerCfg := &auditconfv1.AuditConsumerConfig{}
+	if err := bootstrap.Scan(rt, brokerCfg, auditCfg, consumerCfg); err != nil {
+		return fmt.Errorf("scan bootstrap configs: %w", err)
+	}
+
+	return rt.Run(func() (*kratos.App, func(), error) {
+		return wireApp(rt, brokerCfg, auditCfg, consumerCfg)
+	})
 }
