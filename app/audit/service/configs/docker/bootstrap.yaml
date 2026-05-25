@@ -12,20 +12,23 @@ app:
   name: audit.service
   version: dev
   env: prod
+
+obs:
   log:
-    level: 0
-    filename: "/app/logs/audit.service.log"
-    max_size: 20
-    max_age: 30
-    max_backups: 10
-
-trace:
-  endpoint: "otel-collector:4317"
-  insecure: true
-  sampling_ratio: 1.0
-
-metrics:
-  enable: true
+    level: 1
+    backends:
+      - stdout: {}
+      - file:
+          path: "/app/logs/audit.service.log"
+          max_size: 20
+          max_age: 30
+          max_backups: 10
+  trace:
+    endpoint: "otel-collector:4317"
+    insecure: true
+    sampling_ratio: 1.0
+  metrics:
+    enable: true
 
 registry:
   consul:
@@ -38,9 +41,3 @@ registry:
       - "traefik.http.routers.audit-api.entrypoints=web"
       - "traefik.http.routers.audit-api.service=audit-http"
       - "traefik.http.services.audit-http.loadbalancer.server.port=8000"
-
-discovery:
-  consul:
-    addr: "consul:8500"
-    scheme: "http"
-    datacenter: "dc1"

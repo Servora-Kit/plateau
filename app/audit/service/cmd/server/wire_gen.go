@@ -19,7 +19,7 @@ import (
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/infra/broker/kafka"
-	"github.com/Servora-Kit/servora/obs/telemetry"
+	"github.com/Servora-Kit/servora/obs/metrics"
 	"github.com/go-kratos/kratos/v2"
 	"log/slog"
 )
@@ -35,11 +35,10 @@ func wireApp(runtime *bootstrap.Runtime, broker *brokerv1.Broker, auditContract 
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
 	corev1Server := corev1Bootstrap.Server
-	trace := corev1Bootstrap.Trace
-	metrics := corev1Bootstrap.Metrics
+	observability := corev1Bootstrap.Obs
 	app := corev1Bootstrap.App
 	logger := runtime.Logger
-	telemetryMetrics, err := telemetry.NewMetrics(metrics, app, logger)
+	metricsMetrics, err := metrics.New(observability, app, logger)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,8 +53,8 @@ func wireApp(runtime *bootstrap.Runtime, broker *brokerv1.Broker, auditContract 
 	auditRepo := data.NewAuditRepo(dataData, logger)
 	auditUsecase := biz.NewAuditUsecase(auditRepo)
 	auditService := service.NewAuditService(auditUsecase)
-	grpcServer := server.NewGRPCServer(corev1Server, trace, telemetryMetrics, logger, auditService)
-	httpServer := server.NewHTTPServer(corev1Server, trace, telemetryMetrics, logger, auditService)
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, logger, auditService)
+	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger, auditService)
 	brokerBroker := newKafkaBroker(broker, logger)
 	batchWriter := data.NewBatchWriter(dataData, auditConsumerConfig, logger)
 	consumer := data.NewConsumer(brokerBroker, batchWriter, broker, auditContract, logger)
