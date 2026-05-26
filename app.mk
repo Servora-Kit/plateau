@@ -4,6 +4,8 @@
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 ENV_FILE    := $(MKFILE_DIR).env
+REPO_ROOT   := $(patsubst %/,%,$(MKFILE_DIR))
+ROOT_MAKE   := $(MAKE) -C $(REPO_ROOT)
 
 # load environment variables from .env file if it exists
 ifneq (,$(wildcard $(ENV_FILE)))
@@ -21,11 +23,7 @@ ifeq "$(GOPATH)" ""
 endif
 
 DEFAULT_VERSION ?= $(SERVICE_APP_VERSION)
-REPO_GIT_DIR := $(MKFILE_DIR).git
-
-CYAN := \033[0;36m
-GREEN := \033[0;32m
-RESET := \033[0m
+REPO_GIT_DIR := $(REPO_ROOT)/.git
 
 ifeq ($(OS),Windows_NT)
     IS_WINDOWS := TRUE
@@ -81,6 +79,7 @@ env:
 	@echo "LAST_TAG: $(LAST_TAG)"
 	@echo "VERSION: $(VERSION)"
 	@echo "OPENAPI_CONFIG: $(OPENAPI_CONFIG)"
+	@echo "REPO_ROOT: $(REPO_ROOT)"
 
 # build golang application
 build: gen _build
@@ -107,15 +106,15 @@ app: build
 clean:
 	@go clean
 	$(if $(IS_WINDOWS), del "coverage.out", rm -f "coverage.out")
-	@rm -f openapi.yaml
+	@rm -f openapi.yaml internal/assets/openapi.yaml
 
 # generate code
-gen: wire api openapi gen.ent
+gen: api openapi wire gen.ent
 
 # generate GORM GEN PO and DAO code via centralized svr CLI
 gen.gorm:
 	@echo "Generating GORM DAO/PO..."
-	@cd $(MKFILE_DIR) && go run ./cmd/svr gen gorm $(SERVICE_NAME)
+	@svr gen gorm $(SERVICE_NAME)
 
 # generate Ent code, if internal/data/generate.go exists
 gen.ent:
@@ -133,15 +132,15 @@ endif
 
 # generate protobuf api code
 api:
-	@cd ../../.. && $(MAKE) api-go
+	@$(ROOT_MAKE) api-go
 ifneq (,$(wildcard ./api/buf.typescript.gen.yaml))
-	@cd ../../.. && buf generate --template app/$(APP_RELATIVE_PATH)/api/buf.typescript.gen.yaml
+	@cd $(REPO_ROOT) && buf generate --template app/$(APP_RELATIVE_PATH)/api/buf.typescript.gen.yaml
 endif
 
 # generate protobuf api OpenAPI v3 docs
 openapi:
 ifneq (,$(wildcard ./api/buf.openapi.gen.yaml))
-	@cd ../../.. && buf generate --template app/$(APP_RELATIVE_PATH)/api/buf.openapi.gen.yaml
+	@cd $(REPO_ROOT) && buf generate --template app/$(APP_RELATIVE_PATH)/api/buf.openapi.gen.yaml
 else
 	@echo "No OpenAPI config found for $(SERVICE_NAME), skipping..."
 endif
@@ -162,7 +161,7 @@ help:
 		if (helpMessage) { \
 			helpCommand = substr($$1, 0, index($$1, ":")-1); \
 			helpMessage = substr(lastLine, RSTART + 2, RLENGTH); \
-			printf "$(GREEN)%-20s$(RESET) %s\n", helpCommand,helpMessage; \
+			printf "%-20s %s\n", helpCommand,helpMessage; \
 		} \
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)

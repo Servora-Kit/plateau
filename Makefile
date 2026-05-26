@@ -12,7 +12,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # ============================================================================
-# VARIABLES & CONFIGURATION
+# VARIABLES
 # ============================================================================
 
 CURRENT_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
@@ -21,9 +21,13 @@ ROOT_DIR    := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 BUF_GO_GEN_TEMPLATE := buf.go.gen.yaml
 BUF_TS_GEN_TEMPLATE := buf.typescript.gen.yaml
 
-SRCS_MK := $(foreach dir, app, $(wildcard $(dir)/*/*/Makefile))
-SERVICE_DIRS := $(dir $(realpath $(SRCS_MK)))
+SERVICE_MODULES      := app/audit/service
+GO_WORKSPACE_MODULES := api/gen $(SERVICE_MODULES)
+GO_LINT_MODULES      ?= $(SERVICE_MODULES)
+SRCS_MK              := $(foreach mod,$(SERVICE_MODULES),$(wildcard $(mod)/Makefile))
+SERVICE_DIRS         := $(sort $(dir $(realpath $(SRCS_MK))))
 BUF_TS_SERVICE_TEMPLATES := $(wildcard $(addsuffix api/buf.typescript.gen.yaml,$(SERVICE_DIRS)))
+LINT_GOWORK          ?= auto
 
 GOPATH := $(shell go env GOPATH)
 GOVERSION := $(shell go version)
@@ -38,12 +42,6 @@ DOCKER_TAG_VERSION := $(if $(DOCKER_TAG_VERSION_RAW),$(DOCKER_TAG_VERSION_RAW),d
 
 LDFLAGS := -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMMIT) -X main.GitBranch=$(GIT_BRANCH)
 
-RED := \033[0;31m
-GREEN := \033[0;32m
-YELLOW := \033[0;33m
-CYAN := \033[0;36m
-RESET := \033[0m
-
 COMPOSE := docker compose
 COMPOSE_FILES := -f docker-compose.yaml
 COMPOSE_DEV_FILES := -f docker-compose.yaml -f docker-compose.dev.yaml
@@ -53,8 +51,6 @@ MICROSERVICES := audit
 WEB_APPS :=
 WEB_DEV_APP ?=
 
-GO_WORKSPACE_MODULES := app/audit/service
-
 WEB_PNPM_FILTERS := $(foreach app,$(WEB_APPS),--filter "./web/$(app)")
 INFRA_SERVICES := consul kafka clickhouse otel-collector jaeger loki prometheus grafana traefik
 COMPOSE_STACK_SERVICES := $(INFRA_SERVICES) $(MICROSERVICES)
@@ -63,16 +59,35 @@ COMPOSE_STACK_RESET := $(COMPOSE) $(COMPOSE_DEV_FILES) down --remove-orphans --v
 
 SERVORA_PKG := github.com/Servora-Kit/servora
 
+# Tool versions - override to pin a specific version.
+PROTOC_GEN_GO_VERSION              := latest
+PROTOC_GEN_GO_GRPC_VERSION         := latest
+PROTOC_GEN_GO_HTTP_VERSION         := latest
+PROTOC_GEN_TYPESCRIPT_HTTP_VERSION := latest
+PROTOC_GEN_GO_ERRORS_VERSION       := latest
+PROTOC_GEN_OPENAPI_VERSION         := latest
+PROTOC_GEN_VALIDATE_VERSION        := latest
+PROTOC_GEN_REDACT_VERSION          := latest
+SERVORA_VERSION                    := latest
+KRATOS_VERSION                     := latest
+GNOSTIC_VERSION                    := latest
+BUF_VERSION                        := latest
+GOLANGCI_LINT_VERSION              := latest
+WIRE_VERSION                       := latest
+ENT_VERSION                        := latest
+AIR_VERSION                        := latest
+
 define run-in-service-dirs
-	@$(foreach dir,$(SERVICE_DIRS),cd $(dir) && $(MAKE) $(1);)
+	@$(foreach dir,$(SERVICE_DIRS),echo "==> $(1) $(dir)" && (cd $(dir) && $(MAKE) $(1)) && ) true
 endef
 
 # ============================================================================
 # MAIN TARGETS
 # ============================================================================
 
-.PHONY: help env init plugin cli dep tidy test cover vet lint lint.go lint.proto lint.ts web.dev buf-update buf-push tag
-.PHONY: wire ent gen api api-go api-ts openapi build clean
+.PHONY: help env init plugin cli dep tidy test cover vet lint lint.go lint.proto lint.ts web.dev
+.PHONY: wire ent gen gen.fresh api api-go api-ts openapi build clean
+.PHONY: bsr.update bsr.push buf-update buf-push tag tag.api
 .PHONY: compose.build compose.up compose.up.infra compose.up.all compose.rebuild compose.stop compose.down compose.reset compose.ps compose.logs
 .PHONY: compose.dev compose.dev.build compose.dev.up compose.dev.restart compose.dev.ps compose.dev.stop compose.dev.down compose.dev.reset compose.dev.logs
 .PHONY: openfga.init openfga.model.validate openfga.model.test openfga.model.apply
@@ -90,37 +105,39 @@ env:
 
 # initialize develop environment
 init: plugin cli
-	@echo "$(GREEN)✓ Development environment initialized$(RESET)"
+	@echo "✓ Development environment initialized"
 
 # install protoc plugins
 plugin:
-	@echo "$(CYAN)Installing protoc plugins...$(RESET)"
-	@go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@latest
-	@go install github.com/go-kratos/protoc-gen-typescript-http@latest
-	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-errors/v2@latest
-	@go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest
-	@go install github.com/envoyproxy/protoc-gen-validate@latest
-	@go install github.com/menta2k/protoc-gen-redact/v3@latest
-	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-authz@latest
-	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-audit@latest
-	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-mapper@latest
-	@echo "$(GREEN)✓ Protoc plugins installed$(RESET)"
+	@echo "==> Installing protoc plugins..."
+	@go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
+	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
+	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@$(PROTOC_GEN_GO_HTTP_VERSION)
+	@go install github.com/go-kratos/protoc-gen-typescript-http@$(PROTOC_GEN_TYPESCRIPT_HTTP_VERSION)
+	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-errors/v2@$(PROTOC_GEN_GO_ERRORS_VERSION)
+	@go install github.com/google/gnostic/cmd/protoc-gen-openapi@$(PROTOC_GEN_OPENAPI_VERSION)
+	@go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE_VERSION)
+	@go install github.com/menta2k/protoc-gen-redact/v3@$(PROTOC_GEN_REDACT_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-authz@$(SERVORA_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-audit@$(SERVORA_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-authn@$(SERVORA_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-conf@$(SERVORA_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-mapper@$(SERVORA_VERSION)
+	@echo "✓ Protoc plugins installed"
 
 # install cli tools
 cli:
-	@echo "$(CYAN)Installing CLI tools...$(RESET)"
-	@go install github.com/go-kratos/kratos/cmd/kratos/v2@latest
-	@go install github.com/google/gnostic@latest
-	@go install github.com/bufbuild/buf/cmd/buf@latest
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/google/wire/cmd/wire@latest
-	@go install entgo.io/ent/cmd/ent@latest
-	@go install github.com/air-verse/air@latest
-	@go install $(SERVORA_PKG)/cmd/svr@latest
+	@echo "==> Installing CLI tools..."
+	@go install github.com/go-kratos/kratos/cmd/kratos/v2@$(KRATOS_VERSION)
+	@go install github.com/google/gnostic@$(GNOSTIC_VERSION)
+	@go install github.com/bufbuild/buf/cmd/buf@$(BUF_VERSION)
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	@go install github.com/google/wire/cmd/wire@$(WIRE_VERSION)
+	@go install entgo.io/ent/cmd/ent@$(ENT_VERSION)
+	@go install github.com/air-verse/air@$(AIR_VERSION)
+	@go install $(SERVORA_PKG)/cmd/svr@$(SERVORA_VERSION)
 
-	@echo "$(GREEN)✓ CLI tools installed$(RESET)"
+	@echo "✓ CLI tools installed"
 
 # download dependencies of module
 dep:
@@ -128,13 +145,14 @@ dep:
 
 # tidy all workspace modules
 tidy:
-	@echo "$(CYAN)Tidying Go modules...$(RESET)"
+	@echo "==> Tidying Go modules..."
 	@$(foreach mod,$(GO_WORKSPACE_MODULES),echo "  $(mod)" && (cd $(ROOT_DIR)$(mod) && go mod tidy) && ) true
-	@echo "$(GREEN)✓ All modules tidied$(RESET)"
+	@go work sync
+	@echo "✓ All modules tidied"
 
 # run tests
 test:
-	@$(foreach mod,$(GO_WORKSPACE_MODULES),echo "$(CYAN)Testing $(mod)...$(RESET)" && (cd $(ROOT_DIR)$(mod) && go test ./...) && ) true
+	@$(foreach mod,$(GO_WORKSPACE_MODULES),echo "==> Testing $(mod)..." && (cd $(ROOT_DIR)$(mod) && go test -short ./...) && ) true
 
 # run coverage tests
 cover:
@@ -146,90 +164,94 @@ vet:
 
 # run all configured linters
 lint: lint.go lint.ts
-	@echo "$(GREEN)✓ lint complete$(RESET)"
+	@echo "✓ lint complete"
 
 # run golang lint
 lint.go:
-	@$(foreach mod,$(GO_WORKSPACE_MODULES),echo "$(CYAN)Linting Go ($(mod))...$(RESET)" && (cd $(ROOT_DIR)$(mod) && golangci-lint run) && ) true
-	@echo "$(GREEN)✓ Go lint complete$(RESET)"
+	@$(foreach mod,$(GO_LINT_MODULES),echo "==> Linting Go ($(mod), GOWORK=$(LINT_GOWORK))..." && (cd $(ROOT_DIR)$(mod) && GOWORK=$(LINT_GOWORK) golangci-lint run) && ) true
+	@echo "✓ Go lint complete"
 
 # lint TypeScript
 lint.ts:
 ifneq (,$(WEB_APPS))
-	@echo "$(CYAN)Type checking TypeScript...$(RESET)"
+	@echo "Type checking TypeScript..."
 	@pnpm $(WEB_PNPM_FILTERS) run --if-present typecheck
-	@echo "$(CYAN)Linting TypeScript...$(RESET)"
+	@echo "Linting TypeScript..."
 	@pnpm $(WEB_PNPM_FILTERS) run --if-present lint
-	@echo "$(GREEN)✓ TypeScript lint complete$(RESET)"
+	@echo "✓ TypeScript lint complete"
 else
-	@echo "$(YELLOW)No WEB_APPS configured, skipping TypeScript lint$(RESET)"
+	@echo "No WEB_APPS configured, skipping TypeScript lint"
 endif
 
 # start web dev server
 web.dev:
 ifneq (,$(WEB_DEV_APP))
-	@echo "$(CYAN)Starting web dev server ($(WEB_DEV_APP))...$(RESET)"
+	@echo "Starting web dev server ($(WEB_DEV_APP))..."
 	@pnpm --filter "./web/$(WEB_DEV_APP)" run dev
 else
-	@echo "$(YELLOW)No WEB_DEV_APP configured$(RESET)"
+	@echo "No WEB_DEV_APP configured"
 endif
 
 # generate wire code for all services
 wire:
-	@echo "$(CYAN)Generating wire code for all services...$(RESET)"
+	@echo "Generating wire code for all services..."
 	$(call run-in-service-dirs,wire)
-	@echo "$(GREEN)✓ Wire code generated$(RESET)"
+	@echo "✓ Wire code generated"
 
 # generate ent code for services that define data/generate.go
 ent:
-	@echo "$(CYAN)Generating ent code for all services...$(RESET)"
+	@echo "Generating ent code for all services..."
 	$(call run-in-service-dirs,gen.ent)
-	@echo "$(GREEN)✓ Ent code generated$(RESET)"
+	@echo "✓ Ent code generated"
 
 # generate all code
 gen: api openapi wire ent
-	@echo "$(GREEN)✓ All code generated$(RESET)"
+	@echo "✓ All code generated"
+
+gen.fresh: clean gen
 
 # generate protobuf api code (go + ts)
 api: api-go api-ts
-	@echo "$(GREEN)✓ Protobuf code generated$(RESET)"
+	@echo "✓ Protobuf code generated"
 
 # generate protobuf api go code
 api-go:
-	@echo "$(CYAN)Generating protobuf Go code via $(BUF_GO_GEN_TEMPLATE)...$(RESET)"
+	@echo "Generating protobuf Go code via $(BUF_GO_GEN_TEMPLATE)..."
 	@buf generate --template $(BUF_GO_GEN_TEMPLATE)
 
 # generate protobuf api typescript code
 api-ts:
 ifneq (,$(wildcard $(BUF_TS_GEN_TEMPLATE)))
-	@echo "$(CYAN)Generating shared TypeScript via $(BUF_TS_GEN_TEMPLATE)...$(RESET)"
+	@echo "Generating shared TypeScript via $(BUF_TS_GEN_TEMPLATE)..."
 	@buf generate --template $(BUF_TS_GEN_TEMPLATE)
-	@$(foreach tpl,$(BUF_TS_SERVICE_TEMPLATES),echo "$(CYAN)Generating TypeScript via $(tpl)...$(RESET)" && buf generate --template $(tpl) &&) true
+	@$(foreach tpl,$(BUF_TS_SERVICE_TEMPLATES),echo "Generating TypeScript via $(tpl)..." && buf generate --template $(tpl) &&) true
 endif
 
 # generate protobuf api OpenAPI v3 docs for all services
 openapi:
-	@echo "$(CYAN)Generating OpenAPI documentation for all services...$(RESET)"
+	@echo "Generating OpenAPI documentation for all services..."
 	$(call run-in-service-dirs,openapi)
-	@echo "$(GREEN)✓ OpenAPI documentation generated$(RESET)"
+	@echo "✓ OpenAPI documentation generated"
 
 # lint protobuf files
 lint.proto:
-	@echo "$(CYAN)Linting protobuf files...$(RESET)"
+	@echo "Linting protobuf files..."
 	@buf lint
-	@echo "$(GREEN)✓ Proto lint complete$(RESET)"
+	@echo "✓ Proto lint complete"
 
 # update buf dependencies
-buf-update:
-	@echo "$(CYAN)Updating buf dependencies...$(RESET)"
+bsr.update:
+	@echo "Updating BSR dependencies..."
 	@buf dep update
-	@echo "$(GREEN)✓ Buf dependencies updated$(RESET)"
+	@echo "✓ BSR dependencies updated"
+
+buf-update: bsr.update
 
 # build all service applications
 build: gen
-	@echo "$(CYAN)Building all services...$(RESET)"
+	@echo "Building all services..."
 	$(call run-in-service-dirs,_build)
-	@echo "$(GREEN)✓ All services built$(RESET)"
+	@echo "✓ All services built"
 
 # Tag root module.
 # Usage: make tag TAG=v0.2.0
@@ -237,9 +259,9 @@ tag:
 ifndef TAG
 	$(error TAG is required. Usage: make tag TAG=v0.2.0)
 endif
-	@echo "$(CYAN)Tagging $(TAG)...$(RESET)"
+	@echo "Tagging $(TAG)..."
 	@git tag $(TAG)
-	@echo "$(GREEN)✓ Tagged: $(TAG)$(RESET)"
+	@echo "✓ Tagged: $(TAG)"
 	@echo "  Run 'git push --tags' to push"
 
 # Tag api/gen sub-module when proto/gen changes require it.
@@ -248,23 +270,24 @@ tag.api:
 ifndef TAG
 	$(error TAG is required. Usage: make tag.api TAG=v0.2.0)
 endif
-	@echo "$(CYAN)Tagging api/gen/$(TAG)...$(RESET)"
+	@echo "Tagging api/gen/$(TAG)..."
 	@git tag api/gen/$(TAG)
-	@echo "$(GREEN)✓ Tagged: api/gen/$(TAG)$(RESET)"
+	@echo "✓ Tagged: api/gen/$(TAG)"
 	@echo "  Run 'git push --tags' to push"
 
 # Push proto to BSR, auto-labeling with current Git tag if available
-buf-push:
-	@echo "$(CYAN)Pushing proto to BSR...$(RESET)"
+bsr.push:
 	@GIT_TAG=$$(git tag --points-at HEAD 2>/dev/null | grep -E '^v[0-9]' | head -1); \
 	if [ -n "$$GIT_TAG" ]; then \
-		echo "  Using Git tag as BSR label: $$GIT_TAG"; \
-		buf push --exclude-unnamed --label "$$GIT_TAG"; \
+		echo "==> Pushing to BSR with labels: $$GIT_TAG, main"; \
+		buf push --exclude-unnamed --label "$$GIT_TAG" --label main; \
 	else \
-		echo "  $(YELLOW)No Git version tag on HEAD, pushing without label$(RESET)"; \
-		buf push --exclude-unnamed; \
+		echo "==> No Git version tag on HEAD, pushing with label: main"; \
+		buf push --exclude-unnamed --label main; \
 	fi
-	@echo "$(GREEN)✓ Proto pushed to BSR$(RESET)"
+	@echo "✓ Proto pushed to BSR"
+
+buf-push: bsr.push
 
 # ============================================================================
 # COMPOSE TARGETS
@@ -272,31 +295,31 @@ buf-push:
 
 # build production images for microservices
 compose.build:
-	@echo "$(CYAN)Build production images: $(MICROSERVICES) (version: $(DOCKER_TAG_VERSION))$(RESET)"
+	@echo "Build production images: $(MICROSERVICES) (version: $(DOCKER_TAG_VERSION))"
 	@$(foreach svc,$(MICROSERVICES),docker build --build-arg SERVICE_NAME=$(svc) --build-arg VERSION=$(VERSION) -t servora-$(svc):$(DOCKER_TAG_VERSION) . &&) true
 	@$(foreach svc,$(MICROSERVICES),docker tag servora-$(svc):$(DOCKER_TAG_VERSION) servora-$(svc):latest &&) true
-	@echo "$(GREEN)✓ Production images built$(RESET)"
+	@echo "✓ Production images built"
 
 # start infrastructure compose stack
 compose.up: compose.up.infra
 
 # start only infrastructure services
 compose.up.infra:
-	@echo "$(CYAN)Compose infra up: $(INFRA_SERVICES)$(RESET)"
+	@echo "Compose infra up: $(INFRA_SERVICES)"
 	@$(COMPOSE) $(COMPOSE_FILES) up -d $(INFRA_SERVICES)
-	@echo "$(GREEN)✓ Infrastructure services started$(RESET)"
+	@echo "✓ Infrastructure services started"
 
 # start infrastructure + app services
 compose.up.all:
-	@echo "$(CYAN)Compose up: infra + apps$(RESET)"
+	@echo "Compose up: infra + apps"
 	@$(COMPOSE) $(COMPOSE_APPS_FILES) up -d
-	@echo "$(GREEN)✓ All services started$(RESET)"
+	@echo "✓ All services started"
 
 # rebuild production images and ensure infrastructure is running
 compose.rebuild:
 	@$(MAKE) compose.build
 	@$(MAKE) compose.up
-	@echo "$(GREEN)✓ Production images rebuilt and infrastructure started$(RESET)"
+	@echo "✓ Production images rebuilt and infrastructure started"
 
 # stop infrastructure compose stack
 compose.stop:
@@ -320,28 +343,28 @@ compose.logs:
 
 # build development images for microservices
 compose.dev.build:
-	@echo "$(CYAN)Compose dev build: $(MICROSERVICES)$(RESET)"
+	@echo "Compose dev build: $(MICROSERVICES)"
 	@$(COMPOSE) $(COMPOSE_DEV_FILES) build $(MICROSERVICES)
-	@echo "$(GREEN)✓ Compose dev images built$(RESET)"
+	@echo "✓ Compose dev images built"
 
 # start full development compose stack (infra + microservices) and tail logs
 compose.dev:
-	@echo "$(CYAN)Compose dev start: $(COMPOSE_STACK_SERVICES)$(RESET)"
+	@echo "Compose dev start: $(COMPOSE_STACK_SERVICES)"
 	@$(COMPOSE) $(COMPOSE_DEV_FILES) up -d $(COMPOSE_STACK_SERVICES)
-	@echo "$(GREEN)✓ Compose dev stack started, tailing logs...$(RESET)"
+	@echo "✓ Compose dev stack started, tailing logs..."
 	@$(COMPOSE) $(COMPOSE_DEV_FILES) logs -f $(COMPOSE_STACK_SERVICES)
 
 # start development stack in background
 compose.dev.up:
-	@echo "$(CYAN)Compose dev up: $(COMPOSE_STACK_SERVICES)$(RESET)"
+	@echo "Compose dev up: $(COMPOSE_STACK_SERVICES)"
 	@$(COMPOSE) $(COMPOSE_DEV_FILES) up -d $(COMPOSE_STACK_SERVICES)
-	@echo "$(GREEN)✓ Compose dev stack started$(RESET)"
+	@echo "✓ Compose dev stack started"
 
 # restart development containers to force fresh startup build
 compose.dev.restart:
-	@echo "$(CYAN)Compose dev restart: $(MICROSERVICES)$(RESET)"
+	@echo "Compose dev restart: $(MICROSERVICES)"
 	@$(COMPOSE) $(COMPOSE_DEV_FILES) restart $(MICROSERVICES)
-	@echo "$(GREEN)✓ Compose dev services restarted$(RESET)"
+	@echo "✓ Compose dev services restarted"
 
 # tail logs for development stack
 compose.dev.logs:
@@ -378,15 +401,15 @@ openfga.init:
 
 # validate OpenFGA model syntax (requires fga CLI)
 openfga.model.validate:
-	@echo "$(CYAN)Validating OpenFGA model...$(RESET)"
+	@echo "Validating OpenFGA model..."
 	@fga model validate --file $(OPENFGA_MODEL) --format fga
-	@echo "$(GREEN)✓ OpenFGA model valid$(RESET)"
+	@echo "✓ OpenFGA model valid"
 
 # run OpenFGA model tests (requires fga CLI)
 openfga.model.test: openfga.model.validate
-	@echo "$(CYAN)Testing OpenFGA model...$(RESET)"
+	@echo "Testing OpenFGA model..."
 	@fga model test --tests $(OPENFGA_TESTS)
-	@echo "$(GREEN)✓ OpenFGA model tests passed$(RESET)"
+	@echo "✓ OpenFGA model tests passed"
 
 # apply new model version: validate -> test -> upload (via svr CLI)
 openfga.model.apply: openfga.model.test
@@ -398,16 +421,16 @@ openfga.model.apply: openfga.model.test
 
 # clean build artifacts
 clean:
-	@echo "$(CYAN)Cleaning build artifacts...$(RESET)"
+	@echo "Cleaning build artifacts..."
 	@rm -rf api/gen/go
 	$(call run-in-service-dirs,clean)
-	@echo "$(GREEN)✓ Clean complete$(RESET)"
+	@echo "✓ Clean complete"
 
 # show help
 help:
 	@echo ""
-	@echo "$(CYAN)servora-platform$(RESET)"
-	@echo "$(CYAN)================$(RESET)"
+	@echo "servora-platform"
+	@echo "================"
 	@echo ""
 	@echo "Usage:"
 	@echo " make [target]"
@@ -418,7 +441,7 @@ help:
 		if (helpMessage) { \
 			helpCommand = substr($$1, 0, index($$1, ":")-1); \
 			helpMessage = substr(lastLine, RSTART + 2, RLENGTH); \
-			printf "  $(GREEN)%-20s$(RESET) %s\n", helpCommand,helpMessage; \
+			printf "  %-20s %s\n", helpCommand,helpMessage; \
 		} \
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
