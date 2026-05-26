@@ -38,16 +38,18 @@ func wireApp(runtime *bootstrap.Runtime, broker *brokerv1.Broker, auditContract 
 	observability := corev1Bootstrap.Obs
 	app := corev1Bootstrap.App
 	logger := runtime.Logger
-	metricsMetrics, err := metrics.New(observability, app, logger)
+	metricsMetrics, cleanup, err := metrics.New(observability, app, logger)
 	if err != nil {
 		return nil, nil, err
 	}
 	conn, err := data.NewClickHouseClient(auditConsumerConfig, logger)
 	if err != nil {
+		cleanup()
 		return nil, nil, err
 	}
-	dataData, cleanup, err := data.NewData(conn, auditConsumerConfig, logger)
+	dataData, cleanup2, err := data.NewData(conn, auditConsumerConfig, logger)
 	if err != nil {
+		cleanup()
 		return nil, nil, err
 	}
 	auditRepo := data.NewAuditRepo(dataData, logger)
@@ -60,6 +62,7 @@ func wireApp(runtime *bootstrap.Runtime, broker *brokerv1.Broker, auditContract 
 	consumer := data.NewConsumer(brokerBroker, batchWriter, broker, auditContract, logger)
 	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, consumer)
 	return kratosApp, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
