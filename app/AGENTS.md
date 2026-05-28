@@ -18,7 +18,7 @@ app/{service}/service/
 ├── cmd/         # 启动入口
 ├── configs/     # 配置
 ├── internal/    # 实现代码
-├── Makefile     # include ../../../app.mk
+├── Makefile     # include ../../../make/core.mk
 └── go.mod       # 独立模块
 ```
 
@@ -29,7 +29,7 @@ app/{service}/service/
 
 ## 关键约定
 
-- 服务目录中的 `make gen` 会执行 `wire + api + openapi + gen.ent`
+- 服务目录中的 `make gen` 会执行 `api + openapi + wire + gen.ent`
 - 服务目录中的 `make build` 会先执行 `make gen`，再编译当前服务
 - 服务目录中的 `make api` 会回到仓库根目录跑 `make api-go`
 - 若存在 `api/buf.typescript.gen.yaml`，服务级 `make api` 会额外生成 TypeScript 客户端
@@ -43,7 +43,6 @@ cd app/audit/service && make dev      # 本地热重载 (Air 自动编译运行�
 cd app/audit/service && make build    # 构建服务
 cd app/audit/service && make wire     # 重新生成依赖注入
 cd app/audit/service && make gen.ent  # 生成 Ent 模型代码
-cd app/audit/service && make gen.gorm # 生成 GORM 模型代码
 ```
 
 ## 配置约定
@@ -52,11 +51,11 @@ cd app/audit/service && make gen.gorm # 生成 GORM 模型代码
 - `configs/local/`：**本地开发环境**。数据库、消息队列地址指向 `127.0.0.1`。
   - 使用 `make dev` 或 `make run` 启动时，服务读取此目录。
 - `configs/docker/`：**容器化环境**。数据库地址指向 Docker Compose network 中的服务名（如 `kafka:9092`）。
-  - 当通过 `docker-compose.apps.yaml` 或 `docker-compose.dev.yaml` 启动容器时，服务读取此目录。
+  - 当通过 `docker-compose.apps.yaml` 启动容器时，服务读取此目录。
 
 在 `configs/` 中定义的 `.yaml` 在代码中通过 `conf.Bootstrap` 结构体映射，使用 Protobuf 结构定义在各自的 `api/` 目录下。
 
 ## 维护提示
 
 - 部署清单以根 `manifests/` 为主；各服务可带 `manifests/` 补充资源
-- 若新增服务，优先参考 `app/audit/service/` 的最小结构，再按需要补齐 `api/` 与 `internal/`
+- 若新增服务，优先参考 `app/audit/service/` 的基本结构，再按需要补齐 `api/` 与 `internal/`

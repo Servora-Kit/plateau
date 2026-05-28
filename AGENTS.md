@@ -53,13 +53,13 @@ type(scope): description
 
 ## 关键文件
 
-- `Makefile`：构建入口（gen / api / wire / lint / test / compose / openfga）
-- `app.mk`：服务级公共 Makefile 片段（被各服务 `include`，提供 `run`/`build`/`dev`/`wire` 等 target）
+- `Makefile`：项目变量 + `include make/core.mk`
+- `make/core.mk`：根目录/服务目录共享 Make 逻辑（gen / openapi / wire / build / lint / compose / run / dev）
+- `make/extra.mk`：仓库扩展 Make 逻辑（api / ent / openfga）
 - `buf.yaml`：Buf v2 workspace，包含 `app/audit/service/api/protos`（名为 `buf.build/servora/servora-platform`）；依赖 `buf.build/servora/servora`
 - `buf.go.gen.yaml`：Go 代码生成模板（含 servora 自定义插件：authz、mapper、audit）
 - `docker-compose.yaml`：**仅基础设施**（Kafka、ClickHouse）
-- `docker-compose.dev.yaml`：**热重载开发环境**（audit 服务 + Air，挂载源码）
-- `docker-compose.apps.yaml`：**生产镜像部署**（audit 服务生产镜像，external network/volume）
+- `docker-compose.apps.yaml`：**生产镜像部署**（audit 服务生产镜像，可通过 `COMPOSE_FILES` 显式启用）
 - `.env.example`：环境变量模板
 
 ## 目录约定
@@ -90,18 +90,20 @@ make api               # 仅生成 proto Go 代码
 make wire              # 仅生成 Wire
 
 # 质量检查
-make test              # 运行测试
 make lint              # Go lint
 make lint.proto        # Proto lint
 
 # Compose (开发工作流)
-make compose.up.infra  # 仅启动基础设施 (Kafka, ClickHouse) - 配合本地 make dev 使用
-make compose.up        # 启动基础设施 + 各服务开发容器 (挂载本地源码，支持热重载)
-make compose.up.all    # 启动基础设施 + 生产镜像容器 (完全隔离，不挂载源码)
+make compose.up        # 启动 COMPOSE_FILES 指定的 Compose 服务
 make compose.build     # 构建所有服务的最新生产镜像 (包含 latest tag)
-make compose.stop      # 停止所有容器
-make compose.down      # 移除所有容器/网络
-make compose.reset     # 清理所有容器/网络/数据卷 (删库跑路)
+make compose.stop      # 停止容器，不删除容器
+make compose.down      # 移除容器/网络，保留 volumes
+make compose.reset     # 移除容器/网络/volumes
+make compose.ps        # 查看 Compose 服务状态
+make compose.logs      # 跟踪 Compose 服务日志
+
+# 应用容器
+COMPOSE_FILES="-f docker-compose.yaml -f docker-compose.apps.yaml" make compose.up
 
 # OpenFGA
 make openfga.init             # 初始化 store

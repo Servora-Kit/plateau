@@ -30,7 +30,7 @@ manifests/
 | 任务 | 位置 | 说明 |
 |------|------|------|
 | 本地基础设施 | `../docker-compose.yaml` | 根目录 `make compose.up` |
-| 本地开发环境 | `../docker-compose.yaml` + `../docker-compose.dev.yaml` | 根目录 `make compose.dev` |
+| 本地开发环境 | `../docker-compose.yaml` + 服务目录本机 Air | 根目录 `make compose.up` 后在服务目录执行 `make dev` |
 | K8s 基础设施聚合 | `k8s/base/` | Namespace / RBAC / 跨目录资源聚合 |
 | IAM 服务部署 | `k8s/iam/` | `deployment.yaml`、`service.yaml`、`configmap.yaml`、依赖资源 |
 | SayHello 服务部署 | `k8s/sayhello/` | `deployment.yaml`、`service.yaml`、`configmap.yaml` |
@@ -55,7 +55,6 @@ manifests/
 ### 常用命令
 ```bash
 make compose.up
-make compose.dev
 make compose.stop
 make compose.down
 make compose.reset
