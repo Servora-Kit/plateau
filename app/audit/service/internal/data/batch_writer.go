@@ -11,9 +11,9 @@ import (
 	"time"
 
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
-	"github.com/Servora-Kit/servora/infra/broker"
 	"github.com/Servora-Kit/servora/obs/audit"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/twmb/franz-go/pkg/kgo"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -24,14 +24,19 @@ const flushOnStopTimeout = 10 * time.Second
 
 // pendingEvent bundles a decoded CloudEvent with its Kafka event handle.
 type pendingEvent struct {
-	event    *cloudevents.Event
-	kafkaEvt broker.Event
+	event  *cloudevents.Event
+	record *kgo.Record
+}
+
+type recordCommitter interface {
+	CommitRecords(context.Context, ...*kgo.Record) error
 }
 
 // BatchWriter buffers CloudEvent records and flushes them to ClickHouse in batches.
 type BatchWriter struct {
 	data      *Data
 	log       *slog.Logger
+	committer recordCommitter
 	batchSize int
 	interval  time.Duration
 
@@ -45,7 +50,7 @@ type BatchWriter struct {
 
 // NewBatchWriter creates a new BatchWriter using the audit service's local
 // AuditConsumerConfig (batch_size + flush_interval).
-func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, l *slog.Logger) *BatchWriter {
+func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, client *kgo.Client, l *slog.Logger) *BatchWriter {
 	batchSize := 100
 	interval := time.Second
 
@@ -63,6 +68,7 @@ func NewBatchWriter(d *Data, auditCfg *auditconfv1.AuditConsumerConfig, l *slog.
 	return &BatchWriter{
 		data:      d,
 		log:       l.With("scope", "batch_writer/data/audit"),
+		committer: client,
 		batchSize: batchSize,
 		interval:  interval,
 		buffer:    make([]pendingEvent, 0, batchSize),
@@ -101,9 +107,9 @@ func (w *BatchWriter) Stop() {
 }
 
 // Add appends an event to the buffer. If the buffer reaches batchSize, triggers an immediate flush.
-func (w *BatchWriter) Add(evt *cloudevents.Event, kafkaEvt broker.Event) {
+func (w *BatchWriter) Add(evt *cloudevents.Event, record *kgo.Record) {
 	w.mu.Lock()
-	w.buffer = append(w.buffer, pendingEvent{event: evt, kafkaEvt: kafkaEvt})
+	w.buffer = append(w.buffer, pendingEvent{event: evt, record: record})
 	shouldFlush := len(w.buffer) >= w.batchSize
 	w.mu.Unlock()
 
@@ -133,19 +139,13 @@ func (w *BatchWriter) flush(ctx context.Context) {
 	w.mu.Unlock()
 
 	if w.data.ClickHouse() == nil {
-		// ClickHouse not configured; ack events so they don't block
-		for _, p := range batch {
-			if p.kafkaEvt != nil {
-				_ = p.kafkaEvt.Ack()
-			}
-		}
+		w.commitAll(ctx, batch)
 		return
 	}
 
 	chBatch, err := w.data.ClickHouse().PrepareBatch(ctx, "INSERT INTO audit_events")
 	if err != nil {
 		w.log.Warn("failed to prepare batch", "err", err)
-		w.nackAll(batch)
 		return
 	}
 
@@ -178,38 +178,34 @@ func (w *BatchWriter) flush(ctx context.Context) {
 		); err != nil {
 			w.log.Warn("append failed for event, aborting batch", "event_id", e.ID(), "err", err)
 			_ = chBatch.Abort()
-			w.nackAll(batch)
 			return
 		}
 	}
 
 	if err := chBatch.Send(); err != nil {
 		w.log.Warn("failed to send batch", "err", err)
-		w.nackAll(batch)
 		return
 	}
 
 	w.log.Info("flushed events to ClickHouse", "count", len(batch))
-	w.ackAll(batch)
+	w.commitAll(ctx, batch)
 }
 
-func (w *BatchWriter) ackAll(batch []pendingEvent) {
+func (w *BatchWriter) commitAll(ctx context.Context, batch []pendingEvent) {
+	if w.committer == nil {
+		return
+	}
+	records := make([]*kgo.Record, 0, len(batch))
 	for _, p := range batch {
-		if p.kafkaEvt != nil {
-			if err := p.kafkaEvt.Ack(); err != nil {
-				w.log.Warn("failed to ack event", "err", err)
-			}
+		if p.record != nil {
+			records = append(records, p.record)
 		}
 	}
-}
-
-func (w *BatchWriter) nackAll(batch []pendingEvent) {
-	for _, p := range batch {
-		if p.kafkaEvt != nil {
-			if err := p.kafkaEvt.Nack(); err != nil {
-				w.log.Warn("failed to nack event", "err", err)
-			}
-		}
+	if len(records) == 0 {
+		return
+	}
+	if err := w.committer.CommitRecords(ctx, records...); err != nil {
+		w.log.Warn("failed to commit Kafka records", "err", err)
 	}
 }
 

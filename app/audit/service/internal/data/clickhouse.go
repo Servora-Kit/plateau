@@ -7,41 +7,19 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
+	clickhousepb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/db/clickhouse/v1"
 	pkgch "github.com/Servora-Kit/servora/infra/db/clickhouse"
 )
 
 // NewClickHouseClient opens a ClickHouse connection via pkg/db/clickhouse.
 // Returns (nil, nil) when ClickHouse is not configured; returns an error when
 // configured but connection failed — ensuring fail-fast for a core dependency.
-func NewClickHouseClient(cfg *auditconfv1.AuditConsumerConfig, l *slog.Logger) (driver.Conn, error) {
-	conn, err := pkgch.NewConnOptional(context.Background(), toClickHousePkgConfig(cfg.GetClickhouse()), l)
+func NewClickHouseClient(cfg *clickhousepb.ClickHouse, l *slog.Logger) (driver.Conn, error) {
+	conn, err := pkgch.NewConnOptional(context.Background(), cfg, l)
 	if err != nil {
 		return nil, fmt.Errorf("clickhouse client: %w", err)
 	}
 	return conn, nil
-}
-
-// toClickHousePkgConfig adapts the audit service's local ClickHouse proto into
-// the generic infra/db/clickhouse.Config struct.
-func toClickHousePkgConfig(c *auditconfv1.ClickHouse) *pkgch.Config {
-	if c == nil {
-		return nil
-	}
-	return &pkgch.Config{
-		Addrs:           c.GetAddrs(),
-		Database:        c.GetDatabase(),
-		Username:        c.GetUsername(),
-		Password:        c.GetPassword(),
-		DialTimeout:     c.GetDialTimeout().AsDuration(),
-		ReadTimeout:     c.GetReadTimeout().AsDuration(),
-		MaxOpenConns:    int(c.GetMaxOpenConns()),
-		MaxIdleConns:    int(c.GetMaxIdleConns()),
-		ConnMaxLifetime: c.GetConnMaxLifetime().AsDuration(),
-		TLS:             c.GetTls(),
-		TLSSkipVerify:   c.GetTlsSkipVerify(),
-		Compress:        c.GetCompress(),
-	}
 }
 
 // createAuditEventsTable executes the DDL to create the audit_events table idempotently.

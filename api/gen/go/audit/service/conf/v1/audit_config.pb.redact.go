@@ -30,44 +30,10 @@ func (x *AuditConsumerConfig) Redact() string {
 		return ""
 	}
 
-	// Safe field: Clickhouse
-
 	// Safe field: ConsumerBatchSize
 
 	// Safe field: ConsumerFlushInterval
 
 	// Safe field: RetentionDays
-	return x.String()
-}
-
-// Redact method implementation for ClickHouse
-func (x *ClickHouse) Redact() string {
-	if x == nil {
-		return ""
-	}
-
-	// Safe field: Addrs
-
-	// Safe field: Database
-
-	// Safe field: Username
-
-	// Safe field: Password
-
-	// Safe field: DialTimeout
-
-	// Safe field: ReadTimeout
-
-	// Safe field: MaxOpenConns
-
-	// Safe field: MaxIdleConns
-
-	// Safe field: ConnMaxLifetime
-
-	// Safe field: Tls
-
-	// Safe field: TlsSkipVerify
-
-	// Safe field: Compress
 	return x.String()
 }

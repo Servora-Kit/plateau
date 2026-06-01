@@ -2,215 +2,140 @@ package data
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
-	"time"
 
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
-	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
-	"github.com/Servora-Kit/servora/infra/broker"
+	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
+	auditkafka "github.com/Servora-Kit/servora/obs/audit/kafka"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 const defaultTopic = "servora.audit.events"
 const defaultConsumerGroup = "audit-consumer"
 
-// Consumer subscribes to Kafka audit topic and routes events to the BatchWriter.
-type Consumer struct {
-	broker     broker.Broker
-	writer     *BatchWriter
-	log        *slog.Logger
-	topic      string
-	group      string
-	subscriber broker.Subscriber
+func DefaultTopic(cfg *auditcontractv1.AuditContract) string {
+	if cfg != nil && cfg.GetTopic() != "" {
+		return cfg.GetTopic()
+	}
+	return defaultTopic
 }
 
-// NewConsumer creates a new Consumer. The topic comes from the AuditContract
-// section (servora.extra.audit.v1), the consumer group from the Broker section
-// (servora.extra.broker.v1 → Kafka.consumer_group). Both fall back to
-// hardcoded defaults when unset.
-func NewConsumer(b broker.Broker, writer *BatchWriter, brokerCfg *brokerv1.Broker, auditCfg *auditcontractv1.AuditContract, l *slog.Logger) *Consumer {
-	topic := defaultTopic
-	group := defaultConsumerGroup
+func DefaultConsumerGroup(cfg *kafkapb.Kafka) string {
+	if cfg != nil && cfg.GetConsumerGroup() != "" {
+		return cfg.GetConsumerGroup()
+	}
+	return defaultConsumerGroup
+}
 
-	if auditCfg != nil && auditCfg.GetTopic() != "" {
-		topic = auditCfg.GetTopic()
-	}
-	if k := brokerCfg.GetKafka(); k != nil && k.GetConsumerGroup() != "" {
-		group = k.GetConsumerGroup()
-	}
+// Consumer polls Kafka audit records and routes decoded CloudEvents to the BatchWriter.
+type Consumer struct {
+	client *kgo.Client
+	writer *BatchWriter
+	log    *slog.Logger
+	topic  string
+	group  string
+	cancel context.CancelFunc
+	done   chan struct{}
+}
+
+func NewConsumer(client *kgo.Client, writer *BatchWriter, kafkaCfg *kafkapb.Kafka, auditCfg *auditcontractv1.AuditContract, l *slog.Logger) *Consumer {
+	topic := DefaultTopic(auditCfg)
+	group := DefaultConsumerGroup(kafkaCfg)
 
 	log := l.With("scope", "consumer/data/audit")
 	log.Info("audit consumer configured", "topic", topic, "group", group)
 
 	return &Consumer{
-		broker: b,
+		client: client,
 		writer: writer,
 		log:    log,
 		topic:  topic,
 		group:  group,
+		done:   make(chan struct{}),
 	}
 }
 
-// Start subscribes to the Kafka topic and begins the BatchWriter flush loop.
 func (c *Consumer) Start(ctx context.Context) error {
-	if c.broker == nil {
-		c.log.Warn("kafka broker not configured, audit consumer is disabled")
-		c.writer.Start(ctx)
+	c.writer.Start(ctx)
+	if c.client == nil {
+		c.log.Warn("kafka client not configured, audit consumer is disabled")
+		close(c.done)
 		return nil
 	}
 
-	c.writer.Start(ctx)
-
-	sub, err := c.broker.Subscribe(ctx, c.topic, c.handle,
-		broker.WithQueue(c.group),
-		broker.DisableAutoAck(),
-	)
-	if err != nil {
-		return fmt.Errorf("subscribe to audit topic %s: %w", c.topic, err)
-	}
-
-	c.subscriber = sub
+	pollCtx, cancel := context.WithCancel(ctx)
+	c.cancel = cancel
+	go c.poll(pollCtx)
 	c.log.Info("subscribed to audit topic", "topic", c.topic, "group", c.group)
 	return nil
 }
 
-// Stop unsubscribes and flushes remaining events.
 func (c *Consumer) Stop(_ context.Context) error {
-	if c.subscriber != nil {
-		if err := c.subscriber.Unsubscribe(true); err != nil {
-			c.log.Warn("failed to unsubscribe", "err", err)
-		}
+	if c.cancel != nil {
+		c.cancel()
+	}
+	if c.client != nil {
+		c.client.Close()
+		<-c.done
 	}
 	c.writer.Stop()
 	return nil
 }
 
-// handle processes a single Kafka message.
-func (c *Consumer) handle(ctx context.Context, evt broker.Event) error {
-	msg := evt.Message()
-	if msg == nil {
-		c.log.WarnContext(ctx, "received nil message, skipping")
-		_ = evt.Ack()
-		return nil
+func (c *Consumer) poll(ctx context.Context) {
+	defer close(c.done)
+	for {
+		fetches := c.client.PollFetches(ctx)
+		for _, fetchErr := range fetches.Errors() {
+			if errors.Is(fetchErr.Err, context.Canceled) {
+				return
+			}
+			c.log.WarnContext(ctx, "kafka fetch error", "topic", fetchErr.Topic, "partition", fetchErr.Partition, "err", fetchErr.Err)
+		}
+		if ctx.Err() != nil {
+			return
+		}
+		fetches.EachRecord(func(record *kgo.Record) {
+			if err := c.handle(ctx, record); err != nil {
+				c.log.WarnContext(ctx, "failed to handle Kafka record", "err", err)
+			}
+		})
 	}
+}
 
-	ce, err := decodeCloudEvent(msg)
+func (c *Consumer) handle(ctx context.Context, record *kgo.Record) error {
+	ce, err := auditkafka.DecodeRecord(record)
 	if err != nil {
 		c.log.WarnContext(ctx, "failed to decode CloudEvent", "err", err)
-		_ = evt.Ack() // skip bad messages
+		_ = c.client.CommitRecords(ctx, record)
 		return nil
 	}
 
 	if err := validateEvent(ce); err != nil {
 		c.log.WarnContext(ctx, "invalid CloudEvent", "err", err)
-		_ = evt.Ack()
+		_ = c.client.CommitRecords(ctx, record)
 		return nil
 	}
 
-	c.writer.Add(ce, evt)
+	c.writer.Add(ce, record)
 	return nil
 }
 
-// decodeCloudEvent reconstructs a cloudevents.Event from a broker.Message using
-// the CloudEvents Kafka protocol binding. Structured mode is recognised by
-// content-type = application/cloudevents+json; otherwise binary mode is assumed
-// where ce_* headers carry the context attributes and the body is the payload.
-func decodeCloudEvent(msg *broker.Message) (*cloudevents.Event, error) {
-	ct := strings.ToLower(headerLookup(msg.Headers, "content-type"))
-	if strings.HasPrefix(ct, "application/cloudevents+json") {
-		ev := cloudevents.NewEvent()
-		if err := json.Unmarshal(msg.Body, &ev); err != nil {
-			return nil, fmt.Errorf("structured cloudevent: %w", err)
-		}
-		return &ev, nil
-	}
-
-	ev := cloudevents.NewEvent()
-	dataContentType := ""
-	for k, v := range msg.Headers {
-		lk := strings.ToLower(k)
-		switch lk {
-		case "content-type":
-			dataContentType = v
-		case "ce_id", "ce-id":
-			ev.SetID(v)
-		case "ce_source", "ce-source":
-			ev.SetSource(v)
-		case "ce_specversion", "ce-specversion":
-			ev.SetSpecVersion(v)
-		case "ce_type", "ce-type":
-			ev.SetType(v)
-		case "ce_subject", "ce-subject":
-			ev.SetSubject(v)
-		case "ce_time", "ce-time":
-			if t, err := time.Parse(time.RFC3339Nano, v); err == nil {
-				ev.SetTime(t)
-			}
-		case "ce_dataschema", "ce-dataschema":
-			ev.SetDataSchema(v)
-		case "ce_datacontenttype", "ce-datacontenttype":
-			dataContentType = v
-		default:
-			if name, ok := trimCEPrefix(lk); ok {
-				ev.SetExtension(name, v)
-			}
-		}
-	}
-
-	if ev.SpecVersion() == "" {
-		ev.SetSpecVersion(cloudevents.VersionV1)
-	}
-	if dataContentType == "" {
-		dataContentType = "application/octet-stream"
-	}
-	if len(msg.Body) > 0 {
-		if err := ev.SetData(dataContentType, msg.Body); err != nil {
-			return nil, fmt.Errorf("set data: %w", err)
-		}
-	}
-	return &ev, nil
-}
-
-func headerLookup(h broker.Headers, key string) string {
-	if h == nil {
-		return ""
-	}
-	for k, v := range h {
-		if strings.EqualFold(k, key) {
-			return v
-		}
-	}
-	return ""
-}
-
-func trimCEPrefix(lowerKey string) (string, bool) {
-	switch {
-	case strings.HasPrefix(lowerKey, "ce_"):
-		return lowerKey[3:], true
-	case strings.HasPrefix(lowerKey, "ce-"):
-		return lowerKey[3:], true
-	default:
-		return "", false
-	}
-}
-
-// validateEvent checks required CloudEvents context attributes.
 func validateEvent(e *cloudevents.Event) error {
 	if e.ID() == "" {
-		return errors.New("validation: missing id")
+		return fmt.Errorf("validation: missing id")
 	}
 	if e.Type() == "" {
-		return errors.New("validation: missing type")
+		return fmt.Errorf("validation: missing type")
 	}
 	if e.Source() == "" {
-		return errors.New("validation: missing source")
+		return fmt.Errorf("validation: missing source")
 	}
 	if e.Time().IsZero() {
-		return errors.New("validation: missing time")
+		return fmt.Errorf("validation: missing time")
 	}
 	return nil
 }

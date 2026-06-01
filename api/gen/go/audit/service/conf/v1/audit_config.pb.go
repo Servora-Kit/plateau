@@ -23,14 +23,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// AuditConsumerConfig 装载 audit service 自家配置：ClickHouse 存储与批量消费参数。
+// AuditConsumerConfig 装载 audit service 自家配置：批量消费与存储保留策略。
 // 通过 bootstrap.ScanSections 在 "audit_consumer" section 下加载。
 type AuditConsumerConfig struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
-	Clickhouse            *ClickHouse            `protobuf:"bytes,1,opt,name=clickhouse,proto3" json:"clickhouse,omitempty"`
-	ConsumerBatchSize     int32                  `protobuf:"varint,2,opt,name=consumer_batch_size,json=consumerBatchSize,proto3" json:"consumer_batch_size,omitempty"`            // 批量写入大小，默认 100
-	ConsumerFlushInterval *durationpb.Duration   `protobuf:"bytes,3,opt,name=consumer_flush_interval,json=consumerFlushInterval,proto3" json:"consumer_flush_interval,omitempty"` // 批量刷新间隔，默认 1s
-	RetentionDays         int32                  `protobuf:"varint,4,opt,name=retention_days,json=retentionDays,proto3" json:"retention_days,omitempty"`                          // ClickHouse 数据保留天数，默认 90
+	ConsumerBatchSize     int32                  `protobuf:"varint,1,opt,name=consumer_batch_size,json=consumerBatchSize,proto3" json:"consumer_batch_size,omitempty"`            // 批量写入大小，默认 100
+	ConsumerFlushInterval *durationpb.Duration   `protobuf:"bytes,2,opt,name=consumer_flush_interval,json=consumerFlushInterval,proto3" json:"consumer_flush_interval,omitempty"` // 批量刷新间隔，默认 1s
+	RetentionDays         int32                  `protobuf:"varint,3,opt,name=retention_days,json=retentionDays,proto3" json:"retention_days,omitempty"`                          // ClickHouse 数据保留天数，默认 90
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -65,13 +64,6 @@ func (*AuditConsumerConfig) Descriptor() ([]byte, []int) {
 	return file_audit_service_conf_v1_audit_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *AuditConsumerConfig) GetClickhouse() *ClickHouse {
-	if x != nil {
-		return x.Clickhouse
-	}
-	return nil
-}
-
 func (x *AuditConsumerConfig) GetConsumerBatchSize() int32 {
 	if x != nil {
 		return x.ConsumerBatchSize
@@ -93,167 +85,16 @@ func (x *AuditConsumerConfig) GetRetentionDays() int32 {
 	return 0
 }
 
-// ClickHouse 存储配置（仅 audit service 使用）
-type ClickHouse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Addrs           []string               `protobuf:"bytes,1,rep,name=addrs,proto3" json:"addrs,omitempty"`
-	Database        string                 `protobuf:"bytes,2,opt,name=database,proto3" json:"database,omitempty"`
-	Username        string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
-	Password        string                 `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
-	DialTimeout     *durationpb.Duration   `protobuf:"bytes,5,opt,name=dial_timeout,json=dialTimeout,proto3" json:"dial_timeout,omitempty"`
-	ReadTimeout     *durationpb.Duration   `protobuf:"bytes,6,opt,name=read_timeout,json=readTimeout,proto3" json:"read_timeout,omitempty"`
-	MaxOpenConns    int32                  `protobuf:"varint,7,opt,name=max_open_conns,json=maxOpenConns,proto3" json:"max_open_conns,omitempty"`
-	MaxIdleConns    int32                  `protobuf:"varint,8,opt,name=max_idle_conns,json=maxIdleConns,proto3" json:"max_idle_conns,omitempty"`
-	ConnMaxLifetime *durationpb.Duration   `protobuf:"bytes,9,opt,name=conn_max_lifetime,json=connMaxLifetime,proto3" json:"conn_max_lifetime,omitempty"`
-	Tls             bool                   `protobuf:"varint,10,opt,name=tls,proto3" json:"tls,omitempty"`
-	TlsSkipVerify   bool                   `protobuf:"varint,11,opt,name=tls_skip_verify,json=tlsSkipVerify,proto3" json:"tls_skip_verify,omitempty"`
-	Compress        string                 `protobuf:"bytes,12,opt,name=compress,proto3" json:"compress,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *ClickHouse) Reset() {
-	*x = ClickHouse{}
-	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ClickHouse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ClickHouse) ProtoMessage() {}
-
-func (x *ClickHouse) ProtoReflect() protoreflect.Message {
-	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ClickHouse.ProtoReflect.Descriptor instead.
-func (*ClickHouse) Descriptor() ([]byte, []int) {
-	return file_audit_service_conf_v1_audit_config_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *ClickHouse) GetAddrs() []string {
-	if x != nil {
-		return x.Addrs
-	}
-	return nil
-}
-
-func (x *ClickHouse) GetDatabase() string {
-	if x != nil {
-		return x.Database
-	}
-	return ""
-}
-
-func (x *ClickHouse) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *ClickHouse) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *ClickHouse) GetDialTimeout() *durationpb.Duration {
-	if x != nil {
-		return x.DialTimeout
-	}
-	return nil
-}
-
-func (x *ClickHouse) GetReadTimeout() *durationpb.Duration {
-	if x != nil {
-		return x.ReadTimeout
-	}
-	return nil
-}
-
-func (x *ClickHouse) GetMaxOpenConns() int32 {
-	if x != nil {
-		return x.MaxOpenConns
-	}
-	return 0
-}
-
-func (x *ClickHouse) GetMaxIdleConns() int32 {
-	if x != nil {
-		return x.MaxIdleConns
-	}
-	return 0
-}
-
-func (x *ClickHouse) GetConnMaxLifetime() *durationpb.Duration {
-	if x != nil {
-		return x.ConnMaxLifetime
-	}
-	return nil
-}
-
-func (x *ClickHouse) GetTls() bool {
-	if x != nil {
-		return x.Tls
-	}
-	return false
-}
-
-func (x *ClickHouse) GetTlsSkipVerify() bool {
-	if x != nil {
-		return x.TlsSkipVerify
-	}
-	return false
-}
-
-func (x *ClickHouse) GetCompress() string {
-	if x != nil {
-		return x.Compress
-	}
-	return ""
-}
-
 var File_audit_service_conf_v1_audit_config_proto protoreflect.FileDescriptor
 
 const file_audit_service_conf_v1_audit_config_proto_rawDesc = "" +
 	"\n" +
-	"(audit/service/conf/v1/audit_config.proto\x12\x15audit.service.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\x9a\x02\n" +
-	"\x13AuditConsumerConfig\x12A\n" +
-	"\n" +
-	"clickhouse\x18\x01 \x01(\v2!.audit.service.conf.v1.ClickHouseR\n" +
-	"clickhouse\x12.\n" +
-	"\x13consumer_batch_size\x18\x02 \x01(\x05R\x11consumerBatchSize\x12Q\n" +
-	"\x17consumer_flush_interval\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\x15consumerFlushInterval\x12%\n" +
-	"\x0eretention_days\x18\x04 \x01(\x05R\rretentionDays:\x16\x82\xce\x18\x12\n" +
-	"\x0eaudit_consumer\x10\x01\"\xdb\x03\n" +
-	"\n" +
-	"ClickHouse\x12\x14\n" +
-	"\x05addrs\x18\x01 \x03(\tR\x05addrs\x12\x1a\n" +
-	"\bdatabase\x18\x02 \x01(\tR\bdatabase\x12\x1a\n" +
-	"\busername\x18\x03 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x04 \x01(\tR\bpassword\x12<\n" +
-	"\fdial_timeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\vdialTimeout\x12<\n" +
-	"\fread_timeout\x18\x06 \x01(\v2\x19.google.protobuf.DurationR\vreadTimeout\x12$\n" +
-	"\x0emax_open_conns\x18\a \x01(\x05R\fmaxOpenConns\x12$\n" +
-	"\x0emax_idle_conns\x18\b \x01(\x05R\fmaxIdleConns\x12E\n" +
-	"\x11conn_max_lifetime\x18\t \x01(\v2\x19.google.protobuf.DurationR\x0fconnMaxLifetime\x12\x10\n" +
-	"\x03tls\x18\n" +
-	" \x01(\bR\x03tls\x12&\n" +
-	"\x0ftls_skip_verify\x18\v \x01(\bR\rtlsSkipVerify\x12\x1a\n" +
-	"\bcompress\x18\f \x01(\tR\bcompressB\xfa\x01\n" +
+	"(audit/service/conf/v1/audit_config.proto\x12\x15audit.service.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xd7\x01\n" +
+	"\x13AuditConsumerConfig\x12.\n" +
+	"\x13consumer_batch_size\x18\x01 \x01(\x05R\x11consumerBatchSize\x12Q\n" +
+	"\x17consumer_flush_interval\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x15consumerFlushInterval\x12%\n" +
+	"\x0eretention_days\x18\x03 \x01(\x05R\rretentionDays:\x16\x82\xce\x18\x12\n" +
+	"\x0eaudit_consumer\x10\x01B\xfa\x01\n" +
 	"\x19com.audit.service.conf.v1B\x10AuditConfigProtoP\x01ZTgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1;auditconfv1\xa2\x02\x03ASC\xaa\x02\x15Audit.Service.Conf.V1\xca\x02\x15Audit\\Service\\Conf\\V1\xe2\x02!Audit\\Service\\Conf\\V1\\GPBMetadata\xea\x02\x18Audit::Service::Conf::V1b\x06proto3"
 
 var (
@@ -268,23 +109,18 @@ func file_audit_service_conf_v1_audit_config_proto_rawDescGZIP() []byte {
 	return file_audit_service_conf_v1_audit_config_proto_rawDescData
 }
 
-var file_audit_service_conf_v1_audit_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_audit_service_conf_v1_audit_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_audit_service_conf_v1_audit_config_proto_goTypes = []any{
 	(*AuditConsumerConfig)(nil), // 0: audit.service.conf.v1.AuditConsumerConfig
-	(*ClickHouse)(nil),          // 1: audit.service.conf.v1.ClickHouse
-	(*durationpb.Duration)(nil), // 2: google.protobuf.Duration
+	(*durationpb.Duration)(nil), // 1: google.protobuf.Duration
 }
 var file_audit_service_conf_v1_audit_config_proto_depIdxs = []int32{
-	1, // 0: audit.service.conf.v1.AuditConsumerConfig.clickhouse:type_name -> audit.service.conf.v1.ClickHouse
-	2, // 1: audit.service.conf.v1.AuditConsumerConfig.consumer_flush_interval:type_name -> google.protobuf.Duration
-	2, // 2: audit.service.conf.v1.ClickHouse.dial_timeout:type_name -> google.protobuf.Duration
-	2, // 3: audit.service.conf.v1.ClickHouse.read_timeout:type_name -> google.protobuf.Duration
-	2, // 4: audit.service.conf.v1.ClickHouse.conn_max_lifetime:type_name -> google.protobuf.Duration
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	1, // 0: audit.service.conf.v1.AuditConsumerConfig.consumer_flush_interval:type_name -> google.protobuf.Duration
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_audit_service_conf_v1_audit_config_proto_init() }
@@ -298,7 +134,7 @@ func file_audit_service_conf_v1_audit_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_audit_config_proto_rawDesc), len(file_audit_service_conf_v1_audit_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -8,7 +8,8 @@ import (
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
-	brokerv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/broker/v1"
+	clickhousepb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/db/clickhouse/v1"
+	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 
 	"github.com/go-kratos/kratos/v2"
@@ -54,14 +55,15 @@ func run() (err error) {
 	if err != nil {
 		return err
 	}
-	brokerCfg := &brokerv1.Broker{}
+	kafkaCfg := &kafkapb.Kafka{}
+	clickHouseCfg := &clickhousepb.ClickHouse{}
 	auditCfg := &auditcontractv1.AuditContract{}
 	consumerCfg := &auditconfv1.AuditConsumerConfig{}
-	if err := bootstrap.Scan(rt, brokerCfg, auditCfg, consumerCfg); err != nil {
+	if err := bootstrap.Scan(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg); err != nil {
 		return fmt.Errorf("scan bootstrap configs: %w", err)
 	}
 
 	return rt.Run(func() (*kratos.App, func(), error) {
-		return wireApp(rt, brokerCfg, auditCfg, consumerCfg)
+		return wireApp(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg)
 	})
 }
