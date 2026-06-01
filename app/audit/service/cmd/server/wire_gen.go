@@ -13,9 +13,9 @@ import (
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/infra/db/clickhouse/v1"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
+	"github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/infra/kafka"
@@ -31,7 +31,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *clickhousepb.ClickHouse, auditContract *auditv1.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *clickhousepb.ClickHouse, auditContract *auditconfpb.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -75,7 +75,7 @@ func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *click
 
 // wire.go:
 
-func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditv1.AuditContract, l *slog.Logger) (*kgo.Client, error) {
+func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditconfpb.AuditContract, l *slog.Logger) (*kgo.Client, error) {
 	topic := data.DefaultTopic(auditCfg)
 	group := data.DefaultConsumerGroup(cfg)
 	return kafka.NewClientOptional(context.Background(), cfg, l, kgo.ConsumerGroup(group), kgo.ConsumeTopics(topic), kgo.DisableAutoCommit())

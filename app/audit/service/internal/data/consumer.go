@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
+	auditconfpb "github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
 	auditkafka "github.com/Servora-Kit/servora/obs/audit/kafka"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -16,7 +16,7 @@ import (
 const defaultTopic = "servora.audit.events"
 const defaultConsumerGroup = "audit-consumer"
 
-func DefaultTopic(cfg *auditcontractv1.AuditContract) string {
+func DefaultTopic(cfg *auditconfpb.AuditContract) string {
 	if cfg != nil && cfg.GetTopic() != "" {
 		return cfg.GetTopic()
 	}
@@ -41,7 +41,7 @@ type Consumer struct {
 	done   chan struct{}
 }
 
-func NewConsumer(client *kgo.Client, writer *BatchWriter, kafkaCfg *kafkapb.Kafka, auditCfg *auditcontractv1.AuditContract, l *slog.Logger) *Consumer {
+func NewConsumer(client *kgo.Client, writer *BatchWriter, kafkaCfg *kafkapb.Kafka, auditCfg *auditconfpb.AuditContract, l *slog.Logger) *Consumer {
 	topic := DefaultTopic(auditCfg)
 	group := DefaultConsumerGroup(kafkaCfg)
 

@@ -24,7 +24,6 @@ const (
 )
 
 // AuditConsumerConfig 装载 audit service 自家配置：批量消费与存储保留策略。
-// 通过 bootstrap.ScanSections 在 "audit_consumer" section 下加载。
 type AuditConsumerConfig struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	ConsumerBatchSize     int32                  `protobuf:"varint,1,opt,name=consumer_batch_size,json=consumerBatchSize,proto3" json:"consumer_batch_size,omitempty"`            // 批量写入大小，默认 100

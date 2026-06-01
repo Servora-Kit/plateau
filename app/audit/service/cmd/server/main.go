@@ -7,9 +7,9 @@ import (
 
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
-	auditcontractv1 "github.com/Servora-Kit/servora/api/gen/go/servora/extra/audit/v1"
 	clickhousepb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/db/clickhouse/v1"
 	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
+	auditconfpb "github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 
 	"github.com/go-kratos/kratos/v2"
@@ -57,7 +57,7 @@ func run() (err error) {
 	}
 	kafkaCfg := &kafkapb.Kafka{}
 	clickHouseCfg := &clickhousepb.ClickHouse{}
-	auditCfg := &auditcontractv1.AuditContract{}
+	auditCfg := &auditconfpb.AuditContract{}
 	consumerCfg := &auditconfv1.AuditConsumerConfig{}
 	if err := bootstrap.Scan(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg); err != nil {
 		return fmt.Errorf("scan bootstrap configs: %w", err)
