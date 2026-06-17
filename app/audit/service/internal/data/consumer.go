@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
+	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
 	auditconfpb "github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
 	auditkafka "github.com/Servora-Kit/servora/obs/audit/kafka"
 	cloudevents "github.com/cloudevents/sdk-go/v2"

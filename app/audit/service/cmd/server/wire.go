@@ -12,11 +12,11 @@ import (
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
-	clickhousepb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/db/clickhouse/v1"
-	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/infra/kafka/v1"
+	clickhousepb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/clickhouse/v1"
+	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
 	auditconfpb "github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
+	contribkafka "github.com/Servora-Kit/servora/contrib/kafka"
 	"github.com/Servora-Kit/servora/core/bootstrap"
-	infrakafka "github.com/Servora-Kit/servora/infra/kafka"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/google/wire"
@@ -26,7 +26,7 @@ import (
 func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditconfpb.AuditContract, l *slog.Logger) (*kgo.Client, error) {
 	topic := data.DefaultTopic(auditCfg)
 	group := data.DefaultConsumerGroup(cfg)
-	return infrakafka.NewClientOptional(context.Background(), cfg, l,
+	return contribkafka.NewClientOptional(context.Background(), cfg, l,
 		kgo.ConsumerGroup(group),
 		kgo.ConsumeTopics(topic),
 		kgo.DisableAutoCommit(),
