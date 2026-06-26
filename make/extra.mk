@@ -4,14 +4,14 @@ SERVORA_PKG ?= github.com/Servora-Kit/servora
 
 PROTOC_GEN_GO_VERSION ?= latest
 PROTOC_GEN_GO_GRPC_VERSION ?= latest
-PROTOC_GEN_GO_HTTP_VERSION ?= v2.0.0-20260404020628-f149714c1d54
+PROTOC_GEN_GO_HTTP_VERSION ?= v3.0.0-20260621094049-2726761cdd77
 PROTOC_GEN_TYPESCRIPT_HTTP_VERSION ?= latest
-PROTOC_GEN_GO_ERRORS_VERSION ?= latest
+PROTOC_GEN_GO_ERRORS_VERSION ?= v3.0.0-20260621094049-2726761cdd77
 PROTOC_GEN_OPENAPI_VERSION ?= latest
 PROTOC_GEN_VALIDATE_VERSION ?= latest
 PROTOC_GEN_REDACT_VERSION ?= latest
 SERVORA_VERSION ?= latest
-KRATOS_VERSION ?= latest
+KRATOS_VERSION ?= v3.0.0-20260621094049-2726761cdd77
 GNOSTIC_VERSION ?= latest
 BUF_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= latest
@@ -32,9 +32,9 @@ plugin: ## Install protoc-gen-* plugins
 	@echo "==> Installing protoc plugins..."
 	@go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
 	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
-	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v2@$(PROTOC_GEN_GO_HTTP_VERSION)
+	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3@$(PROTOC_GEN_GO_HTTP_VERSION)
 	@go install github.com/go-kratos/protoc-gen-typescript-http@$(PROTOC_GEN_TYPESCRIPT_HTTP_VERSION)
-	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-errors/v2@$(PROTOC_GEN_GO_ERRORS_VERSION)
+	@go install github.com/go-kratos/kratos/cmd/protoc-gen-go-errors/v3@$(PROTOC_GEN_GO_ERRORS_VERSION)
 	@go install github.com/google/gnostic/cmd/protoc-gen-openapi@$(PROTOC_GEN_OPENAPI_VERSION)
 	@go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE_VERSION)
 	@go install github.com/menta2k/protoc-gen-redact/v3@$(PROTOC_GEN_REDACT_VERSION)
@@ -47,7 +47,7 @@ plugin: ## Install protoc-gen-* plugins
 
 cli: ## Install CLI tools
 	@echo "==> Installing CLI tools..."
-	@go install github.com/go-kratos/kratos/cmd/kratos/v2@$(KRATOS_VERSION)
+	@go install github.com/go-kratos/kratos/cmd/kratos/v3@$(KRATOS_VERSION)
 	@go install github.com/google/gnostic@$(GNOSTIC_VERSION)
 	@go install github.com/bufbuild/buf/cmd/buf@$(BUF_VERSION)
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)

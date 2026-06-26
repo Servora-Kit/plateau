@@ -8,16 +8,14 @@ package auditsvcpb
 
 import (
 	context "context"
-	http "github.com/go-kratos/kratos/v2/transport/http"
-	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
+	http "github.com/go-kratos/kratos/v3/transport/http"
 )
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the kratos package it is being compiled against.
 var _ = new(context.Context)
-var _ = binding.EncodeURL
 
-const _ = http.SupportPackageIsVersion1
+const _ = http.SupportPackageIsVersion3
 
 const OperationAuditHTTPServiceCountAuditEvents = "/audit.service.v1.AuditHTTPService/CountAuditEvents"
 const OperationAuditHTTPServiceListAuditEvents = "/audit.service.v1.AuditHTTPService/ListAuditEvents"
@@ -29,8 +27,8 @@ type AuditHTTPServiceHTTPServer interface {
 
 func RegisterAuditHTTPServiceHTTPServer(s *http.Server, srv AuditHTTPServiceHTTPServer) {
 	r := s.Route("/")
-	r.GET("/v1/audit/events", _AuditHTTPService_ListAuditEvents0_HTTP_Handler(srv))
-	r.GET("/v1/audit/events:count", _AuditHTTPService_CountAuditEvents0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/audit/events", _AuditHTTPService_ListAuditEvents0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/audit/events:count", _AuditHTTPService_CountAuditEvents0_HTTP_Handler(srv))
 }
 
 func _AuditHTTPService_ListAuditEvents0_HTTP_Handler(srv AuditHTTPServiceHTTPServer) func(ctx http.Context) error {
@@ -87,9 +85,12 @@ func NewAuditHTTPServiceHTTPClient(client *http.Client) AuditHTTPServiceHTTPClie
 func (c *AuditHTTPServiceHTTPClientImpl) CountAuditEvents(ctx context.Context, in *CountAuditEventsRequest, opts ...http.CallOption) (*CountAuditEventsResponse, error) {
 	var out CountAuditEventsResponse
 	pattern := "/v1/audit/events:count"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationAuditHTTPServiceCountAuditEvents))
-	opts = append(opts, http.PathTemplate(pattern))
+	path := http.BuildPath(pattern, in, http.WithQueryParams())
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.Operation(OperationAuditHTTPServiceCountAuditEvents),
+		http.PathTemplate(pattern),
+	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,9 +101,12 @@ func (c *AuditHTTPServiceHTTPClientImpl) CountAuditEvents(ctx context.Context, i
 func (c *AuditHTTPServiceHTTPClientImpl) ListAuditEvents(ctx context.Context, in *ListAuditEventsRequest, opts ...http.CallOption) (*ListAuditEventsResponse, error) {
 	var out ListAuditEventsResponse
 	pattern := "/v1/audit/events"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationAuditHTTPServiceListAuditEvents))
-	opts = append(opts, http.PathTemplate(pattern))
+	path := http.BuildPath(pattern, in, http.WithQueryParams())
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.Operation(OperationAuditHTTPServiceListAuditEvents),
+		http.PathTemplate(pattern),
+	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
