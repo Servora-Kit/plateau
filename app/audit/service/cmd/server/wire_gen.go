@@ -20,7 +20,7 @@ import (
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/obs/metrics"
-	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v3"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"log/slog"
 )

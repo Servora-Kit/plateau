@@ -3,7 +3,7 @@ package server
 import (
 	"log/slog"
 
-	khttp "github.com/go-kratos/kratos/v2/transport/http"
+	khttp "github.com/go-kratos/kratos/v3/transport/http"
 
 	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
