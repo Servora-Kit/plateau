@@ -2,13 +2,11 @@ module github.com/Servora-Kit/servora-platform/app/audit/service
 
 go 1.26.1
 
-replace github.com/go-kratos/kratos/v3 v3.0.0 => github.com/go-kratos/kratos/v3 v3.0.0-20260621094049-2726761cdd77
-
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.43.0
-	github.com/Servora-Kit/servora v0.7.6
+	github.com/Servora-Kit/servora v0.8.0
 	github.com/Servora-Kit/servora-platform/api/gen v0.3.0
-	github.com/Servora-Kit/servora/api/gen v0.7.6
+	github.com/Servora-Kit/servora/api/gen v0.8.0
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/wire v0.7.0

@@ -21,7 +21,7 @@
 
 ## 技术栈
 
-- 框架：[servora](https://github.com/Servora-Kit/servora)（Kratos v2）
+- 框架：[servora](https://github.com/Servora-Kit/servora)（Kratos v3）
 - API：Protobuf + Buf v2（业务 proto 依赖 [buf.build/servora/servora](https://buf.build/servora/servora)）
 - DI：Google Wire
 - 消息：Kafka（franz-go）
