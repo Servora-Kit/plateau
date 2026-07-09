@@ -3,4 +3,4 @@ kafka:
     - kafka:9092
   client_id: audit-service
   consumer_group: audit-consumer
-  required_acks: 1
+  required_acks: -1

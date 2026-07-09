@@ -11,7 +11,6 @@ import (
 	"time"
 
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
-	"github.com/Servora-Kit/servora/obs/audit"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -21,6 +20,16 @@ import (
 )
 
 const flushOnStopTimeout = 10 * time.Second
+
+// CE extension attribute keys used for ClickHouse column projection.
+// These mirror the private constants in servora/obs/audit but are defined
+// locally to avoid coupling to the framework's internal implementation.
+const (
+	extAuthID       = "authid"
+	extAuthType     = "authtype"
+	extErrorMessage = "errormessage"
+	extTraceParent  = "traceparent"
+)
 
 // pendingEvent bundles a decoded CloudEvent with its Kafka event handle.
 type pendingEvent struct {
@@ -125,8 +134,10 @@ func (w *BatchWriter) Add(evt *cloudevents.Event, record *kgo.Record) {
 //
 // Column projection from CloudEvents to audit_events:
 //   - id/type/specversion/time/subject → event_id/event_type/event_version/occurred_at/target_id
-//   - source ("/pkg.Service/Method") → service (pkg.Service) + operation (full path)
-//   - extensions authid/authtype/severitytext/errormessage/traceparent → actor_*/error_*/trace_id
+//   - source ("//app-name") → service (app-name)
+//   - subject or type → operation
+//   - extensions authid/authtype/errormessage/traceparent → actor_*/error_*/trace_id
+//   - CE type → success (type-based: authn.success/authz.allowed/rpc(no error) → true)
 //   - data payload → detail column as JSON (see detailJSON)
 func (w *BatchWriter) flush(ctx context.Context) {
 	w.mu.Lock()
@@ -152,9 +163,10 @@ func (w *BatchWriter) flush(ctx context.Context) {
 	for _, p := range batch {
 		e := p.event
 		exts := e.Extensions()
-		service, operation := splitOperation(e.Source())
-		errMsg := extString(exts, audit.ExtErrorMessage)
-		success := errMsg == "" && !strings.EqualFold(extString(exts, audit.ExtSeverityText), "ERROR")
+		service := serviceFromSource(e.Source())
+		operation := operationFromEvent(e)
+		errMsg := extString(exts, extErrorMessage)
+		success := successFromCEType(e.Type(), errMsg)
 
 		if err := chBatch.Append(
 			e.ID(),
@@ -163,8 +175,8 @@ func (w *BatchWriter) flush(ctx context.Context) {
 			e.Time(),
 			service,
 			operation,
-			extString(exts, audit.ExtAuthID),
-			extString(exts, audit.ExtAuthType),
+			extString(exts, extAuthID),
+			extString(exts, extAuthType),
 			"", // actor_display_name — not carried in CloudEvents context
 			"", // target_type — not carried in CloudEvents context
 			e.Subject(),
@@ -172,7 +184,7 @@ func (w *BatchWriter) flush(ctx context.Context) {
 			success,
 			"", // error_code — not carried in CloudEvents context
 			errMsg,
-			traceIDFromTraceparent(extString(exts, audit.ExtTraceParent)),
+			traceIDFromTraceparent(extString(exts, extTraceParent)),
 			"", // request_id — not carried in CloudEvents context
 			detailJSON(e),
 		); err != nil {
@@ -219,18 +231,52 @@ func extString(exts map[string]any, name string) string {
 	return ""
 }
 
-// splitOperation parses an RPC operation path "/pkg.Service/Method" into
-// (service="pkg.Service", operation=original). When the source does not match
-// that shape both fields fall back to the raw source string.
-func splitOperation(source string) (string, string) {
+// successFromCEType determines whether an audit event represents a successful
+// operation based on its CloudEvents type. This replaces the legacy severitytext
+// extension-based approach.
+func successFromCEType(ceType, errMsg string) bool {
+	switch ceType {
+	case "servora.authn.success.v1",
+		"servora.authz.allowed.v1",
+		"servora.authz.openfga.tuple_mutation.v1":
+		return true
+	case "servora.authn.failure.v1",
+		"servora.authz.denied.v1",
+		"servora.authz.error.v1":
+		return false
+	default:
+		// Generic RPC events and unknown types: treat as success when no error message.
+		return errMsg == ""
+	}
+}
+
+// serviceFromSource projects the CloudEvents source into the service column.
+// New Servora events use source="//app-name"; legacy RPC-path sources still
+// fall back to the service segment so old records remain readable.
+func serviceFromSource(source string) string {
 	if source == "" {
-		return "", ""
+		return ""
+	}
+	if strings.HasPrefix(source, "//") {
+		return strings.TrimPrefix(source, "//")
 	}
 	trimmed := strings.TrimPrefix(source, "/")
 	if i := strings.Index(trimmed, "/"); i > 0 {
-		return trimmed[:i], source
+		return trimmed[:i]
 	}
-	return source, source
+	return source
+}
+
+// operationFromEvent stores the actionable event dimension. RPC audit events
+// set subject to the transport operation; non-RPC events fall back to CE type.
+func operationFromEvent(e *cloudevents.Event) string {
+	if e == nil {
+		return ""
+	}
+	if subject := e.Subject(); subject != "" {
+		return subject
+	}
+	return e.Type()
 }
 
 // traceIDFromTraceparent extracts the trace-id segment from a W3C traceparent

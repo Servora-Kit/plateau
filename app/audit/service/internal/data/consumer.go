@@ -120,8 +120,39 @@ func (c *Consumer) handle(ctx context.Context, record *kgo.Record) error {
 		return nil
 	}
 
-	c.writer.Add(ce, record)
+	c.route(ctx, ce, record)
 	return nil
+}
+
+// route dispatches a validated CloudEvent to the appropriate storage path based
+// on its CE type. Known framework types are explicitly enumerated; all others
+// fall through to generic ClickHouse storage.
+func (c *Consumer) route(ctx context.Context, ce *cloudevents.Event, record *kgo.Record) {
+	switch ce.Type() {
+	case "servora.authn.failure.v1",
+		"servora.authn.success.v1":
+		c.log.DebugContext(ctx, "routing authn audit event", "type", ce.Type(), "id", ce.ID())
+		c.writer.Add(ce, record)
+
+	case "servora.authz.allowed.v1",
+		"servora.authz.denied.v1",
+		"servora.authz.error.v1":
+		c.log.DebugContext(ctx, "routing authz audit event", "type", ce.Type(), "id", ce.ID())
+		c.writer.Add(ce, record)
+
+	case "servora.audit.rpc.v1":
+		c.log.DebugContext(ctx, "routing rpc audit event", "type", ce.Type(), "id", ce.ID())
+		c.writer.Add(ce, record)
+
+	case "servora.authz.openfga.tuple_mutation.v1":
+		c.log.DebugContext(ctx, "routing openfga tuple mutation event", "type", ce.Type(), "id", ce.ID())
+		c.writer.Add(ce, record)
+
+	default:
+		// Unknown CE type — pass through to generic storage.
+		c.log.DebugContext(ctx, "routing unknown audit event to generic storage", "type", ce.Type(), "id", ce.ID())
+		c.writer.Add(ce, record)
+	}
 }
 
 func validateEvent(e *cloudevents.Event) error {

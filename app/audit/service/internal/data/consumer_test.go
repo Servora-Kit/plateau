@@ -51,6 +51,48 @@ func TestConsumerHandleDecodesCloudEventsKafkaRecords(t *testing.T) {
 	}
 }
 
+func TestServiceFromSource(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   string
+	}{
+		{name: "servora app source", source: "//worker-service", want: "worker-service"},
+		{name: "legacy rpc source", source: "/worker.service.v1.WorkerService/Hello", want: "worker.service.v1.WorkerService"},
+		{name: "plain source", source: "custom-source", want: "custom-source"},
+		{name: "empty", source: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := serviceFromSource(tt.source); got != tt.want {
+				t.Fatalf("serviceFromSource(%q) = %q, want %q", tt.source, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperationFromEvent(t *testing.T) {
+	rpc := cloudevents.NewEvent()
+	rpc.SetType("servora.audit.rpc.v1")
+	rpc.SetSource("//worker-service")
+	rpc.SetSubject("/worker.service.v1.WorkerService/Hello")
+	if got := operationFromEvent(&rpc); got != "/worker.service.v1.WorkerService/Hello" {
+		t.Fatalf("RPC operation = %q, want subject", got)
+	}
+
+	typed := cloudevents.NewEvent()
+	typed.SetType("servora.authz.allowed.v1")
+	typed.SetSource("//worker-service")
+	if got := operationFromEvent(&typed); got != "servora.authz.allowed.v1" {
+		t.Fatalf("typed operation = %q, want CE type", got)
+	}
+
+	if got := operationFromEvent(nil); got != "" {
+		t.Fatalf("nil operation = %q, want empty", got)
+	}
+}
+
 func testCloudEvent(t *testing.T) cloudevents.Event {
 	t.Helper()
 	ev := cloudevents.NewEvent()
