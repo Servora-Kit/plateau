@@ -9,10 +9,10 @@
     // Path mapping for cleaner imports.
     "paths": {
       "@servora/proto-utils/client": [
-        "../../../../servora/web/packages/proto-utils/src/client/index.ts"
+        "./node_modules/@servora/proto-utils/dist/client/index.d.ts"
       ],
       "@servora/proto-utils/crud": [
-        "../../../../servora/web/packages/proto-utils/src/crud/index.ts"
+        "./node_modules/@servora/proto-utils/dist/crud/index.d.ts"
       ],
       "@/*": ["./src/*"]
     },

@@ -24,7 +24,7 @@
 
 ## 技术栈
 
-- 框架：[servora](https://github.com/Servora-Kit/servora)（Kratos v3）
+- 框架：[servora](https://github.com/Servora-Kit/servora)
 - API：Protobuf + Buf v2（业务 proto 依赖 [buf.build/servora/servora](https://buf.build/servora/servora)）
 - DI：Google Wire
 - 消息：Kafka（franz-go）
@@ -42,7 +42,7 @@
 │       ├── api/protos/              # 审计业务 proto
 │       ├── cmd/                     # 服务入口
 │       ├── configs/
-│       │   ├── local/               # 本地开发配置（air 热重载读取）
+│       │   ├── local/               # 本地运行配置
 │       │   └── docker/              # 容器部署配置
 │       └── internal/                # 业务实现（service/biz/data/server）
 ├── manifests/
@@ -50,7 +50,7 @@
 ├── buf.yaml                         # Buf v2 workspace（依赖 buf.build/servora/servora）
 ├── buf.go.gen.yaml                  # Go 代码生成模板
 ├── docker-compose.yaml              # 基础设施（Kafka、ClickHouse、Consul 等）
-├── docker-compose.apps.yaml         # 应用容器（audit 生产镜像，可通过 COMPOSE_FILES 启用）
+├── docker-compose.apps.yaml         # 应用容器编排
 ├── make/
 │   ├── core.mk                      # 根目录/服务目录共享 Make 逻辑
 │   └── extra.mk                     # API/Ent/OpenFGA 等仓库扩展
@@ -79,22 +79,14 @@ make gen     # 统一生成（api + wire）
 
 ### 启动开发环境
 
-使用本机 Air 热重载开发，Compose 只负责基础设施：
+Compose 负责基础设施，应用通过 `make run` 在本机启动：
 
 ```bash
 # 启动基础设施
 make compose.up
 
-# 在服务目录用 air 热重载启动
-cd app/audit/service && make dev
-```
-
-```bash
-# 构建应用镜像
-make compose.build
-
-# 启动基础设施 + 应用容器
-COMPOSE_FILES="-f docker-compose.yaml -f docker-compose.apps.yaml" make compose.up
+# 在服务目录本地启动
+cd app/audit/service && make run
 ```
 
 ### 常用命令
@@ -110,7 +102,6 @@ make lint                   # Go lint
 make lint.proto             # Proto lint
 
 # 服务目录（app/audit/service/）
-make dev                    # air 热重载启动（读 configs/local/）
 make run                    # 直接运行（读 configs/local/）
 make build                  # 编译二进制
 
@@ -121,10 +112,6 @@ make compose.down           # 移除容器/网络（保留数据卷）
 make compose.reset          # 移除容器/网络/数据卷
 make compose.ps             # 查看 Compose 服务状态
 make compose.logs           # 跟踪 Compose 服务日志
-
-# Compose - 应用镜像
-make compose.build          # 构建应用镜像（同时打 :latest tag）
-COMPOSE_FILES="-f docker-compose.yaml -f docker-compose.apps.yaml" make compose.up
 
 # OpenFGA
 make openfga.init           # 初始化 store
@@ -140,8 +127,6 @@ make openfga.model.apply    # 应用 model 更新
 - **Go 依赖**：`github.com/Servora-Kit/servora`（基础库）、`github.com/Servora-Kit/servora/api/gen`（框架 proto 生成代码）
 - **Proto 依赖**：`buf.build/servora/servora`（框架公共 proto）
 - **CLI / 代码生成工具**：`make init` 从 GitHub 安装 `svr`、Servora 代码生成插件与 GoWind `protoc-gen-go-redact`；项目由 Buf 驱动生成，无需安装 `kratos` CLI。
-
-本地联合开发时通过顶层 `go.work` 实现跨仓库引用。
 
 ## 质量约束
 

@@ -14,14 +14,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@servora/proto-utils/client': fileURLToPath(
-        new URL('../../../../servora/web/packages/proto-utils/src/client/index.ts', import.meta.url),
-      ),
-      '@servora/proto-utils/crud': fileURLToPath(
-        new URL('../../../../servora/web/packages/proto-utils/src/crud/index.ts', import.meta.url),
-      ),
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+    dedupe: ['@servora/proto-utils'],
   },
   server: {
     proxy: {
