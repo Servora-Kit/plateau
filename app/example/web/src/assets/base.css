@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #1b211f;
+  --muted: #59615e;
+  --paper: #f1f0e9;
+  --panel: #faf9f3;
+  --line: #c9cbc2;
+  --line-strong: #8a918c;
+  --signal: #e54b2a;
+  --signal-dark: #a72e16;
+  --active: #087f66;
+  --active-soft: #d6eee6;
+  --warning-soft: #f5ddcf;
+  --shadow: 6px 6px 0 rgb(27 33 31 / 12%);
+  color: var(--ink);
+  background: var(--paper);
+  font-family: 'Manrope', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--paper);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 47px,
+    rgb(27 33 31 / 3%) 48px
+  );
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a,
+input,
+summary {
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--signal);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+code,
+pre,
+.eyebrow,
+.panel-index,
+.runtime-badge,
+.brand-mark {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+input {
+  min-width: 0;
+}
+
+::selection {
+  color: var(--panel);
+  background: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -5,9 +5,10 @@
 
 ## 目录概览
 
-`app/` 存放可运行服务。当前仓库内包含平台级基础服务模块：
+`app/` 存放可运行服务。当前包含：
 - `app/audit/service/`：审计微服务
-
+- `app/example/service/`：唯一公开 User CRUD 参考服务
+- `app/example/web/`：参考服务的 Vue 请求控制台（非 CI E2E 测试应用）
 每个服务目录都是独立 Go module，并通过根 `go.work` 纳管。
 
 ## 服务共同结构
@@ -38,11 +39,11 @@ app/{service}/service/
 ## 常用命令
 
 ```bash
-cd app/audit/service && make run      # 本地运行 (需提前启动 infra)
-cd app/audit/service && make dev      # 本地热重载 (Air 自动编译运行，读 configs/local/)
-cd app/audit/service && make build    # 构建服务
-cd app/audit/service && make wire     # 重新生成依赖注入
-cd app/audit/service && make gen.ent  # 生成 Ent 模型代码
+cd app/audit/service && make run
+cd app/example/service && make run     # 本地 User CRUD HTTP/gRPC 服务
+cd app/example/web && pnpm dev        # Vite 请求控制台
+make gen                                # 生成平台 API/Wire/Ent
+make lint && make lint.proto
 ```
 
 ## 配置约定

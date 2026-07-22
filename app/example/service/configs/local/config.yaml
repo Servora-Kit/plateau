@@ -1,0 +1,27 @@
+server:
+  http:
+    listen:
+      addr: "127.0.0.1:28080"
+      timeout: 30s
+  grpc:
+    listen:
+      addr: "127.0.0.1:28081"
+      timeout: 30s
+
+data:
+  database:
+    driver: sqlite
+    source: "file:servora_example?mode=memory&cache=shared&_foreign_keys=on"
+
+app:
+  name: example.service
+  version: dev
+  env: dev
+
+obs:
+  log:
+    level: 0
+    backends:
+      - stdout: {}
+  metrics:
+    enable: false

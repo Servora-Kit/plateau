@@ -1,23 +1,23 @@
 # AGENTS.md - servora-platform
 
-<!-- Generated: 2026-03-25 | Updated: 2026-04-12 -->
+<!-- Updated: 2026-07-21 -->
 
 ## 项目概览
 
-`servora-platform` 是 [Servora](https://github.com/Servora-Kit/servora) 框架的**示例项目**，提供平台级基础微服务。当前包含 Audit（审计）微服务，后续将持续扩展。
+`servora-platform` 是 Servora 的平台服务与参考应用仓库，当前包含 Audit 微服务和单一 User CRUD 参考应用。
 
 依赖关系：
+
 - Go module 依赖：`github.com/Servora-Kit/servora`、`github.com/Servora-Kit/servora/api/gen`
 - Proto BSR 依赖：`buf.build/servora/servora`
-- 业务 proto 发布到：`buf.build/servora/servora-platform`
-- Go module 路径：
-  - `github.com/Servora-Kit/servora-platform/app/audit/service`
-  - `github.com/Servora-Kit/servora-platform/api/gen`
+- 平台/参考应用生成物：`api/gen/go/` 与 `api/gen/ts/`
+- Go module：`app/audit/service`、`app/example/service`、`api/gen`
 
 当前主线事实：
-- 所有开发在 `main` 分支进行
-- `go.work` 已 gitignore，仅用于仓库内部多模块联合与顶层跨仓库开发
-- 无前端应用
+
+- 所有开发在 `main` 分支进行；`go.work` 仅用于本地联合开发。
+- `app/example/service` 是 `example.servora.dev/User` 的可运行 CRUD 黄金路径。
+- `app/example/web` 是 Vue 请求控制台，直接调用本地 HTTP facade，不维护第二套 API contract。
 
 ## 开发约束
 
@@ -40,43 +40,43 @@ type(scope): description
 
 ## 顶层目录
 
-- `api/`：生成代码产物
-  - `gen/go/`：Go 生成代码（业务 proto）
-- `app/`：微服务实现
-  - `audit/service/`：Audit 微服务
-    - `api/protos/`：审计业务 proto
-    - `cmd/`：服务入口
-    - `configs/`：配置文件
-    - `internal/`：业务实现（service/biz/data/server）
-- `manifests/`：部署清单
-  - `openfga/`：OpenFGA model 与测试
+- `api/gen/`：Go/TypeScript 生成产物
+- `app/audit/service/`：Audit 微服务
+- `app/example/service/`：User CRUD 参考服务，包含 service/biz/data/Ent/HTTP facade
+- `app/example/web/`：Vue 参考客户端
+- `manifests/`：平台部署清单与 OpenFGA model
 
 ## 关键文件
 
-- `Makefile`：项目变量 + `include make/core.mk`
-- `make/core.mk`：根目录/服务目录共享 Make 逻辑（gen / openapi / wire / build / lint / compose / run / dev）
-- `make/extra.mk`：仓库扩展 Make 逻辑（api / ent / openfga）
-- `buf.yaml`：Buf v2 workspace，包含 `app/audit/service/api/protos`（名为 `buf.build/servora/servora-platform`）；依赖 `buf.build/servora/servora`
-- `buf.go.gen.yaml`：Go 代码生成模板（含 servora 自定义插件：authz、mapper、audit）
-- `docker-compose.yaml`：**仅基础设施**（Kafka、ClickHouse）
-- `docker-compose.apps.yaml`：**生产镜像部署**（audit 服务生产镜像，可通过 `COMPOSE_FILES` 显式启用）
-- `.env.example`：环境变量模板
+- `Makefile`：模块、Buf template 与共享 Make 入口
+- `make/core.mk`：根目录/服务目录共享 gen / build / lint / run 逻辑
+- `make/extra.mk`：api / ent / openfga 扩展逻辑
+- `buf.yaml`：Buf v2 workspace，纳管 Audit 与 Example User proto
+- `buf.go.gen.yaml`：Go 生成模板，包含 CRUD descriptor/name/field helper
+- `buf.typescript.gen.yaml`：TypeScript HTTP/CRUD 生成模板
+- `docker-compose.yaml`：平台基础设施；参考服务本地使用 SQLite，不要求 Audit 容器
 
 ## 目录约定
 
 ### API / Proto
-- Audit 业务 proto：`app/audit/service/api/protos/`
-- 框架公共 proto 通过 BSR 依赖（`buf.build/servora/servora`），不在本仓库存放
-- Go 生成代码输出到 `api/gen/go/`
 
-### Proto 命名规范
-- `package` 以 `servora.` 开头，携带版本后缀
-- 目录与 `package` 逐段对齐（Buf `PACKAGE_DIRECTORY_MATCH`）
-- `go_package` 落到 `github.com/Servora-Kit/servora-platform/api/gen/go/servora/**`
+- Audit proto：`app/audit/service/api/protos/`
+- Example User proto：`app/example/service/api/protos/`
+- 框架公共 proto 通过 BSR 依赖（`buf.build/servora/servora`）
+- Go/TypeScript 生成代码输出到 `api/gen/`
+- `api/gen/go`、`api/gen/ts`、Ent、Wire 与 OpenAPI 产物禁止手改，也不创建手写 `AGENTS.md`
+
+### Proto 呍名规范
+
+- 目录与 package 逐段对齐，满足 Buf `PACKAGE_DIRECTORY_MATCH`
+- Audit 使用 `servora.audit.*`；参考业务资源使用 `example.service.v1`
+- `go_package` 必须落到 `github.com/Servora-Kit/servora-platform/api/gen/go/**`
 
 ### 服务实现
+
 - DDD 分层：`service -> biz -> data`
 - Wire 依赖注入：修改后执行 `make wire`
+- CRUD 原始 RPC wrapper、FieldMask 与 filter/order 文本停在 service；业务 scope 与语义归 biz；Ent binding 与 mutation 归 data
 
 ## 常用命令
 

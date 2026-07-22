@@ -42,7 +42,7 @@ plugin: ## Install protoc-gen-* plugins
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-audit@$(SERVORA_VERSION)
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-authn@$(SERVORA_VERSION)
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-conf@$(SERVORA_VERSION)
-	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-mapper@$(SERVORA_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-crud@$(SERVORA_VERSION)
 	@echo "✓ Protoc plugins installed"
 
 cli: ## Install CLI tools

@@ -55,8 +55,8 @@ plugins:
       out: api/gen/go
       opt: paths=source_relative
 
-    # generate mapper plans from proto annotations
-    - local: protoc-gen-servora-mapper
+    # generate typed CRUD descriptors, field paths, and resource-name helpers
+    - local: protoc-gen-servora-crud
       out: api/gen/go
       opt: paths=source_relative
 

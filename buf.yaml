@@ -3,6 +3,7 @@ version: v2
 modules:
   - path: app/audit/service/api/protos
     name: buf.build/servora/servora-platform
+  - path: app/example/service/api/protos
 
 deps:
   - buf.build/servora/servora
@@ -19,3 +20,7 @@ lint:
     - ENUM_VALUE_PREFIX
     - ENUM_ZERO_VALUE_SUFFIX
     - RPC_REQUEST_RESPONSE_UNIQUE
+  ignore_only:
+    RPC_RESPONSE_STANDARD_NAME:
+      - app/example/service/api/protos/example/service/v1/i_user.proto
+      - app/example/service/api/protos/example/service/v1/user.proto

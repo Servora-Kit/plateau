@@ -1,0 +1,307 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: UserHTTPService API
+    description: UserHTTPService exposes the User CRUD reference flow over HTTP.
+    version: 0.0.1
+paths:
+    /v1/tenants/{tenant}/users:
+        get:
+            tags:
+                - UserHTTPService
+            operationId: UserHTTPService_ListUsers
+            parameters:
+                - name: tenant
+                  in: path
+                  description: The tenant id.
+                  required: true
+                  schema:
+                    type: string
+                - name: pageSize
+                  in: query
+                  description: page_size 是服务端最多返回的资源数量。
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageToken
+                  in: query
+                  description: page_token 是前一页返回的不透明连续翻页令牌。
+                  schema:
+                    type: string
+                - name: skip
+                  in: query
+                  description: |-
+                    可单独使用，也可在 page_token 恢复 cursor 后额外跳过资源；服务可以限制最大值。
+                     Servora 的随机跳页扩展；项目 api-linter 配置明示允许该字段。
+                  schema:
+                    type: string
+                - name: filter
+                  in: query
+                  description: filter 是 AIP-160 确定性子集表达式。
+                  schema:
+                    type: string
+                - name: orderBy
+                  in: query
+                  description: order_by 是 AIP-132 排序表达式。
+                  schema:
+                    type: string
+                - name: includeTotal
+                  in: query
+                  description: |-
+                    只有 true 时执行 Count 并返回 total_size。
+                     Servora 的可选 total 扩展；项目 api-linter 配置需允许该附加字段。
+                  schema:
+                    type: boolean
+                - name: showDeleted
+                  in: query
+                  description: true 时显式包含正常资源与 tombstone；默认只返回正常资源。
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListUsersResponse'
+        post:
+            tags:
+                - UserHTTPService
+            operationId: UserHTTPService_CreateUser
+            parameters:
+                - name: tenant
+                  in: path
+                  description: The tenant id.
+                  required: true
+                  schema:
+                    type: string
+                - name: userId
+                  in: query
+                  description: 成为 User.name 的末段；请求中的 user.name 被忽略。
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/tenants/{tenant}/users/{user}:
+        get:
+            tags:
+                - UserHTTPService
+            operationId: UserHTTPService_GetUser
+            parameters:
+                - name: tenant
+                  in: path
+                  description: The tenant id.
+                  required: true
+                  schema:
+                    type: string
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+        delete:
+            tags:
+                - UserHTTPService
+            operationId: UserHTTPService_DeleteUser
+            parameters:
+                - name: tenant
+                  in: path
+                  description: The tenant id.
+                  required: true
+                  schema:
+                    type: string
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+                - name: etag
+                  in: query
+                  description: etag 非空时要求与当前资源一致。
+                  schema:
+                    type: string
+                - name: allowMissing
+                  in: query
+                  description: allow_missing 为 true 时删除不存在资源可由业务返回幂等结果。
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+        patch:
+            tags:
+                - UserHTTPService
+            operationId: UserHTTPService_UpdateUser
+            parameters:
+                - name: tenant
+                  in: path
+                  description: The tenant id.
+                  required: true
+                  schema:
+                    type: string
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+                - name: updateMask
+                  in: query
+                  description: update_mask 选择待更新字段；省略时按标准隐式 mask 处理。
+                  schema:
+                    type: string
+                    format: field-mask
+                - name: allowMissing
+                  in: query
+                  description: allow_missing 允许业务按 AIP-134 执行 upsert。
+                  schema:
+                    type: boolean
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/tenants/{tenant}/users/{user}:undelete:
+        post:
+            tags:
+                - UserHTTPService
+            operationId: UserHTTPService_UndeleteUser
+            parameters:
+                - name: tenant
+                  in: path
+                  description: The tenant id.
+                  required: true
+                  schema:
+                    type: string
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UndeleteUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+components:
+    schemas:
+        ListUsersResponse:
+            type: object
+            properties:
+                users:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/User'
+                    description: users 是当前页返回的 User 列表。
+                nextPageToken:
+                    type: string
+                    description: next_page_token 是下一页的不透明连续翻页令牌；末页为空。
+                totalSize:
+                    type: string
+                    description: |-
+                        仅在 include_total 为 true 时设置。Servora 明示使用 optional int64
+                         表达“未计算”并支持大型集合。
+                         Servora 的可选 total 扩展；项目 api-linter 配置明示允许该字段。
+            description: ListUsersResponse 包含一页 User 及分页元数据。
+        UndeleteUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: name 是待恢复 User 的 canonical 资源名。
+            description: UndeleteUserRequest 按 canonical 资源名定位待恢复 User。
+        User:
+            required:
+                - email
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: name 是 User 的 canonical AIP 资源名。
+                displayName:
+                    type: string
+                    description: display_name 是调用方可修改的显示名称；显式 Clear 写入空字符串。
+                email:
+                    type: string
+                    description: email 是创建 User 时必须提供且非空的电子邮箱。
+                tenantPlan:
+                    type: string
+                    description: tenant_plan 是创建后不可修改的租户套餐快照。
+                nickname:
+                    type: string
+                    description: nickname 保留 presence；显式 Clear 写入 NULL。
+                temporaryPassword:
+                    writeOnly: true
+                    type: string
+                    description: temporary_password 只供 Create/Update 输入；存储层转换为私有 password_hash。
+                etag:
+                    type: string
+                    description: etag 是服务端并发控制值；生命周期由业务显式处理。
+                createTime:
+                    readOnly: true
+                    type: string
+                    description: create_time 是服务端记录的创建时间。
+                    format: date-time
+                updateTime:
+                    readOnly: true
+                    type: string
+                    description: update_time 是服务端记录的最近更新时间。
+                    format: date-time
+                deleteTime:
+                    readOnly: true
+                    type: string
+                    description: delete_time 是软删除发生时间；未删除时为空。
+                    format: date-time
+                purgeTime:
+                    readOnly: true
+                    type: string
+                    description: purge_time 是计划物理清除时间；本示例无限期保留，因此可一直为空。
+                    format: date-time
+            description: User 表示 tenant 下的公开用户资源。
+tags:
+    - name: UserHTTPService

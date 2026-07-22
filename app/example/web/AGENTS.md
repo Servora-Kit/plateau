@@ -1,0 +1,15 @@
+# AGENTS.md - Example Web
+
+## Scope
+
+Vue reference client for `example.service.v1.User`. It must exercise the public HTTP facade through generated TypeScript code and `@servora/proto-utils`; it is not a second source of API contracts.
+
+## Rules
+
+- Keep resource identity `example.servora.dev/User` and `tenants/{tenant}/users/{user}` aligned with the service Proto.
+- Import generated API code from `servora-platform/api/gen/ts`; never copy generated types into `src` and never edit generated output.
+- Build resource names, filters, order expressions, update masks, and pagination state with generated CRUD helpers and `@servora/proto-utils`.
+- Send requests through `createRequestHandler`; preserve `application/protojson` content negotiation and structured `ApiError` handling.
+- The Vite `/v1` proxy targets the local example service on `127.0.0.1:28080`. Do not start Audit or database containers for this app.
+- Verify the request path by running `make run` in `app/example/service`, starting Vite, and exercising CRUD in a real browser; do not add a browser-test lifecycle to CI.
+- Keep forms keyboard-operable, labels connected, status updates announced, and destructive actions explicit.

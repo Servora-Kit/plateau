@@ -1,0 +1,28 @@
+version: v2
+
+clean: false
+
+managed:
+    enabled: true
+    disable:
+        - module: buf.build/googleapis/googleapis
+        - module: buf.build/servora/servora
+    override:
+        - file_option: go_package_prefix
+          value: github.com/Servora-Kit/servora-platform/api/gen/go
+
+inputs:
+    - directory: app/example/service/api/protos
+      paths:
+          - app/example/service/api/protos/example/service/v1
+
+plugins:
+    - local: protoc-gen-openapi
+      out: app/example/service/internal/assets
+      opt:
+          - naming=json
+          - depth=2
+          - default_response=false
+          - enum_type=string
+          - output_mode=merged
+          - fq_schema_naming=false

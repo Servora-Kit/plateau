@@ -10,7 +10,7 @@
 - Go 生成模块：`api/gen/go.mod`，模块路径为 `github.com/Servora-Kit/servora-platform/api/gen`
 - TypeScript API client 包：`api/gen/package.json`，包名为 `@servora-platform/api-client`
 
-仓库使用 **Buf v2 workspace**。当前根目录 `buf.yaml` 纳管 `app/audit/service/api/protos`；后续新增服务 proto 时继续加入根 `buf.yaml`，统一从仓库根生成 Go 与 TypeScript 产物。
+仓库使用 Buf v2 workspace，当前同时生成 Audit 与 Example User 的 Go、HTTP、CRUD、TypeScript 产物。
 
 ## 当前结构
 
@@ -22,9 +22,11 @@ api/
     ├── go.sum
     ├── package.json  # TypeScript API client 包根
     ├── go/           # Go 生成代码（make api-go 输出，可清空）
-    │   └── audit/service/...
+    │   ├── audit/service/...
+    │   └── example/service/...
     └── ts/           # TypeScript 生成代码（make api-ts 输出，可清空）
-        └── audit/service/...
+        ├── audit/service/...
+        └── example/service/...
 ```
 
 ## 生成规则
@@ -51,9 +53,8 @@ api/
 - 服务专属业务 proto 放在对应服务的 `app/{service}/service/api/protos/`
 - 修改 proto 后在仓库根目录运行 `make api`，同时刷新 Go 与 TypeScript 生成产物
 - **禁止手动编辑** `api/gen/go/` 和 `api/gen/ts/`
-- 可以维护 `api/gen/go.mod`、`api/gen/go.sum`、`api/gen/package.json` 等包根文件
-- Go 插件使用 `paths=source_relative`，TypeScript 的 `protoc-gen-typescript-http` 不配置 `paths=source_relative`
-- 后续 `protoc-gen-servora-crud target=ts` 也输出到 `api/gen/ts`，生成业务 `ResourceSchema`
+- `protoc-gen-servora-crud` 生成的 `*.crud.go`/`*.crud.ts` 与 message/client 产物一起刷新
+- `example.servora.dev/User` 与 `tenants/{tenant}/users/{user}` 必须在所有生成输入和消费方保持一致
 
 ## 常用命令
 

@@ -1,0 +1,20 @@
+version: v2
+
+clean: false
+
+managed:
+    enabled: false
+
+inputs:
+    - directory: app/example/service/api/protos
+      paths:
+          - app/example/service/api/protos/example/service/v1
+
+plugins:
+    - local: protoc-gen-typescript-http
+      out: api/gen/ts
+    - local: protoc-gen-servora-crud
+      out: api/gen/ts
+      opt:
+          - target=ts
+          - paths=source_relative
