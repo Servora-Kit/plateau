@@ -50,7 +50,7 @@ func NewUserRepo(data *Data, logger *slog.Logger) (biz.UserRepo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build User resource mapper: %w", err)
 	}
-	clear, err := entcrud.NewClearHelper[*entmodel.UserMutation](
+	clear, err := entcrud.NewClearHelper(
 		entcrud.ClearToValue(examplev1.UserFields.DisplayName, func(mutation *entmodel.UserMutation) error {
 			mutation.SetDisplayName("")
 			return nil
@@ -94,12 +94,13 @@ func (repo *userRepo) CreateUser(
 	}
 	created, err := builder.Save(ctx)
 	if err != nil {
+		repo.log.ErrorContext(ctx, "create User failed", "tenant", name.Tenant, "user", name.User, "err", err)
 		if entmodel.IsConstraintError(err) {
-			return nil, fmt.Errorf("create User: %w", errors.Join(biz.ErrUserAlreadyExists, err))
+			return nil, errors.Join(biz.ErrAlreadyExists, err)
 		}
-		return nil, repo.persistenceError(ctx, "create", err)
+		return nil, err
 	}
-	return repo.mapUser(created)
+	return repo.mapper.ToDTO(created), nil
 }
 
 func (repo *userRepo) GetUser(
@@ -116,11 +117,12 @@ func (repo *userRepo) GetUser(
 	).Only(ctx)
 	if err != nil {
 		if entmodel.IsNotFound(err) {
-			return nil, fmt.Errorf("get User: %w", errors.Join(biz.ErrUserNotFound, err))
+			return nil, errors.Join(biz.ErrNotFound, err)
 		}
-		return nil, repo.persistenceError(ctx, "get", err)
+		repo.log.ErrorContext(ctx, "get User failed", "tenant", name.Tenant, "user", name.User, "err", err)
+		return nil, err
 	}
-	return repo.mapUser(entity)
+	return repo.mapper.ToDTO(entity), nil
 }
 
 func (repo *userRepo) ListUsers(
@@ -140,12 +142,10 @@ func (repo *userRepo) ListUsers(
 		scope.Fingerprint(includeDeleted),
 	)
 	if err != nil {
-		return corecrud.ListResult[*examplev1.User]{}, fmt.Errorf("list Users: %w", err)
+		repo.log.ErrorContext(ctx, "list Users failed", "tenant", scope.TenantID(), "err", err)
+		return corecrud.ListResult[*examplev1.User]{}, err
 	}
-	resources, err := repo.mapper.TryToDTOs(result.Items())
-	if err != nil {
-		return corecrud.ListResult[*examplev1.User]{}, fmt.Errorf("map User list: %w", err)
-	}
+	resources := repo.mapper.ToDTOs(result.Items())
 	var totalSize *int64
 	if value, present := result.TotalSize(); present {
 		totalSize = &value
@@ -197,10 +197,15 @@ func (repo *userRepo) UpdateUser(
 	builder.SetEtag(resource.GetEtag())
 	updated, err := builder.Save(ctx)
 	if err != nil {
-		return nil, repo.persistenceError(ctx, "update", err)
+		repo.log.ErrorContext(ctx, "update User failed", "tenant", name.Tenant, "user", name.User, "err", err)
+		return nil, err
+	}
+	if updated == 0 {
+		return nil, biz.ErrMutationMiss
 	}
 	if updated != 1 {
-		return nil, repo.mutationMissError(ctx, "update", updated, name)
+		repo.log.ErrorContext(ctx, "update User affected unexpected rows", "tenant", name.Tenant, "user", name.User, "affected", updated)
+		return nil, fmt.Errorf("update User affected %d rows", updated)
 	}
 	return repo.GetUser(ctx, name, false)
 }
@@ -213,10 +218,15 @@ func (repo *userRepo) DeleteUser(ctx context.Context, name examplev1.UserName, e
 		entuser.EtagEQ(expectedEtag),
 	).Exec(ctx)
 	if err != nil {
-		return nil, repo.persistenceError(ctx, "delete", err)
+		repo.log.ErrorContext(ctx, "delete User failed", "tenant", name.Tenant, "user", name.User, "err", err)
+		return nil, err
+	}
+	if deleted == 0 {
+		return nil, biz.ErrMutationMiss
 	}
 	if deleted != 1 {
-		return nil, repo.mutationMissError(ctx, "delete", deleted, name)
+		repo.log.ErrorContext(ctx, "delete User affected unexpected rows", "tenant", name.Tenant, "user", name.User, "affected", deleted)
+		return nil, fmt.Errorf("delete User affected %d rows", deleted)
 	}
 	return repo.GetUser(ctx, name, true)
 }
@@ -229,42 +239,15 @@ func (repo *userRepo) UndeleteUser(ctx context.Context, name examplev1.UserName,
 		entuser.DeleteTimeNotNil(),
 	).ClearDeleteTime().ClearPurgeTime().ClearDeletedBy().SetEtag(newEtag).Save(ctx)
 	if err != nil {
-		return nil, repo.persistenceError(ctx, "undelete", err)
+		repo.log.ErrorContext(ctx, "undelete User failed", "tenant", name.Tenant, "user", name.User, "err", err)
+		return nil, err
+	}
+	if restored == 0 {
+		return nil, biz.ErrMutationMiss
 	}
 	if restored != 1 {
-		return nil, fmt.Errorf("undelete User affected %d rows: %w", restored, biz.ErrUserNotFound)
+		repo.log.ErrorContext(ctx, "undelete User affected unexpected rows", "tenant", name.Tenant, "user", name.User, "affected", restored)
+		return nil, fmt.Errorf("undelete User affected %d rows", restored)
 	}
 	return repo.GetUser(ctx, name, true)
-}
-
-func (repo *userRepo) mutationMissError(
-	ctx context.Context,
-	operation string,
-	affected int,
-	name examplev1.UserName,
-) error {
-	current, err := repo.GetUser(ctx, name, true)
-	if err != nil {
-		if errors.Is(err, biz.ErrUserNotFound) {
-			return fmt.Errorf("%s User affected %d rows: %w", operation, affected, err)
-		}
-		return err
-	}
-	if current.GetDeleteTime() != nil {
-		return fmt.Errorf("%s User affected %d rows: %w", operation, affected, biz.ErrUserNotFound)
-	}
-	return fmt.Errorf("%s User affected %d rows: %w", operation, affected, biz.ErrUserEtagMismatch)
-}
-
-func (repo *userRepo) persistenceError(ctx context.Context, operation string, cause error) error {
-	repo.log.ErrorContext(ctx, "User persistence failed", "operation", operation, "err", cause)
-	return fmt.Errorf("%s User: %w", operation, cause)
-}
-
-func (repo *userRepo) mapUser(entity *entmodel.User) (*examplev1.User, error) {
-	resource, err := repo.mapper.TryToDTO(entity)
-	if err != nil {
-		return nil, fmt.Errorf("map User: %w", err)
-	}
-	return resource, nil
 }

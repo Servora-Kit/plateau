@@ -139,7 +139,7 @@ make openfga.model.apply    # 应用 model 更新
 
 - **Go 依赖**：`github.com/Servora-Kit/servora`（基础库）、`github.com/Servora-Kit/servora/api/gen`（框架 proto 生成代码）
 - **Proto 依赖**：`buf.build/servora/servora`（框架公共 proto）
-- **CLI 工具**：`svr`、`protoc-gen-servora-authz`、`protoc-gen-servora-audit`、`protoc-gen-servora-mapper`
+- **CLI / 代码生成工具**：`make init` 从 GitHub 安装 `svr`、Servora 代码生成插件与 GoWind `protoc-gen-go-redact`；项目由 Buf 驱动生成，无需安装 `kratos` CLI。
 
 本地联合开发时通过顶层 `go.work` 实现跨仓库引用。
 

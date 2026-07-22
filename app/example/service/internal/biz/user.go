@@ -16,6 +16,17 @@ import (
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
+var (
+	// ErrNotFound indicates that a repository record does not exist.
+	ErrNotFound = errors.New("record not found")
+	// ErrAlreadyExists indicates that a repository uniqueness constraint was violated.
+	ErrAlreadyExists = errors.New("record already exists")
+	// ErrMutationMiss indicates that an atomic conditional mutation matched no row.
+	ErrMutationMiss = errors.New("conditional mutation matched no rows")
+)
+
+const maxUndeleteAttempts = 3
+
 // UserScope is intentionally a minimal example-only resource scope.
 // It is not Servora's production tenant/authentication context: it only extracts
 // the tenant path variable so this reference service can exercise scoped CRUD,
@@ -45,15 +56,6 @@ func (scope UserScope) Fingerprint(includeDeleted bool) []byte {
 	}
 	return []byte("tenant:" + scope.TenantID() + "\x00deleted:" + visibility)
 }
-
-var (
-	// ErrUserNotFound is a persistence fact translated to the public business error by biz.
-	ErrUserNotFound = errors.New("user not found")
-	// ErrUserAlreadyExists is a persistence fact translated to the public business error by biz.
-	ErrUserAlreadyExists = errors.New("user already exists")
-	// ErrUserEtagMismatch indicates an atomic mutation lost its optimistic-concurrency race.
-	ErrUserEtagMismatch = errors.New("user etag mismatch")
-)
 
 // UserRepo is the persistence port implemented by data.NewUserRepo.
 type UserRepo interface {
@@ -93,12 +95,12 @@ func (usecase *UserUsecase) CreateUser(
 	resource.TemporaryPassword = nil
 	resource.Etag = etag
 	created, err := usecase.repo.CreateUser(ctx, name, resource, passwordHash)
-	return created, usecase.translateRepoError(ctx, "create", err)
+	return created, usecase.translateRepoError(err)
 }
 
 func (usecase *UserUsecase) GetUser(ctx context.Context, name examplev1.UserName) (*examplev1.User, error) {
 	resource, err := usecase.repo.GetUser(ctx, name, true)
-	return resource, usecase.translateRepoError(ctx, "get", err)
+	return resource, usecase.translateRepoError(err)
 }
 
 // ListUsers applies the biz-owned tombstone visibility choice to a prepared query.
@@ -110,7 +112,7 @@ func (usecase *UserUsecase) ListUsers(
 ) (corecrud.ListResult[*examplev1.User], error) {
 	result, err := usecase.repo.ListUsers(ctx, scope, options.ShowDeleted, query)
 	if err != nil {
-		return corecrud.ListResult[*examplev1.User]{}, usecase.translateRepoError(ctx, "list", err)
+		return corecrud.ListResult[*examplev1.User]{}, usecase.translateRepoError(err)
 	}
 	return result, nil
 }
@@ -123,10 +125,10 @@ func (usecase *UserUsecase) UpdateUser(
 ) (*examplev1.User, error) {
 	current, err := usecase.repo.GetUser(ctx, name, false)
 	if err != nil {
-		if errors.Is(err, ErrUserNotFound) && prepared.Options().AllowMissing && missingCreate != nil {
+		if errors.Is(err, ErrNotFound) && prepared.Options().AllowMissing && missingCreate != nil {
 			return usecase.CreateUser(ctx, name, *missingCreate)
 		}
-		return nil, usecase.translateRepoError(ctx, "update", err)
+		return nil, usecase.translateRepoError(err)
 	}
 	if err := prepared.ValidateImmutable(current); err != nil {
 		return nil, err
@@ -146,7 +148,17 @@ func (usecase *UserUsecase) UpdateUser(
 	resource.TemporaryPassword = nil
 	resource.Etag = etag
 	updated, err := usecase.repo.UpdateUser(ctx, name, resource, prepared.WriteMask(), passwordHash, current.GetEtag())
-	return updated, usecase.translateRepoError(ctx, "update", err)
+	if errors.Is(err, ErrMutationMiss) {
+		latest, probeErr := usecase.repo.GetUser(ctx, name, true)
+		if probeErr != nil {
+			return nil, usecase.translateRepoError(probeErr)
+		}
+		if latest.GetDeleteTime() != nil {
+			return nil, examplev1.ErrorUserErrorReasonNotFound("user not found").WithCause(err)
+		}
+		return nil, examplev1.ErrorUserErrorReasonEtagMismatch("user etag does not match").WithCause(err)
+	}
+	return updated, usecase.translateRepoError(err)
 }
 
 // DeleteUser soft-deletes an active row and returns its persisted tombstone.
@@ -157,7 +169,7 @@ func (usecase *UserUsecase) DeleteUser(
 ) (*examplev1.User, error) {
 	current, err := usecase.repo.GetUser(ctx, name, true)
 	if err != nil {
-		return nil, usecase.translateRepoError(ctx, "delete", err)
+		return nil, usecase.translateRepoError(err)
 	}
 	if options.Etag != "" && options.Etag != current.GetEtag() {
 		return nil, examplev1.ErrorUserErrorReasonEtagMismatch("user etag does not match")
@@ -169,33 +181,69 @@ func (usecase *UserUsecase) DeleteUser(
 		return nil, examplev1.ErrorUserErrorReasonNotFound("user not found")
 	}
 	deleted, err := usecase.repo.DeleteUser(ctx, name, current.GetEtag())
-	if errors.Is(err, ErrUserNotFound) && options.AllowMissing {
-		tombstone, getErr := usecase.repo.GetUser(ctx, name, true)
-		if getErr != nil {
-			return nil, usecase.translateRepoError(ctx, "delete", getErr)
+	if errors.Is(err, ErrMutationMiss) {
+		latest, probeErr := usecase.repo.GetUser(ctx, name, true)
+		if probeErr != nil {
+			return nil, usecase.translateRepoError(probeErr)
 		}
-		if tombstone.GetDeleteTime() != nil {
-			return tombstone, nil
+		if latest.GetDeleteTime() != nil {
+			if options.AllowMissing {
+				return latest, nil
+			}
+			return nil, examplev1.ErrorUserErrorReasonNotFound("user not found").WithCause(err)
 		}
+		return nil, examplev1.ErrorUserErrorReasonEtagMismatch("user etag does not match").WithCause(err)
 	}
-	return deleted, usecase.translateRepoError(ctx, "delete", err)
+	return deleted, usecase.translateRepoError(err)
 }
 
 // UndeleteUser restores a tombstone and is idempotent for an already-active row.
 func (usecase *UserUsecase) UndeleteUser(ctx context.Context, name examplev1.UserName) (*examplev1.User, error) {
-	current, err := usecase.repo.GetUser(ctx, name, true)
+	var lastMiss error
+	for range maxUndeleteAttempts {
+		current, err := usecase.repo.GetUser(ctx, name, true)
+		if err != nil {
+			return nil, usecase.translateRepoError(err)
+		}
+		if current == nil {
+			return nil, usecase.internalUserError(ctx, "undelete", errors.New("repository returned nil User without error"))
+		}
+		if current.GetDeleteTime() == nil {
+			return current, nil
+		}
+
+		etag, err := newEtag()
+		if err != nil {
+			return nil, usecase.internalUserError(ctx, "undelete", err)
+		}
+		restored, err := usecase.repo.UndeleteUser(ctx, name, etag)
+		if err == nil {
+			if restored == nil {
+				return nil, usecase.internalUserError(ctx, "undelete", errors.New("repository returned nil User without error"))
+			}
+			if restored.GetDeleteTime() == nil {
+				return restored, nil
+			}
+			lastMiss = ErrMutationMiss
+			continue
+		}
+		if !errors.Is(err, ErrMutationMiss) {
+			return nil, usecase.translateRepoError(err)
+		}
+		lastMiss = err
+	}
+
+	latest, err := usecase.repo.GetUser(ctx, name, true)
 	if err != nil {
-		return nil, usecase.translateRepoError(ctx, "undelete", err)
+		return nil, usecase.translateRepoError(err)
 	}
-	if current.GetDeleteTime() == nil {
-		return current, nil
+	if latest == nil {
+		return nil, usecase.internalUserError(ctx, "undelete", errors.New("repository returned nil User without error"))
 	}
-	etag, err := newEtag()
-	if err != nil {
-		return nil, usecase.internalUserError(ctx, "undelete", err)
+	if latest.GetDeleteTime() == nil {
+		return latest, nil
 	}
-	restored, err := usecase.repo.UndeleteUser(ctx, name, etag)
-	return restored, usecase.translateRepoError(ctx, "undelete", err)
+	return nil, examplev1.ErrorUserErrorReasonEtagMismatch("user lifecycle changed concurrently").WithCause(lastMiss)
 }
 
 func hashTemporaryPassword(plaintext *string) (*string, error) {
@@ -218,23 +266,21 @@ func newEtag() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(value[:]), nil
 }
 
-func (usecase *UserUsecase) translateRepoError(ctx context.Context, operation string, err error) error {
+func (*UserUsecase) translateRepoError(err error) error {
 	if err == nil {
 		return nil
 	}
 	switch {
-	case errors.Is(err, ErrUserNotFound):
+	case errors.Is(err, ErrNotFound):
 		return examplev1.ErrorUserErrorReasonNotFound("user not found").WithCause(err)
-	case errors.Is(err, ErrUserAlreadyExists):
+	case errors.Is(err, ErrAlreadyExists):
 		return examplev1.ErrorUserErrorReasonAlreadyExists("user already exists").WithCause(err)
-	case errors.Is(err, ErrUserEtagMismatch):
-		return examplev1.ErrorUserErrorReasonEtagMismatch("user etag does not match").WithCause(err)
 	}
 	var apiError *kerrors.Error
 	if errors.As(err, &apiError) {
 		return err
 	}
-	return usecase.internalUserError(ctx, operation, err)
+	return kerrors.InternalServer("USER_INTERNAL", "user operation failed").WithCause(err)
 }
 
 func (usecase *UserUsecase) internalUserError(ctx context.Context, operation string, cause error) error {
