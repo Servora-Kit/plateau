@@ -758,8 +758,8 @@ const file_example_service_v1_user_proto_rawDesc = "" +
 	"UpdateUser\x12%.example.service.v1.UpdateUserRequest\x1a\x18.example.service.v1.User\"\x13\xdaA\x10user,update_mask\x12V\n" +
 	"\n" +
 	"DeleteUser\x12%.example.service.v1.DeleteUserRequest\x1a\x18.example.service.v1.User\"\a\xdaA\x04name\x12Z\n" +
-	"\fUndeleteUser\x12'.example.service.v1.UndeleteUserRequest\x1a\x18.example.service.v1.User\"\a\xdaA\x04nameB\xe1\x01\n" +
-	"\x16com.example.service.v1B\tUserProtoP\x01ZRgithub.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplesvcpb\xa2\x02\x03ESX\xaa\x02\x12Example.Service.V1\xca\x02\x12Example\\Service\\V1\xe2\x02\x1eExample\\Service\\V1\\GPBMetadata\xea\x02\x14Example::Service::V1b\x06proto3"
+	"\fUndeleteUser\x12'.example.service.v1.UndeleteUserRequest\x1a\x18.example.service.v1.User\"\a\xdaA\x04nameB\x84\x01\n" +
+	"\x1edev.servora.example.service.v1B\fExampleProtoP\x01ZRgithub.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplesvcpbb\x06proto3"
 
 var (
 	file_example_service_v1_user_proto_rawDescOnce sync.Once

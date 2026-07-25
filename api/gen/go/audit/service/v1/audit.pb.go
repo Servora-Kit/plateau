@@ -527,9 +527,7 @@ const file_audit_service_v1_audit_proto_rawDesc = "" +
 	"totalCount2\xe6\x01\n" +
 	"\x11AuditQueryService\x12f\n" +
 	"\x0fListAuditEvents\x12(.audit.service.v1.ListAuditEventsRequest\x1a).audit.service.v1.ListAuditEventsResponse\x12i\n" +
-	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponseB\xd4\x01\n" +
-	"\x14com.audit.service.v1B\n" +
-	"AuditProtoP\x01ZNgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpb\xa2\x02\x03ASX\xaa\x02\x10Audit.Service.V1\xca\x02\x10Audit\\Service\\V1\xe2\x02\x1cAudit\\Service\\V1\\GPBMetadata\xea\x02\x12Audit::Service::V1b\x06proto3"
+	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponseBPZNgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpbb\x06proto3"
 
 var (
 	file_audit_service_v1_audit_proto_rawDescOnce sync.Once

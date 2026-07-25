@@ -1,5 +1,4 @@
 BUF_GO_GEN_TEMPLATE ?= buf.go.gen.yaml
-BUF_TS_GEN_TEMPLATE ?= buf.typescript.gen.yaml
 SERVORA_PKG ?= github.com/Servora-Kit/servora
 
 PROTOC_GEN_GO_VERSION ?= latest
@@ -59,18 +58,8 @@ api: $(API_TARGETS) ## Generate configured protobuf API code
 api-go: ## Generate protobuf Go code
 	@buf generate --template $(BUF_GO_GEN_TEMPLATE)
 
-api-ts: ## Generate TypeScript API code where templates exist
-	@if [ -f "$(BUF_TS_GEN_TEMPLATE)" ]; then \
-		echo "==> Generating TypeScript via $(BUF_TS_GEN_TEMPLATE)"; \
-		buf generate --template "$(BUF_TS_GEN_TEMPLATE)"; \
-	fi
-	@set -e; for mod in $(SERVICE_MODULES); do \
-		tpl="$$mod/api/buf.typescript.gen.yaml"; \
-		if [ -f "$$tpl" ]; then \
-			echo "==> Generating TypeScript via $$tpl"; \
-			buf generate --template "$$tpl"; \
-		fi; \
-	done
+api-ts: ## Generate TypeScript API code for services that define templates
+	$(call run-in-service-dirs,api-ts)
 
 ent: ## Generate Ent code for services that define generators
 	$(call run-in-service-dirs,gen.ent)
@@ -100,13 +89,18 @@ ifeq ($(SERVORA_CONTEXT),service)
 GEN_TARGETS := api $(GEN_TARGETS) gen.ent
 RUN_DEPS := api $(RUN_DEPS)
 
-.PHONY: api gen.ent
+.PHONY: api api-ts gen.ent
 
-api: ## Generate repository Go API and current service API templates
+api: ## Generate repository Go API and current service TypeScript API
 	@$(MAKE) -C $(REPO_ROOT) api-go
-	@if [ -f "./api/buf.typescript.gen.yaml" ]; then \
-		cd $(REPO_ROOT) && buf generate --template $(SERVICE_MODULE)/api/buf.typescript.gen.yaml; \
-	fi
+	@$(MAKE) api-ts
+
+api-ts: ## Generate current service TypeScript API code
+ifneq (,$(wildcard ./api/buf.typescript.gen.yaml))
+	@cd $(REPO_ROOT) && buf generate --template $(SERVICE_MODULE)/api/buf.typescript.gen.yaml
+else
+	@echo "No TypeScript API template found for $(SERVICE_NAME), skipping"
+endif
 
 gen.ent: ## Generate Ent code if this service defines a generator
 	@if [ -f "./internal/data/generate.go" ]; then \

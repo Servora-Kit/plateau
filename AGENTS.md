@@ -6,77 +6,61 @@
 
 `servora-platform` 是 Servora 的平台服务与参考应用仓库，当前包含 Audit 微服务和单一 User CRUD 参考应用。
 
-依赖关系：
+## 依赖关系
 
-- Go module 依赖：`github.com/Servora-Kit/servora`、`github.com/Servora-Kit/servora/api/gen`
+- go.work 用于连接代码生成与各个微服务依赖
 - Proto BSR 依赖：`buf.build/servora/servora`
-- 平台/参考应用生成物：`api/gen/go/` 与 `api/gen/ts/`
-- Go module：`app/audit/service`、`app/example/service`、`api/gen`
 
-当前主线事实：
+## 开发规范
 
-- 所有开发在 `main` 分支进行；`go.work` 仅用于本地联合开发。
-- `app/example/service` 是 `example.servora.dev/User` 的可运行 CRUD 黄金路径。
-- `app/example/web` 是 Vue 请求控制台，直接调用本地 HTTP facade，不维护第二套 API contract。
+- 修改 proto 后执行 `make gen`
+- 修改 Wire 依赖图后执行 `make wire`
+- 不要手改 `api/gen/go/*`、`app/*/web/src/api/generated/*`、`wire_gen.go`
+- `servora-platform/app/example` 是当前servora最标准的微服务使用流程，也是新增平台级微服务的推荐模板。微服务的后端分为：
+- api
+  - gen/go 所有微服务的 Go proto 代码生成输出目录；前端 TypeScript 生成到各自 `web/src/api/generated/`
+- app/ 微服务全都在这个目录里面
+  - {ServiceName/}|{OtherServiceName/}
+    - service/ 后端
+      - api/ 本微服务proto接口定义和私有配置文件proto定义
+        - protos/{DomainName}/service/ 该微服务各个领域的 Proto API 定义
+        - protos/{ConfigName}/conf.proto 该微服务自己的业务配置 proto
+        - buf.openapi.gen.yaml 该服务的OpenAPI的 buf 生成配置
+        - buf.xxx.gen.yaml 该服务特有的 某语言的 buf 生成配置
+      - cmd/ 启动入口，一般只包含 server/
+      - configs/local|docker 本地/容器运行时配置
+      - internal/ 业务逻辑，其中包含
+        - assets/ 默认包含protoc-gen-openapi所生成的openapi.yaml
+        - server/ http/grpc等服务层
+          - server.go 除了ProviderSet，一般不能有别的方法
+          - http.go|grpc.go 服务具体实现，后续若有WebSocket、Asynq的服务端也可以放这里
+        - service/ 接口实现层，无任何业务逻辑，不能被 biz 层 import
+          - service.go 除了ProviderSet，一般不能有别的方法
+          - xxx.go 某业务的接口适配
+          - 定义 XxxService 结构体来嵌入 xxxv1.UnimplementedXxxServiceServer 进行接口实现，嵌入 *biz.UserUsecase 来将规范化后的请求让 biz 层处理
+        - biz/ 业务逻辑层，具体的业务处理逻辑，可以被 service 层 import，不应 import data 层(不关心存储如何实现)
+          - biz.go 除了ProviderSet，一般不能有别的方法
+          - xxx.go 某业务的具体处理逻辑
+          - 定义 XxxUsecase 结构体表示本领域的具体业务
+          - 定义 XxxRepo 接口表示本业务所需要的 data 层方法
+        - data/ 数据访问层，包含数据库访问逻辑，可以 import biz 层
+          - data.go 除了ProviderSet，有且仅有 NewData 相关初始化逻辑
+          - xxx.go 实现 biz 层定义的 XxxRepo 接口，实现具体的数据访问逻辑
+          - ent/schema/ 如用了 Ent ORM ，推荐这里定义表结构
+          - generate.go 如用了 Ent  ORM 框架，生成代码的入口
+      - go.mod|go.sum
+      - Makefile 服务级 make 命令入口
+    - web/ 前端
+- make/ Makefile
+- manifests/ 部署资源文件
+- Makefile 项目级 make 命令入口
+- buf.yaml buf 总配置，依赖以及 lint 规则
+- `buf.go.gen.yaml` 项目级统一 Go 生成配置；服务特有语言配置放在服务 `api/` 下
+- go.work 统一管理各个微服务与 ./api/gen 的依赖
+- go.mod|go.sum 总依赖管理
 
-## 开发约束
 
-### 提交消息格式
-
-遵循 Servora-Kit 组织统一规范：
-
-```
-type(scope): description
-```
-
-**允许的 type**：`feat`、`fix`、`refactor`、`docs`、`test`、`chore`
-
-**建议的 scope**：
-- `api`：API / Proto
-- `app/audit`：Audit 服务
-- `manifests`：部署清单
-- `infra`：基础设施/部署
-- `repo`：仓库治理
-
-## 顶层目录
-
-- `api/gen/`：Go/TypeScript 生成产物
-- `app/audit/service/`：Audit 微服务
-- `app/example/service/`：User CRUD 参考服务，包含 service/biz/data/Ent/HTTP facade
-- `app/example/web/`：Vue 参考客户端
-- `manifests/`：平台部署清单与 OpenFGA model
-
-## 关键文件
-
-- `Makefile`：模块、Buf template 与共享 Make 入口
-- `make/core.mk`：根目录/服务目录共享 gen / build / lint / run 逻辑
-- `make/extra.mk`：api / ent / openfga 扩展逻辑
-- `buf.yaml`：Buf v2 workspace，纳管 Audit 与 Example User proto
-- `buf.go.gen.yaml`：Go 生成模板，包含 CRUD descriptor/name/field helper
-- `buf.typescript.gen.yaml`：TypeScript HTTP/CRUD 生成模板
-- `docker-compose.yaml`：平台基础设施；参考服务本地使用 SQLite，不要求 Audit 容器
-
-## 目录约定
-
-### API / Proto
-
-- Audit proto：`app/audit/service/api/protos/`
-- Example User proto：`app/example/service/api/protos/`
-- 框架公共 proto 通过 BSR 依赖（`buf.build/servora/servora`）
-- Go/TypeScript 生成代码输出到 `api/gen/`
-- `api/gen/go`、`api/gen/ts`、Ent、Wire 与 OpenAPI 产物禁止手改，也不创建手写 `AGENTS.md`
-
-### Proto 呍名规范
-
-- 目录与 package 逐段对齐，满足 Buf `PACKAGE_DIRECTORY_MATCH`
-- Audit 使用 `servora.audit.*`；参考业务资源使用 `example.service.v1`
-- `go_package` 必须落到 `github.com/Servora-Kit/servora-platform/api/gen/go/**`
-
-### 服务实现
-
-- DDD 分层：`service -> biz -> data`
-- Wire 依赖注入：修改后执行 `make wire`
-- CRUD 原始 RPC wrapper、FieldMask 与 filter/order 文本停在 service；业务 scope 与语义归 biz；Ent binding 与 mutation 归 data
+- 修改 OpenFGA model 后执行 `make openfga.model.apply`
 
 ## 常用命令
 
@@ -86,24 +70,13 @@ make init              # 安装工具（protoc 插件 + CLI）
 
 # 代码生成
 make gen               # 统一生成（api + wire）
-make api               # 仅生成 proto Go 代码
+make api               # 生成统一 Go API 与各服务可选 TypeScript API
+make api-go            # 仅生成 proto Go 代码
 make wire              # 仅生成 Wire
 
 # 质量检查
 make lint              # Go lint
 make lint.proto        # Proto lint
-
-# Compose (开发工作流)
-make compose.up        # 启动 COMPOSE_FILES 指定的 Compose 服务
-make compose.build     # 构建所有服务的最新生产镜像 (包含 latest tag)
-make compose.stop      # 停止容器，不删除容器
-make compose.down      # 移除容器/网络，保留 volumes
-make compose.reset     # 移除容器/网络/volumes
-make compose.ps        # 查看 Compose 服务状态
-make compose.logs      # 跟踪 Compose 服务日志
-
-# 应用容器
-COMPOSE_FILES="-f docker-compose.yaml -f docker-compose.apps.yaml" make compose.up
 
 # OpenFGA
 make openfga.init             # 初始化 store
@@ -113,10 +86,3 @@ make openfga.model.apply      # 应用 model 更新
 ```
 
 ## 维护提示
-
-- 修改 proto 后执行 `make gen`
-- 修改 Wire 依赖图后执行 `make wire`
-- 不要手改 `api/gen/go/`、`wire_gen.go`
-- 修改 OpenFGA model 后执行 `make openfga.model.apply`
-- 自定义 protoc 插件通过 `go install github.com/Servora-Kit/servora/cmd/...@latest` 安装
-- 新增平台级微服务时，在 `app/<service>/service/` 下创建标准 Kratos 服务结构，并在 `buf.yaml` 中添加对应 proto 模块

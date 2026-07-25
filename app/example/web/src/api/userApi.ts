@@ -4,7 +4,7 @@ import {
   createUserHTTPServiceClient,
   type ClientTransport,
   type User,
-} from '../../../../../api/gen/ts/example/service/v1/index'
+} from '@/api/generated/example/service/v1'
 
 const requestHandler = createRequestHandler({
   baseUrl: import.meta.env.VITE_API_BASE_URL ?? '',

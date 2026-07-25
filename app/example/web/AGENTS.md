@@ -7,7 +7,7 @@ Vue reference client for `example.service.v1.User`. It must exercise the public 
 ## Rules
 
 - Keep resource identity `example.servora.dev/User` and `tenants/{tenant}/users/{user}` aligned with the service Proto.
-- Import generated API code from `servora-platform/api/gen/ts`; never copy generated types into `src` and never edit generated output.
+- Import generated API code from `@/api/generated/**`; never copy generated types by hand and never edit generated output.
 - Build resource names, filters, order expressions, update masks, and pagination state with generated CRUD helpers and `@servora/proto-utils`.
 - Send requests through `createRequestHandler`; preserve `application/json` content negotiation with canonical ProtoJSON payloads and structured `ApiError` handling.
 - The Vite `/v1` proxy targets the local example service on `127.0.0.1:28080`. Do not start Audit or database containers for this app.

@@ -28,8 +28,7 @@ const file_audit_service_v1_i_audit_proto_rawDesc = "" +
 	"\x1eaudit/service/v1/i_audit.proto\x12\x10audit.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1caudit/service/v1/audit.proto2\xa1\x02\n" +
 	"\x10AuditHTTPService\x12\x80\x01\n" +
 	"\x0fListAuditEvents\x12(.audit.service.v1.ListAuditEventsRequest\x1a).audit.service.v1.ListAuditEventsResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/audit/events\x12\x89\x01\n" +
-	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/audit/events:countB\xd5\x01\n" +
-	"\x14com.audit.service.v1B\vIAuditProtoP\x01ZNgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpb\xa2\x02\x03ASX\xaa\x02\x10Audit.Service.V1\xca\x02\x10Audit\\Service\\V1\xe2\x02\x1cAudit\\Service\\V1\\GPBMetadata\xea\x02\x12Audit::Service::V1b\x06proto3"
+	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/audit/events:countBPZNgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpbb\x06proto3"
 
 var file_audit_service_v1_i_audit_proto_goTypes = []any{
 	(*ListAuditEventsRequest)(nil),   // 0: audit.service.v1.ListAuditEventsRequest

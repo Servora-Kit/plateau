@@ -35,9 +35,8 @@ const file_example_service_v1_i_user_proto_rawDesc = "" +
 	"UpdateUser\x12%.example.service.v1.UpdateUserRequest\x1a\x18.example.service.v1.User\"/\x82\xd3\xe4\x93\x02):\x04user2!/v1/{user.name=tenants/*/users/*}\x12s\n" +
 	"\n" +
 	"DeleteUser\x12%.example.service.v1.DeleteUserRequest\x1a\x18.example.service.v1.User\"$\x82\xd3\xe4\x93\x02\x1e*\x1c/v1/{name=tenants/*/users/*}\x12\x83\x01\n" +
-	"\fUndeleteUser\x12'.example.service.v1.UndeleteUserRequest\x1a\x18.example.service.v1.User\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/{name=tenants/*/users/*}:undeleteB\xe2\x01\n" +
-	"\x16com.example.service.v1B\n" +
-	"IUserProtoP\x01ZRgithub.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplesvcpb\xa2\x02\x03ESX\xaa\x02\x12Example.Service.V1\xca\x02\x12Example\\Service\\V1\xe2\x02\x1eExample\\Service\\V1\\GPBMetadata\xea\x02\x14Example::Service::V1b\x06proto3"
+	"\fUndeleteUser\x12'.example.service.v1.UndeleteUserRequest\x1a\x18.example.service.v1.User\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/{name=tenants/*/users/*}:undeleteB\x89\x01\n" +
+	"\x1edev.servora.example.service.v1B\x11InternalUserProtoP\x01ZRgithub.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplesvcpbb\x06proto3"
 
 var file_example_service_v1_i_user_proto_goTypes = []any{
 	(*GetUserRequest)(nil),      // 0: example.service.v1.GetUserRequest

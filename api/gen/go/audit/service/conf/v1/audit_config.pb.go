@@ -93,8 +93,7 @@ const file_audit_service_conf_v1_audit_config_proto_rawDesc = "" +
 	"\x13consumer_batch_size\x18\x01 \x01(\x05R\x11consumerBatchSize\x12Q\n" +
 	"\x17consumer_flush_interval\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x15consumerFlushInterval\x12%\n" +
 	"\x0eretention_days\x18\x03 \x01(\x05R\rretentionDays:\x16\x82\xce\x18\x12\n" +
-	"\x0eaudit_consumer\x10\x01B\xfa\x01\n" +
-	"\x19com.audit.service.conf.v1B\x10AuditConfigProtoP\x01ZTgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1;auditconfv1\xa2\x02\x03ASC\xaa\x02\x15Audit.Service.Conf.V1\xca\x02\x15Audit\\Service\\Conf\\V1\xe2\x02!Audit\\Service\\Conf\\V1\\GPBMetadata\xea\x02\x18Audit::Service::Conf::V1b\x06proto3"
+	"\x0eaudit_consumer\x10\x01BVZTgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1;auditconfv1b\x06proto3"
 
 var (
 	file_audit_service_conf_v1_audit_config_proto_rawDescOnce sync.Once

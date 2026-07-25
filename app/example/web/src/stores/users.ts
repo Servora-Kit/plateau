@@ -11,12 +11,12 @@ import {
   type Pager,
 } from '@servora/proto-utils/crud'
 
-import type { ListUsersRequest } from '../../../../../api/gen/ts/example/service/v1/index'
+import type { ListUsersRequest } from '@/api/generated/example/service/v1'
 import {
   UserFields,
   UserName,
   UserUpdateFields,
-} from '../../../../../api/gen/ts/example/service/v1/user.crud'
+} from '@/api/generated/example/service/v1/user.crud'
 import { userApi, type User } from '@/api/userApi'
 
 type CreateUserInput = Readonly<{

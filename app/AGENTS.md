@@ -32,8 +32,7 @@ app/{service}/service/
 
 - 服务目录中的 `make gen` 会执行 `api + openapi + wire + gen.ent`
 - 服务目录中的 `make build` 会先执行 `make gen`，再编译当前服务
-- 服务目录中的 `make api` 会回到仓库根目录跑 `make api-go`
-- 若存在 `api/buf.typescript.gen.yaml`，服务级 `make api` 会额外生成 TypeScript 客户端
+- 服务目录中的 `make api` 会回到仓库根目录生成统一 Go API；若存在 `api/buf.typescript.gen.yaml`，再生成当前服务的 TypeScript API
 - 服务级 `make openapi` 读取本目录 `api/buf.openapi.gen.yaml`
 
 ## 常用命令
