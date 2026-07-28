@@ -36,7 +36,7 @@ func TestUserReferenceIntegration(t *testing.T) {
 
 	alpha := createUser(t, ctx, service, "alpha", "Alpha", "alpha@example.com", "developer", &temporaryPassword, injectedCreateTime)
 	beta := createUser(t, ctx, service, "beta", "Beta", "beta@example.com", "developer", nil, nil)
-	gamma := createUser(t, ctx, service, "gamma", "Gamma", "gamma@example.com", "enterprise", nil, nil)
+	gamma := createUser(t, ctx, service, "gamma", "Gamma*", "gamma@example.com", "enterprise", nil, nil)
 
 	if alpha.GetName() != "tenants/acme/users/alpha" {
 		t.Fatalf("created name = %q", alpha.GetName())
@@ -111,6 +111,86 @@ func TestUserReferenceIntegration(t *testing.T) {
 	}
 	if len(enterprise.GetUsers()) != 1 || enterprise.GetUsers()[0].GetName() != gamma.GetName() {
 		t.Fatalf("enterprise users = %v", userNames(enterprise.GetUsers()))
+	}
+
+	prefix, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent: "tenants/acme", Filter: `display_name = "Al*"`,
+	})
+	if err != nil {
+		t.Fatalf("ListUsers prefix filter: %v", err)
+	}
+	if len(prefix.GetUsers()) != 1 || prefix.GetUsers()[0].GetName() != alpha.GetName() {
+		t.Fatalf("prefix users = %v, want [%s]", userNames(prefix.GetUsers()), alpha.GetName())
+	}
+
+	suffix, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent: "tenants/acme", Filter: `email = "*ha@example.com"`, IncludeTotal: true,
+	})
+	if err != nil {
+		t.Fatalf("ListUsers suffix filter: %v", err)
+	}
+	if suffix.GetTotalSize() != 1 || len(suffix.GetUsers()) != 1 || suffix.GetUsers()[0].GetName() != alpha.GetName() {
+		t.Fatalf("suffix result = users %v total %d, want [%s] total 1", userNames(suffix.GetUsers()), suffix.GetTotalSize(), alpha.GetName())
+	}
+
+	contains, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent: "tenants/acme", Filter: `display_name = "*amm*"`,
+	})
+	if err != nil {
+		t.Fatalf("ListUsers contains filter: %v", err)
+	}
+	if len(contains.GetUsers()) != 1 || contains.GetUsers()[0].GetName() != gamma.GetName() {
+		t.Fatalf("contains users = %v, want [%s]", userNames(contains.GetUsers()), gamma.GetName())
+	}
+
+	literalStar, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent: "tenants/acme", Filter: `display_name = "Gamma\\*"`,
+	})
+	if err != nil {
+		t.Fatalf("ListUsers literal star filter: %v", err)
+	}
+	if len(literalStar.GetUsers()) != 1 || literalStar.GetUsers()[0].GetName() != gamma.GetName() {
+		t.Fatalf("literal-star users = %v, want [%s]", userNames(literalStar.GetUsers()), gamma.GetName())
+	}
+
+	_, err = service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent: "tenants/acme", Filter: `display_name < "Al*"`,
+	})
+	if !crudpb.IsCrudErrorReasonInvalidFilter(err) {
+		t.Fatalf("range wildcard error = %v, want INVALID_FILTER", err)
+	}
+
+	wildcardFirst, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent: "tenants/acme", PageSize: 1, Filter: `email = "**@example.com"`, OrderBy: "display_name",
+	})
+	if err != nil {
+		t.Fatalf("ListUsers wildcard first page: %v", err)
+	}
+	if len(wildcardFirst.GetUsers()) != 1 || wildcardFirst.GetUsers()[0].GetName() != alpha.GetName() || wildcardFirst.GetNextPageToken() == "" {
+		t.Fatalf("wildcard first page = users %v token %q", userNames(wildcardFirst.GetUsers()), wildcardFirst.GetNextPageToken())
+	}
+	wildcardSecond, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent:    "tenants/acme",
+		PageSize:  1,
+		PageToken: wildcardFirst.GetNextPageToken(),
+		Filter:    `email = "*@example.com"`,
+		OrderBy:   "display_name",
+	})
+	if err != nil {
+		t.Fatalf("ListUsers canonical wildcard second page: %v", err)
+	}
+	if len(wildcardSecond.GetUsers()) != 1 || wildcardSecond.GetUsers()[0].GetName() != beta.GetName() {
+		t.Fatalf("wildcard second page users = %v, want [%s]", userNames(wildcardSecond.GetUsers()), beta.GetName())
+	}
+	_, err = service.ListUsers(ctx, &examplev1.ListUsersRequest{
+		Parent:    "tenants/acme",
+		PageSize:  1,
+		PageToken: wildcardFirst.GetNextPageToken(),
+		Filter:    `email = "*@example.org"`,
+		OrderBy:   "display_name",
+	})
+	if !crudpb.IsCrudErrorReasonInvalidPageToken(err) {
+		t.Fatalf("changed wildcard token error = %v, want INVALID_PAGE_TOKEN", err)
 	}
 
 	defaultFirst, err := service.ListUsers(ctx, &examplev1.ListUsersRequest{
@@ -246,12 +326,23 @@ func newLiveUserService(t *testing.T, dsn string) *userservice.UserService {
 		_ = driver.Close()
 		t.Fatalf("NewDBClient: %v", err)
 	}
-	store, cleanup, err := data.NewData(client)
+	transaction, err := client.Tx(context.Background())
 	if err != nil {
 		_ = client.Close()
+		t.Fatalf("begin fixture transaction: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := transaction.Rollback(); err != nil {
+			t.Errorf("rollback fixture transaction: %v", err)
+		}
+		if err := client.Close(); err != nil {
+			t.Errorf("close fixture client: %v", err)
+		}
+	})
+	store, _, err := data.NewData(transaction.Client())
+	if err != nil {
 		t.Fatalf("NewData: %v", err)
 	}
-	t.Cleanup(cleanup)
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	repository, err := data.NewUserRepo(store, logger)

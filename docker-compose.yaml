@@ -1,4 +1,30 @@
 services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: platform_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      POSTGRES_DB: "${POSTGRES_DB:-servora_platform}"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # PostgreSQL 18 在 major-version 子目录存储数据，挂载父目录。
+      - platform-postgres-data:/var/lib/postgresql
+    networks:
+      - platform-network
+
   consul:
     image: consul:1.15.4
     container_name: platform_consul
@@ -206,6 +232,7 @@ services:
       - platform-network
 
 volumes:
+  platform-postgres-data:
   platform-consul-data:
   platform-loki-data:
   platform-prometheus-data:
