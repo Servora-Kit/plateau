@@ -92,7 +92,7 @@ gen: $(GEN_TARGETS) ## Generate configured project code
 	@echo "✓ Code generated"
 
 gen.clean: ## Remove repository generated API code
-	@rm -rf api/gen/go
+	@rm -rf api/gen/go api/gen/ts api/gen/dist
 	@echo "✓ Generated API code cleaned"
 
 gen.fresh: gen.clean gen ## Clean generated API code and regenerate

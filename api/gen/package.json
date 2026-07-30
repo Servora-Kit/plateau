@@ -1,0 +1,36 @@
+{
+  "name": "@servora-platform/api",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./*.errors": {
+      "types": "./dist/*.errors.d.ts",
+      "import": "./dist/*.errors.js"
+    },
+    "./*.crud": {
+      "types": "./dist/*.crud.d.ts",
+      "import": "./dist/*.crud.js"
+    },
+    "./*": {
+      "types": "./dist/*/index.d.ts",
+      "import": "./dist/*/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@servora/proto-utils": "^0.1.6"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.0"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  }
+}

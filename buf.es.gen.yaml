@@ -1,0 +1,19 @@
+# Protobuf-ES generation is disabled; retained as a reference only.
+
+# version: v2
+#
+# clean: true
+#
+# plugins:
+#   - remote: buf.build/bufbuild/es:v2.13.0
+#     out: api/gen/ts
+#     include_imports: true
+#     opt:
+#       - target=ts
+#       - import_extension=js
+#
+#   - local: protoc-gen-servora-crud
+#     out: api/gen/ts
+#     opt:
+#       - target=ts
+#       - paths=source_relative

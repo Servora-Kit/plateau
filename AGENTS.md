@@ -1,6 +1,6 @@
 # AGENTS.md - servora-platform
 
-<!-- Updated: 2026-07-21 -->
+<!-- Updated: 2026-07-30 -->
 
 ## 项目概览
 
@@ -10,15 +10,19 @@
 
 - go.work 用于连接代码生成与各个微服务依赖
 - Proto BSR 依赖：`buf.build/servora/servora`
+- `pnpm-workspace.yaml` 独立管理 `api/gen` 与 `app/*/web`，仓库根 `pnpm-lock.yaml` 作为共享锁文件；顶层 `servora-kit` workspace 仅用于本地跨仓联调
 
 ## 开发规范
 
-- 修改 proto 后执行 `make gen`
+- 仓库根修改 proto 后执行 `make gen`，统一刷新 Go API、共享 TypeScript HTTP API 包、OpenAPI、Wire 与 Ent 产物；需要服务自有 Web client 时，在对应 `service/` 目录执行 `make gen` 或 `make api-ts`
 - 修改 Wire 依赖图后执行 `make wire`
-- 不要手改 `api/gen/go/*`、`app/*/web/src/api/generated/*`、`wire_gen.go`
+- 不要手改 `api/gen/go/*`、`api/gen/ts/*`、`app/*/web/src/api/generated/*`、`wire_gen.go`
+- 同一 API 的 gRPC 与 HTTP 必须由一个 Proto `service` 定义，HTTP annotation 与 RPC 放在同一个领域 Proto；不要创建 `i_xxx.proto` 或复制 `XxxHTTPService`
 - `servora-platform/app/example` 是当前servora最标准的微服务使用流程，也是新增平台级微服务的推荐模板。微服务的后端分为：
 - api
-  - gen/go 所有微服务的 Go proto 代码生成输出目录；前端 TypeScript 生成到各自 `web/src/api/generated/`
+  - gen/go 所有微服务的 Go Proto 生成输出目录
+  - gen/ts 所有微服务的 TypeScript Proto 生成输出目录
+  - gen/package.json 管理共享 TS 包依赖与 exports
 - app/ 微服务全都在这个目录里面
   - {ServiceName/}|{OtherServiceName/}
     - service/ 后端
@@ -26,7 +30,7 @@
         - protos/{DomainName}/service/ 该微服务各个领域的 Proto API 定义
         - protos/{ConfigName}/conf.proto 该微服务自己的业务配置 proto
         - buf.openapi.gen.yaml 该服务的OpenAPI的 buf 生成配置
-        - buf.xxx.gen.yaml 该服务特有的 某语言的 buf 生成配置
+        - buf.typescript.gen.yaml 可选的服务级模板；仅在服务目录执行 `make api-ts` 时使用，并按模板自己的 `out` 生成到服务 Web。仓库根 `buf.typescript.gen.yaml` 则为 `buf.yaml` 中全部模块生成共享 HTTP client，两者互不清理
       - cmd/ 启动入口，一般只包含 server/
       - configs/local|docker 本地/容器运行时配置
       - internal/ 业务逻辑，其中包含
@@ -54,8 +58,12 @@
 - make/ Makefile
 - manifests/ 部署资源文件
 - Makefile 项目级 make 命令入口
+- pnpm-workspace.yaml 统一纳管 `api/gen` 与 `app/*/web`
+- pnpm-lock.yaml Platform workspace 共享依赖锁文件
 - buf.yaml buf 总配置，依赖以及 lint 规则
-- `buf.go.gen.yaml` 项目级统一 Go 生成配置；服务特有语言配置放在服务 `api/` 下
+- `buf.go.gen.yaml` 项目级统一 Go 生成配置
+- `buf.typescript.gen.yaml` 项目级统一 TypeScript HTTP、error reason 与 CRUD helper 生成配置
+- `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
 - go.work 统一管理各个微服务与 ./api/gen 的依赖
 - go.mod|go.sum 总依赖管理
 
@@ -66,12 +74,14 @@
 
 ```bash
 # 初始化
-make init              # 安装工具（protoc 插件 + CLI）
+make init              # 安装 protoc 插件、CLI 与 pnpm workspace 依赖
 
 # 代码生成
-make gen               # 统一生成（api + wire）
-make api               # 生成统一 Go API 与各服务可选 TypeScript API
-make api-go            # 仅生成 proto Go 代码
+make gen               # 统一生成 Go、共享 TypeScript HTTP、OpenAPI、Wire 与 Ent
+make api               # 生成 Go 与共享 TypeScript HTTP API
+make api-go            # 仅生成全部模块的 Proto Go 代码到 api/gen/go
+make api-ts            # 仅生成全部模块的共享 HTTP client 到 api/gen/ts 并构建包
+make api-ts.check      # 仅检查共享 TypeScript HTTP 包类型
 make wire              # 仅生成 Wire
 
 # 质量检查
@@ -86,3 +96,7 @@ make openfga.model.apply      # 应用 model 更新
 ```
 
 ## 维护提示
+
+- 仓库根 `buf.typescript.gen.yaml` 不声明 `inputs`：`buf generate` 默认读取当前 `buf.yaml` workspace 的全部模块，三个本地插件共同输出到 `api/gen/ts/`；服务级模板拥有独立 `out`，不会相互清理。
+- `api/gen/package.json` 用 `./*` 映射 package 目录的 `index`，并用更具体的 `./*.errors`、`./*.crud` 映射 sidecar；新增 workspace 模块或 API 无需逐项维护 exports。共享包仅保留生成代码实际需要的 `@servora/proto-utils` 运行时依赖。
+- pnpm 依赖与锁文件统一由仓库根 workspace 管理；`api/gen` 与 `app/*/web` 不维护独立 `pnpm-lock.yaml`

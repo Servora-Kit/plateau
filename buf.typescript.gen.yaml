@@ -1,0 +1,17 @@
+version: v2
+
+clean: true
+
+plugins:
+  - local: protoc-gen-typescript-http
+    out: api/gen/ts
+  - local: protoc-gen-go-errors
+    out: api/gen/ts
+    opt:
+      - target=ts
+      - paths=source_relative
+  - local: protoc-gen-servora-crud
+    out: api/gen/ts
+    opt:
+      - target=ts
+      - paths=source_relative

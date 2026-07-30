@@ -68,13 +68,13 @@
 ### 安装工具
 
 ```bash
-make init    # 安装 protoc 插件与 CLI 工具
+make init    # 安装 protoc 插件、CLI 与 pnpm workspace 依赖
 ```
 
 ### 生成代码
 
 ```bash
-make gen     # 统一生成（api + wire）
+make gen     # 根目录统一生成 Go、共享 TypeScript HTTP、OpenAPI、Wire 与 Ent
 ```
 
 ### 启动开发环境
@@ -92,9 +92,12 @@ cd app/audit/service && make run
 ### 常用命令
 
 ```bash
-# 代码生成
-make gen                    # 统一生成
-make api                    # 仅生成 proto Go 代码
+# 根目录代码生成
+make gen                    # 统一生成仓库级代码
+make api                    # 生成全部模块的 Go 与共享 TypeScript HTTP API
+make api-go                 # 仅生成全部模块的 Go API 到 api/gen/go
+make api-ts                 # 仅生成共享 HTTP client 到 api/gen/ts 并构建 workspace 包
+make api-ts.check           # 仅检查共享 TypeScript HTTP 包类型
 make wire                   # 仅生成 Wire
 
 # 质量检查
@@ -104,6 +107,7 @@ make lint.proto             # Proto lint
 # 服务目录（app/audit/service/）
 make run                    # 直接运行（读 configs/local/）
 make build                  # 编译二进制
+make api-ts                 # 若服务存在 api/buf.typescript.gen.yaml，按其 out 生成本地 Web client
 
 # Compose - 基础设施
 make compose.up             # 启动基础设施
@@ -126,12 +130,13 @@ make openfga.model.apply    # 应用 model 更新
 
 - **Go 依赖**：`github.com/Servora-Kit/servora`（基础库）、`github.com/Servora-Kit/servora/api/gen`（框架 proto 生成代码）
 - **Proto 依赖**：`buf.build/servora/servora`（框架公共 proto）
+- **TypeScript 依赖**：`@servora-platform/api` 是 `api/gen` 提供的共享 workspace 包；根 `make api-ts` 为 `buf.yaml` 全部模块生成 HTTP client，服务目录的同名目标使用服务自有模板
 - **CLI / 代码生成工具**：`make init` 从 GitHub 安装 `svr`、Servora 代码生成插件与 GoWind `protoc-gen-go-redact`；项目由 Buf 驱动生成，无需安装 `kratos` CLI。
 
 ## 质量约束
 
-- 不要手动编辑生成代码：`api/gen/go/`、`wire_gen.go`
-- 修改 proto 后执行 `make gen`
+- 不要手动编辑生成代码：`api/gen/go/`、`api/gen/ts/`、`app/*/web/src/api/generated/`、`wire_gen.go`
+- 修改 proto 后在仓库根执行 `make gen`；需要服务自有 client 时，再在对应服务目录执行 `make api-ts`
 - 修改 Wire 依赖图后执行 `make wire`
 - 修改 OpenFGA model 后执行 `make openfga.model.apply`
 - 提交前执行 `make lint`

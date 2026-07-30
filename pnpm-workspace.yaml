@@ -1,0 +1,11 @@
+linkWorkspacePackages: true
+
+packages:
+  - "api/gen"
+  - "app/*/web"
+
+minimumReleaseAgeExclude:
+  - "@servora/proto-utils"
+
+allowBuilds:
+  sharp: true

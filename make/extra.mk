@@ -1,4 +1,7 @@
 BUF_GO_GEN_TEMPLATE ?= buf.go.gen.yaml
+BUF_TS_GEN_TEMPLATE ?= buf.typescript.gen.yaml
+PNPM ?= pnpm
+API_TS_PACKAGE ?= @servora-platform/api
 SERVORA_PKG ?= github.com/Servora-Kit/servora
 
 PROTOC_GEN_GO_VERSION ?= latest
@@ -19,10 +22,11 @@ ifeq ($(SERVORA_CONTEXT),root)
 GEN_TARGETS := api $(GEN_TARGETS) ent
 API_TARGETS += api-go api-ts
 
-.PHONY: init plugin cli api api-go api-ts ent
+.PHONY: init plugin cli api api-go api-ts api-ts.check ent
 .PHONY: openfga.init openfga.model.validate openfga.model.test openfga.model.apply
 
-init: plugin cli ## Install protoc plugins and CLI tools
+init: plugin cli ## Install protoc plugins, CLI tools, and pnpm workspace dependencies
+	@$(PNPM) install --frozen-lockfile
 
 plugin: ## Install protoc-gen-* plugins
 	@echo "==> Installing protoc plugins..."
@@ -58,8 +62,12 @@ api: $(API_TARGETS) ## Generate configured protobuf API code
 api-go: ## Generate protobuf Go code
 	@buf generate --template $(BUF_GO_GEN_TEMPLATE)
 
-api-ts: ## Generate TypeScript API code for services that define templates
-	$(call run-in-service-dirs,api-ts)
+api-ts: ## Generate and build the shared TypeScript HTTP API package
+	@buf generate --template $(BUF_TS_GEN_TEMPLATE)
+	@$(PNPM) --filter $(API_TS_PACKAGE) build
+
+api-ts.check: ## Type-check the shared TypeScript HTTP API package without emitting files
+	@$(PNPM) --filter $(API_TS_PACKAGE) typecheck
 
 ent: ## Generate Ent code for services that define generators
 	$(call run-in-service-dirs,gen.ent)
