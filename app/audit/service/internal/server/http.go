@@ -5,7 +5,7 @@ import (
 
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
+	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
@@ -27,7 +27,7 @@ func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
 		svrhttp.WithServices(func(s *khttp.Server) {
-			auditsvcpb.RegisterAuditHTTPServiceHTTPServer(s, svc)
+			auditpb.RegisterAuditQueryServiceHTTPServer(s, svc)
 		}),
 	}
 	if c != nil && c.Http != nil {

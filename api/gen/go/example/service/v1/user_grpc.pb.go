@@ -6,7 +6,7 @@
 
 // Servora 标准 CRUD 业务契约与生成链公开示例。
 
-package examplesvcpb
+package examplepb
 
 import (
 	context "context"
@@ -33,7 +33,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UserService 提供内部 gRPC CRUD 方法及 AIP-164 恢复方法。
+// UserService exposes the User CRUD reference flow over gRPC and HTTP.
 type UserServiceClient interface {
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error)
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
@@ -115,7 +115,7 @@ func (c *userServiceClient) UndeleteUser(ctx context.Context, in *UndeleteUserRe
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
 //
-// UserService 提供内部 gRPC CRUD 方法及 AIP-164 恢复方法。
+// UserService exposes the User CRUD reference flow over gRPC and HTTP.
 type UserServiceServer interface {
 	GetUser(context.Context, *GetUserRequest) (*User, error)
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)

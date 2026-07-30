@@ -2,14 +2,19 @@ syntax = "proto3";
 
 package audit.service.v1;
 
+import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpb";
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditpb";
 
-// AuditQueryService provides read-only access to persisted audit events.
+// AuditQueryService provides read-only gRPC and HTTP access to persisted audit events.
 service AuditQueryService {
-  rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse);
-  rpc CountAuditEvents(CountAuditEventsRequest) returns (CountAuditEventsResponse);
+  rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse) {
+    option (google.api.http) = {get: "/v1/audit/events"};
+  }
+  rpc CountAuditEvents(CountAuditEventsRequest) returns (CountAuditEventsResponse) {
+    option (google.api.http) = {get: "/v1/audit/events:count"};
+  }
 }
 
 // AuditEventItem mirrors the ClickHouse audit_events row.

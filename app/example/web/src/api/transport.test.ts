@@ -4,7 +4,7 @@ import { ApiError } from '@servora/proto-utils/errors'
 import { transport } from '@/api/transport'
 
 const meta = {
-  service: 'UserHTTPService',
+  service: 'UserService',
   method: 'GetUser',
 }
 
@@ -46,7 +46,7 @@ describe('application ClientTransport', () => {
     const body = JSON.stringify({ revision: '9223372036854775807' })
 
     await transport.unary('/v1/users', 'POST', body, {
-      service: 'UserHTTPService',
+      service: 'UserService',
       method: 'CreateUser',
     })
 
@@ -100,7 +100,7 @@ describe('application ClientTransport', () => {
       kind: 'http',
       httpStatus: response.status,
       responseBody: expectedBody,
-      service: 'UserHTTPService',
+      service: 'UserService',
       method: 'GetUser',
     })
   })
@@ -119,7 +119,7 @@ describe('application ClientTransport', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({
       kind: 'network',
-      service: 'UserHTTPService',
+      service: 'UserService',
       method: 'GetUser',
       cause,
     })
@@ -160,7 +160,7 @@ describe('application ClientTransport', () => {
     const request = transport.unary('/v1/users/ada', 'GET', null, meta)
     const rejection = expect(request).rejects.toMatchObject({
       kind: 'timeout',
-      service: 'UserHTTPService',
+      service: 'UserService',
       method: 'GetUser',
     })
     await vi.advanceTimersByTimeAsync(10_000)

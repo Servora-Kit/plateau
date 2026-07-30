@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"time"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
+	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -52,7 +52,7 @@ func decodePageToken(token string) (*pageToken, error) {
 }
 
 // ListEvents queries audit events with filters and cursor-based pagination.
-func (r *auditRepo) ListEvents(ctx context.Context, req *auditsvcpb.ListAuditEventsRequest) ([]*auditsvcpb.AuditEventItem, string, error) {
+func (r *auditRepo) ListEvents(ctx context.Context, req *auditpb.ListAuditEventsRequest) ([]*auditpb.AuditEventItem, string, error) {
 	if r.data.ClickHouse() == nil {
 		return nil, "", nil
 	}
@@ -100,7 +100,7 @@ LIMIT %d
 		}
 	}()
 
-	var items []*auditsvcpb.AuditEventItem
+	var items []*auditpb.AuditEventItem
 	for rows.Next() {
 		var (
 			eventID, eventType, eventVersion string
@@ -123,7 +123,7 @@ LIMIT %d
 			r.log.WarnContext(ctx, "failed to scan row", "err", err)
 			continue
 		}
-		items = append(items, &auditsvcpb.AuditEventItem{
+		items = append(items, &auditpb.AuditEventItem{
 			EventId:          eventID,
 			EventType:        eventType,
 			EventVersion:     eventVersion,
@@ -159,7 +159,7 @@ LIMIT %d
 }
 
 // CountEvents returns the count of audit events matching the given filters.
-func (r *auditRepo) CountEvents(ctx context.Context, req *auditsvcpb.CountAuditEventsRequest) (int64, error) {
+func (r *auditRepo) CountEvents(ctx context.Context, req *auditpb.CountAuditEventsRequest) (int64, error) {
 	if r.data.ClickHouse() == nil {
 		return 0, nil
 	}

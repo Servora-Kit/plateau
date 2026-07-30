@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: audit/service/v1/audit.proto
 
-package auditsvcpb
+package auditpb
 
 import (
 	context "context"
@@ -27,7 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AuditQueryService provides read-only access to persisted audit events.
+// AuditQueryService provides read-only gRPC and HTTP access to persisted audit events.
 type AuditQueryServiceClient interface {
 	ListAuditEvents(ctx context.Context, in *ListAuditEventsRequest, opts ...grpc.CallOption) (*ListAuditEventsResponse, error)
 	CountAuditEvents(ctx context.Context, in *CountAuditEventsRequest, opts ...grpc.CallOption) (*CountAuditEventsResponse, error)
@@ -65,7 +65,7 @@ func (c *auditQueryServiceClient) CountAuditEvents(ctx context.Context, in *Coun
 // All implementations must embed UnimplementedAuditQueryServiceServer
 // for forward compatibility.
 //
-// AuditQueryService provides read-only access to persisted audit events.
+// AuditQueryService provides read-only gRPC and HTTP access to persisted audit events.
 type AuditQueryServiceServer interface {
 	ListAuditEvents(context.Context, *ListAuditEventsRequest) (*ListAuditEventsResponse, error)
 	CountAuditEvents(context.Context, *CountAuditEventsRequest) (*CountAuditEventsResponse, error)

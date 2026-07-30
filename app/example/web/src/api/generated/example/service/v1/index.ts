@@ -240,18 +240,8 @@ export type UndeleteUserRequest = {
   name?: string;
 };
 
-// UserService 提供内部 gRPC CRUD 方法及 AIP-164 恢复方法。
+// UserService exposes the User CRUD reference flow over gRPC and HTTP.
 export interface UserService {
-}
-
-export function createUserServiceClient(
-  transport: ClientTransport,
-): UserService {
-  return {
-  };
-}
-// UserHTTPService exposes the User CRUD reference flow over HTTP.
-export interface UserHTTPService {
   GetUser(
     request: GetUserRequest,
   ): Promise<User>;
@@ -272,9 +262,9 @@ export interface UserHTTPService {
   ): Promise<User>;
 }
 
-export function createUserHTTPServiceClient(
+export function createUserServiceClient(
   transport: ClientTransport,
-): UserHTTPService {
+): UserService {
   return {
     GetUser(request) {
       if (request.name === undefined || request.name === null || request.name === '') {
@@ -283,7 +273,7 @@ export function createUserHTTPServiceClient(
       const path = `v1/${encodeMultiSegmentPath(request.name)}`;
       const body = null;
       return transport.unary<User>(path, 'GET', body, {
-        service: 'UserHTTPService',
+        service: 'UserService',
         method: 'GetUser',
       });
     },
@@ -334,7 +324,7 @@ export function createUserHTTPServiceClient(
         uri += `?${queryParams.join('&')}`;
       }
       return transport.unary<ListUsersResponse>(uri, 'GET', body, {
-        service: 'UserHTTPService',
+        service: 'UserService',
         method: 'ListUsers',
       });
     },
@@ -361,7 +351,7 @@ export function createUserHTTPServiceClient(
         uri += `?${queryParams.join('&')}`;
       }
       return transport.unary<User>(uri, 'POST', body, {
-        service: 'UserHTTPService',
+        service: 'UserService',
         method: 'CreateUser',
       });
     },
@@ -387,7 +377,7 @@ export function createUserHTTPServiceClient(
         uri += `?${queryParams.join('&')}`;
       }
       return transport.unary<User>(uri, 'PATCH', body, {
-        service: 'UserHTTPService',
+        service: 'UserService',
         method: 'UpdateUser',
       });
     },
@@ -413,7 +403,7 @@ export function createUserHTTPServiceClient(
         uri += `?${queryParams.join('&')}`;
       }
       return transport.unary<User>(uri, 'DELETE', body, {
-        service: 'UserHTTPService',
+        service: 'UserService',
         method: 'DeleteUser',
       });
     },
@@ -424,7 +414,7 @@ export function createUserHTTPServiceClient(
       const path = `v1/${encodeMultiSegmentPath(request.name)}:undelete`;
       const body = JSON.stringify(request);
       return transport.unary<User>(path, 'POST', body, {
-        service: 'UserHTTPService',
+        service: 'UserService',
         method: 'UndeleteUser',
       });
     },
@@ -432,15 +422,10 @@ export function createUserHTTPServiceClient(
 }
 export class ApiClient {
   private readonly _transport: ClientTransport;
-  private _userHTTPService?: UserHTTPService;
   private _userService?: UserService;
 
   constructor(transport: ClientTransport) {
     this._transport = transport;
-  }
-
-  get userHTTPService(): UserHTTPService {
-    return this._userHTTPService ??= createUserHTTPServiceClient(this._transport);
   }
 
   get userService(): UserService {

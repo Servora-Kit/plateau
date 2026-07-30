@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-http v3.0.0
 // - protoc             (unknown)
-// source: audit/service/v1/i_audit.proto
+// source: audit/service/v1/audit.proto
 
-package auditsvcpb
+package auditpb
 
 import (
 	context "context"
@@ -17,27 +17,27 @@ var _ = new(context.Context)
 
 const _ = http.SupportPackageIsVersion3
 
-const OperationAuditHTTPServiceCountAuditEvents = "/audit.service.v1.AuditHTTPService/CountAuditEvents"
-const OperationAuditHTTPServiceListAuditEvents = "/audit.service.v1.AuditHTTPService/ListAuditEvents"
+const OperationAuditQueryServiceCountAuditEvents = "/audit.service.v1.AuditQueryService/CountAuditEvents"
+const OperationAuditQueryServiceListAuditEvents = "/audit.service.v1.AuditQueryService/ListAuditEvents"
 
-type AuditHTTPServiceHTTPServer interface {
+type AuditQueryServiceHTTPServer interface {
 	CountAuditEvents(context.Context, *CountAuditEventsRequest) (*CountAuditEventsResponse, error)
 	ListAuditEvents(context.Context, *ListAuditEventsRequest) (*ListAuditEventsResponse, error)
 }
 
-func RegisterAuditHTTPServiceHTTPServer(s *http.Server, srv AuditHTTPServiceHTTPServer) {
+func RegisterAuditQueryServiceHTTPServer(s *http.Server, srv AuditQueryServiceHTTPServer) {
 	r := s.Route("/")
-	r.Handle("GET", "/v1/audit/events", _AuditHTTPService_ListAuditEvents0_HTTP_Handler(srv))
-	r.Handle("GET", "/v1/audit/events:count", _AuditHTTPService_CountAuditEvents0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/audit/events", _AuditQueryService_ListAuditEvents0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/audit/events:count", _AuditQueryService_CountAuditEvents0_HTTP_Handler(srv))
 }
 
-func _AuditHTTPService_ListAuditEvents0_HTTP_Handler(srv AuditHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _AuditQueryService_ListAuditEvents0_HTTP_Handler(srv AuditQueryServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ListAuditEventsRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationAuditHTTPServiceListAuditEvents)
+		http.SetOperation(ctx, OperationAuditQueryServiceListAuditEvents)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.ListAuditEvents(ctx, req.(*ListAuditEventsRequest))
 		})
@@ -50,13 +50,13 @@ func _AuditHTTPService_ListAuditEvents0_HTTP_Handler(srv AuditHTTPServiceHTTPSer
 	}
 }
 
-func _AuditHTTPService_CountAuditEvents0_HTTP_Handler(srv AuditHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _AuditQueryService_CountAuditEvents0_HTTP_Handler(srv AuditQueryServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CountAuditEventsRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationAuditHTTPServiceCountAuditEvents)
+		http.SetOperation(ctx, OperationAuditQueryServiceCountAuditEvents)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.CountAuditEvents(ctx, req.(*CountAuditEventsRequest))
 		})
@@ -69,26 +69,26 @@ func _AuditHTTPService_CountAuditEvents0_HTTP_Handler(srv AuditHTTPServiceHTTPSe
 	}
 }
 
-type AuditHTTPServiceHTTPClient interface {
+type AuditQueryServiceHTTPClient interface {
 	CountAuditEvents(ctx context.Context, req *CountAuditEventsRequest, opts ...http.CallOption) (rsp *CountAuditEventsResponse, err error)
 	ListAuditEvents(ctx context.Context, req *ListAuditEventsRequest, opts ...http.CallOption) (rsp *ListAuditEventsResponse, err error)
 }
 
-type AuditHTTPServiceHTTPClientImpl struct {
+type AuditQueryServiceHTTPClientImpl struct {
 	cc *http.Client
 }
 
-func NewAuditHTTPServiceHTTPClient(client *http.Client) AuditHTTPServiceHTTPClient {
-	return &AuditHTTPServiceHTTPClientImpl{client}
+func NewAuditQueryServiceHTTPClient(client *http.Client) AuditQueryServiceHTTPClient {
+	return &AuditQueryServiceHTTPClientImpl{client}
 }
 
-func (c *AuditHTTPServiceHTTPClientImpl) CountAuditEvents(ctx context.Context, in *CountAuditEventsRequest, opts ...http.CallOption) (*CountAuditEventsResponse, error) {
+func (c *AuditQueryServiceHTTPClientImpl) CountAuditEvents(ctx context.Context, in *CountAuditEventsRequest, opts ...http.CallOption) (*CountAuditEventsResponse, error) {
 	var out CountAuditEventsResponse
 	pattern := "/v1/audit/events:count"
 	path := http.BuildPath(pattern, in, http.WithQueryParams())
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
-		http.Operation(OperationAuditHTTPServiceCountAuditEvents),
+		http.Operation(OperationAuditQueryServiceCountAuditEvents),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
@@ -98,13 +98,13 @@ func (c *AuditHTTPServiceHTTPClientImpl) CountAuditEvents(ctx context.Context, i
 	return &out, nil
 }
 
-func (c *AuditHTTPServiceHTTPClientImpl) ListAuditEvents(ctx context.Context, in *ListAuditEventsRequest, opts ...http.CallOption) (*ListAuditEventsResponse, error) {
+func (c *AuditQueryServiceHTTPClientImpl) ListAuditEvents(ctx context.Context, in *ListAuditEventsRequest, opts ...http.CallOption) (*ListAuditEventsResponse, error) {
 	var out ListAuditEventsResponse
 	pattern := "/v1/audit/events"
 	path := http.BuildPath(pattern, in, http.WithQueryParams())
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
-		http.Operation(OperationAuditHTTPServiceListAuditEvents),
+		http.Operation(OperationAuditQueryServiceListAuditEvents),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)

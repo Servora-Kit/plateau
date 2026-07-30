@@ -3,6 +3,7 @@ syntax = "proto3";
 // Servora 标准 CRUD 业务契约与生成链公开示例。
 package example.service.v1;
 
+import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
@@ -10,30 +11,45 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "servora/errors/v1/errors.proto";
 
-option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplesvcpb";
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplepb";
 option java_multiple_files = true;
 option java_outer_classname = "ExampleProto";
 option java_package = "dev.servora.example.service.v1";
 
-// UserService 提供内部 gRPC CRUD 方法及 AIP-164 恢复方法。
+// UserService exposes the User CRUD reference flow over gRPC and HTTP.
 service UserService {
   rpc GetUser(GetUserRequest) returns (User) {
     option (google.api.method_signature) = "name";
+    option (google.api.http) = {get: "/v1/{name=tenants/*/users/*}"};
   }
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
     option (google.api.method_signature) = "parent";
+    option (google.api.http) = {get: "/v1/{parent=tenants/*}/users"};
   }
   rpc CreateUser(CreateUserRequest) returns (User) {
     option (google.api.method_signature) = "parent,user,user_id";
+    option (google.api.http) = {
+      post: "/v1/{parent=tenants/*}/users"
+      body: "user"
+    };
   }
   rpc UpdateUser(UpdateUserRequest) returns (User) {
     option (google.api.method_signature) = "user,update_mask";
+    option (google.api.http) = {
+      patch: "/v1/{user.name=tenants/*/users/*}"
+      body: "user"
+    };
   }
   rpc DeleteUser(DeleteUserRequest) returns (User) {
     option (google.api.method_signature) = "name";
+    option (google.api.http) = {delete: "/v1/{name=tenants/*/users/*}"};
   }
   rpc UndeleteUser(UndeleteUserRequest) returns (User) {
     option (google.api.method_signature) = "name";
+    option (google.api.http) = {
+      post: "/v1/{name=tenants/*/users/*}:undelete"
+      body: "*"
+    };
   }
 }
 

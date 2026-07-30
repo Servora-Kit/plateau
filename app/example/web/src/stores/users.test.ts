@@ -29,7 +29,7 @@ function rejectedRequest(kind: ApiErrorKind, reason = '', message = 'request fai
             message,
           }
         : undefined,
-    service: 'UserHTTPService',
+    service: 'UserService',
     method: 'GetUser',
   })
 }

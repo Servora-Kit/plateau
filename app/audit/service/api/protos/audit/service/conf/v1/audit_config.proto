@@ -9,9 +9,12 @@ option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/audit/se
 
 // AuditConsumerConfig 装载 audit service 自家配置：批量消费与存储保留策略。
 message AuditConsumerConfig {
-  option (servora.conf.v1.section) = { key: "audit_consumer", optional: true };
+  option (servora.conf.v1.section) = {
+    key: "audit_consumer"
+    optional: true
+  };
 
-  int32 consumer_batch_size = 1;       // 批量写入大小，默认 100
+  int32 consumer_batch_size = 1; // 批量写入大小，默认 100
   google.protobuf.Duration consumer_flush_interval = 2; // 批量刷新间隔，默认 1s
-  int32 retention_days = 3;            // ClickHouse 数据保留天数，默认 90
+  int32 retention_days = 3; // ClickHouse 数据保留天数，默认 90
 }

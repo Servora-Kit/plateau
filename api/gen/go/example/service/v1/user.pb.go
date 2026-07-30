@@ -6,7 +6,7 @@
 
 // Servora 标准 CRUD 业务契约与生成链公开示例。
 
-package examplesvcpb
+package examplepb
 
 import (
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
@@ -684,7 +684,7 @@ var File_example_service_v1_user_proto protoreflect.FileDescriptor
 
 const file_example_service_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x1dexample/service/v1/user.proto\x12\x12example.service.v1\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eservora/errors/v1/errors.proto\"\xb0\x05\n" +
+	"\x1dexample/service/v1/user.proto\x12\x12example.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eservora/errors/v1/errors.proto\"\xb0\x05\n" +
 	"\x04User\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12+\n" +
 	"\fdisplay_name\x18\x02 \x01(\tB\x03\xe0A\x01H\x00R\vdisplayName\x88\x01\x01\x12\x1e\n" +
@@ -748,18 +748,18 @@ const file_example_service_v1_user_proto_rawDesc = "" +
 	"\x1dUSER_ERROR_REASON_UNSPECIFIED\x10\x00\x12&\n" +
 	"\x1bUSER_ERROR_REASON_NOT_FOUND\x10\x01\x1a\x05\xa8\xd4\x18\x94\x03\x12+\n" +
 	" USER_ERROR_REASON_ALREADY_EXISTS\x10\x02\x1a\x05\xa8\xd4\x18\x99\x03\x12*\n" +
-	"\x1fUSER_ERROR_REASON_ETAG_MISMATCH\x10\x03\x1a\x05\xa8\xd4\x18\x99\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xc3\x04\n" +
-	"\vUserService\x12P\n" +
-	"\aGetUser\x12\".example.service.v1.GetUserRequest\x1a\x18.example.service.v1.User\"\a\xdaA\x04name\x12c\n" +
-	"\tListUsers\x12$.example.service.v1.ListUsersRequest\x1a%.example.service.v1.ListUsersResponse\"\t\xdaA\x06parent\x12e\n" +
+	"\x1fUSER_ERROR_REASON_ETAG_MISMATCH\x10\x03\x1a\x05\xa8\xd4\x18\x99\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xbc\x06\n" +
+	"\vUserService\x12t\n" +
+	"\aGetUser\x12\".example.service.v1.GetUserRequest\x1a\x18.example.service.v1.User\"+\xdaA\x04name\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/{name=tenants/*/users/*}\x12\x87\x01\n" +
+	"\tListUsers\x12$.example.service.v1.ListUsersRequest\x1a%.example.service.v1.ListUsersResponse\"-\xdaA\x06parent\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/{parent=tenants/*}/users\x12\x8f\x01\n" +
 	"\n" +
-	"CreateUser\x12%.example.service.v1.CreateUserRequest\x1a\x18.example.service.v1.User\"\x16\xdaA\x13parent,user,user_id\x12b\n" +
+	"CreateUser\x12%.example.service.v1.CreateUserRequest\x1a\x18.example.service.v1.User\"@\xdaA\x13parent,user,user_id\x82\xd3\xe4\x93\x02$:\x04user\"\x1c/v1/{parent=tenants/*}/users\x12\x91\x01\n" +
 	"\n" +
-	"UpdateUser\x12%.example.service.v1.UpdateUserRequest\x1a\x18.example.service.v1.User\"\x13\xdaA\x10user,update_mask\x12V\n" +
+	"UpdateUser\x12%.example.service.v1.UpdateUserRequest\x1a\x18.example.service.v1.User\"B\xdaA\x10user,update_mask\x82\xd3\xe4\x93\x02):\x04user2!/v1/{user.name=tenants/*/users/*}\x12z\n" +
 	"\n" +
-	"DeleteUser\x12%.example.service.v1.DeleteUserRequest\x1a\x18.example.service.v1.User\"\a\xdaA\x04name\x12Z\n" +
-	"\fUndeleteUser\x12'.example.service.v1.UndeleteUserRequest\x1a\x18.example.service.v1.User\"\a\xdaA\x04nameB\x84\x01\n" +
-	"\x1edev.servora.example.service.v1B\fExampleProtoP\x01ZRgithub.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplesvcpbb\x06proto3"
+	"DeleteUser\x12%.example.service.v1.DeleteUserRequest\x1a\x18.example.service.v1.User\"+\xdaA\x04name\x82\xd3\xe4\x93\x02\x1e*\x1c/v1/{name=tenants/*/users/*}\x12\x8a\x01\n" +
+	"\fUndeleteUser\x12'.example.service.v1.UndeleteUserRequest\x1a\x18.example.service.v1.User\"7\xdaA\x04name\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/{name=tenants/*/users/*}:undeleteB\x81\x01\n" +
+	"\x1edev.servora.example.service.v1B\fExampleProtoP\x01ZOgithub.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplepbb\x06proto3"
 
 var (
 	file_example_service_v1_user_proto_rawDescOnce sync.Once

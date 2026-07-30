@@ -4,9 +4,10 @@
 // 	protoc        (unknown)
 // source: audit/service/v1/audit.proto
 
-package auditsvcpb
+package auditpb
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -472,7 +473,7 @@ var File_audit_service_v1_audit_proto protoreflect.FileDescriptor
 
 const file_audit_service_v1_audit_proto_rawDesc = "" +
 	"\n" +
-	"\x1caudit/service/v1/audit.proto\x12\x10audit.service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x04\n" +
+	"\x1caudit/service/v1/audit.proto\x12\x10audit.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x04\n" +
 	"\x0eAuditEventItem\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1d\n" +
 	"\n" +
@@ -524,10 +525,10 @@ const file_audit_service_v1_audit_proto_rawDesc = "" +
 	"\aservice\x18\x05 \x01(\tR\aservice\";\n" +
 	"\x18CountAuditEventsResponse\x12\x1f\n" +
 	"\vtotal_count\x18\x01 \x01(\x03R\n" +
-	"totalCount2\xe6\x01\n" +
-	"\x11AuditQueryService\x12f\n" +
-	"\x0fListAuditEvents\x12(.audit.service.v1.ListAuditEventsRequest\x1a).audit.service.v1.ListAuditEventsResponse\x12i\n" +
-	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponseBPZNgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditsvcpbb\x06proto3"
+	"totalCount2\xa2\x02\n" +
+	"\x11AuditQueryService\x12\x80\x01\n" +
+	"\x0fListAuditEvents\x12(.audit.service.v1.ListAuditEventsRequest\x1a).audit.service.v1.ListAuditEventsResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/audit/events\x12\x89\x01\n" +
+	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/audit/events:countBMZKgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditpbb\x06proto3"
 
 var (
 	file_audit_service_v1_audit_proto_rawDescOnce sync.Once

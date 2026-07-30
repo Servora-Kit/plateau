@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-http v3.0.0
 // - protoc             (unknown)
-// source: example/service/v1/i_user.proto
+// source: example/service/v1/user.proto
 
-package examplesvcpb
+package examplepb
 
 import (
 	context "context"
@@ -17,14 +17,14 @@ var _ = new(context.Context)
 
 const _ = http.SupportPackageIsVersion3
 
-const OperationUserHTTPServiceCreateUser = "/example.service.v1.UserHTTPService/CreateUser"
-const OperationUserHTTPServiceDeleteUser = "/example.service.v1.UserHTTPService/DeleteUser"
-const OperationUserHTTPServiceGetUser = "/example.service.v1.UserHTTPService/GetUser"
-const OperationUserHTTPServiceListUsers = "/example.service.v1.UserHTTPService/ListUsers"
-const OperationUserHTTPServiceUndeleteUser = "/example.service.v1.UserHTTPService/UndeleteUser"
-const OperationUserHTTPServiceUpdateUser = "/example.service.v1.UserHTTPService/UpdateUser"
+const OperationUserServiceCreateUser = "/example.service.v1.UserService/CreateUser"
+const OperationUserServiceDeleteUser = "/example.service.v1.UserService/DeleteUser"
+const OperationUserServiceGetUser = "/example.service.v1.UserService/GetUser"
+const OperationUserServiceListUsers = "/example.service.v1.UserService/ListUsers"
+const OperationUserServiceUndeleteUser = "/example.service.v1.UserService/UndeleteUser"
+const OperationUserServiceUpdateUser = "/example.service.v1.UserService/UpdateUser"
 
-type UserHTTPServiceHTTPServer interface {
+type UserServiceHTTPServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*User, error)
 	DeleteUser(context.Context, *DeleteUserRequest) (*User, error)
 	GetUser(context.Context, *GetUserRequest) (*User, error)
@@ -33,17 +33,17 @@ type UserHTTPServiceHTTPServer interface {
 	UpdateUser(context.Context, *UpdateUserRequest) (*User, error)
 }
 
-func RegisterUserHTTPServiceHTTPServer(s *http.Server, srv UserHTTPServiceHTTPServer) {
+func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r := s.Route("/")
-	r.Handle("GET", "/v1/{name:tenants/[^/]+/users/[^/]+}", _UserHTTPService_GetUser0_HTTP_Handler(srv))
-	r.Handle("GET", "/v1/{parent:tenants/[^/]+}/users", _UserHTTPService_ListUsers0_HTTP_Handler(srv))
-	r.Handle("POST", "/v1/{parent:tenants/[^/]+}/users", _UserHTTPService_CreateUser0_HTTP_Handler(srv))
-	r.Handle("PATCH", "/v1/{user.name:tenants/[^/]+/users/[^/]+}", _UserHTTPService_UpdateUser0_HTTP_Handler(srv))
-	r.Handle("DELETE", "/v1/{name:tenants/[^/]+/users/[^/]+}", _UserHTTPService_DeleteUser0_HTTP_Handler(srv))
-	r.Handle("POST", "/v1/{name:tenants/[^/]+/users/[^/]+}:undelete", _UserHTTPService_UndeleteUser0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/{name:tenants/[^/]+/users/[^/]+}", _UserService_GetUser0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/{parent:tenants/[^/]+}/users", _UserService_ListUsers0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/{parent:tenants/[^/]+}/users", _UserService_CreateUser0_HTTP_Handler(srv))
+	r.Handle("PATCH", "/v1/{user.name:tenants/[^/]+/users/[^/]+}", _UserService_UpdateUser0_HTTP_Handler(srv))
+	r.Handle("DELETE", "/v1/{name:tenants/[^/]+/users/[^/]+}", _UserService_DeleteUser0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/{name:tenants/[^/]+/users/[^/]+}:undelete", _UserService_UndeleteUser0_HTTP_Handler(srv))
 }
 
-func _UserHTTPService_GetUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_GetUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetUserRequest
 		if err := ctx.BindQuery(&in); err != nil {
@@ -52,7 +52,7 @@ func _UserHTTPService_GetUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserHTTPServiceGetUser)
+		http.SetOperation(ctx, OperationUserServiceGetUser)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.GetUser(ctx, req.(*GetUserRequest))
 		})
@@ -65,7 +65,7 @@ func _UserHTTPService_GetUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(
 	}
 }
 
-func _UserHTTPService_ListUsers0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_ListUsers0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ListUsersRequest
 		if err := ctx.BindQuery(&in); err != nil {
@@ -74,7 +74,7 @@ func _UserHTTPService_ListUsers0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fun
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserHTTPServiceListUsers)
+		http.SetOperation(ctx, OperationUserServiceListUsers)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.ListUsers(ctx, req.(*ListUsersRequest))
 		})
@@ -87,7 +87,7 @@ func _UserHTTPService_ListUsers0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fun
 	}
 }
 
-func _UserHTTPService_CreateUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_CreateUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateUserRequest
 		if err := ctx.Bind(&in.User); err != nil {
@@ -99,7 +99,7 @@ func _UserHTTPService_CreateUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fu
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserHTTPServiceCreateUser)
+		http.SetOperation(ctx, OperationUserServiceCreateUser)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.CreateUser(ctx, req.(*CreateUserRequest))
 		})
@@ -112,7 +112,7 @@ func _UserHTTPService_CreateUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fu
 	}
 }
 
-func _UserHTTPService_UpdateUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_UpdateUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UpdateUserRequest
 		if err := ctx.Bind(&in.User); err != nil {
@@ -124,7 +124,7 @@ func _UserHTTPService_UpdateUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fu
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserHTTPServiceUpdateUser)
+		http.SetOperation(ctx, OperationUserServiceUpdateUser)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.UpdateUser(ctx, req.(*UpdateUserRequest))
 		})
@@ -137,7 +137,7 @@ func _UserHTTPService_UpdateUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fu
 	}
 }
 
-func _UserHTTPService_DeleteUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_DeleteUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in DeleteUserRequest
 		if err := ctx.BindQuery(&in); err != nil {
@@ -146,7 +146,7 @@ func _UserHTTPService_DeleteUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fu
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserHTTPServiceDeleteUser)
+		http.SetOperation(ctx, OperationUserServiceDeleteUser)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.DeleteUser(ctx, req.(*DeleteUserRequest))
 		})
@@ -159,7 +159,7 @@ func _UserHTTPService_DeleteUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) fu
 	}
 }
 
-func _UserHTTPService_UndeleteUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_UndeleteUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UndeleteUserRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -168,7 +168,7 @@ func _UserHTTPService_UndeleteUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) 
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationUserHTTPServiceUndeleteUser)
+		http.SetOperation(ctx, OperationUserServiceUndeleteUser)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.UndeleteUser(ctx, req.(*UndeleteUserRequest))
 		})
@@ -181,7 +181,7 @@ func _UserHTTPService_UndeleteUser0_HTTP_Handler(srv UserHTTPServiceHTTPServer) 
 	}
 }
 
-type UserHTTPServiceHTTPClient interface {
+type UserServiceHTTPClient interface {
 	CreateUser(ctx context.Context, req *CreateUserRequest, opts ...http.CallOption) (rsp *User, err error)
 	DeleteUser(ctx context.Context, req *DeleteUserRequest, opts ...http.CallOption) (rsp *User, err error)
 	GetUser(ctx context.Context, req *GetUserRequest, opts ...http.CallOption) (rsp *User, err error)
@@ -190,22 +190,22 @@ type UserHTTPServiceHTTPClient interface {
 	UpdateUser(ctx context.Context, req *UpdateUserRequest, opts ...http.CallOption) (rsp *User, err error)
 }
 
-type UserHTTPServiceHTTPClientImpl struct {
+type UserServiceHTTPClientImpl struct {
 	cc *http.Client
 }
 
-func NewUserHTTPServiceHTTPClient(client *http.Client) UserHTTPServiceHTTPClient {
-	return &UserHTTPServiceHTTPClientImpl{client}
+func NewUserServiceHTTPClient(client *http.Client) UserServiceHTTPClient {
+	return &UserServiceHTTPClientImpl{client}
 }
 
-func (c *UserHTTPServiceHTTPClientImpl) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...http.CallOption) (*User, error) {
+func (c *UserServiceHTTPClientImpl) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...http.CallOption) (*User, error) {
 	var out User
 	pattern := "/v1/{parent=tenants/*}/users"
 	path := http.BuildPath(pattern, in, http.WithQueryParams(), http.WithOmitFields("user"))
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
 		http.ContentType("application/protojson"),
-		http.Operation(OperationUserHTTPServiceCreateUser),
+		http.Operation(OperationUserServiceCreateUser),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "POST", path, in.User, &out, opts...)
@@ -215,13 +215,13 @@ func (c *UserHTTPServiceHTTPClientImpl) CreateUser(ctx context.Context, in *Crea
 	return &out, nil
 }
 
-func (c *UserHTTPServiceHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...http.CallOption) (*User, error) {
+func (c *UserServiceHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...http.CallOption) (*User, error) {
 	var out User
 	pattern := "/v1/{name=tenants/*/users/*}"
 	path := http.BuildPath(pattern, in, http.WithQueryParams())
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
-		http.Operation(OperationUserHTTPServiceDeleteUser),
+		http.Operation(OperationUserServiceDeleteUser),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
@@ -231,13 +231,13 @@ func (c *UserHTTPServiceHTTPClientImpl) DeleteUser(ctx context.Context, in *Dele
 	return &out, nil
 }
 
-func (c *UserHTTPServiceHTTPClientImpl) GetUser(ctx context.Context, in *GetUserRequest, opts ...http.CallOption) (*User, error) {
+func (c *UserServiceHTTPClientImpl) GetUser(ctx context.Context, in *GetUserRequest, opts ...http.CallOption) (*User, error) {
 	var out User
 	pattern := "/v1/{name=tenants/*/users/*}"
 	path := http.BuildPath(pattern, in, http.WithQueryParams())
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
-		http.Operation(OperationUserHTTPServiceGetUser),
+		http.Operation(OperationUserServiceGetUser),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
@@ -247,13 +247,13 @@ func (c *UserHTTPServiceHTTPClientImpl) GetUser(ctx context.Context, in *GetUser
 	return &out, nil
 }
 
-func (c *UserHTTPServiceHTTPClientImpl) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...http.CallOption) (*ListUsersResponse, error) {
+func (c *UserServiceHTTPClientImpl) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...http.CallOption) (*ListUsersResponse, error) {
 	var out ListUsersResponse
 	pattern := "/v1/{parent=tenants/*}/users"
 	path := http.BuildPath(pattern, in, http.WithQueryParams())
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
-		http.Operation(OperationUserHTTPServiceListUsers),
+		http.Operation(OperationUserServiceListUsers),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
@@ -263,14 +263,14 @@ func (c *UserHTTPServiceHTTPClientImpl) ListUsers(ctx context.Context, in *ListU
 	return &out, nil
 }
 
-func (c *UserHTTPServiceHTTPClientImpl) UndeleteUser(ctx context.Context, in *UndeleteUserRequest, opts ...http.CallOption) (*User, error) {
+func (c *UserServiceHTTPClientImpl) UndeleteUser(ctx context.Context, in *UndeleteUserRequest, opts ...http.CallOption) (*User, error) {
 	var out User
 	pattern := "/v1/{name=tenants/*/users/*}:undelete"
 	path := http.BuildPath(pattern, in)
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
 		http.ContentType("application/protojson"),
-		http.Operation(OperationUserHTTPServiceUndeleteUser),
+		http.Operation(OperationUserServiceUndeleteUser),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
@@ -280,14 +280,14 @@ func (c *UserHTTPServiceHTTPClientImpl) UndeleteUser(ctx context.Context, in *Un
 	return &out, nil
 }
 
-func (c *UserHTTPServiceHTTPClientImpl) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...http.CallOption) (*User, error) {
+func (c *UserServiceHTTPClientImpl) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...http.CallOption) (*User, error) {
 	var out User
 	pattern := "/v1/{user.name=tenants/*/users/*}"
 	path := http.BuildPath(pattern, in, http.WithQueryParams(), http.WithOmitFields("user"))
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
 		http.ContentType("application/protojson"),
-		http.Operation(OperationUserHTTPServiceUpdateUser),
+		http.Operation(OperationUserServiceUpdateUser),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "PATCH", path, in.User, &out, opts...)

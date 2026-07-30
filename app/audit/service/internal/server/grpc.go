@@ -5,7 +5,7 @@ import (
 
 	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 
-	auditsvcpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
+	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
 	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
@@ -26,7 +26,7 @@ func NewGRPCServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		svrgrpc.WithLogger(glog),
 		svrgrpc.WithMiddleware(ms...),
 		svrgrpc.WithServices(func(s *kgrpc.Server) {
-			auditsvcpb.RegisterAuditQueryServiceServer(s, svc)
+			auditpb.RegisterAuditQueryServiceServer(s, svc)
 		}),
 	}
 	if c != nil && c.Grpc != nil {

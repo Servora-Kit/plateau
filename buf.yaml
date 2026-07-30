@@ -22,5 +22,4 @@ lint:
     - RPC_REQUEST_RESPONSE_UNIQUE
   ignore_only:
     RPC_RESPONSE_STANDARD_NAME:
-      - app/example/service/api/protos/example/service/v1/i_user.proto
       - app/example/service/api/protos/example/service/v1/user.proto

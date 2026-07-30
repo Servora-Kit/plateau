@@ -3,14 +3,15 @@
 
 openapi: 3.0.3
 info:
-    title: AuditHTTPService API
+    title: AuditQueryService API
+    description: AuditQueryService provides read-only gRPC and HTTP access to persisted audit events.
     version: 0.0.1
 paths:
     /v1/audit/events:
         get:
             tags:
-                - AuditHTTPService
-            operationId: AuditHTTPService_ListAuditEvents
+                - AuditQueryService
+            operationId: AuditQueryService_ListAuditEvents
             parameters:
                 - name: startTime
                   in: query
@@ -55,8 +56,8 @@ paths:
     /v1/audit/events:count:
         get:
             tags:
-                - AuditHTTPService
-            operationId: AuditHTTPService_CountAuditEvents
+                - AuditQueryService
+            operationId: AuditQueryService_CountAuditEvents
             parameters:
                 - name: startTime
                   in: query
@@ -148,4 +149,4 @@ components:
                 nextPageToken:
                     type: string
 tags:
-    - name: AuditHTTPService
+    - name: AuditQueryService

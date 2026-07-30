@@ -27,7 +27,7 @@ func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
 		svrhttp.WithServices(func(s *khttp.Server) {
-			examplev1.RegisterUserHTTPServiceHTTPServer(s, svc)
+			examplev1.RegisterUserServiceHTTPServer(s, svc)
 		}),
 	}
 	if c != nil && c.Http != nil {

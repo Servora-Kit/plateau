@@ -3,15 +3,15 @@
 
 openapi: 3.0.3
 info:
-    title: UserHTTPService API
-    description: UserHTTPService exposes the User CRUD reference flow over HTTP.
+    title: UserService API
+    description: UserService exposes the User CRUD reference flow over gRPC and HTTP.
     version: 0.0.1
 paths:
     /v1/tenants/{tenant}/users:
         get:
             tags:
-                - UserHTTPService
-            operationId: UserHTTPService_ListUsers
+                - UserService
+            operationId: UserService_ListUsers
             parameters:
                 - name: tenant
                   in: path
@@ -68,8 +68,8 @@ paths:
                                 $ref: '#/components/schemas/ListUsersResponse'
         post:
             tags:
-                - UserHTTPService
-            operationId: UserHTTPService_CreateUser
+                - UserService
+            operationId: UserService_CreateUser
             parameters:
                 - name: tenant
                   in: path
@@ -98,8 +98,8 @@ paths:
     /v1/tenants/{tenant}/users/{user}:
         get:
             tags:
-                - UserHTTPService
-            operationId: UserHTTPService_GetUser
+                - UserService
+            operationId: UserService_GetUser
             parameters:
                 - name: tenant
                   in: path
@@ -122,8 +122,8 @@ paths:
                                 $ref: '#/components/schemas/User'
         delete:
             tags:
-                - UserHTTPService
-            operationId: UserHTTPService_DeleteUser
+                - UserService
+            operationId: UserService_DeleteUser
             parameters:
                 - name: tenant
                   in: path
@@ -156,8 +156,8 @@ paths:
                                 $ref: '#/components/schemas/User'
         patch:
             tags:
-                - UserHTTPService
-            operationId: UserHTTPService_UpdateUser
+                - UserService
+            operationId: UserService_UpdateUser
             parameters:
                 - name: tenant
                   in: path
@@ -198,8 +198,8 @@ paths:
     /v1/tenants/{tenant}/users/{user}:undelete:
         post:
             tags:
-                - UserHTTPService
-            operationId: UserHTTPService_UndeleteUser
+                - UserService
+            operationId: UserService_UndeleteUser
             parameters:
                 - name: tenant
                   in: path
@@ -304,4 +304,4 @@ components:
                     format: date-time
             description: User 表示 tenant 下的公开用户资源。
 tags:
-    - name: UserHTTPService
+    - name: UserService
