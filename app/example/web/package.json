@@ -16,7 +16,7 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
-    "@servora/proto-utils": "^0.1.4",
+    "@servora/proto-utils": "^0.1.6",
     "pinia": "^4.0.2",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"

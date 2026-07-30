@@ -10,6 +10,11 @@ inputs:
 plugins:
     - local: protoc-gen-typescript-http
       out: app/example/web/src/api/generated
+    - local: protoc-gen-go-errors
+      out: app/example/web/src/api/generated
+      opt:
+          - target=ts
+          - paths=source_relative
     - local: protoc-gen-servora-crud
       out: app/example/web/src/api/generated
       opt:

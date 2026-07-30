@@ -8,8 +8,8 @@
 
     // Path mapping for cleaner imports.
     "paths": {
-      "@servora/proto-utils/client": [
-        "./node_modules/@servora/proto-utils/dist/client/index.d.ts"
+      "@servora/proto-utils/errors": [
+        "./node_modules/@servora/proto-utils/dist/errors.d.ts"
       ],
       "@servora/proto-utils/crud": [
         "./node_modules/@servora/proto-utils/dist/crud/index.d.ts"

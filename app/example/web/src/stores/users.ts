@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { ApiError, kratosMessage, parseKratosError } from '@servora/proto-utils/client'
+import { ApiError, parseKratosError } from '@servora/proto-utils/errors'
 import {
   advancePager,
   applyPager,
@@ -17,6 +17,7 @@ import {
   UserName,
   UserUpdateFields,
 } from '@/api/generated/example/service/v1/user.crud'
+import { UserErrorReason, isUserErrorReason } from '@/api/generated/example/service/v1/user.errors'
 import { userApi, type User } from '@/api/userApi'
 
 type CreateUserInput = Readonly<{
@@ -47,14 +48,27 @@ function userMessage(overrides: Partial<User>): User {
   return message
 }
 
-function failureMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    const payload = parseKratosError(error)
-    return payload ? `${payload.reason} · ${payload.message}` : kratosMessage(error)
-  }
-  return error instanceof Error ? error.message : String(error)
+const userErrorMessages: Readonly<Partial<Record<UserErrorReason, string>>> = {
+  [UserErrorReason.USER_ERROR_REASON_ALREADY_EXISTS]: '用户已存在',
+  [UserErrorReason.USER_ERROR_REASON_ETAG_MISMATCH]: '用户数据已更新，请刷新后重试',
+  [UserErrorReason.USER_ERROR_REASON_NOT_FOUND]: '用户不存在',
 }
 
+function failureMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return '操作失败'
+  if (error.kind === 'network') return '网络连接失败，请检查网络设置'
+  if (error.kind === 'timeout') return '请求超时，请稍后重试'
+
+  const payload = parseKratosError(error)
+  if (!payload) return '请求失败'
+  if (isUserErrorReason(payload.reason)) {
+    const localMessage = userErrorMessages[payload.reason]
+    if (localMessage) return localMessage
+  }
+  const message = payload.message.trim()
+  if (!message || message.includes('_ERROR_REASON_')) return '请求失败'
+  return message
+}
 
 export const useUsersStore = defineStore('users', () => {
   const tenant = ref('demo')
@@ -96,7 +110,6 @@ export const useUsersStore = defineStore('users', () => {
     }
     return value
   }
-
 
   async function listUsers(append = false): Promise<boolean> {
     if (!append) {
