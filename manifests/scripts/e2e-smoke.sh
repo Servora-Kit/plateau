@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Platform service e2e smoke test.
-# Assumes the dev compose stack is running (make compose.dev).
+# Assumes the dev compose stack is running (`just compose-up`).
 #
 # Usage:
 #   ./scripts/e2e-smoke.sh              # defaults: Traefik=8080, direct=10000

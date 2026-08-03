@@ -5,7 +5,7 @@ import { ApiError, type ApiErrorKind } from '@servora/proto-utils/errors'
 import { UserErrorReason, isUserErrorReason } from '@/api/generated/example/service/v1/user.errors'
 import { useUsersStore } from '@/stores/users'
 
-const { getUser } = vi.hoisted(() => ({ getUser: vi.fn() }))
+const { getUser } = vi.hoisted(() => ({ getUser: vi.fn<(request: { name: string }) => Promise<unknown>>() }))
 
 vi.mock('@/api/userApi', () => ({
   userApi: { GetUser: getUser },

@@ -14,8 +14,8 @@
 
 ## 开发规范
 
-- 仓库根修改 proto 后执行 `make gen`，统一刷新 Go API、共享 TypeScript HTTP API 包、OpenAPI、Wire 与 Ent 产物；需要服务自有 Web client 时，在对应 `service/` 目录执行 `make gen` 或 `make api-ts`
-- 修改 Wire 依赖图后执行 `make wire`
+- 仓库根修改 proto 后执行 `just gen`，统一刷新 Go API、共享 TypeScript HTTP API 包、OpenAPI、Wire 与 Ent 产物；需要服务自有 Web client 时，在对应 leaf 执行 `just api-ts`
+- 修改 Wire 依赖图后执行 `just wire`
 - 不要手改 `api/gen/go/*`、`api/gen/ts/*`、`app/*/web/src/api/generated/*`、`wire_gen.go`
 - 同一 API 的 gRPC 与 HTTP 必须由一个 Proto `service` 定义，HTTP annotation 与 RPC 放在同一个领域 Proto；不要创建 `i_xxx.proto` 或复制 `XxxHTTPService`
 - `servora-platform/app/example` 是当前servora最标准的微服务使用流程，也是新增平台级微服务的推荐模板。微服务的后端分为：
@@ -30,7 +30,7 @@
         - protos/{DomainName}/service/ 该微服务各个领域的 Proto API 定义
         - protos/{ConfigName}/conf.proto 该微服务自己的业务配置 proto
         - buf.openapi.gen.yaml 该服务的OpenAPI的 buf 生成配置
-        - buf.typescript.gen.yaml 可选的服务级模板；仅在服务目录执行 `make api-ts` 时使用，并按模板自己的 `out` 生成到服务 Web。仓库根 `buf.typescript.gen.yaml` 则为 `buf.yaml` 中全部模块生成共享 HTTP client，两者互不清理
+        - buf.typescript.gen.yaml 可选的服务级模板；仅在服务 leaf 执行 `just api-ts` 时使用，并按模板自己的 `out` 生成到服务 Web。仓库根 `buf.typescript.gen.yaml` 则为 `buf.yaml` 中全部模块生成共享 HTTP client，两者互不清理
       - cmd/ 启动入口，一般只包含 server/
       - configs/local|docker 本地/容器运行时配置
       - internal/ 业务逻辑，其中包含
@@ -53,11 +53,11 @@
           - ent/schema/ 如用了 Ent ORM ，推荐这里定义表结构
           - generate.go 如用了 Ent  ORM 框架，生成代码的入口
       - go.mod|go.sum
-      - Makefile 服务级 make 命令入口
+      - justfile 服务级 Just 命令入口
     - web/ 前端
-- make/ Makefile
+- just/ 平台共享 Just settings、registry 与 service 实现
 - manifests/ 部署资源文件
-- Makefile 项目级 make 命令入口
+- justfile 项目级 Just 命令入口
 - pnpm-workspace.yaml 统一纳管 `api/gen` 与 `app/*/web`
 - pnpm-lock.yaml Platform workspace 共享依赖锁文件
 - buf.yaml buf 总配置，依赖以及 lint 规则
@@ -68,31 +68,31 @@
 - go.mod|go.sum 总依赖管理
 
 
-- 修改 OpenFGA model 后执行 `make openfga.model.apply`
+- 修改 OpenFGA model 后执行 `just openfga-model-apply`
 
 ## 常用命令
 
 ```bash
 # 初始化
-make init              # 安装 protoc 插件、CLI 与 pnpm workspace 依赖
+just init              # 安装 protoc 插件、CLI 与 pnpm workspace 依赖
 
 # 代码生成
-make gen               # 统一生成 Go、共享 TypeScript HTTP、OpenAPI、Wire 与 Ent
-make api               # 生成 Go 与共享 TypeScript HTTP API
-make api-go            # 仅生成全部模块的 Proto Go 代码到 api/gen/go
-make api-ts            # 仅生成全部模块的共享 HTTP client 到 api/gen/ts 并构建包
-make api-ts.check      # 仅检查共享 TypeScript HTTP 包类型
-make wire              # 仅生成 Wire
+just gen               # 统一生成 Go、共享 TypeScript HTTP、OpenAPI、Wire 与 Ent
+just api               # 生成 Go 与共享 TypeScript HTTP API
+just api-go            # 仅生成全部模块的 Proto Go 代码到 api/gen/go
+just api-ts            # 仅生成全部模块的共享 HTTP client 到 api/gen/ts 并构建包
+just api-ts-check      # 仅检查共享 TypeScript HTTP 包类型
+just wire              # 仅生成 Wire
 
 # 质量检查
-make lint              # Go lint
-make lint.proto        # Proto lint
+just lint              # Go、Proto、共享 TypeScript 与 Web 只读 lint
+just lint-proto        # Proto lint
 
 # OpenFGA
-make openfga.init             # 初始化 store
-make openfga.model.validate   # 验证 model
-make openfga.model.test       # 测试 model
-make openfga.model.apply      # 应用 model 更新
+just openfga-init             # 初始化 store
+just openfga-model-validate   # 验证 model
+just openfga-model-test       # 测试 model
+just openfga-model-apply      # 应用 model 更新
 ```
 
 ## 维护提示

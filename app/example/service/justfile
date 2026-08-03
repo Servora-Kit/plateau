@@ -1,0 +1,12 @@
+import "../../../just/service.just"
+
+SERVORA_EXAMPLE_SQLITE_DSN := env("SERVORA_EXAMPLE_SQLITE_DSN", "")
+SERVORA_KIT_GOWORK := env("SERVORA_KIT_GOWORK", join(ROOT_DIR, "../go.work"))
+
+[unix]
+test-integration:
+    @{{ if SERVORA_EXAMPLE_SQLITE_DSN == "" { error("SERVORA_EXAMPLE_SQLITE_DSN is required") } else if !path_exists(SERVORA_KIT_GOWORK) { error("Servora-Kit workspace not found: " + SERVORA_KIT_GOWORK) } else { "GOWORK=\"" + SERVORA_KIT_GOWORK + "\" go test -tags=integration ./internal/service -run '^TestUserReferenceIntegration$' -count=1" } }}
+
+[windows]
+test-integration:
+    @{{ if SERVORA_EXAMPLE_SQLITE_DSN == "" { error("SERVORA_EXAMPLE_SQLITE_DSN is required") } else if !path_exists(SERVORA_KIT_GOWORK) { error("Servora-Kit workspace not found: " + SERVORA_KIT_GOWORK) } else { "$env:GOWORK = \"" + SERVORA_KIT_GOWORK + "\"; go test -tags=integration ./internal/service -run '^TestUserReferenceIntegration$' -count=1" } }}

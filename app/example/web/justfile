@@ -1,0 +1,92 @@
+import "../../../just/settings.just"
+
+COMPONENT_DIR := module_directory()
+PNPM := env("PNPM", "pnpm")
+
+env:
+    @echo "COMPONENT_DIR: {{ COMPONENT_DIR }}"
+    @echo "PNPM: {{ PNPM }}"
+
+run: dev
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+dev:
+    @"{{ PNPM }}" run dev
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+dev:
+    @& "{{ PNPM }}" run dev
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+build:
+    @"{{ PNPM }}" run build
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+build:
+    @& "{{ PNPM }}" run build
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+preview:
+    @"{{ PNPM }}" run preview
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+preview:
+    @& "{{ PNPM }}" run preview
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+test-unit:
+    @"{{ PNPM }}" run test:unit
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+test-unit:
+    @& "{{ PNPM }}" run test:unit
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+lint:
+    @"{{ PNPM }}" run lint
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+lint:
+    @& "{{ PNPM }}" run lint
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+lint-fix:
+    @"{{ PNPM }}" run lint-fix
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+lint-fix:
+    @& "{{ PNPM }}" run lint-fix
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+format:
+    @"{{ PNPM }}" run format
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+format:
+    @& "{{ PNPM }}" run format
+
+_build: build
+
+[unix]
+_clean-files:
+    rm -rf -- "{{ join(COMPONENT_DIR, "dist") }}" "{{ join(COMPONENT_DIR, ".vite") }}"
+
+[windows]
+_clean-files:
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue @("{{ join(COMPONENT_DIR, "dist") }}", "{{ join(COMPONENT_DIR, ".vite") }}")
+
+clean: _clean-files

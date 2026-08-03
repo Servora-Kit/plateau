@@ -16,5 +16,5 @@
 
 - Keep resource identity and request fields aligned between source Proto, generated Go/TypeScript, service, and web.
 - The service owns the API contract; the web app never duplicates generated message or CRUD helper code.
-- Keep CI database-free. Local verification explicitly runs `make run`, starts Vite, and exercises the real HTTP facade.
+- Keep CI database-free. Local verification explicitly runs `just service::example::run`, starts Vite, and exercises the real HTTP facade.
 - Generated API, Ent, Wire, OpenAPI, and build output must not receive hand-written `AGENTS.md` files.

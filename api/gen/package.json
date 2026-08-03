@@ -21,7 +21,9 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "clean": "node scripts/clean-dist.mjs",
+    "prebuild": "pnpm run clean",
+    "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

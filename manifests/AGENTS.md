@@ -29,13 +29,13 @@ manifests/
 
 | 任务 | 位置 | 说明 |
 |------|------|------|
-| 本地基础设施 | `../docker-compose.yaml` | 根目录 `make compose.up` |
-| 本地开发环境 | `../docker-compose.yaml` + 服务目录本机 Air | 根目录 `make compose.up` 后在服务目录执行 `make dev` |
+| 本地基础设施 | `../docker-compose.yaml` | root `just compose-up` |
+| 本地开发环境 | `../docker-compose.yaml` + 服务 leaf 本机 Air | root `just compose-up` 后执行 `just service::<name>::dev` |
 | K8s 基础设施聚合 | `k8s/base/` | Namespace / RBAC / 跨目录资源聚合 |
 | IAM 服务部署 | `k8s/iam/` | `deployment.yaml`、`service.yaml`、`configmap.yaml`、依赖资源 |
 | SayHello 服务部署 | `k8s/sayhello/` | `deployment.yaml`、`service.yaml`、`configmap.yaml` |
-| OpenFGA model | `openfga/model/` | 修改后需执行 `make openfga.model.apply` |
-| OpenFGA model 测试 | `openfga/tests/` | 使用 `make openfga.model.test` |
+| OpenFGA model | `openfga/model/` | 修改后需执行 `just openfga-model-apply` |
+| OpenFGA model 测试 | `openfga/tests/` | 使用 `just openfga-model-test` |
 | Compose 初始化脚本 | `scripts/postgres-init/` | 根 `docker-compose.yaml` 挂载 |
 | 压测脚本 | `scripts/k6/` | k6 压测 |
 
@@ -54,18 +54,18 @@ manifests/
 
 ### 常用命令
 ```bash
-make compose.up
-make compose.stop
-make compose.down
-make compose.reset
-make openfga.init
-make openfga.model.validate
-make openfga.model.test
-make openfga.model.apply
+just compose-up
+just compose-stop
+just compose-down
+just compose-reset
+just openfga-init
+just openfga-model-validate
+just openfga-model-test
+just openfga-model-apply
 ```
 
 ## 维护提醒
 
 - SQL 初始化脚本如果位于服务目录，应在对应服务目录内维护；`manifests/scripts/postgres-init/` 仅负责 Compose 场景
-- 变更 OpenFGA model 后，除了提交文件本身，还要提醒执行 `make openfga.model.apply`
+- 变更 OpenFGA model 后，除了提交文件本身，还要提醒执行 `just openfga-model-apply`
 - 如果清单引用了 `app/`、`templates/` 或外部目录，更新前先验证这些路径今天是否真实存在，避免把历史遗留路径继续写入文档

@@ -15,7 +15,7 @@ afterEach(() => {
 
 describe('application ClientTransport', () => {
   it('sends bodyless requests with Accept but without Content-Type', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(JSON.stringify({ name: 'tenants/demo/users/ada' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,7 @@ describe('application ClientTransport', () => {
   })
 
   it('sends generated ProtoJSON bodies without serializing them again', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(JSON.stringify({ name: 'tenants/demo/users/ada' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ describe('application ClientTransport', () => {
       expectedBody: undefined,
     },
   ])('preserves $label HTTP error bodies and call metadata', async ({ response, expectedBody }) => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response))
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(response))
 
     let error: unknown
     try {
@@ -107,7 +107,7 @@ describe('application ClientTransport', () => {
 
   it('classifies native fetch TypeError failures as network errors', async () => {
     const cause = new TypeError('fetch failed')
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(cause))
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockRejectedValue(cause))
 
     let error: unknown
     try {
@@ -130,16 +130,16 @@ describe('application ClientTransport', () => {
     const response = {
       ok: true,
       status: 200,
-      text: vi.fn().mockRejectedValue(cause),
+      text: vi.fn<() => Promise<string>>().mockRejectedValue(cause),
     } as unknown as Response
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response))
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(response))
 
     await expect(transport.unary('/v1/users/ada', 'GET', null, meta)).rejects.toBe(cause)
   })
 
   it('rethrows errors that the adapter cannot classify', async () => {
     const cause = new Error('unexpected adapter failure')
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(cause))
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockRejectedValue(cause))
 
     await expect(transport.unary('/v1/users/ada', 'GET', null, meta)).rejects.toBe(cause)
   })
@@ -158,13 +158,13 @@ describe('application ClientTransport', () => {
     )
 
     const request = transport.unary('/v1/users/ada', 'GET', null, meta)
-    const rejection = expect(request).rejects.toMatchObject({
+    const requestResult = request.catch((error: unknown) => error)
+    await vi.advanceTimersByTimeAsync(10_000)
+    await expect(requestResult).resolves.toMatchObject({
       kind: 'timeout',
       service: 'UserService',
       method: 'GetUser',
     })
-    await vi.advanceTimersByTimeAsync(10_000)
-    await rejection
   })
 
   it('reports unsupported streaming modes explicitly', () => {
