@@ -144,10 +144,6 @@ func (c *Consumer) route(ctx context.Context, ce *cloudevents.Event, record *kgo
 		c.log.DebugContext(ctx, "routing rpc audit event", "type", ce.Type(), "id", ce.ID())
 		c.writer.Add(ce, record)
 
-	case "servora.authz.openfga.tuple_mutation.v1":
-		c.log.DebugContext(ctx, "routing openfga tuple mutation event", "type", ce.Type(), "id", ce.ID())
-		c.writer.Add(ce, record)
-
 	default:
 		// Unknown CE type — pass through to generic storage.
 		c.log.DebugContext(ctx, "routing unknown audit event to generic storage", "type", ce.Type(), "id", ce.ID())

@@ -11,6 +11,8 @@ import (
 	"time"
 
 	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
+	authnauditpb "github.com/Servora-Kit/servora/api/gen/go/servora/authn/audit/v1"
+	authzauditpb "github.com/Servora-Kit/servora/api/gen/go/servora/authz/audit/v1"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -136,7 +138,7 @@ func (w *BatchWriter) Add(evt *cloudevents.Event, record *kgo.Record) {
 //   - id/type/specversion/time/subject → event_id/event_type/event_version/occurred_at/target_id
 //   - source ("//app-name") → service (app-name)
 //   - subject or type → operation
-//   - extensions authid/authtype/errormessage/traceparent → actor_*/error_*/trace_id
+//   - typed AuthN/AuthZ payload or legacy extensions → actor/target/error columns
 //   - CE type → success (type-based: authn.success/authz.allowed/rpc(no error) → true)
 //   - data payload → detail column as JSON (see detailJSON)
 func (w *BatchWriter) flush(ctx context.Context) {
@@ -165,8 +167,8 @@ func (w *BatchWriter) flush(ctx context.Context) {
 		exts := e.Extensions()
 		service := serviceFromSource(e.Source())
 		operation := operationFromEvent(e)
-		errMsg := extString(exts, extErrorMessage)
-		success := successFromCEType(e.Type(), errMsg)
+		projection := projectEvent(e)
+		success := successFromCEType(e.Type(), projection.errorMessage)
 
 		if err := chBatch.Append(
 			e.ID(),
@@ -175,15 +177,15 @@ func (w *BatchWriter) flush(ctx context.Context) {
 			e.Time(),
 			service,
 			operation,
-			extString(exts, extAuthID),
-			extString(exts, extAuthType),
-			"", // actor_display_name — not carried in CloudEvents context
-			"", // target_type — not carried in CloudEvents context
-			e.Subject(),
-			"", // target_name — not carried in CloudEvents context
+			projection.actorID,
+			projection.actorType,
+			"", // actor_display_name — not carried in framework Audit payloads
+			projection.targetType,
+			projection.targetID,
+			"", // target_name — not carried in framework Audit payloads
 			success,
-			"", // error_code — not carried in CloudEvents context
-			errMsg,
+			projection.errorCode,
+			projection.errorMessage,
 			traceIDFromTraceparent(extString(exts, extTraceParent)),
 			"", // request_id — not carried in CloudEvents context
 			detailJSON(e),
@@ -231,14 +233,68 @@ func extString(exts map[string]any, name string) string {
 	return ""
 }
 
+type eventProjection struct {
+	actorID      string
+	actorType    string
+	targetType   string
+	targetID     string
+	errorCode    string
+	errorMessage string
+}
+
+func projectEvent(event *cloudevents.Event) eventProjection {
+	if event == nil {
+		return eventProjection{}
+	}
+
+	switch event.Type() {
+	case "servora.authn.success.v1":
+		payload := new(authnauditpb.AuthnSuccess)
+		if err := proto.Unmarshal(event.Data(), payload); err != nil {
+			return eventProjection{}
+		}
+		return eventProjection{
+			actorID:   payload.GetSubject(),
+			actorType: payload.GetScheme(),
+		}
+	case "servora.authn.failure.v1":
+		payload := new(authnauditpb.AuthnFailure)
+		if err := proto.Unmarshal(event.Data(), payload); err != nil {
+			return eventProjection{}
+		}
+		return eventProjection{errorCode: payload.GetReason().String()}
+	case "servora.authz.allowed.v1", "servora.authz.denied.v1", "servora.authz.error.v1":
+		payload := new(authzauditpb.AuthzDecision)
+		if err := proto.Unmarshal(event.Data(), payload); err != nil {
+			return eventProjection{}
+		}
+		projection := eventProjection{
+			actorID:    payload.GetSubject(),
+			targetType: payload.GetResourceType(),
+			targetID:   payload.GetResourceId(),
+		}
+		if payload.GetDecision() != authzauditpb.AuthzDecision_DECISION_ALLOWED {
+			projection.errorCode = payload.GetReason().String()
+		}
+		return projection
+	default:
+		extensions := event.Extensions()
+		return eventProjection{
+			actorID:      extString(extensions, extAuthID),
+			actorType:    extString(extensions, extAuthType),
+			targetID:     event.Subject(),
+			errorMessage: extString(extensions, extErrorMessage),
+		}
+	}
+}
+
 // successFromCEType determines whether an audit event represents a successful
 // operation based on its CloudEvents type. This replaces the legacy severitytext
 // extension-based approach.
 func successFromCEType(ceType, errMsg string) bool {
 	switch ceType {
 	case "servora.authn.success.v1",
-		"servora.authz.allowed.v1",
-		"servora.authz.openfga.tuple_mutation.v1":
+		"servora.authz.allowed.v1":
 		return true
 	case "servora.authn.failure.v1",
 		"servora.authz.denied.v1",
