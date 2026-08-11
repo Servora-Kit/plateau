@@ -129,17 +129,6 @@ func (c *Consumer) handle(ctx context.Context, record *kgo.Record) error {
 // fall through to generic ClickHouse storage.
 func (c *Consumer) route(ctx context.Context, ce *cloudevents.Event, record *kgo.Record) {
 	switch ce.Type() {
-	case "servora.authn.failure.v1",
-		"servora.authn.success.v1":
-		c.log.DebugContext(ctx, "routing authn audit event", "type", ce.Type(), "id", ce.ID())
-		c.writer.Add(ce, record)
-
-	case "servora.authz.allowed.v1",
-		"servora.authz.denied.v1",
-		"servora.authz.error.v1":
-		c.log.DebugContext(ctx, "routing authz audit event", "type", ce.Type(), "id", ce.ID())
-		c.writer.Add(ce, record)
-
 	case "servora.audit.rpc.v1":
 		c.log.DebugContext(ctx, "routing rpc audit event", "type", ce.Type(), "id", ce.ID())
 		c.writer.Add(ce, record)

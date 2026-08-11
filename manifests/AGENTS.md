@@ -20,6 +20,8 @@ manifests/
 │   ├── model/                # OpenFGA model（如 servora.fga）
 │   └── tests/                # OpenFGA model 测试（如存在）
 ├── scripts/
+│   ├── openfga.sh            # Unix OpenFGA store/model 管理
+│   ├── openfga.ps1           # 原生 PowerShell 等价实现
 │   ├── k6/                   # 压测脚本
 │   └── postgres-init/        # Compose 用 DB 初始化 SQL
 └── ...
@@ -36,6 +38,7 @@ manifests/
 | SayHello 服务部署 | `k8s/sayhello/` | `deployment.yaml`、`service.yaml`、`configmap.yaml` |
 | OpenFGA model | `openfga/model/` | 修改后需执行 `just openfga-model-apply` |
 | OpenFGA model 测试 | `openfga/tests/` | 使用 `just openfga-model-test` |
+| OpenFGA 管理脚本 | `scripts/openfga.sh`、`scripts/openfga.ps1` | 由 Just 按操作系统分派，不依赖 `svr` |
 | Compose 初始化脚本 | `scripts/postgres-init/` | 根 `docker-compose.yaml` 挂载 |
 | 压测脚本 | `scripts/k6/` | k6 压测 |
 

@@ -39,7 +39,12 @@ plugins:
 
     # ==================== Servora custom plugins ====================
 
-    # generate authz rules from proto annotations
+    # generate authn rules from Platform proto annotations
+    - local: protoc-gen-servora-authn
+      out: api/gen/go
+      opt: paths=source_relative
+
+    # generate authz rules from Platform proto annotations
     - local: protoc-gen-servora-authz
       out: api/gen/go
       opt: paths=source_relative

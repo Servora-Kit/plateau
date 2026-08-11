@@ -1,0 +1,55 @@
+// Package openfga maps Platform configuration to the official OpenFGA SDK
+// client. It intentionally does not wrap the SDK data plane.
+package openfga
+
+import (
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
+	openfgaconfpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/infra/openfga/v1"
+	fgaclient "github.com/openfga/go-sdk/client"
+	fgacredentials "github.com/openfga/go-sdk/credentials"
+)
+
+// New constructs and returns the official OpenFGA SDK client.
+func New(config *openfgaconfpb.OpenFGA) (*fgaclient.OpenFgaClient, error) {
+	if config == nil {
+		return nil, fmt.Errorf("openfga: config is nil")
+	}
+	if err := config.ApplyConf(); err != nil {
+		return nil, fmt.Errorf("openfga: config: %w", err)
+	}
+
+	sdkConfig := &fgaclient.ClientConfiguration{
+		ApiUrl:               config.GetApiUrl(),
+		StoreId:              config.GetStoreId(),
+		AuthorizationModelId: config.GetModelId(),
+	}
+	if token := config.GetApiToken(); token != "" {
+		endpoint, err := url.ParseRequestURI(config.GetApiUrl())
+		if err != nil || endpoint.User != nil || endpoint.Hostname() == "" || !strings.EqualFold(endpoint.Scheme, "https") {
+			return nil, fmt.Errorf("openfga: api_token requires an https api_url with a valid hostname")
+		}
+		baseClient := http.DefaultClient
+		if baseClient == nil {
+			baseClient = new(http.Client)
+		}
+		httpClient := *baseClient
+		httpClient.CheckRedirect = func(*http.Request, []*http.Request) error {
+			return fmt.Errorf("openfga: redirects are disabled when api_token is configured")
+		}
+		sdkConfig.HTTPClient = &httpClient
+		sdkConfig.Credentials = &fgacredentials.Credentials{
+			Method: fgacredentials.CredentialsMethodApiToken,
+			Config: &fgacredentials.Config{ApiToken: token},
+		}
+	}
+
+	client, err := fgaclient.NewSdkClient(sdkConfig)
+	if err != nil {
+		return nil, fmt.Errorf("openfga: construct SDK client: %w", err)
+	}
+	return client, nil
+}

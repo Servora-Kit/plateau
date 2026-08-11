@@ -38,9 +38,9 @@ plugin: ## Install protoc-gen-* plugins
 	@go install github.com/google/gnostic/cmd/protoc-gen-openapi@$(PROTOC_GEN_OPENAPI_VERSION)
 	@go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE_VERSION)
 	@go install github.com/tx7do/go-wind-toolkit/protoc-gen-go-redact@$(PROTOC_GEN_GO_REDACT_VERSION)
-	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-authz@$(SERVORA_VERSION)
+	@go install ./cmd/protoc-gen-servora-authz
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-audit@$(SERVORA_VERSION)
-	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-authn@$(SERVORA_VERSION)
+	@go install ./cmd/protoc-gen-servora-authn
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-conf@$(SERVORA_VERSION)
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-crud@$(SERVORA_VERSION)
 	@echo "✓ Protoc plugins installed"
@@ -53,7 +53,6 @@ cli: ## Install CLI tools
 	@go install github.com/google/wire/cmd/wire@$(WIRE_VERSION)
 	@go install entgo.io/ent/cmd/ent@$(ENT_VERSION)
 	@go install github.com/air-verse/air@$(AIR_VERSION)
-	@go install $(SERVORA_PKG)/cmd/svr@$(SERVORA_VERSION)
 	@echo "✓ CLI tools installed"
 
 api: $(API_TARGETS) ## Generate configured protobuf API code
@@ -75,11 +74,19 @@ ent: ## Generate Ent code for services that define generators
 
 OPENFGA_MODEL ?= manifests/openfga/model/servora.fga
 OPENFGA_TESTS ?= manifests/openfga/tests/servora.fga.yaml
-OPENFGA_ENV_PREFIX ?= OPENFGA_
-OPENFGA_API_URL ?= http://localhost:18080
+OPENFGA_ENV_PREFIX ?= PLATFORM_
+OPENFGA_API_URL ?=
+
+ifeq ($(OS),Windows_NT)
+OPENFGA_INIT_CMD = powershell -NoProfile -ExecutionPolicy Bypass -File "$(REPO_ROOT)/manifests/scripts/openfga.ps1" init -Model "$(OPENFGA_MODEL)" -EnvFile "$(ENV_FILE_PATH)" -EnvPrefix "$(OPENFGA_ENV_PREFIX)" -ApiUrl "$(OPENFGA_API_URL)"
+OPENFGA_APPLY_CMD = powershell -NoProfile -ExecutionPolicy Bypass -File "$(REPO_ROOT)/manifests/scripts/openfga.ps1" apply -Model "$(OPENFGA_MODEL)" -EnvFile "$(ENV_FILE_PATH)" -EnvPrefix "$(OPENFGA_ENV_PREFIX)" -ApiUrl "$(OPENFGA_API_URL)"
+else
+OPENFGA_INIT_CMD = bash "$(REPO_ROOT)/manifests/scripts/openfga.sh" init --model "$(OPENFGA_MODEL)" --env-file "$(ENV_FILE_PATH)" --env-prefix "$(OPENFGA_ENV_PREFIX)" --api-url "$(OPENFGA_API_URL)"
+OPENFGA_APPLY_CMD = bash "$(REPO_ROOT)/manifests/scripts/openfga.sh" apply --model "$(OPENFGA_MODEL)" --env-file "$(ENV_FILE_PATH)" --env-prefix "$(OPENFGA_ENV_PREFIX)" --api-url "$(OPENFGA_API_URL)"
+endif
 
 openfga.init: ## Initialize OpenFGA store and model
-	@svr openfga init --model $(OPENFGA_MODEL) --env-file $(ENV_FILE_PATH) --env-prefix $(OPENFGA_ENV_PREFIX) --api-url $(OPENFGA_API_URL)
+	@$(OPENFGA_INIT_CMD)
 
 openfga.model.validate: ## Validate OpenFGA model syntax
 	@fga model validate --file $(OPENFGA_MODEL) --format fga
@@ -90,7 +97,7 @@ openfga.model.test: openfga.model.validate ## Run OpenFGA model tests
 	@echo "✓ OpenFGA model tests passed"
 
 openfga.model.apply: openfga.model.test ## Apply OpenFGA model after validate/test
-	@svr openfga model apply --model $(OPENFGA_MODEL) --env-file $(ENV_FILE_PATH) --env-prefix $(OPENFGA_ENV_PREFIX) --api-url $(OPENFGA_API_URL)
+	@$(OPENFGA_APPLY_CMD)
 endif
 
 ifeq ($(SERVORA_CONTEXT),service)

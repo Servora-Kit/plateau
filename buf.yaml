@@ -1,8 +1,8 @@
 version: v2
 
 modules:
+  - path: api/protos
   - path: app/audit/service/api/protos
-    name: buf.build/servora/servora-platform
   - path: app/example/service/api/protos
 
 deps:
@@ -17,8 +17,8 @@ lint:
   use:
     - STANDARD
   except:
-    - ENUM_VALUE_PREFIX
-    - ENUM_ZERO_VALUE_SUFFIX
+    # - ENUM_VALUE_PREFIX
+    # - ENUM_ZERO_VALUE_SUFFIX
     - RPC_REQUEST_RESPONSE_UNIQUE
   ignore_only:
     RPC_RESPONSE_STANDARD_NAME:

@@ -4,8 +4,9 @@ go 1.26.1
 
 require (
 	entgo.io/ent v0.14.5
-	github.com/Servora-Kit/servora v0.8.9
-	github.com/Servora-Kit/servora/api/gen v0.8.9
+	github.com/Servora-Kit/servora v0.8.11
+	github.com/Servora-Kit/servora-platform/api/gen v0.0.0-20260809114341-d79ce9eb1f24
+	github.com/Servora-Kit/servora/api/gen v0.8.11
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/wire v0.7.0
 	github.com/jackc/pgx/v5 v5.9.2
@@ -61,6 +62,7 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-kratos/kratos/contrib/config/consul/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/config/nacos/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
+	github.com/go-kratos/kratos/contrib/encoding/json/v3 v3.0.0-20260626125723-668db92c2c00 // indirect
 	github.com/go-kratos/kratos/contrib/middleware/validate/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/otel/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/registry/consul/v3 v3.0.0-20260621094049-2726761cdd77 // indirect

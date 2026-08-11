@@ -3,7 +3,7 @@ module github.com/Servora-Kit/servora-platform/api/gen
 go 1.26.1
 
 require (
-	github.com/Servora-Kit/servora/api/gen v0.8.9
+	github.com/Servora-Kit/servora/api/gen v0.8.11
 	github.com/go-kratos/kratos/v3 v3.0.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60
 	google.golang.org/grpc v1.82.1

@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package platform.authn.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/platform/authn/v1;authnpb";
+
+// AuthnMode defines the authentication requirement for an RPC method.
+enum AuthnMode {
+  // Unspecified inherits a service default or produces no generated rule.
+  AUTHN_MODE_UNSPECIFIED = 0;
+  // Public skips authentication. Schemes must be empty.
+  AUTHN_MODE_PUBLIC = 1;
+  // Required authenticates with the selected schemes, or all configured schemes when empty.
+  AUTHN_MODE_REQUIRED = 2;
+}
+
+// AuthnRule declares an RPC authentication policy.
+message AuthnRule {
+  AuthnMode mode = 1;
+  // Open scheme names implemented by Platform authenticators.
+  repeated string schemes = 2;
+}
+
+extend google.protobuf.MethodOptions {
+  // rule declares the authentication requirement for an RPC method.
+  AuthnRule rule = 50300;
+}
+
+extend google.protobuf.ServiceOptions {
+  // service_default applies when a method has no non-zero rule.
+  AuthnRule service_default = 50301;
+}

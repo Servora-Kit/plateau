@@ -2,9 +2,9 @@
 
 简体中文
 
-> 本项目是 [Servora](https://github.com/Servora-Kit/servora) 框架的**示例项目**，提供平台级基础微服务实现。
+> 本项目是 [Servora](https://github.com/Servora-Kit/servora) 框架的主要业务实践仓库，并拥有 Platform 产品安全生态。
 
-`servora-platform` 当前包含简单的示例审计（Audit）微服务、User CRUD 参考服务及其 Vue/Next Web 入口。
+`servora-platform` 当前包含 AuthN/AuthZ runtime、JWT/OpenFGA 集成、安全 Proto/codegen、Audit 微服务、Example CRUD 服务及其 Web 入口。
 
 ## 包含内容
 
@@ -17,6 +17,18 @@
   - 基于 Kafka 消费审计事件
   - ClickHouse 持久化存储
   - 审计日志查询 API
+  - 不定义或解析 AuthN/AuthZ typed Audit payload；旧安全事件按 generic CloudEvent 保存 raw data
+
+### 公共安全能力
+
+- `security/authn`：认证调度、稳定 Subject 与 transport error 映射
+- `security/authz`：结构化 Check contract、middleware、batch/list 扩展
+- `security/jwt`：claims-neutral RS256/KID/PEM 与 typed claims context 工具
+- `infra/openfga`：Platform config 到官方 OpenFGA SDK Client
+- `security/rebac/openfga`：官方 Client 到 Platform AuthZ/ReBAC Adapter
+- `cmd/protoc-gen-servora-authn`、`cmd/protoc-gen-servora-authz`：由当前 checkout 本地安装的规则插件
+
+安全公共 Proto 位于 `api/protos/platform/**`，生成物位于独立 module `api/gen`；Platform 不发布自己的 BSR module。
 
 ### Web
 
@@ -30,7 +42,7 @@
 ## 技术栈
 
 - 框架：[servora](https://github.com/Servora-Kit/servora)
-- API：Protobuf + Buf v2（业务 proto 依赖 [buf.build/servora/servora](https://buf.build/servora/servora)）
+- API：Protobuf + Buf v2；Servora 通用 Proto 依赖 [buf.build/servora/servora](https://buf.build/servora/servora)，Platform 安全 Proto 由本仓本地 module 管理
 - 任务编排：Just 1.57.0+
 - DI：Google Wire
 - 消息：Kafka（franz-go）
@@ -42,23 +54,29 @@
 ```text
 .
 ├── api/
-│   └── gen/                         # Go 与共享 TypeScript 生成代码
+│   ├── protos/platform/              # Platform AuthN/AuthZ/JWT/OpenFGA Proto
+│   └── gen/                          # 独立 Go module 与共享 TypeScript 生成代码
 ├── app/
-│   ├── audit/service/               # Audit 微服务及 leaf justfile
-│   ├── example/service/             # Example 微服务及 leaf justfile
-│   ├── example/web/                 # Vue 请求控制台及 leaf justfile
-│   └── test/web/                    # Next.js Web 入口及 leaf justfile
-├── just/
-│   ├── settings.just                # 跨平台设置
-│   ├── service.just                 # service 共享实现
-│   ├── services.just                # service 显式 registry
-│   └── webs.just                    # Web 显式 registry
-├── manifests/                       # OpenFGA 与部署资源
-├── buf.yaml                         # Buf v2 workspace
-├── buf.go.gen.yaml                  # Go 代码生成模板
-├── buf.typescript.gen.yaml          # TypeScript HTTP 生成模板
-├── docker-compose.yaml              # 基础设施编排
-└── justfile                         # 平台 root 任务入口
+│   ├── audit/service/                # generic CloudEvents Audit 微服务
+│   ├── example/service/              # Example CRUD 微服务
+│   ├── example/web/                  # Vue 请求控制台
+│   └── test/web/                     # Next.js 构建验证入口
+├── cmd/
+│   ├── protoc-gen-servora-authn/     # Platform AuthN 规则插件
+│   └── protoc-gen-servora-authz/     # Platform AuthZ 规则插件
+├── infra/openfga/                    # 官方 OpenFGA SDK Client 构造
+├── security/
+│   ├── authn/                        # Platform AuthN runtime
+│   ├── authz/                        # Platform AuthZ runtime
+│   ├── jwt/                          # claims-neutral JWT 工具
+│   └── rebac/openfga/                # OpenFGA ReBAC Adapter
+├── just/                             # service/web 跨平台任务模块
+├── manifests/                        # OpenFGA、部署资源与管理脚本
+├── buf.yaml                          # 本地 Buf v2 workspace modules
+├── buf.go.gen.yaml                   # Go 代码生成模板
+├── buf.typescript.gen.yaml           # TypeScript 生成模板
+├── docker-compose.yaml               # 基础设施编排
+└── justfile                          # Platform root 任务入口
 ```
 
 ## 快速开始
@@ -69,6 +87,7 @@
 - Just 1.57.0+
 - Node.js 与 pnpm
 - Docker / Docker Compose
+- OpenFGA CLI `fga`；Unix OpenFGA 管理还需 `jq`
 
 ### 安装工具
 
@@ -159,7 +178,14 @@ just openfga-model-apply
 - **Go 依赖**：`github.com/Servora-Kit/servora`（基础库）、`github.com/Servora-Kit/servora/api/gen`（框架 proto 生成代码）
 - **Proto 依赖**：`buf.build/servora/servora`（框架公共 proto）
 - **TypeScript 依赖**：`@servora-platform/api` 是 `api/gen` 提供的共享 workspace 包；root `just api-ts` 为 `buf.yaml` 全部模块生成 HTTP client，service leaf 的同名任务使用服务自有模板
-- **CLI / 代码生成工具**：`just init` 从 GitHub 安装 `svr`、Servora 代码生成插件与 GoWind `protoc-gen-go-redact`；项目由 Buf 驱动生成，无需安装 `kratos` CLI
+- **CLI / 代码生成工具**：`just init` 安装 Servora 仍拥有的通用插件，并从当前 checkout 安装 AuthN/AuthZ 插件；OpenFGA 管理由仓库脚本和 `fga` CLI 完成，不安装或调用 `svr`
+
+### 安全与 Audit 边界
+
+- Platform 拥有 AuthN/AuthZ runtime、注解 Proto、生成插件、JWT 工具和 OpenFGA Client/Adapter。
+- Servora 只提供通用 Audit runtime、CloudEvents backend、RPC Audit 注解/plugin 与其他框架 primitive。
+- 本次不定义 `platform.authn.*` 或 `platform.authz.*` Audit 事件；IAM 开始后再基于真实身份模型单独设计。
+- Audit service 对遗留 `servora.authn.*` / `servora.authz.*` 事件只执行 generic raw-data 存储，不做 typed projection。
 
 ## 质量约束
 
