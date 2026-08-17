@@ -6,7 +6,7 @@ mod web 'just/webs.just'
 ROOT_DIR := justfile_directory()
 BUF_GO_GEN_TEMPLATE := env("BUF_GO_GEN_TEMPLATE", "buf.go.gen.yaml")
 BUF_TS_GEN_TEMPLATE := env("BUF_TS_GEN_TEMPLATE", "buf.typescript.gen.yaml")
-API_TS_PACKAGE := env("API_TS_PACKAGE", "@servora-platform/api")
+API_TS_PACKAGE := env("API_TS_PACKAGE", "@plateau/api")
 SERVORA_PKG := env("SERVORA_PKG", "github.com/Servora-Kit/servora")
 SERVORA_VERSION := env("SERVORA_VERSION", "v0.8.11")
 PNPM := env("PNPM", "pnpm")
@@ -59,8 +59,8 @@ plugin:
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-audit@{{ SERVORA_VERSION }}
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-conf@{{ SERVORA_VERSION }}
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-crud@{{ SERVORA_VERSION }}
-    @go install ./cmd/protoc-gen-servora-authz
-    @go install ./cmd/protoc-gen-servora-authn
+    @go install ./cmd/protoc-gen-plateau-authz
+    @go install ./cmd/protoc-gen-plateau-authn
 
 cli:
     @echo "==> Installing CLI tools..."

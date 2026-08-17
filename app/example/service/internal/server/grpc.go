@@ -5,8 +5,8 @@ import (
 
 	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 
-	examplev1 "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/service"
+	examplev1 "github.com/Servora-Kit/plateau/api/gen/go/example/service/v1"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/service"
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrgrpc "github.com/Servora-Kit/servora/transport/server/grpc"

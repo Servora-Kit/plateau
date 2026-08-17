@@ -5,8 +5,8 @@ package runtime
 import (
 	"time"
 
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/schema"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/user"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/schema"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/user"
 )
 
 // The init function reads all schema descriptors with runtime code

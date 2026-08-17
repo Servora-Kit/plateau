@@ -1,8 +1,8 @@
-# Platform 统一 Security Wire Error 边界
+# Plateau 统一 Security Wire Error 边界
 
 > Status: accepted
 
-Platform 不为 AuthN/AuthZ 或 JWT、mTLS、OIDC、OpenFGA、Casbin 等具体实现分别暴露 provider-specific errors proto。具体实现保留自己的 Go 错误语义，middleware 统一包装为 `platform/security/errors/v1/errors.proto` 定义的最小标准类别，再映射到 HTTP/gRPC 状态；这样客户端依赖安全语义而不是当前 provider。
+Plateau 不为 AuthN/AuthZ 或 JWT、mTLS、OIDC、OpenFGA、Casbin 等具体实现分别暴露 provider-specific errors proto。具体实现保留自己的 Go 错误语义，middleware 统一包装为 `plateau/security/errors/v1/errors.proto` 定义的最小标准类别，再映射到 HTTP/gRPC 状态；这样客户端依赖安全语义而不是当前 provider。
 
 ## Considered Options
 

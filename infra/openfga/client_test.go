@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	openfgaconfpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/infra/openfga/v1"
+	openfgaconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	fgaclient "github.com/openfga/go-sdk/client"
 	"google.golang.org/protobuf/proto"
 )

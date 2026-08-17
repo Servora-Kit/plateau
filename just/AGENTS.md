@@ -5,7 +5,7 @@
 
 ## 目录定位
 
-维护 servora-platform 的 justfile
+维护 plateau 的 justfile
 
 ## 开发规范
 

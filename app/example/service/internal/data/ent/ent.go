@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/user"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/user"
 )
 
 // ent aliases to avoid import conflicts in user's code.

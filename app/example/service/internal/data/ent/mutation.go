@@ -11,8 +11,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/predicate"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/user"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/predicate"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/user"
 )
 
 const (

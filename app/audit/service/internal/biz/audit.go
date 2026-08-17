@@ -3,7 +3,7 @@ package biz
 import (
 	"context"
 
-	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1"
 )
 
 // AuditRepo defines the read-side repository for querying persisted audit events.

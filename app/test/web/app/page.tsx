@@ -1,7 +1,7 @@
-import { createAuditQueryServiceClient } from "@servora-platform/api/audit/service/v1";
-import { createUserServiceClient } from "@servora-platform/api/example/service/v1";
-import { UserName } from "@servora-platform/api/example/service/v1/user.crud";
-import { UserErrorReason } from "@servora-platform/api/example/service/v1/user.errors";
+import { createAuditQueryServiceClient } from "@plateau/api/audit/service/v1";
+import { createUserServiceClient } from "@plateau/api/example/service/v1";
+import { UserName } from "@plateau/api/example/service/v1/user.crud";
+import { UserErrorReason } from "@plateau/api/example/service/v1/user.errors";
 
 import Image from "next/image";
 

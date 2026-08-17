@@ -1,7 +1,7 @@
 BUF_GO_GEN_TEMPLATE ?= buf.go.gen.yaml
 BUF_TS_GEN_TEMPLATE ?= buf.typescript.gen.yaml
 PNPM ?= pnpm
-API_TS_PACKAGE ?= @servora-platform/api
+API_TS_PACKAGE ?= @plateau/api
 SERVORA_PKG ?= github.com/Servora-Kit/servora
 
 PROTOC_GEN_GO_VERSION ?= latest
@@ -38,9 +38,9 @@ plugin: ## Install protoc-gen-* plugins
 	@go install github.com/google/gnostic/cmd/protoc-gen-openapi@$(PROTOC_GEN_OPENAPI_VERSION)
 	@go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE_VERSION)
 	@go install github.com/tx7do/go-wind-toolkit/protoc-gen-go-redact@$(PROTOC_GEN_GO_REDACT_VERSION)
-	@go install ./cmd/protoc-gen-servora-authz
+	@go install ./cmd/protoc-gen-plateau-authz
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-audit@$(SERVORA_VERSION)
-	@go install ./cmd/protoc-gen-servora-authn
+	@go install ./cmd/protoc-gen-plateau-authn
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-conf@$(SERVORA_VERSION)
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-crud@$(SERVORA_VERSION)
 	@echo "✓ Protoc plugins installed"

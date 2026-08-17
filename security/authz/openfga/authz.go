@@ -9,7 +9,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	security "github.com/Servora-Kit/servora-platform/security"
+	security "github.com/Servora-Kit/plateau/security"
 	fgasdk "github.com/openfga/go-sdk"
 	fgaclient "github.com/openfga/go-sdk/client"
 )

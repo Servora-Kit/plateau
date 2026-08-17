@@ -1,10 +1,10 @@
-# Servora Platform
+# Servora Plateau
 
 简体中文
 
-> 本项目是 [Servora](https://github.com/Servora-Kit/servora) 框架的主要业务实践仓库，并拥有 Platform 产品安全生态。
+> 本项目是 [Servora](https://github.com/Servora-Kit/servora) 框架的主要业务实践仓库，并拥有 Plateau 产品安全生态。
 
-`servora-platform` 当前包含具体 JWT AuthN、OpenFGA AuthZ、JWT/OpenFGA 基础能力、安全 Proto/codegen、Audit 微服务、Example CRUD 服务及其 Web 入口。
+`plateau` 当前包含具体 JWT AuthN、OpenFGA AuthZ、JWT/OpenFGA 基础能力、安全 Proto/codegen、Audit 微服务、Example CRUD 服务及其 Web 入口。
 
 ## 包含内容
 
@@ -25,10 +25,10 @@
 - `security/authn/jwt`：JWT Bearer 认证、路由策略与 Actor 映射
 - `security/authz/openfga`：直接消费 Actor 的 OpenFGA 检查、Batch、List 与路由策略
 - `security/jwt`：claims-neutral RS256、KID、Signer 与 Verifier
-- `infra/openfga`：Platform config 到官方 OpenFGA SDK Client
-- `cmd/protoc-gen-servora-authn`、`cmd/protoc-gen-servora-authz`：由当前 checkout 本地安装的规则插件
+- `infra/openfga`：Plateau config 到官方 OpenFGA SDK Client
+- `cmd/protoc-gen-plateau-authn`、`cmd/protoc-gen-plateau-authz`：由当前 checkout 本地安装的规则插件
 
-安全公共 Proto 位于 `api/protos/platform/**`，生成物位于独立 module `api/gen`；Platform 不发布自己的 BSR module。
+安全公共 Proto 位于 `api/protos/plateau/**`，生成物位于独立 module `api/gen`；Plateau 不发布自己的 BSR module。
 
 ### Web
 
@@ -42,7 +42,7 @@
 ## 技术栈
 
 - 框架：[servora](https://github.com/Servora-Kit/servora)
-- API：Protobuf + Buf v2；Servora 通用 Proto 依赖 [buf.build/servora/servora](https://buf.build/servora/servora)，Platform 安全 Proto 由本仓本地 module 管理
+- API：Protobuf + Buf v2；Servora 通用 Proto 依赖 [buf.build/servora/servora](https://buf.build/servora/servora)，Plateau 安全 Proto 由本仓本地 module 管理
 - 任务编排：Just 1.57.0+
 - DI：Google Wire
 - 消息：Kafka（franz-go）
@@ -54,7 +54,7 @@
 ```text
 .
 ├── api/
-│   ├── protos/platform/              # Platform AuthN/AuthZ/JWT/OpenFGA Proto
+│   ├── protos/plateau/              # Plateau AuthN/AuthZ/JWT/OpenFGA Proto
 │   └── gen/                          # 独立 Go module 与共享 TypeScript 生成代码
 ├── app/
 │   ├── audit/service/                # generic CloudEvents Audit 微服务
@@ -62,8 +62,8 @@
 │   ├── example/web/                  # Vue 请求控制台
 │   └── test/web/                     # Next.js 构建验证入口
 ├── cmd/
-│   ├── protoc-gen-servora-authn/     # Platform AuthN 规则插件
-│   └── protoc-gen-servora-authz/     # Platform AuthZ 规则插件
+│   ├── protoc-gen-plateau-authn/     # Plateau AuthN 规则插件
+│   └── protoc-gen-plateau-authz/     # Plateau AuthZ 规则插件
 ├── infra/openfga/                    # 官方 OpenFGA SDK Client 构造
 ├── security/
 │   ├── actor.go                      # 跨服务共享 Actor
@@ -76,7 +76,7 @@
 ├── buf.go.gen.yaml                   # Go 代码生成模板
 ├── buf.typescript.gen.yaml           # TypeScript 生成模板
 ├── docker-compose.yaml               # 基础设施编排
-└── justfile                          # Platform root 任务入口
+└── justfile                          # Plateau root 任务入口
 ```
 
 ## 快速开始
@@ -177,14 +177,14 @@ just openfga-model-apply
 
 - **Go 依赖**：`github.com/Servora-Kit/servora`（基础库）、`github.com/Servora-Kit/servora/api/gen`（框架 proto 生成代码）
 - **Proto 依赖**：`buf.build/servora/servora`（框架公共 proto）
-- **TypeScript 依赖**：`@servora-platform/api` 是 `api/gen` 提供的共享 workspace 包；root `just api-ts` 为 `buf.yaml` 全部模块生成 HTTP client，service leaf 的同名任务使用服务自有模板
+- **TypeScript 依赖**：`@plateau/api` 是 `api/gen` 提供的共享 workspace 包；root `just api-ts` 为 `buf.yaml` 全部模块生成 HTTP client，service leaf 的同名任务使用服务自有模板
 - **CLI / 代码生成工具**：`just init` 安装 Servora 仍拥有的通用插件，并从当前 checkout 安装 AuthN/AuthZ 插件；OpenFGA 管理由仓库脚本和 `fga` CLI 完成，不安装或调用 `svr`
 
 ### 安全与 Audit 边界
 
-- Platform 拥有具体 AuthN/AuthZ 实现、注解 Proto、生成插件、JWT primitive 和 OpenFGA SDK Client 构造。
+- Plateau 拥有具体 AuthN/AuthZ 实现、注解 Proto、生成插件、JWT primitive 和 OpenFGA SDK Client 构造。
 - Servora 只提供通用 Audit runtime、CloudEvents backend、RPC Audit 注解/plugin 与其他框架 primitive。
-- 本次不定义 `platform.authn.*` 或 `platform.authz.*` Audit 事件；IAM 开始后再基于真实身份模型单独设计。
+- 本次不定义 `plateau.authn.*` 或 `plateau.authz.*` Audit 事件；IAM 开始后再基于真实身份模型单独设计。
 - Audit service 对遗留 `servora.authn.*` / `servora.authz.*` 事件只执行 generic raw-data 存储，不做 typed projection。
 
 ## 质量约束

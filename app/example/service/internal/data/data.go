@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect"
-	entmodel "github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent"
-	_ "github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/runtime"
+	entmodel "github.com/Servora-Kit/plateau/app/example/service/internal/data/ent"
+	_ "github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/runtime"
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	entdriver "github.com/Servora-Kit/servora/contrib/db/entgo"
 	"github.com/google/wire"

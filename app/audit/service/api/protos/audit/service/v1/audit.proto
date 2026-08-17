@@ -5,7 +5,7 @@ package audit.service.v1;
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditpb";
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1;auditpb";
 
 // AuditQueryService provides read-only gRPC and HTTP access to persisted audit events.
 service AuditQueryService {

@@ -1,4 +1,4 @@
-// Package security provides shared Platform security value types.
+// Package security provides shared Plateau security value types.
 package security
 
 import "context"
@@ -18,7 +18,7 @@ type Actor struct {
 	ID   string
 }
 
-// Valid reports whether the Actor satisfies Platform's identity invariant.
+// Valid reports whether the Actor satisfies Plateau's identity invariant.
 func (actor Actor) Valid() bool {
 	switch actor.Type {
 	case ActorTypeHuman, ActorTypeService:

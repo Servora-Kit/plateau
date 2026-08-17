@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/predicate"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent/user"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/predicate"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent/user"
 )
 
 // The Query interface represents an operation that queries a graph.

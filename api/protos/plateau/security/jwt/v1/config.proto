@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package plateau.security.jwt.v1;
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1;jwtv1";
+
+// VerificationKey describes one public key accepted by a JWT verifier.
+message VerificationKey {
+  string kid = 1;
+
+  oneof source {
+    string public_key_pem = 2;
+    string public_key_path = 3;
+  }
+}

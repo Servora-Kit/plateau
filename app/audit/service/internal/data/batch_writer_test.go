@@ -28,7 +28,7 @@ func TestProjectEventLegacySecurityUsesGenericProjection(t *testing.T) {
 
 func TestProjectEventUnknownCloudEventUsesGenericProjection(t *testing.T) {
 	event := cloudevents.NewEvent()
-	event.SetType("platform.future.event.v1")
+	event.SetType("plateau.future.event.v1")
 	event.SetSubject("resource:1")
 	event.SetExtension(extAuthID, "user-1")
 

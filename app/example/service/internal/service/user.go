@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	examplev1 "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/biz"
+	examplev1 "github.com/Servora-Kit/plateau/api/gen/go/example/service/v1"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/biz"
 	crudpb "github.com/Servora-Kit/servora/api/gen/go/servora/crud/v1"
 	corecrud "github.com/Servora-Kit/servora/core/crud"
 )

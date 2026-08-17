@@ -11,7 +11,7 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "servora/errors/v1/errors.proto";
 
-option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1;examplepb";
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/example/service/v1;examplepb";
 option java_multiple_files = true;
 option java_outer_classname = "ExampleProto";
 option java_package = "dev.servora.example.service.v1";

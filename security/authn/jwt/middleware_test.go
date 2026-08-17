@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	authnpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/authn/v1"
-	securityerrorspb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/errors/v1"
-	security "github.com/Servora-Kit/servora-platform/security"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
+	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
+	security "github.com/Servora-Kit/plateau/security"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 )

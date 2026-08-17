@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package plateau.security.errors.v1;
+
+import "servora/errors/v1/errors.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1;securityerrorspb";
+
+// SecurityErrorReason defines stable client-visible security failures.
+enum SecurityErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  SECURITY_ERROR_REASON_UNSPECIFIED = 0;
+  SECURITY_ERROR_REASON_UNAUTHENTICATED = 1 [(servora.errors.v1.code) = 401];
+  SECURITY_ERROR_REASON_PERMISSION_DENIED = 2 [(servora.errors.v1.code) = 403];
+  SECURITY_ERROR_REASON_INVALID_ARGUMENT = 3 [(servora.errors.v1.code) = 400];
+  SECURITY_ERROR_REASON_UNAVAILABLE = 4 [(servora.errors.v1.code) = 503];
+  SECURITY_ERROR_REASON_INTERNAL = 5 [(servora.errors.v1.code) = 500];
+}

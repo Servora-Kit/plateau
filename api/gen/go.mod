@@ -1,4 +1,4 @@
-module github.com/Servora-Kit/servora-platform/api/gen
+module github.com/Servora-Kit/plateau/api/gen
 
 go 1.26.1
 

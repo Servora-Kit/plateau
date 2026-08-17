@@ -1,4 +1,4 @@
-// Package optionmerge provides shared merge logic for Platform's AuthN and
+// Package optionmerge provides shared merge logic for Plateau's AuthN and
 // AuthZ protoc plugins. Both plugins use identical service-default and
 // method-override semantics:
 //

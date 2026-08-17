@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data/ent"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data/ent"
 )
 
 // The UserFunc type is an adapter to allow the use of ordinary

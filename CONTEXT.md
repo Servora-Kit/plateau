@@ -1,10 +1,10 @@
-# Servora Platform
+# Servora Plateau
 
 Servora 的平台微服务集合。每个服务既是可运行的业务系统，也是 Servora 框架抽象的真实使用场景。
 
 ## 使用范围
 
-本文件只统一讨论 Servora Platform IAM 与跨服务安全时使用的词义，不表示已经决定采用某种资源模型、协议实现、生命周期、存储方案或 API。所有设计决策与行为合同以当前 OpenSpec change 及正式 specs 为准。
+本文件只统一讨论 Servora Plateau IAM 与跨服务安全时使用的词义，不表示已经决定采用某种资源模型、协议实现、生命周期、存储方案或 API。所有设计决策与行为合同以当前 OpenSpec change 及正式 specs 为准。
 
 ## Language
 
@@ -35,15 +35,15 @@ _Avoid_：全局 Principal、共享 Token 的任意 claims 容器、跨服务通
 _Avoid_：把 Actor 当作资源、把 Tenant 自动当作资源、隐式 provider 默认 object ID。
 
 **IAM Login Session**：
-Human Actor 完成一种或多种认证仪式后，由 Platform IAM 建立的登录状态。它证明浏览器或用户代理当前已认证，但不是 access token，也不直接授予业务资源权限。
+Human Actor 完成一种或多种认证仪式后，由 Plateau IAM 建立的登录状态。它证明浏览器或用户代理当前已认证，但不是 access token，也不直接授予业务资源权限。
 _Avoid_：Access Token、Refresh Token、OAuth Authorization Grant。
 
 **Token Session**：
 OIDC/OAuth Client 基于授权结果取得并轮换 token 的生命周期，可被单独撤销，并关联到创建它的 IAM Login Session。
 _Avoid_：IAM Login Session、Access Token 字符串、Credential。
 
-**Platform Access Token**：
-Platform IAM 作为唯一 Authorization Server 签发、供 Platform Resource Server 验证，并在验证后映射为 Actor 的 OAuth access token。
+**Plateau Access Token**：
+Plateau IAM 作为唯一 Authorization Server 签发、供 Plateau Resource Server 验证，并在验证后映射为 Actor 的 OAuth access token。
 _Avoid_：IAM Login Session、ID Token、私有 Login API TokenPair。
 
 **OIDC UserInfo Profile**：
@@ -77,7 +77,7 @@ _Avoid_：Service Actor、Workload、Human Actor。
 
 ### 跨服务认证与 claims 所有权
 
-每个 token issuer 可以在 JWT Registered Claims 基础上定义自己的 claims 扩展。IAM、CMS、Mall 或其他服务各自拥有自己签发 token 的 claims schema；`security/authn/jwt` 不枚举所有 issuer 的业务 claims，也不提供统一业务 claims struct。当前不为 IAM claims 建立 Platform 共享 Proto 或 `api/gen` claims type。Resource Server 为自己消费的 token 定义本地最小 claims decoder，并遵守 issuer 发布的必要 wire semantics。
+每个 token issuer 可以在 JWT Registered Claims 基础上定义自己的 claims 扩展。IAM、CMS、Mall 或其他服务各自拥有自己签发 token 的 claims schema；`security/authn/jwt` 不枚举所有 issuer 的业务 claims，也不提供统一业务 claims struct。当前不为 IAM claims 建立 Plateau 共享 Proto 或 `api/gen` claims type。Resource Server 为自己消费的 token 定义本地最小 claims decoder，并遵守 issuer 发布的必要 wire semantics。
 
 CMS、Audit、Admin 等业务服务通常只需要已验证的 Actor 和本服务自己的 Tenant、Membership、Role、资源关系或审计事实，很少需要 IAM token 的完整业务 claims。需要解析 JWT 时，各服务只读取并验证自身所需的标准 claims 与最小 issuer-specific 字段，不导入 IAM 内部 claims 类型。
 

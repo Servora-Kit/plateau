@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	jwtconfpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/authn/jwt/v1"
-	jwtkeypb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/jwt/v1"
-	security "github.com/Servora-Kit/servora-platform/security"
-	securityjwt "github.com/Servora-Kit/servora-platform/security/jwt"
+	jwtconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
+	jwtkeypb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1"
+	security "github.com/Servora-Kit/plateau/security"
+	securityjwt "github.com/Servora-Kit/plateau/security/jwt"
 	jwtlib "github.com/golang-jwt/jwt/v5"
 )
 

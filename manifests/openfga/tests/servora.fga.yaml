@@ -2,7 +2,7 @@ name: servora authorization model tests
 model_file: ../model/servora.fga
 
 tuples:
-  # Platform admin
+  # Plateau admin
   - user: user:platform-admin
     relation: admin
     object: platform:default
@@ -23,7 +23,7 @@ tuples:
     object: service:payment-service
 
 tests:
-  # --- Platform tests ---
+  # --- Plateau tests ---
 
   - name: platform admin has admin and can manage users and applications
     check:

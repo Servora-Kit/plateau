@@ -1,5 +1,5 @@
 {
-  "name": "@servora-platform/example-web",
+  "name": "@plateau/example-web",
   "version": "0.0.0",
   "private": true,
   "type": "module",

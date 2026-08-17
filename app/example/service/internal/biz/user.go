@@ -9,7 +9,7 @@ import (
 	"log/slog"
 	"strings"
 
-	examplev1 "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1"
+	examplev1 "github.com/Servora-Kit/plateau/api/gen/go/example/service/v1"
 	corecrud "github.com/Servora-Kit/servora/core/crud"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 	"golang.org/x/crypto/bcrypt"

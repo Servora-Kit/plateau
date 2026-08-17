@@ -19,14 +19,14 @@ services:
             clickhouse:
                 condition: service_healthy
         networks:
-            - platform-network
+            - plateau-network
 
 volumes:
     audit-logs:
         external: true
-        name: servora-platform_audit-logs
+        name: plateau_audit-logs
 
 networks:
-    platform-network:
+    plateau-network:
         external: true
-        name: servora-platform_platform-network
+        name: plateau_plateau-network

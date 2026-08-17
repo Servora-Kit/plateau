@@ -1,11 +1,10 @@
-module github.com/Servora-Kit/servora-platform/app/example/service
+module github.com/Servora-Kit/plateau/app/example/service
 
 go 1.26.1
 
 require (
 	entgo.io/ent v0.14.5
 	github.com/Servora-Kit/servora v0.8.11
-	github.com/Servora-Kit/servora-platform/api/gen v0.0.0-20260809114341-d79ce9eb1f24
 	github.com/Servora-Kit/servora/api/gen v0.8.11
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/wire v0.7.0

@@ -1,4 +1,4 @@
-module github.com/Servora-Kit/servora-platform
+module github.com/Servora-Kit/plateau
 
 go 1.26.1
 

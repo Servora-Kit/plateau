@@ -5,8 +5,8 @@ import (
 
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
 
-	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
 	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrhttp "github.com/Servora-Kit/servora/transport/server/http"

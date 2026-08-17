@@ -106,7 +106,7 @@ importers:
 
   app/test/web:
     dependencies:
-      '@servora-platform/api':
+      '@plateau/api':
         specifier: workspace:*
         version: link:../../../api/gen
       next:

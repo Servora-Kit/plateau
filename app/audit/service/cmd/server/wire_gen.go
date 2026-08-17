@@ -8,11 +8,11 @@ package main
 
 import (
 	"context"
-	"github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/data"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/server"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/service"
+	"github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/server"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/clickhouse/v1"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"

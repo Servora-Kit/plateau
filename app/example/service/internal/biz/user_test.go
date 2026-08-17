@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"testing"
 
-	examplev1 "github.com/Servora-Kit/servora-platform/api/gen/go/example/service/v1"
+	examplev1 "github.com/Servora-Kit/plateau/api/gen/go/example/service/v1"
 	corecrud "github.com/Servora-Kit/servora/core/crud"
 	"golang.org/x/crypto/bcrypt"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"

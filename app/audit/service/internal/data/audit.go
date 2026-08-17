@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"time"
 
-	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

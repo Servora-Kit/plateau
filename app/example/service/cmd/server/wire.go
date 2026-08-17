@@ -4,10 +4,10 @@
 package main
 
 import (
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/biz"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/data"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/server"
-	"github.com/Servora-Kit/servora-platform/app/example/service/internal/service"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/biz"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/data"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/server"
+	"github.com/Servora-Kit/plateau/app/example/service/internal/service"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 
 	"github.com/go-kratos/kratos/v3"

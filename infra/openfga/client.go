@@ -1,4 +1,4 @@
-// Package openfga maps Platform configuration to the official OpenFGA SDK
+// Package openfga maps Plateau configuration to the official OpenFGA SDK
 // client. It intentionally does not wrap the SDK data plane.
 package openfga
 
@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	openfgaconfpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/infra/openfga/v1"
+	openfgaconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	fgaclient "github.com/openfga/go-sdk/client"
 	fgacredentials "github.com/openfga/go-sdk/credentials"
 )

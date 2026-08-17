@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	auditconfv1 "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/conf/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"google.golang.org/protobuf/encoding/protojson"

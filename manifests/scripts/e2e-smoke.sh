@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Platform service e2e smoke test.
+# Plateau service e2e smoke test.
 # Assumes the dev compose stack is running (`just compose-up`).
 #
 # Usage:
@@ -65,7 +65,7 @@ check_prom_target() {
   fi
 }
 
-echo -e "${CYAN}=== Platform E2E Smoke Test ===${RESET}"
+echo -e "${CYAN}=== Plateau E2E Smoke Test ===${RESET}"
 echo ""
 
 echo -e "${CYAN}[1/5] Traefik proxy (port $TRAEFIK_PORT)${RESET}"

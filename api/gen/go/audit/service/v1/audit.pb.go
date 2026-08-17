@@ -528,7 +528,7 @@ const file_audit_service_v1_audit_proto_rawDesc = "" +
 	"totalCount2\xa2\x02\n" +
 	"\x11AuditQueryService\x12\x80\x01\n" +
 	"\x0fListAuditEvents\x12(.audit.service.v1.ListAuditEventsRequest\x1a).audit.service.v1.ListAuditEventsResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/audit/events\x12\x89\x01\n" +
-	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/audit/events:countBMZKgithub.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1;auditpbb\x06proto3"
+	"\x10CountAuditEvents\x12).audit.service.v1.CountAuditEventsRequest\x1a*.audit.service.v1.CountAuditEventsResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/audit/events:countBDZBgithub.com/Servora-Kit/plateau/api/gen/go/audit/service/v1;auditpbb\x06proto3"
 
 var (
 	file_audit_service_v1_audit_proto_rawDescOnce sync.Once

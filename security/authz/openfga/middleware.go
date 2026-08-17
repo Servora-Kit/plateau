@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	authzpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/authz/v1"
-	securityerrorspb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/errors/v1"
-	security "github.com/Servora-Kit/servora-platform/security"
+	authzpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
+	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
+	security "github.com/Servora-Kit/plateau/security"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 	fgasdk "github.com/openfga/go-sdk"

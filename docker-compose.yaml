@@ -21,9 +21,9 @@ services:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       # PostgreSQL 18 在 major-version 子目录存储数据，挂载父目录。
-      - platform-postgres-data:/var/lib/postgresql
+      - plateau-postgres-data:/var/lib/postgresql
     networks:
-      - platform-network
+      - plateau-network
 
   consul:
     image: consul:1.15.4
@@ -46,9 +46,9 @@ services:
       - "8500:8500"
       - "8600:8600/udp"
     volumes:
-      - platform-consul-data:/consul/data
+      - plateau-consul-data:/consul/data
     networks:
-      - platform-network
+      - plateau-network
 
   jaeger:
     image: jaegertracing/jaeger:latest
@@ -59,7 +59,7 @@ services:
     ports:
       - "16686:16686"
     networks:
-      - platform-network
+      - plateau-network
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -89,7 +89,7 @@ services:
       - jaeger
       - loki
     networks:
-      - platform-network
+      - plateau-network
 
   loki:
     image: grafana/loki:latest
@@ -100,9 +100,9 @@ services:
       - "16685:3100"
     volumes:
       - ./manifests/loki/loki.yaml:/etc/loki/config.yaml:ro
-      - platform-loki-data:/loki
+      - plateau-loki-data:/loki
     networks:
-      - platform-network
+      - plateau-network
 
   prometheus:
     image: prom/prometheus:latest
@@ -115,9 +115,9 @@ services:
       - "9090:9090"
     volumes:
       - ./manifests/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - platform-prometheus-data:/prometheus
+      - plateau-prometheus-data:/prometheus
     networks:
-      - platform-network
+      - plateau-network
 
   grafana:
     image: grafana/grafana:latest
@@ -133,13 +133,13 @@ services:
     volumes:
       - ./manifests/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./manifests/grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - platform-grafana-data:/var/lib/grafana
+      - plateau-grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
       - loki
       - jaeger
     networks:
-      - platform-network
+      - plateau-network
 
   traefik:
     image: traefik:v3.6
@@ -162,7 +162,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - platform-network
+      - plateau-network
 
   kafka:
     image: apache/kafka:latest
@@ -200,9 +200,9 @@ services:
       - "9092:9092"
       - "29092:29092"
     volumes:
-      - platform-kafka-data:/var/lib/kafka/data
+      - plateau-kafka-data:/var/lib/kafka/data
     networks:
-      - platform-network
+      - plateau-network
 
   clickhouse:
     image: clickhouse/clickhouse-server:latest
@@ -227,19 +227,19 @@ services:
       - "18123:8123"
       - "19000:9000"
     volumes:
-      - platform-clickhouse-data:/var/lib/clickhouse
+      - plateau-clickhouse-data:/var/lib/clickhouse
     networks:
-      - platform-network
+      - plateau-network
 
 volumes:
-  platform-postgres-data:
-  platform-consul-data:
-  platform-loki-data:
-  platform-prometheus-data:
-  platform-grafana-data:
-  platform-kafka-data:
-  platform-clickhouse-data:
+  plateau-postgres-data:
+  plateau-consul-data:
+  plateau-loki-data:
+  plateau-prometheus-data:
+  plateau-grafana-data:
+  plateau-kafka-data:
+  plateau-clickhouse-data:
   audit-logs:
 
 networks:
-  platform-network:
+  plateau-network:

@@ -38,13 +38,13 @@ plugins:
           - lang=go
 
     # ==================== Servora custom plugins ====================
-    # generate authn rules from Platform proto annotations
-    - local: protoc-gen-servora-authn
+    # generate authn rules from Plateau proto annotations
+    - local: protoc-gen-plateau-authn
       out: api/gen/go
       opt: paths=source_relative
 
-    # generate authz rules from Platform proto annotations
-    - local: protoc-gen-servora-authz
+    # generate authz rules from Plateau proto annotations
+    - local: protoc-gen-plateau-authz
       out: api/gen/go
       opt: paths=source_relative
 

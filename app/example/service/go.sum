@@ -19,8 +19,8 @@ github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3
 github.com/HdrHistogram/hdrhistogram-go v1.1.2/go.mod h1:yDgFjdqOqDEKOvasDdhWNXYg9BVp4O+o5f6V/ehm6Oo=
 github.com/Servora-Kit/servora v0.8.11 h1:P3cUMVrvAZ4xRs1XJel3DXDSzcQJJiK4kNy015c6B9I=
 github.com/Servora-Kit/servora v0.8.11/go.mod h1:dyswWWgYGd8rwPuUgNckYYe3lRCzD/TcFdzqNW6lkBI=
-github.com/Servora-Kit/servora-platform/api/gen v0.0.0-20260809114341-d79ce9eb1f24 h1:NnknfQlghdhQupOB+e4HCjwJizQ73WfEwzngIc0sRKg=
-github.com/Servora-Kit/servora-platform/api/gen v0.0.0-20260809114341-d79ce9eb1f24/go.mod h1:RN81zPPJGKKtQKl1rJLd8RIuzakv9PtHaC79dWGd5Zs=
+github.com/Servora-Kit/plateau/api/gen v0.0.0-20260809114341-d79ce9eb1f24 h1:NnknfQlghdhQupOB+e4HCjwJizQ73WfEwzngIc0sRKg=
+github.com/Servora-Kit/plateau/api/gen v0.0.0-20260809114341-d79ce9eb1f24/go.mod h1:RN81zPPJGKKtQKl1rJLd8RIuzakv9PtHaC79dWGd5Zs=
 github.com/Servora-Kit/servora/api/gen v0.8.11 h1:qaBmsYdwOs6XtbHAMsPhhKMYL8Mw2hJ6ejTtfGdTEXQ=
 github.com/Servora-Kit/servora/api/gen v0.8.11/go.mod h1:s4OdXX4BuV0tzDeZGKOfr2RBgl+tEMjojiSbIwa3ZPA=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=

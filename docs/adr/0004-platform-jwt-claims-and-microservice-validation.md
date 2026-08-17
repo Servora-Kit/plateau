@@ -1,8 +1,8 @@
-# ADR 0004：Platform JWT claims 与微服务认证传播边界
+# ADR 0004：Plateau JWT claims 与微服务认证传播边界
 
 - 状态：accepted
 - 日期：2026-08-16
-- 范围：`servora-platform` 安全基础与未来 IAM/Resource Server 接入
+- 范围：`plateau` 安全基础与未来 IAM/Resource Server 接入
 
 ## Context
 
@@ -19,7 +19,7 @@
 5. 默认认证链采用“网关预检 + Resource Server 本地验证 JWT”。网关不得通过未保护的 `X-User-ID`、`X-Role` 等明文 header 传递可信身份。网关唯一认证边界必须使用 mTLS/受信服务认证和完整性受保护 assertion。
 6. Opaque/reference token 或即时撤销要求使用受保护的 introspection；这不是 JWT 默认路径。introspection 故障时受保护请求 fail closed，并由服务按策略使用有界缓存。
 7. 当前 `Actor` 只表示单一执行主体。服务代表 human 调用下游时，delegation/impersonation、RFC 8693 token exchange 和双主体 context 留给后续 IAM change。
-8. JWT 配置拆分：`platform/security/authn/jwt/v1` 的 `JwtAuthnConfig` 独占 section key `jwt`；`platform/security/jwt/v1` 只提供可嵌套 reusable key/config message，不独立扫描。未来若独立扫描基础 key config，使用 `jwt_keys`，不得复用 `jwt`。
+8. JWT 配置拆分：`plateau/security/authn/jwt/v1` 的 `JwtAuthnConfig` 独占 section key `jwt`；`plateau/security/jwt/v1` 只提供可嵌套 reusable key/config message，不独立扫描。未来若独立扫描基础 key config，使用 `jwt_keys`，不得复用 `jwt`。
 
 ## Consequences
 

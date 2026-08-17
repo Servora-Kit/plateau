@@ -1,4 +1,4 @@
-// Package ruleplan builds deterministic generation plans for Platform RPC
+// Package ruleplan builds deterministic generation plans for Plateau RPC
 // rule plugins.
 package ruleplan
 
@@ -7,7 +7,7 @@ import (
 	"path"
 	"sort"
 
-	"github.com/Servora-Kit/servora-platform/internal/codegen/optionmerge"
+	"github.com/Servora-Kit/plateau/internal/codegen/optionmerge"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

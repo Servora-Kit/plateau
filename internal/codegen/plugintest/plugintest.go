@@ -1,4 +1,4 @@
-// Package plugintest contains reusable Platform protoc plugin test helpers.
+// Package plugintest contains reusable Plateau protoc plugin test helpers.
 package plugintest
 
 import (
@@ -84,7 +84,7 @@ func assertGeneratedGo(t testing.TB, source, packageName, testSource string) {
 		t.Fatal("resolve plugintest helper path")
 	}
 	apiGenDir := filepath.Clean(filepath.Join(filepath.Dir(helperFile), "..", "..", "..", "api", "gen"))
-	goMod := "module sandbox\n\ngo 1.26.1\n\nrequire github.com/Servora-Kit/servora-platform/api/gen v0.0.0\n\nreplace github.com/Servora-Kit/servora-platform/api/gen => " + apiGenDir + "\n"
+	goMod := "module sandbox\n\ngo 1.26.1\n\nrequire github.com/Servora-Kit/plateau/api/gen v0.0.0\n\nreplace github.com/Servora-Kit/plateau/api/gen => " + apiGenDir + "\n"
 	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}

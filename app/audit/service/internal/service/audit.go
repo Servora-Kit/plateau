@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	auditpb "github.com/Servora-Kit/servora-platform/api/gen/go/audit/service/v1"
-	"github.com/Servora-Kit/servora-platform/app/audit/service/internal/biz"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
 )
 
 // AuditService implements the generated AuditQueryService gRPC and HTTP contract.
