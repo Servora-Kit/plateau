@@ -38,11 +38,18 @@ function encodeMultiSegmentPath(value: unknown): string {
     .join('/');
 }
 
-// VerificationKey describes one public key accepted by a JWT verifier.
-export type VerificationKey = {
-  kid?: string;
-  publicKeyPath?: string;
-  publicKeyPem?: string;
+// AuthzMode defines the authorization requirement for an RPC method.
+export type AuthzMode =
+  | 'AUTHZ_MODE_NONE'
+  | 'AUTHZ_MODE_REQUIRED'
+  | 'AUTHZ_MODE_UNSPECIFIED';
+// AuthzRule declares an RPC authorization policy.
+export type AuthzRule = {
+  action?: string;
+  mode?: AuthzMode;
+  resourceId?: string;
+  resourceIdField?: string;
+  resourceType?: string;
 };
 
 

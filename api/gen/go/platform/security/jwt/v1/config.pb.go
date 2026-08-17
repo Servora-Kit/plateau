@@ -7,7 +7,6 @@
 package jwtv1
 
 import (
-	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -22,33 +21,33 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Jwt configures claims-neutral RS256 signing and verification helpers.
-type Jwt struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	PrivateKeyPath string                 `protobuf:"bytes,1,opt,name=private_key_path,json=privateKeyPath,proto3" json:"private_key_path,omitempty"`
-	PrivateKeyPem  string                 `protobuf:"bytes,2,opt,name=private_key_pem,json=privateKeyPem,proto3" json:"private_key_pem,omitempty"`
-	AccessExpire   int32                  `protobuf:"varint,3,opt,name=access_expire,json=accessExpire,proto3" json:"access_expire,omitempty"`
-	RefreshExpire  int32                  `protobuf:"varint,4,opt,name=refresh_expire,json=refreshExpire,proto3" json:"refresh_expire,omitempty"`
-	Issuer         string                 `protobuf:"bytes,5,opt,name=issuer,proto3" json:"issuer,omitempty"`
-	Audience       string                 `protobuf:"bytes,6,opt,name=audience,proto3" json:"audience,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+// VerificationKey describes one public key accepted by a JWT verifier.
+type VerificationKey struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Kid   string                 `protobuf:"bytes,1,opt,name=kid,proto3" json:"kid,omitempty"`
+	// Types that are valid to be assigned to Source:
+	//
+	//	*VerificationKey_PublicKeyPem
+	//	*VerificationKey_PublicKeyPath
+	Source        isVerificationKey_Source `protobuf_oneof:"source"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Jwt) Reset() {
-	*x = Jwt{}
+func (x *VerificationKey) Reset() {
+	*x = VerificationKey{}
 	mi := &file_platform_security_jwt_v1_config_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Jwt) String() string {
+func (x *VerificationKey) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Jwt) ProtoMessage() {}
+func (*VerificationKey) ProtoMessage() {}
 
-func (x *Jwt) ProtoReflect() protoreflect.Message {
+func (x *VerificationKey) ProtoReflect() protoreflect.Message {
 	mi := &file_platform_security_jwt_v1_config_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -60,69 +59,69 @@ func (x *Jwt) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Jwt.ProtoReflect.Descriptor instead.
-func (*Jwt) Descriptor() ([]byte, []int) {
+// Deprecated: Use VerificationKey.ProtoReflect.Descriptor instead.
+func (*VerificationKey) Descriptor() ([]byte, []int) {
 	return file_platform_security_jwt_v1_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Jwt) GetPrivateKeyPath() string {
+func (x *VerificationKey) GetKid() string {
 	if x != nil {
-		return x.PrivateKeyPath
+		return x.Kid
 	}
 	return ""
 }
 
-func (x *Jwt) GetPrivateKeyPem() string {
+func (x *VerificationKey) GetSource() isVerificationKey_Source {
 	if x != nil {
-		return x.PrivateKeyPem
+		return x.Source
+	}
+	return nil
+}
+
+func (x *VerificationKey) GetPublicKeyPem() string {
+	if x != nil {
+		if x, ok := x.Source.(*VerificationKey_PublicKeyPem); ok {
+			return x.PublicKeyPem
+		}
 	}
 	return ""
 }
 
-func (x *Jwt) GetAccessExpire() int32 {
+func (x *VerificationKey) GetPublicKeyPath() string {
 	if x != nil {
-		return x.AccessExpire
-	}
-	return 0
-}
-
-func (x *Jwt) GetRefreshExpire() int32 {
-	if x != nil {
-		return x.RefreshExpire
-	}
-	return 0
-}
-
-func (x *Jwt) GetIssuer() string {
-	if x != nil {
-		return x.Issuer
+		if x, ok := x.Source.(*VerificationKey_PublicKeyPath); ok {
+			return x.PublicKeyPath
+		}
 	}
 	return ""
 }
 
-func (x *Jwt) GetAudience() string {
-	if x != nil {
-		return x.Audience
-	}
-	return ""
+type isVerificationKey_Source interface {
+	isVerificationKey_Source()
 }
+
+type VerificationKey_PublicKeyPem struct {
+	PublicKeyPem string `protobuf:"bytes,2,opt,name=public_key_pem,json=publicKeyPem,proto3,oneof"`
+}
+
+type VerificationKey_PublicKeyPath struct {
+	PublicKeyPath string `protobuf:"bytes,3,opt,name=public_key_path,json=publicKeyPath,proto3,oneof"`
+}
+
+func (*VerificationKey_PublicKeyPem) isVerificationKey_Source() {}
+
+func (*VerificationKey_PublicKeyPath) isVerificationKey_Source() {}
 
 var File_platform_security_jwt_v1_config_proto protoreflect.FileDescriptor
 
 const file_platform_security_jwt_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"%platform/security/jwt/v1/config.proto\x12\x18platform.security.jwt.v1\x1a!servora/conf/v1/annotations.proto\"\xfe\x01\n" +
-	"\x03Jwt\x12(\n" +
-	"\x10private_key_path\x18\x01 \x01(\tR\x0eprivateKeyPath\x12&\n" +
-	"\x0fprivate_key_pem\x18\x02 \x01(\tR\rprivateKeyPem\x12/\n" +
-	"\raccess_expire\x18\x03 \x01(\x05B\n" +
-	"\x8a\xce\x18\x06\n" +
-	"\x043600R\faccessExpire\x123\n" +
-	"\x0erefresh_expire\x18\x04 \x01(\x05B\f\x8a\xce\x18\b\n" +
-	"\x06604800R\rrefreshExpire\x12\x16\n" +
-	"\x06issuer\x18\x05 \x01(\tR\x06issuer\x12\x1a\n" +
-	"\baudience\x18\x06 \x01(\tR\baudience:\v\x82\xce\x18\a\n" +
-	"\x03jwt\x10\x01BSZQgithub.com/Servora-Kit/servora-platform/api/gen/go/platform/security/jwt/v1;jwtv1b\x06proto3"
+	"%platform/security/jwt/v1/config.proto\x12\x18platform.security.jwt.v1\"\x7f\n" +
+	"\x0fVerificationKey\x12\x10\n" +
+	"\x03kid\x18\x01 \x01(\tR\x03kid\x12&\n" +
+	"\x0epublic_key_pem\x18\x02 \x01(\tH\x00R\fpublicKeyPem\x12(\n" +
+	"\x0fpublic_key_path\x18\x03 \x01(\tH\x00R\rpublicKeyPathB\b\n" +
+	"\x06sourceBSZQgithub.com/Servora-Kit/servora-platform/api/gen/go/platform/security/jwt/v1;jwtv1b\x06proto3"
 
 var (
 	file_platform_security_jwt_v1_config_proto_rawDescOnce sync.Once
@@ -138,7 +137,7 @@ func file_platform_security_jwt_v1_config_proto_rawDescGZIP() []byte {
 
 var file_platform_security_jwt_v1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_platform_security_jwt_v1_config_proto_goTypes = []any{
-	(*Jwt)(nil), // 0: platform.security.jwt.v1.Jwt
+	(*VerificationKey)(nil), // 0: platform.security.jwt.v1.VerificationKey
 }
 var file_platform_security_jwt_v1_config_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -152,6 +151,10 @@ func init() { file_platform_security_jwt_v1_config_proto_init() }
 func file_platform_security_jwt_v1_config_proto_init() {
 	if File_platform_security_jwt_v1_config_proto != nil {
 		return
+	}
+	file_platform_security_jwt_v1_config_proto_msgTypes[0].OneofWrappers = []any{
+		(*VerificationKey_PublicKeyPem)(nil),
+		(*VerificationKey_PublicKeyPath)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

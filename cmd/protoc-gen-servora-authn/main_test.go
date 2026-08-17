@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	authnpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/authn/v1"
+	authnpb "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/authn/v1"
 	"github.com/Servora-Kit/servora-platform/internal/codegen/plugintest"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -35,7 +35,7 @@ type fileSpec struct {
 func runPluginScenario(t *testing.T, files []fileSpec) (*protogen.Plugin, error) {
 	t.Helper()
 	request := &pluginpb.CodeGeneratorRequest{
-		ProtoFile: plugintest.DescriptorClosure(authnpb.File_platform_authn_v1_annotations_proto),
+		ProtoFile: plugintest.DescriptorClosure(authnpb.File_platform_security_authn_v1_annotations_proto),
 		Parameter: proto.String("paths=source_relative"),
 	}
 	for _, file := range files {
@@ -56,7 +56,7 @@ func authnFileDescriptor(file fileSpec) *descriptorpb.FileDescriptorProto {
 		Name:       proto.String(file.name),
 		Package:    proto.String(file.protoPkg),
 		Syntax:     proto.String(protoreflect.Proto3.String()),
-		Dependency: []string{"google/protobuf/descriptor.proto", "platform/authn/v1/annotations.proto"},
+		Dependency: []string{"google/protobuf/descriptor.proto", "platform/security/authn/v1/annotations.proto"},
 		Options:    &descriptorpb.FileOptions{GoPackage: proto.String(file.goPkg)},
 		MessageType: []*descriptorpb.DescriptorProto{{
 			Name: proto.String("Empty"),
@@ -94,11 +94,8 @@ func TestGenerateMergesOverridesSortsAndReturnsIndependentCopies(t *testing.T) {
 		goPkg:    "example.com/gen/example/v1;examplev1",
 		generate: true,
 		services: []serviceSpec{{
-			name: "ExampleService",
-			serviceDefault: &authnpb.AuthnRule{
-				Mode:    authnpb.AuthnMode_AUTHN_MODE_REQUIRED,
-				Schemes: []string{"jwt", "mtls"},
-			},
+			name:           "ExampleService",
+			serviceDefault: &authnpb.AuthnRule{Mode: authnpb.AuthnMode_AUTHN_MODE_REQUIRED},
 			methods: []methodSpec{
 				{name: "Zulu"},
 				{name: "Public", rule: &authnpb.AuthnRule{Mode: authnpb.AuthnMode_AUTHN_MODE_PUBLIC}},
@@ -126,7 +123,7 @@ func TestGenerateMergesOverridesSortsAndReturnsIndependentCopies(t *testing.T) {
 	if alpha < 0 || public <= alpha || zulu <= public {
 		t.Fatalf("operations are not sorted: Alpha=%d Public=%d Zulu=%d", alpha, public, zulu)
 	}
-	if strings.Count(first, `"jwt"`) != 2 || !strings.Contains(first, "AuthnMode_AUTHN_MODE_PUBLIC") {
+	if strings.Contains(first, `"Schemes:"`) || !strings.Contains(first, "AuthnMode_AUTHN_MODE_PUBLIC") {
 		t.Fatalf("inheritance or PUBLIC override missing\n%s", first)
 	}
 
@@ -137,17 +134,17 @@ import "testing"
 func TestAuthnRulesIndependentCopies(t *testing.T) {
 	const operation = "/example.v1.ExampleService/Alpha"
 	first := AuthnRules()
-	first[operation].Schemes[0] = "mutated"
+	first[operation].Mode = 1
 	delete(first, operation)
 	second := AuthnRules()
-	if second[operation] == nil || second[operation].Schemes[0] != "jwt" {
+	if second[operation] == nil || second[operation].Mode != 2 {
 		t.Fatalf("AuthnRules shared mutable state: %#v", second[operation])
 	}
 }
 `)
 }
 
-func TestGenerateAcceptsRequiredWithEmptySchemes(t *testing.T) {
+func TestGenerateAcceptsRequiredRule(t *testing.T) {
 	plugin, err := runPluginScenario(t, []fileSpec{{
 		name:     "example/v1/service.proto",
 		protoPkg: "example.v1",
@@ -162,33 +159,20 @@ func TestGenerateAcceptsRequiredWithEmptySchemes(t *testing.T) {
 		t.Fatalf("generate: %v", err)
 	}
 	content := plugintest.OnlyGeneratedFile(t, plugintest.ResponseFiles(plugin), "authn_rules.gen.go")
-	if !strings.Contains(content, "AuthnMode_AUTHN_MODE_REQUIRED") || strings.Contains(content, "Schemes:") {
-		t.Fatalf("unexpected REQUIRED empty-schemes output\n%s", content)
+	if !strings.Contains(content, "AuthnMode_AUTHN_MODE_REQUIRED") {
+		t.Fatalf("unexpected REQUIRED output\n%s", content)
 	}
 }
-
-func TestGenerateRejectsIllegalModeSchemesCombinations(t *testing.T) {
-	tests := []struct {
-		name string
-		rule *authnpb.AuthnRule
-		want string
-	}{
-		{name: "unspecified", rule: &authnpb.AuthnRule{Schemes: []string{"jwt"}}, want: "AUTHN_MODE_UNSPECIFIED"},
-		{name: "public", rule: &authnpb.AuthnRule{Mode: authnpb.AuthnMode_AUTHN_MODE_PUBLIC, Schemes: []string{"jwt"}}, want: "AUTHN_MODE_PUBLIC"},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			_, err := runPluginScenario(t, []fileSpec{{
-				name:     "example/v1/bad.proto",
-				protoPkg: "example.v1",
-				goPkg:    "example.com/gen/example/v1;examplev1",
-				generate: true,
-				services: []serviceSpec{{name: "BadService", methods: []methodSpec{{name: "Get", rule: test.rule}}}},
-			}})
-			if err == nil || !strings.Contains(err.Error(), test.want) || !strings.Contains(err.Error(), "BadService") {
-				t.Fatalf("error = %v, want mode %q and service", err, test.want)
-			}
-		})
+func TestGenerateRejectsUnknownMode(t *testing.T) {
+	_, err := runPluginScenario(t, []fileSpec{{
+		name:     "example/v1/bad.proto",
+		protoPkg: "example.v1",
+		goPkg:    "example.com/gen/example/v1;examplev1",
+		generate: true,
+		services: []serviceSpec{{name: "BadService", methods: []methodSpec{{name: "Get", rule: &authnpb.AuthnRule{Mode: authnpb.AuthnMode(99)}}}}},
+	}})
+	if err == nil || !strings.Contains(err.Error(), "unknown AuthnMode") || !strings.Contains(err.Error(), "BadService") {
+		t.Fatalf("error = %v, want unknown mode and service", err)
 	}
 }
 

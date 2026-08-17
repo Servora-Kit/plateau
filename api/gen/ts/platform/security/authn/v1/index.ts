@@ -38,11 +38,14 @@ function encodeMultiSegmentPath(value: unknown): string {
     .join('/');
 }
 
-// VerificationKey describes one public key accepted by a JWT verifier.
-export type VerificationKey = {
-  kid?: string;
-  publicKeyPath?: string;
-  publicKeyPem?: string;
+// AuthnMode defines the authentication requirement for an RPC method.
+export type AuthnMode =
+  | 'AUTHN_MODE_PUBLIC'
+  | 'AUTHN_MODE_REQUIRED'
+  | 'AUTHN_MODE_UNSPECIFIED';
+// AuthnRule declares an RPC authentication policy.
+export type AuthnRule = {
+  mode?: AuthnMode;
 };
 
 

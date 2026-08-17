@@ -38,8 +38,15 @@ function encodeMultiSegmentPath(value: unknown): string {
     .join('/');
 }
 
+// JwtAuthnConfig configures one Resource Server JWT verifier profile.
+export type JwtAuthnConfig = {
+  audience?: string;
+  issuer?: string;
+  verificationKeys?: platformsecurityjwtv1_VerificationKey[];
+};
+
 // VerificationKey describes one public key accepted by a JWT verifier.
-export type VerificationKey = {
+export type platformsecurityjwtv1_VerificationKey = {
   kid?: string;
   publicKeyPath?: string;
   publicKeyPem?: string;

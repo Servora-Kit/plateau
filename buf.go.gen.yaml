@@ -38,7 +38,6 @@ plugins:
           - lang=go
 
     # ==================== Servora custom plugins ====================
-
     # generate authn rules from Platform proto annotations
     - local: protoc-gen-servora-authn
       out: api/gen/go
@@ -48,6 +47,7 @@ plugins:
     - local: protoc-gen-servora-authz
       out: api/gen/go
       opt: paths=source_relative
+
 
     # generate typed CRUD descriptors, field paths, and resource-name helpers
     - local: protoc-gen-servora-crud

@@ -35,52 +35,73 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on Jwt with the rules defined in the proto
-// definition for this message. If any rules are violated, the first error
-// encountered is returned, or nil if there are no violations.
-func (m *Jwt) Validate() error {
+// Validate checks the field values on VerificationKey with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *VerificationKey) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on Jwt with the rules defined in the
-// proto definition for this message. If any rules are violated, the result is
-// a list of violation errors wrapped in JwtMultiError, or nil if none found.
-func (m *Jwt) ValidateAll() error {
+// ValidateAll checks the field values on VerificationKey with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// VerificationKeyMultiError, or nil if none found.
+func (m *VerificationKey) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *Jwt) validate(all bool) error {
+func (m *VerificationKey) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for PrivateKeyPath
+	// no validation rules for Kid
 
-	// no validation rules for PrivateKeyPem
-
-	// no validation rules for AccessExpire
-
-	// no validation rules for RefreshExpire
-
-	// no validation rules for Issuer
-
-	// no validation rules for Audience
+	switch v := m.Source.(type) {
+	case *VerificationKey_PublicKeyPem:
+		if v == nil {
+			err := VerificationKeyValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		// no validation rules for PublicKeyPem
+	case *VerificationKey_PublicKeyPath:
+		if v == nil {
+			err := VerificationKeyValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		// no validation rules for PublicKeyPath
+	default:
+		_ = v // ensures v is used
+	}
 
 	if len(errors) > 0 {
-		return JwtMultiError(errors)
+		return VerificationKeyMultiError(errors)
 	}
 
 	return nil
 }
 
-// JwtMultiError is an error wrapping multiple validation errors returned by
-// Jwt.ValidateAll() if the designated constraints aren't met.
-type JwtMultiError []error
+// VerificationKeyMultiError is an error wrapping multiple validation errors
+// returned by VerificationKey.ValidateAll() if the designated constraints
+// aren't met.
+type VerificationKeyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m JwtMultiError) Error() string {
+func (m VerificationKeyMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -89,11 +110,11 @@ func (m JwtMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m JwtMultiError) AllErrors() []error { return m }
+func (m VerificationKeyMultiError) AllErrors() []error { return m }
 
-// JwtValidationError is the validation error returned by Jwt.Validate if the
-// designated constraints aren't met.
-type JwtValidationError struct {
+// VerificationKeyValidationError is the validation error returned by
+// VerificationKey.Validate if the designated constraints aren't met.
+type VerificationKeyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -101,22 +122,22 @@ type JwtValidationError struct {
 }
 
 // Field function returns field value.
-func (e JwtValidationError) Field() string { return e.field }
+func (e VerificationKeyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e JwtValidationError) Reason() string { return e.reason }
+func (e VerificationKeyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e JwtValidationError) Cause() error { return e.cause }
+func (e VerificationKeyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e JwtValidationError) Key() bool { return e.key }
+func (e VerificationKeyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e JwtValidationError) ErrorName() string { return "JwtValidationError" }
+func (e VerificationKeyValidationError) ErrorName() string { return "VerificationKeyValidationError" }
 
 // Error satisfies the builtin error interface
-func (e JwtValidationError) Error() string {
+func (e VerificationKeyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -128,14 +149,14 @@ func (e JwtValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sJwt.%s: %s%s",
+		"invalid %sVerificationKey.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = JwtValidationError{}
+var _ error = VerificationKeyValidationError{}
 
 var _ interface {
 	Field() string
@@ -143,4 +164,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = JwtValidationError{}
+} = VerificationKeyValidationError{}

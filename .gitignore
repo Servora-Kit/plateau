@@ -39,6 +39,7 @@ examples/
 /server
 /svr
 tmp/
+# docs/adr/
 
 # Develop tools
 .vscode/

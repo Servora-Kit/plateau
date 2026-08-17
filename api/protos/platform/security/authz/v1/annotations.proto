@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package platform.security.authz.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/authz/v1;authzpb";
+
+// AuthzMode defines the authorization requirement for an RPC method.
+enum AuthzMode {
+  AUTHZ_MODE_UNSPECIFIED = 0;
+  AUTHZ_MODE_NONE = 1;
+  AUTHZ_MODE_REQUIRED = 2;
+}
+
+// AuthzRule declares an RPC authorization policy.
+message AuthzRule {
+  AuthzMode mode = 1;
+  string action = 2;
+  string resource_type = 3;
+
+  oneof target {
+    string resource_id = 4;
+    string resource_id_field = 5;
+  }
+}
+
+extend google.protobuf.MethodOptions {
+  AuthzRule rule = 50200;
+}
+
+extend google.protobuf.ServiceOptions {
+  AuthzRule service_default = 50201;
+}

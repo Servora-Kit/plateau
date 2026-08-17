@@ -1,17 +1,18 @@
-// Package jwt provides claims-neutral RS256 signing, verification, KID, and
-// typed claims context helpers.
+// Package jwt provides claims-neutral RS256 signing and verification primitives.
 package jwt
 
 import (
-	"context"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
+	"math/big"
+	"reflect"
 
-	jwtlib "github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Signer signs arbitrary JWT claims with one RSA private key.
@@ -27,11 +28,11 @@ func NewSigner(privateKeyPEM []byte) (*Signer, error) {
 		return nil, fmt.Errorf("jwt: failed to decode PEM block")
 	}
 
-	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
+	key, pkcs1Err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if pkcs1Err != nil {
 		pkcs8Key, pkcs8Err := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if pkcs8Err != nil {
-			return nil, fmt.Errorf("jwt: failed to parse private key: %w", err)
+			return nil, fmt.Errorf("jwt: failed to parse private key as PKCS#1 or PKCS#8: %w", errors.Join(pkcs1Err, pkcs8Err))
 		}
 		var ok bool
 		key, ok = pkcs8Key.(*rsa.PrivateKey)
@@ -54,55 +55,92 @@ func NewSigner(privateKeyPEM []byte) (*Signer, error) {
 }
 
 // Sign creates an RS256 token and writes this signer's stable KID header.
-func (signer *Signer) Sign(claims jwtlib.Claims) (string, error) {
-	token := jwtlib.NewWithClaims(jwtlib.SigningMethodRS256, claims)
+func (signer *Signer) Sign(claims jwt.Claims) (string, error) {
+	if signer == nil || signer.key == nil {
+		return "", fmt.Errorf("jwt: signer is nil")
+	}
+	if claims == nil || nilValue(claims) {
+		return "", fmt.Errorf("jwt: claims are nil")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header["kid"] = signer.kid
 	return token.SignedString(signer.key)
 }
 
-// PrivateKey returns the configured RSA private key.
-func (signer *Signer) PrivateKey() *rsa.PrivateKey {
-	return signer.key
-}
-
-// PublicKey returns the configured RSA public key.
+// PublicKey returns a detached copy of this signer's RSA public key.
 func (signer *Signer) PublicKey() *rsa.PublicKey {
-	return &signer.key.PublicKey
+	if signer == nil || signer.key == nil || signer.key.PublicKey.N == nil {
+		return nil
+	}
+	return &rsa.PublicKey{N: new(big.Int).Set(signer.key.PublicKey.N), E: signer.key.PublicKey.E}
 }
 
 // KID returns the stable public-key-derived key ID.
 func (signer *Signer) KID() string {
+	if signer == nil {
+		return ""
+	}
 	return signer.kid
 }
 
-// Verifier selects registered RSA public keys by KID.
+// Verifier selects registered RSA public keys by KID and verifies signatures.
 type Verifier struct {
 	publicKeys map[string]*rsa.PublicKey
+	parser     *jwt.Parser
 }
 
-// NewVerifier creates an empty verifier.
-func NewVerifier() *Verifier {
-	return &Verifier{publicKeys: make(map[string]*rsa.PublicKey)}
+// New validates and snapshots an immutable KID-to-public-key set.
+func New(publicKeys map[string]*rsa.PublicKey) (*Verifier, error) {
+	if len(publicKeys) == 0 {
+		return nil, fmt.Errorf("jwt: public key set is empty")
+	}
+	cloned := make(map[string]*rsa.PublicKey, len(publicKeys))
+	for kid, publicKey := range publicKeys {
+		if kid == "" {
+			return nil, fmt.Errorf("jwt: public key KID is empty")
+		}
+		if publicKey == nil || publicKey.N == nil || publicKey.N.Sign() <= 0 || publicKey.E <= 1 {
+			return nil, fmt.Errorf("jwt: public key for KID %q is invalid", kid)
+		}
+		cloned[kid] = &rsa.PublicKey{N: new(big.Int).Set(publicKey.N), E: publicKey.E}
+	}
+	return &Verifier{
+		publicKeys: cloned,
+		parser: jwt.NewParser(
+			jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Alg()}),
+			jwt.WithStrictDecoding(),
+			jwt.WithoutClaimsValidation(),
+		),
+	}, nil
 }
 
-// AddKey registers one RSA public key under an exact KID.
-func (verifier *Verifier) AddKey(kid string, publicKey *rsa.PublicKey) {
-	verifier.publicKeys[kid] = publicKey
+// VerifySignature verifies one RS256 signature into caller-owned claims.
+// Registered and custom claims policy belongs to the concrete token consumer.
+func (verifier *Verifier) VerifySignature(tokenString string, claims jwt.Claims) (*jwt.Token, error) {
+	if verifier == nil || len(verifier.publicKeys) == 0 || verifier.parser == nil {
+		return nil, fmt.Errorf("jwt: verifier is invalid")
+	}
+	if tokenString == "" {
+		return nil, fmt.Errorf("jwt: token is empty")
+	}
+	if claims == nil || nilValue(claims) {
+		return nil, fmt.Errorf("jwt: claims are nil")
+	}
+	return verifier.parser.ParseWithClaims(tokenString, claims, verifier.keyFunc)
 }
 
-// Verify parses and validates one RS256 token into caller-owned claims.
-func (verifier *Verifier) Verify(tokenString string, claims jwtlib.Claims) error {
-	_, err := jwtlib.ParseWithClaims(
-		tokenString,
-		claims,
-		verifier.keyFunc,
-		jwtlib.WithValidMethods([]string{jwtlib.SigningMethodRS256.Alg()}),
-	)
-	return err
+func nilValue(value any) bool {
+	reflected := reflect.ValueOf(value)
+	switch reflected.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return reflected.IsNil()
+	default:
+		return false
+	}
 }
 
-func (verifier *Verifier) keyFunc(token *jwtlib.Token) (any, error) {
-	if token.Method != jwtlib.SigningMethodRS256 {
+func (verifier *Verifier) keyFunc(token *jwt.Token) (any, error) {
+	if token.Method != jwt.SigningMethodRS256 {
 		return nil, fmt.Errorf("jwt: unexpected signing method: %v", token.Header["alg"])
 	}
 
@@ -115,17 +153,4 @@ func (verifier *Verifier) keyFunc(token *jwtlib.Token) (any, error) {
 		return nil, fmt.Errorf("jwt: unknown kid: %s", kid)
 	}
 	return publicKey, nil
-}
-
-type claimsKey struct{}
-
-// NewContext stores caller-owned typed claims without interpreting them.
-func NewContext[T any](ctx context.Context, claims *T) context.Context {
-	return context.WithValue(ctx, claimsKey{}, claims)
-}
-
-// FromContext reads caller-owned typed claims.
-func FromContext[T any](ctx context.Context) (*T, bool) {
-	claims, ok := ctx.Value(claimsKey{}).(*T)
-	return claims, ok
 }

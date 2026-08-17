@@ -4,7 +4,7 @@
 
 > 本项目是 [Servora](https://github.com/Servora-Kit/servora) 框架的主要业务实践仓库，并拥有 Platform 产品安全生态。
 
-`servora-platform` 当前包含 AuthN/AuthZ runtime、JWT/OpenFGA 集成、安全 Proto/codegen、Audit 微服务、Example CRUD 服务及其 Web 入口。
+`servora-platform` 当前包含具体 JWT AuthN、OpenFGA AuthZ、JWT/OpenFGA 基础能力、安全 Proto/codegen、Audit 微服务、Example CRUD 服务及其 Web 入口。
 
 ## 包含内容
 
@@ -21,11 +21,11 @@
 
 ### 公共安全能力
 
-- `security/authn`：认证调度、稳定 Subject 与 transport error 映射
-- `security/authz`：结构化 Check contract、middleware、batch/list 扩展
-- `security/jwt`：claims-neutral RS256/KID/PEM 与 typed claims context 工具
+- `security/actor.go`：跨服务共享的最小 Actor 与 context carrier
+- `security/authn/jwt`：JWT Bearer 认证、路由策略与 Actor 映射
+- `security/authz/openfga`：直接消费 Actor 的 OpenFGA 检查、Batch、List 与路由策略
+- `security/jwt`：claims-neutral RS256、KID、Signer 与 Verifier
 - `infra/openfga`：Platform config 到官方 OpenFGA SDK Client
-- `security/rebac/openfga`：官方 Client 到 Platform AuthZ/ReBAC Adapter
 - `cmd/protoc-gen-servora-authn`、`cmd/protoc-gen-servora-authz`：由当前 checkout 本地安装的规则插件
 
 安全公共 Proto 位于 `api/protos/platform/**`，生成物位于独立 module `api/gen`；Platform 不发布自己的 BSR module。
@@ -66,10 +66,10 @@
 │   └── protoc-gen-servora-authz/     # Platform AuthZ 规则插件
 ├── infra/openfga/                    # 官方 OpenFGA SDK Client 构造
 ├── security/
-│   ├── authn/                        # Platform AuthN runtime
-│   ├── authz/                        # Platform AuthZ runtime
-│   ├── jwt/                          # claims-neutral JWT 工具
-│   └── rebac/openfga/                # OpenFGA ReBAC Adapter
+│   ├── actor.go                      # 跨服务共享 Actor
+│   ├── authn/jwt/                    # 具体 JWT Bearer AuthN
+│   ├── authz/openfga/                # 具体 OpenFGA AuthZ
+│   └── jwt/                          # claims-neutral JWT primitive
 ├── just/                             # service/web 跨平台任务模块
 ├── manifests/                        # OpenFGA、部署资源与管理脚本
 ├── buf.yaml                          # 本地 Buf v2 workspace modules
@@ -182,7 +182,7 @@ just openfga-model-apply
 
 ### 安全与 Audit 边界
 
-- Platform 拥有 AuthN/AuthZ runtime、注解 Proto、生成插件、JWT 工具和 OpenFGA Client/Adapter。
+- Platform 拥有具体 AuthN/AuthZ 实现、注解 Proto、生成插件、JWT primitive 和 OpenFGA SDK Client 构造。
 - Servora 只提供通用 Audit runtime、CloudEvents backend、RPC Audit 注解/plugin 与其他框架 primitive。
 - 本次不定义 `platform.authn.*` 或 `platform.authz.*` Audit 事件；IAM 开始后再基于真实身份模型单独设计。
 - Audit service 对遗留 `servora.authn.*` / `servora.authz.*` 事件只执行 generic raw-data 存储，不做 typed projection。

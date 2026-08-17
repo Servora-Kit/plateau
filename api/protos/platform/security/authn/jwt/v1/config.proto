@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package platform.security.authn.jwt.v1;
+
+import "platform/security/jwt/v1/config.proto";
+import "servora/conf/v1/annotations.proto";
+
+option go_package = "github.com/Servora-Kit/servora-platform/api/gen/go/platform/security/authn/jwt/v1;jwtv1";
+
+// JwtAuthnConfig configures one Resource Server JWT verifier profile.
+message JwtAuthnConfig {
+  option (servora.conf.v1.section) = {
+    key: "jwt"
+    optional: true
+  };
+
+  string issuer = 1;
+  string audience = 2;
+  repeated platform.security.jwt.v1.VerificationKey verification_keys = 3;
+}

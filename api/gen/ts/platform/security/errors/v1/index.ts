@@ -38,12 +38,13 @@ function encodeMultiSegmentPath(value: unknown): string {
     .join('/');
 }
 
-// VerificationKey describes one public key accepted by a JWT verifier.
-export type VerificationKey = {
-  kid?: string;
-  publicKeyPath?: string;
-  publicKeyPem?: string;
-};
-
+// SecurityErrorReason defines stable client-visible security failures.
+export type SecurityErrorReason =
+  | 'SECURITY_ERROR_REASON_INTERNAL'
+  | 'SECURITY_ERROR_REASON_INVALID_ARGUMENT'
+  | 'SECURITY_ERROR_REASON_PERMISSION_DENIED'
+  | 'SECURITY_ERROR_REASON_UNAUTHENTICATED'
+  | 'SECURITY_ERROR_REASON_UNAVAILABLE'
+  | 'SECURITY_ERROR_REASON_UNSPECIFIED';
 
 // @@protoc_insertion_point(typescript-http-eof)
