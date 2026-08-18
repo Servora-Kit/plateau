@@ -23,7 +23,6 @@ func NewGRPCServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		Build()
 
 	opts := []svrgrpc.ServerOption{
-		svrgrpc.WithLogger(glog),
 		svrgrpc.WithMiddleware(ms...),
 		svrgrpc.WithServices(func(s *kgrpc.Server) {
 			auditpb.RegisterAuditQueryServiceServer(s, svc)

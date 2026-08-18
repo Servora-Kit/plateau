@@ -8,7 +8,7 @@ BUF_GO_GEN_TEMPLATE := env("BUF_GO_GEN_TEMPLATE", "buf.go.gen.yaml")
 BUF_TS_GEN_TEMPLATE := env("BUF_TS_GEN_TEMPLATE", "buf.typescript.gen.yaml")
 API_TS_PACKAGE := env("API_TS_PACKAGE", "@plateau/api")
 SERVORA_PKG := env("SERVORA_PKG", "github.com/Servora-Kit/servora")
-SERVORA_VERSION := env("SERVORA_VERSION", "v0.8.11")
+SERVORA_VERSION := env("SERVORA_VERSION", "v0.9.0")
 PNPM := env("PNPM", "pnpm")
 LINT_GOWORK := env("LINT_GOWORK", "auto")
 COMPOSE := env("COMPOSE", "docker compose")
@@ -55,7 +55,7 @@ plugin:
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-go-errors@{{ SERVORA_VERSION }}
     @go install github.com/google/gnostic/cmd/protoc-gen-openapi@{{ env("PROTOC_GEN_OPENAPI_VERSION", "latest") }}
     @go install github.com/envoyproxy/protoc-gen-validate@{{ env("PROTOC_GEN_VALIDATE_VERSION", "latest") }}
-    @go install github.com/tx7do/go-wind-toolkit/protoc-gen-go-redact@{{ env("PROTOC_GEN_GO_REDACT_VERSION", "latest") }}
+    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-redact@{{ SERVORA_VERSION }}
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-audit@{{ SERVORA_VERSION }}
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-conf@{{ SERVORA_VERSION }}
     @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-crud@{{ SERVORA_VERSION }}

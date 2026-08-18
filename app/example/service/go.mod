@@ -4,8 +4,9 @@ go 1.26.1
 
 require (
 	entgo.io/ent v0.14.5
-	github.com/Servora-Kit/servora v0.8.11
-	github.com/Servora-Kit/servora/api/gen v0.8.11
+	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260817135904-f9c9dec43c3b
+	github.com/Servora-Kit/servora v0.9.0
+	github.com/Servora-Kit/servora/api/gen v0.9.0
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/wire v0.7.0
 	github.com/jackc/pgx/v5 v5.9.2

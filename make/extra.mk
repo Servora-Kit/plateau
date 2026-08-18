@@ -37,7 +37,7 @@ plugin: ## Install protoc-gen-* plugins
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-go-errors@$(SERVORA_VERSION)
 	@go install github.com/google/gnostic/cmd/protoc-gen-openapi@$(PROTOC_GEN_OPENAPI_VERSION)
 	@go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE_VERSION)
-	@go install github.com/tx7do/go-wind-toolkit/protoc-gen-go-redact@$(PROTOC_GEN_GO_REDACT_VERSION)
+	@go install $(SERVORA_PKG)/cmd/protoc-gen-redact@$(SERVORA_VERSION)
 	@go install ./cmd/protoc-gen-plateau-authz
 	@go install $(SERVORA_PKG)/cmd/protoc-gen-servora-audit@$(SERVORA_VERSION)
 	@go install ./cmd/protoc-gen-plateau-authn

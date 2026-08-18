@@ -4,8 +4,9 @@ go 1.26.1
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.43.0
-	github.com/Servora-Kit/servora v0.8.11
-	github.com/Servora-Kit/servora/api/gen v0.8.11
+	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260817135904-f9c9dec43c3b
+	github.com/Servora-Kit/servora v0.9.0
+	github.com/Servora-Kit/servora/api/gen v0.9.0
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/wire v0.7.0
@@ -58,7 +59,6 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
-	github.com/go-kratos/aegis v0.2.0 // indirect
 	github.com/go-kratos/kratos/contrib/config/consul/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/config/nacos/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/encoding/json/v3 v3.0.0-20260626125723-668db92c2c00 // indirect
@@ -67,7 +67,6 @@ require (
 	github.com/go-kratos/kratos/contrib/registry/consul/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/registry/kubernetes/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/registry/nacos/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
-	github.com/go-kratos/kratos/v2 v2.9.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.23.1 // indirect
@@ -110,7 +109,6 @@ require (
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
-	github.com/menta2k/protoc-gen-redact/v3 v3.0.0-20260213125431-7688a38967d4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect

@@ -23,7 +23,6 @@ func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		Build()
 
 	opts := []svrhttp.ServerOption{
-		svrhttp.WithLogger(hlog),
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
 		svrhttp.WithServices(func(s *khttp.Server) {
