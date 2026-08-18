@@ -6,12 +6,13 @@ services:
     environment:
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
-      POSTGRES_DB: "${POSTGRES_DB:-servora_platform}"
+      POSTGRES_DB: "${POSTGRES_DB:-plateau}"
+      POSTGRES_SERVICE_DATABASES: "${POSTGRES_SERVICE_DATABASES:-plateau_iam}"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+          "pg_isready -U $${POSTGRES_USER} -d postgres",
         ]
       interval: 5s
       timeout: 3s
@@ -22,6 +23,26 @@ services:
     volumes:
       # PostgreSQL 18 在 major-version 子目录存储数据，挂载父目录。
       - plateau-postgres-data:/var/lib/postgresql
+    networks:
+      - plateau-network
+
+  postgres-provision:
+    image: postgres:18-alpine
+    container_name: platform_postgres_provision
+    restart: "no"
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: "${POSTGRES_USER:-postgres}"
+      PGPASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      PGDATABASE: postgres
+      POSTGRES_SERVICE_DATABASES: "${POSTGRES_SERVICE_DATABASES:-plateau_iam}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/provision/create-databases.sh"]
+    volumes:
+      - ./manifests/scripts/postgres-init:/provision:ro
     networks:
       - plateau-network
 
@@ -254,7 +275,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - iam-redis-data:/data
+      - redis-data:/data
     networks:
       - plateau-network
 
@@ -266,6 +287,7 @@ volumes:
   plateau-grafana-data:
   plateau-kafka-data:
   plateau-clickhouse-data:
+  redis-data:
   audit-logs:
 
 networks:
