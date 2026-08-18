@@ -231,15 +231,32 @@ services:
     networks:
       - plateau-network
 
-mailpit:
-  image: axllent/mailpit:latest
-  container_name: platform_mailpit
-  restart: unless-stopped
-  ports:
-    - "1025:1025"   # SMTP —— IAM 的 config 指向 mailpit:1025
-    - "8025:8025"   # Web UI —— 本地点链接 http://localhost:8025
-  networks:
-    - plateau-network
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: platform_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP —— IAM 的 config 指向 mailpit:1025
+      - "8025:8025"   # Web UI —— 本地点链接 http://localhost:8025
+    networks:
+      - plateau-network
+
+  redis:
+    image: redis:8.6.1-alpine
+    container_name: iam_redis
+    restart: unless-stopped
+    command: redis-server --requirepass servora_redis_pwd --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "servora_redis_pwd", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    volumes:
+      - iam-redis-data:/data
+    networks:
+      - plateau-network
 
 volumes:
   plateau-postgres-data:
