@@ -21,8 +21,12 @@ github.com/Servora-Kit/plateau/api/gen v0.0.0-20260817135904-f9c9dec43c3b h1:6w7
 github.com/Servora-Kit/plateau/api/gen v0.0.0-20260817135904-f9c9dec43c3b/go.mod h1:p0AHeLQWFpI5VOhpNXtToxzaPBeA/Cnp9gr/Uvvnkkw=
 github.com/Servora-Kit/servora v0.9.0 h1:ZH9GWMj3WD7Se4xJ3AHPLMBRcc6M8zncBxJctr4SGds=
 github.com/Servora-Kit/servora v0.9.0/go.mod h1:eFU2h6k9y1f3qJNSxR/f1ZDv9D7VHbqGMqb4eWp49IE=
+github.com/Servora-Kit/servora v0.9.1 h1:w51chC6MxO3HVP1OYHDBSZMa0RGHVnFRI3AYc+DqFaQ=
+github.com/Servora-Kit/servora v0.9.1/go.mod h1:9Hbhlzj140ruvKsp8cMYKqSD7pFUc1409FWYVEAa33M=
 github.com/Servora-Kit/servora/api/gen v0.9.0 h1:KdS7xFHo+TQZo5twjR1SacmDDDZcU4jt81/EIkHcde8=
 github.com/Servora-Kit/servora/api/gen v0.9.0/go.mod h1:JrqmoFUt874HoXcIeN5KZ9ryPc1vdFekrYLE9C1Wu/c=
+github.com/Servora-Kit/servora/api/gen v0.9.1 h1:JXQ3cj96aRTgXxaQB9M8kVMiQcEqyr6uE/uekU61Keg=
+github.com/Servora-Kit/servora/api/gen v0.9.1/go.mod h1:JrqmoFUt874HoXcIeN5KZ9ryPc1vdFekrYLE9C1Wu/c=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=

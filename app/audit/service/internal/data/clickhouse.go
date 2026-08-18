@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	clickhousepb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/clickhouse/v1"
-	pkgch "github.com/Servora-Kit/servora/contrib/db/clickhouse"
+	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
+	pkgch "github.com/Servora-Kit/plateau/infra/clickhouse"
 )
 
-// NewClickHouseClient opens a ClickHouse connection via contrib/db/clickhouse.
+// NewClickHouseClient opens a ClickHouse connection via infra/clickhouse.
 // Returns (nil, nil) when ClickHouse is not configured; returns an error when
 // configured but connection failed — ensuring fail-fast for a core dependency.
 func NewClickHouseClient(cfg *clickhousepb.ClickHouse, l *slog.Logger) (driver.Conn, error) {
