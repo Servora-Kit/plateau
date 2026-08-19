@@ -1,0 +1,8 @@
+module iam
+
+type user
+
+type plateau
+  relations
+    define admin: [user]
+    define can_manage_users: admin

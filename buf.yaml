@@ -5,6 +5,8 @@ modules:
   - path: app/audit/service/api/protos
   - path: app/example/service/api/protos
 
+  - path: app/iam/service/api/protos
+
 deps:
   - buf.build/servora/servora
   - buf.build/googleapis/googleapis
@@ -17,9 +19,7 @@ lint:
   use:
     - STANDARD
   except:
-    # - ENUM_VALUE_PREFIX
-    # - ENUM_ZERO_VALUE_SUFFIX
+    # AIP standard CRUD methods return the resource directly, not XxxResponse.
+    - RPC_RESPONSE_STANDARD_NAME
+    # AIP standard methods reuse resource/request types by design.
     - RPC_REQUEST_RESPONSE_UNIQUE
-  ignore_only:
-    RPC_RESPONSE_STANDARD_NAME:
-      - app/example/service/api/protos/example/service/v1/user.proto

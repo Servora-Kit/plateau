@@ -15,10 +15,9 @@ COMPOSE := env("COMPOSE", "docker compose")
 COMPOSE_FILES := env("COMPOSE_FILES", "-f docker-compose.yaml")
 COMPOSE_SERVICES := env("COMPOSE_SERVICES", "")
 ENV_FILE := env("ENV_FILE", join(ROOT_DIR, ".env"))
-OPENFGA_ENV_PREFIX := env("OPENFGA_ENV_PREFIX", "PLATFORM_")
-OPENFGA_API_URL := env("FGA_API_URL", env("OPENFGA_API_URL", ""))
-OPENFGA_MODEL := env("OPENFGA_MODEL", "manifests/openfga/model/servora.fga")
-OPENFGA_TESTS := env("OPENFGA_TESTS", "manifests/openfga/tests/servora.fga.yaml")
+FGA_API_URL := env("FGA_API_URL", "")
+OPENFGA_MODEL := env("OPENFGA_MODEL", "manifests/openfga/fga.mod")
+OPENFGA_TESTS := env("OPENFGA_TESTS", "manifests/openfga/*.fga.yaml")
 OPENFGA_SCRIPT_UNIX := env("OPENFGA_SCRIPT_UNIX", join(ROOT_DIR, "manifests/scripts/openfga.sh"))
 OPENFGA_SCRIPT_WINDOWS := env("OPENFGA_SCRIPT_WINDOWS", join(ROOT_DIR, "manifests/scripts/openfga.ps1"))
 VERSION_ENV := env("VERSION", "")
@@ -160,23 +159,23 @@ compose-logs:
     @{{ COMPOSE }} {{ COMPOSE_FILES }} logs -f {{ COMPOSE_SERVICES }}
 
 openfga-model-validate:
-    @fga model validate --file "{{ OPENFGA_MODEL }}" --format fga
+    @fga model validate --file "{{ OPENFGA_MODEL }}"
 
 openfga-model-test: openfga-model-validate
     @fga model test --tests "{{ OPENFGA_TESTS }}"
 
 [unix]
-openfga-init:
-    @bash "{{ OPENFGA_SCRIPT_UNIX }}" init --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --env-prefix "{{ OPENFGA_ENV_PREFIX }}" --api-url "{{ OPENFGA_API_URL }}"
+openfga-init: openfga-model-test
+    @bash "{{ OPENFGA_SCRIPT_UNIX }}" init --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --api-url "{{ FGA_API_URL }}"
 
 [windows]
-openfga-init:
-    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" init -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -EnvPrefix "{{ OPENFGA_ENV_PREFIX }}" -ApiUrl "{{ OPENFGA_API_URL }}"
+openfga-init: openfga-model-test
+    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" init -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ FGA_API_URL }}"
 
 [unix]
 openfga-model-apply: openfga-model-test
-    @bash "{{ OPENFGA_SCRIPT_UNIX }}" apply --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --env-prefix "{{ OPENFGA_ENV_PREFIX }}" --api-url "{{ OPENFGA_API_URL }}"
+    @bash "{{ OPENFGA_SCRIPT_UNIX }}" apply --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --api-url "{{ FGA_API_URL }}"
 
 [windows]
 openfga-model-apply: openfga-model-test
-    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" apply -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -EnvPrefix "{{ OPENFGA_ENV_PREFIX }}" -ApiUrl "{{ OPENFGA_API_URL }}"
+    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" apply -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ FGA_API_URL }}"

@@ -4,19 +4,15 @@ param(
     [ValidateSet('init', 'apply')]
     [string]$Command,
     [string]$ApiUrl,
-    [string]$Model = 'manifests/openfga/model/servora.fga',
+    [string]$Model = 'manifests/openfga/fga.mod',
     [string]$StoreName,
     [string]$StoreId,
-    [string]$EnvFile = '.env',
-    [string]$EnvPrefix = ''
+    [string]$EnvFile = '.env'
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-if ($EnvPrefix -and $EnvPrefix -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
-    throw "env prefix must be a shell variable prefix: $EnvPrefix"
-}
 if (-not (Get-Command fga -ErrorAction SilentlyContinue)) {
     throw 'required command not found: fga'
 }
@@ -42,23 +38,15 @@ function Get-DotEnvValue([string]$Key) {
 function Get-ConfigValue([string]$Key) {
     $value = [Environment]::GetEnvironmentVariable($Key)
     if (-not [string]::IsNullOrWhiteSpace($value)) { return $value }
-    if ($EnvPrefix) {
-        $prefixedKey = "$EnvPrefix$Key"
-        $value = [Environment]::GetEnvironmentVariable($prefixedKey)
-        if (-not [string]::IsNullOrWhiteSpace($value)) { return $value }
-        $value = Get-DotEnvValue $prefixedKey
-        if (-not [string]::IsNullOrWhiteSpace($value)) { return $value }
-    }
     return Get-DotEnvValue $Key
 }
 
 if ([string]::IsNullOrWhiteSpace($ApiUrl)) {
-    $ApiUrl = [Environment]::GetEnvironmentVariable('OPENFGA_API_URL')
-    if ([string]::IsNullOrWhiteSpace($ApiUrl)) { $ApiUrl = Get-ConfigValue 'FGA_API_URL' }
+    $ApiUrl = Get-ConfigValue 'FGA_API_URL'
     if ([string]::IsNullOrWhiteSpace($ApiUrl)) { $ApiUrl = 'http://localhost:18080' }
 }
 if ([string]::IsNullOrWhiteSpace($StoreName)) {
-    $StoreName = if ($env:OPENFGA_STORE_NAME) { $env:OPENFGA_STORE_NAME } else { 'servora' }
+    $StoreName = if ($env:OPENFGA_STORE_NAME) { $env:OPENFGA_STORE_NAME } else { 'plateau' }
 }
 
 $storeIdExplicit = -not [string]::IsNullOrWhiteSpace($StoreId)
@@ -128,22 +116,16 @@ function Find-StoreIdByName {
 }
 
 function Write-Model {
-    $response = Invoke-Fga @('model', 'write', '--store-id', $StoreId, '--file', $Model, '--format', 'fga')
+    $response = Invoke-Fga @('model', 'write', '--store-id', $StoreId, '--file', $Model)
     return Get-JsonId $response 'model'
 }
 
 function Write-InitEnvironment([string]$ModelId) {
-    $values = @{
+    Set-DotEnvValues @{
         FGA_API_URL = $ApiUrl
         FGA_STORE_ID = $StoreId
         FGA_MODEL_ID = $ModelId
     }
-    if ($EnvPrefix) {
-        $values["$EnvPrefix`FGA_API_URL"] = $ApiUrl
-        $values["$EnvPrefix`FGA_STORE_ID"] = $StoreId
-        $values["$EnvPrefix`FGA_MODEL_ID"] = $ModelId
-    }
-    Set-DotEnvValues $values
 }
 
 if ($Command -eq 'init') {
@@ -159,8 +141,6 @@ if ($Command -eq 'init') {
     if ([string]::IsNullOrWhiteSpace($StoreId)) { $StoreId = Get-ConfigValue 'FGA_STORE_ID' }
     if ([string]::IsNullOrWhiteSpace($StoreId)) { throw 'store ID required: use -StoreId or FGA_STORE_ID' }
     $modelId = Write-Model
-    $values = @{ FGA_MODEL_ID = $modelId }
-    if ($EnvPrefix) { $values["$EnvPrefix`FGA_MODEL_ID"] = $modelId }
-    Set-DotEnvValues $values
+    Set-DotEnvValues @{ FGA_MODEL_ID = $modelId }
     Write-Output "OpenFGA model applied: $modelId"
 }

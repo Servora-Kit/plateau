@@ -1,0 +1,24 @@
+name: iam authorization model tests
+model_file: fga.mod
+
+tuples:
+  - user: user:bootstrap-admin
+    relation: admin
+    object: plateau:default
+
+tests:
+  - name: bootstrap admin can manage IAM users
+    check:
+      - user: user:bootstrap-admin
+        object: plateau:default
+        assertions:
+          admin: true
+          can_manage_users: true
+
+  - name: regular user cannot manage IAM users
+    check:
+      - user: user:regular-user
+        object: plateau:default
+        assertions:
+          admin: false
+          can_manage_users: false

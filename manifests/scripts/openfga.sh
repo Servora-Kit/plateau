@@ -8,12 +8,11 @@ Usage:
   openfga.sh apply [options]
 
 Options:
-  --api-url URL       OpenFGA API URL (default: FGA_API_URL, OPENFGA_API_URL or http://localhost:18080)
+  --api-url URL       OpenFGA API URL (default: FGA_API_URL or http://localhost:18080)
   --model FILE        Authorization model file
-  --store-name NAME   Store name used by init (default: servora)
+  --store-name NAME   Store name used by init (default: plateau)
   --store-id ID       Existing store ID used by apply/init
   --env-file FILE     dotenv output/input file (default: .env)
-  --env-prefix PREFIX Also write prefixed FGA_* variables (for example PLATFORM_)
   -h, --help          Show this help
 EOF
 }
@@ -26,11 +25,10 @@ fi
 shift
 
 api_url=""
-model_file="manifests/openfga/model/servora.fga"
-store_name="${OPENFGA_STORE_NAME:-servora}"
+model_file="manifests/openfga/fga.mod"
+store_name="${OPENFGA_STORE_NAME:-plateau}"
 store_id=""
 env_file=".env"
-env_prefix=""
 
 while (($# > 0)); do
   case "$1" in
@@ -39,16 +37,10 @@ while (($# > 0)); do
     --store-name) [[ $# -ge 2 ]] || { echo "--store-name requires a value" >&2; exit 2; }; store_name="$2"; shift 2 ;;
     --store-id) [[ $# -ge 2 ]] || { echo "--store-id requires a value" >&2; exit 2; }; store_id="$2"; shift 2 ;;
     --env-file) [[ $# -ge 2 ]] || { echo "--env-file requires a value" >&2; exit 2; }; env_file="$2"; shift 2 ;;
-    --env-prefix) [[ $# -ge 2 ]] || { echo "--env-prefix requires a value" >&2; exit 2; }; env_prefix="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
-
-[[ "$env_prefix" =~ ^[A-Za-z_][A-Za-z0-9_]*$|^$ ]] || {
-  echo "env prefix must be a shell variable prefix: $env_prefix" >&2
-  exit 2
-}
 
 for tool in fga jq awk; do
   command -v "$tool" >/dev/null 2>&1 || {
@@ -56,6 +48,7 @@ for tool in fga jq awk; do
     exit 127
   }
 done
+
 [[ -f "$model_file" ]] || { echo "model file not found: $model_file" >&2; exit 1; }
 
 # Read only dotenv key/value pairs; never source an arbitrary environment file.
@@ -82,23 +75,17 @@ dotenv_get() {
 }
 
 config_value() {
-  local key="$1" name value
-  name="$key"
-  value="${!name-}"
-  if [[ -n "$value" ]]; then printf '%s' "$value"; return; fi
-  if [[ -n "$env_prefix" ]]; then
-    name="${env_prefix}${key}"
-    value="${!name-}"
-    if [[ -n "$value" ]]; then printf '%s' "$value"; return; fi
-    value="$(dotenv_get "$name")"
-    if [[ -n "$value" ]]; then printf '%s' "$value"; return; fi
+  local key="$1" value
+  value="${!key-}"
+  if [[ -n "$value" ]]; then
+    printf '%s' "$value"
+    return
   fi
   dotenv_get "$key"
 }
 
 if [[ -z "$api_url" ]]; then
-  api_url="${OPENFGA_API_URL:-}"
-  [[ -n "$api_url" ]] || api_url="$(config_value FGA_API_URL)"
+  api_url="$(config_value FGA_API_URL)"
   [[ -n "$api_url" ]] || api_url="http://localhost:18080"
 fi
 
@@ -151,11 +138,7 @@ atomic_upsert_env() {
 
 write_env() {
   local model_id="$1"
-  local -a updates=("FGA_API_URL=$api_url" "FGA_STORE_ID=$store_id" "FGA_MODEL_ID=$model_id")
-  if [[ -n "$env_prefix" ]]; then
-    updates+=("${env_prefix}FGA_API_URL=$api_url" "${env_prefix}FGA_STORE_ID=$store_id" "${env_prefix}FGA_MODEL_ID=$model_id")
-  fi
-  atomic_upsert_env "${updates[@]}"
+  atomic_upsert_env "FGA_API_URL=$api_url" "FGA_STORE_ID=$store_id" "FGA_MODEL_ID=$model_id"
 }
 
 fga_args=(--api-url "$api_url")
@@ -164,7 +147,7 @@ fga_call() { fga "${fga_args[@]}" "$@"; }
 
 write_model() {
   local response model_id
-  response="$(fga_call model write --store-id "$store_id" --file "$model_file" --format fga)" || {
+  response="$(fga_call model write --store-id "$store_id" --file "$model_file")" || {
     echo "failed to write OpenFGA authorization model" >&2
     exit 1
   }
@@ -216,9 +199,7 @@ case "$command_name" in
     [[ -n "$store_id" ]] || store_id="$(config_value FGA_STORE_ID)"
     [[ -n "$store_id" ]] || { echo "store ID required: use --store-id or FGA_STORE_ID" >&2; exit 2; }
     model_id="$(write_model)"
-    updates=("FGA_MODEL_ID=$model_id")
-    [[ -n "$env_prefix" ]] && updates+=("${env_prefix}FGA_MODEL_ID=$model_id")
-    atomic_upsert_env "${updates[@]}"
+    atomic_upsert_env "FGA_MODEL_ID=$model_id"
     printf 'OpenFGA model applied: %s\n' "$model_id"
     ;;
   *)
