@@ -1,0 +1,31 @@
+version: v2
+
+clean: false
+
+managed:
+    enabled: true
+
+    disable:
+        - module: buf.build/googleapis/googleapis
+        - module: buf.build/bufbuild/protovalidate
+        - module: buf.build/kratos/apis
+        - module: buf.build/gnostic/gnostic
+        - module: buf.build/gogo/protobuf
+
+inputs:
+    - directory: app/iam/service/api/protos
+      paths:
+          - app/iam/service/api/protos/iam/user/v1
+          - app/iam/service/api/protos/iam/account/v1
+          - app/iam/service/api/protos/iam/authn/v1
+
+plugins:
+    - local: protoc-gen-openapi
+      out: app/iam/service/api/internal/assets
+      opt:
+          - naming=json
+          - depth=2
+          - default_response=false
+          - enum_type=string
+          - output_mode=merged
+          - fq_schema_naming=false

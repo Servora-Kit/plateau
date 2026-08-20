@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package iam.authn.v1;
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+import "iam/user/v1/user.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1;authnpb";
+
+// AuthnService owns email/password authentication and browser sessions.
+service AuthnService {
+  // Login verifies credentials and establishes one opaque browser session.
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/login"
+      body: "*"
+    };
+    option (google.api.method_signature) = "email,password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // Logout revokes the current browser session identified by the session cookie.
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/logout"
+      body: "*"
+    };
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+  }
+}
+
+// AuthnErrorReason contains intentionally generic credential/session failures.
+enum AuthnErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  AUTHN_ERROR_REASON_UNSPECIFIED = 0;
+  AUTHN_ERROR_REASON_INVALID_CREDENTIALS = 1 [(servora.errors.v1.code) = 401];
+  AUTHN_ERROR_REASON_SESSION_REVOKED = 2 [(servora.errors.v1.code) = 401];
+  AUTHN_ERROR_REASON_USER_DISABLED = 3 [(servora.errors.v1.code) = 401];
+  AUTHN_ERROR_REASON_USER_NOT_ACTIVE = 4 [(servora.errors.v1.code) = 401];
+}
+
+// Session is safe browser-session metadata; the opaque cookie secret is never exposed.
+message Session {
+  option (google.api.resource) = {
+    type: "iam.plateau.dev/Session"
+    pattern: "sessions/{session}"
+    singular: "session"
+    plural: "sessions"
+  };
+
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+  string session_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp last_seen_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp idle_expires_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp absolute_expires_time = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message LoginRequest {
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  string password = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message LoginResponse {
+  iam.user.v1.User user = 1;
+  Session session = 2;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {}

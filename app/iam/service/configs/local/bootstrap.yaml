@@ -1,0 +1,37 @@
+server:
+  http:
+    listen:
+      addr: "0.0.0.0:8000"
+      timeout: 30s
+  grpc:
+    listen:
+      addr: "0.0.0.0:8001"
+      timeout: 30s
+
+app:
+  name: iam.service
+  version: dev
+  env: dev
+
+obs:
+  log:
+    level: 1
+    backends:
+      - stdout: {}
+      - file:
+          path: "./logs/iam.service.log"
+          max_size: 20
+          max_age: 30
+          max_backups: 10
+  trace:
+    endpoint: "localhost:4317"
+    insecure: true
+    sampling_ratio: 1.0
+  metrics:
+    enable: true
+
+registry:
+  consul:
+    addr: "${REGISTRY_CONSUL_ADDR:localhost:8500}"
+    scheme: "${REGISTRY_CONSUL_SCHEME:http}"
+    datacenter: "${REGISTRY_CONSUL_DC:dc1}"

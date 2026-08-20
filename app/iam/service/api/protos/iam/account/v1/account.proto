@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+package iam.account.v1;
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/field_mask.proto";
+import "iam/user/v1/user.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;accountpb";
+
+// AccountService owns self-service registration, profile and recovery flows.
+service AccountService {
+  // Register creates a pending user and sends an email-verification message.
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/register"
+      body: "*"
+    };
+    option (google.api.method_signature) = "email,password,profile,cap_token";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // VerifyEmail consumes a one-time email-verification token.
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/verify-email"
+      body: "*"
+    };
+    option (google.api.method_signature) = "token";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // ResendVerificationEmail uses a generic response to prevent account enumeration.
+  rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/resend-verification"
+      body: "*"
+    };
+    option (google.api.method_signature) = "email,cap_token";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // Activate consumes an administrator-created activation token and sets a password.
+  rpc Activate(ActivateRequest) returns (ActivateResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/activate"
+      body: "*"
+    };
+    option (google.api.method_signature) = "token,password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // GetProfile returns the currently authenticated user's IAM resource.
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {
+    option (google.api.http) = {get: "/v1/iam/account/profile"};
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+  }
+
+  // UpdateProfile updates the currently authenticated user's OIDC profile.
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse) {
+    option (google.api.http) = {
+      patch: "/v1/iam/account/profile"
+      body: "profile"
+    };
+    option (google.api.method_signature) = "profile,update_mask";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+  }
+
+  // ChangePassword changes the current password and revokes other sessions.
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/change-password"
+      body: "*"
+    };
+    option (google.api.method_signature) = "current_password,new_password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+  }
+
+  // RequestPasswordReset always returns a generic success response.
+  rpc RequestPasswordReset(RequestPasswordResetRequest) returns (RequestPasswordResetResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/password-reset/request"
+      body: "*"
+    };
+    option (google.api.method_signature) = "email,cap_token";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // ConfirmPasswordReset consumes a one-time reset token and sets a password.
+  rpc ConfirmPasswordReset(ConfirmPasswordResetRequest) returns (ConfirmPasswordResetResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/password-reset/confirm"
+      body: "*"
+    };
+    option (google.api.method_signature) = "token,new_password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+}
+
+// AccountErrorReason contains account lifecycle and recovery failures.
+enum AccountErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  ACCOUNT_ERROR_REASON_UNSPECIFIED = 0;
+  ACCOUNT_ERROR_REASON_INVALID_TOKEN = 1 [(servora.errors.v1.code) = 400];
+  ACCOUNT_ERROR_REASON_TOKEN_EXPIRED = 2 [(servora.errors.v1.code) = 400];
+  ACCOUNT_ERROR_REASON_INVALID_PASSWORD = 3 [(servora.errors.v1.code) = 400];
+  ACCOUNT_ERROR_REASON_EMAIL_ALREADY_REGISTERED = 4 [(servora.errors.v1.code) = 409];
+  ACCOUNT_ERROR_REASON_USER_DISABLED = 5 [(servora.errors.v1.code) = 403];
+  ACCOUNT_ERROR_REASON_UNAUTHENTICATED = 6 [(servora.errors.v1.code) = 401];
+}
+
+message RegisterRequest {
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  // Password policy is enforced by the service; plaintext is never persisted.
+  string password = 2 [(google.api.field_behavior) = REQUIRED];
+  iam.user.v1.UserProfile profile = 3 [(google.api.field_behavior) = OPTIONAL];
+  // CAP verification token, consumed once before the database transaction.
+  string cap_token = 4 [(google.api.field_behavior) = REQUIRED];
+}
+
+message RegisterResponse {
+  iam.user.v1.User user = 1;
+}
+
+message VerifyEmailRequest {
+  string token = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message VerifyEmailResponse {
+  iam.user.v1.User user = 1;
+}
+
+message ResendVerificationEmailRequest {
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  string cap_token = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message ActivateRequest {
+  string token = 1 [(google.api.field_behavior) = REQUIRED];
+  string password = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message ActivateResponse {
+  iam.user.v1.User user = 1;
+}
+
+message GetProfileRequest {}
+
+message UpdateProfileRequest {
+  iam.user.v1.UserProfile profile = 1 [(google.api.field_behavior) = REQUIRED];
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message ChangePasswordRequest {
+  string current_password = 1 [(google.api.field_behavior) = REQUIRED];
+  string new_password = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message RequestPasswordResetRequest {
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  string cap_token = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message ConfirmPasswordResetRequest {
+  string token = 1 [(google.api.field_behavior) = REQUIRED];
+  string new_password = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message ResendVerificationEmailResponse {}
+
+message GetProfileResponse {
+  iam.user.v1.User user = 1;
+}
+
+message UpdateProfileResponse {
+  iam.user.v1.User user = 1;
+}
+
+message ChangePasswordResponse {}
+
+message RequestPasswordResetResponse {}
+
+message ConfirmPasswordResetResponse {}
