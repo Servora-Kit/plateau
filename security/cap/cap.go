@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	nethttp "net/http"
 	"strings"
@@ -16,7 +17,7 @@ import (
 
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
 
-	"github.com/Servora-Kit/servora/contrib/db/redis"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 const (
@@ -68,11 +69,11 @@ type challengeRecord struct {
 
 // Cap is the embedded Cap CAPTCHA server backed by Redis.
 type Cap struct {
-	rdb *redis.Client
+	rdb *goredis.Client
 }
 
 // New creates a new Cap instance backed by the given Redis client.
-func New(rdb *redis.Client) *Cap {
+func New(rdb *goredis.Client) *Cap {
 	return &Cap{rdb: rdb}
 }
 
@@ -160,7 +161,7 @@ func (c *Cap) CreateChallenge(ctx context.Context, conf *ChallengeConfig) (*Chal
 
 	ttl := time.Duration(expiresMs) * time.Millisecond
 	key := challengeKeyPrefix + token
-	if err := c.rdb.Set(ctx, key, string(data), ttl); err != nil {
+	if err := c.rdb.Set(ctx, key, string(data), ttl).Err(); err != nil {
 		return nil, fmt.Errorf("cap: store challenge: %w", err)
 	}
 
@@ -178,9 +179,12 @@ func (c *Cap) RedeemChallenge(ctx context.Context, token string, solutions []int
 	}
 
 	key := challengeKeyPrefix + token
-	raw, err := c.rdb.GetDel(ctx, key)
-	if err != nil {
+	raw, err := c.rdb.GetDel(ctx, key).Result()
+	if errors.Is(err, goredis.Nil) {
 		return &RedeemResponse{Success: false, Message: "Challenge invalid or expired"}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("cap: consume challenge: %w", err)
 	}
 
 	var record challengeRecord
@@ -222,7 +226,7 @@ func (c *Cap) RedeemChallenge(ctx context.Context, token string, solutions []int
 
 	expires := time.Now().UnixMilli() + int64(tokenTTL/time.Millisecond)
 	// Store empty marker with TTL; the key itself encodes the validity.
-	if err := c.rdb.Set(ctx, tokenKey, "1", tokenTTL); err != nil {
+	if err := c.rdb.Set(ctx, tokenKey, "1", tokenTTL).Err(); err != nil {
 		return nil, fmt.Errorf("cap: store token: %w", err)
 	}
 
@@ -250,8 +254,14 @@ func (c *Cap) ValidateToken(ctx context.Context, token string) (bool, error) {
 	tokenKey := tokenKeyPrefix + id + ":" + hash
 
 	// GetDel atomically reads and deletes the key (one-time use).
-	val, err := c.rdb.GetDel(ctx, tokenKey)
-	if err != nil || val == "" {
+	val, err := c.rdb.GetDel(ctx, tokenKey).Result()
+	if errors.Is(err, goredis.Nil) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("cap: consume verification token: %w", err)
+	}
+	if val == "" {
 		return false, nil
 	}
 
@@ -268,12 +278,12 @@ const (
 //
 // 注册路由（均无需认证，需将 OperationCapChallenge/OperationCapRedeem 加入白名单）：
 //
-//	POST /v1/cap/challenge — 生成 PoW challenge，返回 {challenge, token, expires}
-//	POST /v1/cap/redeem   — 提交 PoW 解答，换取一次性验证 token
+//	POST /cap/challenge — 生成 PoW challenge，返回 {challenge, token, expires}
+//	POST /cap/redeem   — 提交 PoW 解答，换取一次性验证 token
 func Register(s *khttp.Server, c *Cap) {
-	r := s.Route("/v1/cap")
+	r := s.Route("/cap")
 
-	// POST /v1/cap/challenge — 客户端请求新的 PoW 挑战
+	// POST /cap/challenge — 客户端请求新的 PoW 挑战
 	r.POST("/challenge", func(ctx khttp.Context) error {
 		khttp.SetOperation(ctx, OperationCapChallenge)
 		resp, err := c.CreateChallenge(ctx, nil)
@@ -283,7 +293,7 @@ func Register(s *khttp.Server, c *Cap) {
 		return ctx.JSON(nethttp.StatusOK, resp)
 	})
 
-	// POST /v1/cap/redeem — 客户端提交 PoW 答案，服务端验证后返回验证 token
+	// POST /cap/redeem — 客户端提交 PoW 答案，服务端验证后返回验证 token
 	r.POST("/redeem", func(ctx khttp.Context) error {
 		khttp.SetOperation(ctx, OperationCapRedeem)
 		var body struct {

@@ -34,39 +34,3 @@ func IsAuthnErrorReasonInvalidCredentials(err error) bool {
 func ErrorAuthnErrorReasonInvalidCredentials(format string, args ...any) *errors.Error {
 	return errors.New(401, AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_CREDENTIALS.String(), fmt.Sprintf(format, args...))
 }
-
-func IsAuthnErrorReasonSessionRevoked(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_SESSION_REVOKED.String() && e.Code == 401
-}
-
-func ErrorAuthnErrorReasonSessionRevoked(format string, args ...any) *errors.Error {
-	return errors.New(401, AuthnErrorReason_AUTHN_ERROR_REASON_SESSION_REVOKED.String(), fmt.Sprintf(format, args...))
-}
-
-func IsAuthnErrorReasonUserDisabled(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_USER_DISABLED.String() && e.Code == 401
-}
-
-func ErrorAuthnErrorReasonUserDisabled(format string, args ...any) *errors.Error {
-	return errors.New(401, AuthnErrorReason_AUTHN_ERROR_REASON_USER_DISABLED.String(), fmt.Sprintf(format, args...))
-}
-
-func IsAuthnErrorReasonUserNotActive(err error) bool {
-	if err == nil {
-		return false
-	}
-	e := errors.FromError(err)
-	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_USER_NOT_ACTIVE.String() && e.Code == 401
-}
-
-func ErrorAuthnErrorReasonUserNotActive(format string, args ...any) *errors.Error {
-	return errors.New(401, AuthnErrorReason_AUTHN_ERROR_REASON_USER_NOT_ACTIVE.String(), fmt.Sprintf(format, args...))
-}

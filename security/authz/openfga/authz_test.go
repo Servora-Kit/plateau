@@ -40,6 +40,10 @@ func sdkClient(t *testing.T, handler http.HandlerFunc) (*fgaclient.OpenFgaClient
 	return client, &calls
 }
 
+func directSubject(actor security.Actor) (string, error) {
+	return "principal:" + actor.ID, nil
+}
+
 func request() Request {
 	return Request{
 		Actor:        security.Actor{Type: security.ActorTypeHuman, ID: "alice"},
@@ -53,17 +57,21 @@ func performCheck(ctx context.Context, authorizer *Authorizer, value Request) (b
 	return authorizer.Check(ctx, value.Actor, value.Action, value.ResourceType, value.ResourceID)
 }
 func TestNewValidation(t *testing.T) {
-	if got, err := New(nil); err == nil || got != nil {
+	if got, err := New(nil, directSubject); err == nil || got != nil {
 		t.Fatalf("authorizer = %v, error = %v", got, err)
 	}
-	if got, err := New(&fgaclient.OpenFgaClient{}); err == nil || got != nil {
+	if got, err := New(&fgaclient.OpenFgaClient{}, directSubject); err == nil || got != nil {
 		t.Fatalf("zero SDK client authorizer=%v error=%v", got, err)
+	}
+	client, _ := sdkClient(t, func(http.ResponseWriter, *http.Request) {})
+	if got, err := New(client, nil); err == nil || got != nil {
+		t.Fatalf("nil subject mapper authorizer=%v error=%v", got, err)
 	}
 }
 
 func TestDirectRequestValidationDoesNotCallSDK(t *testing.T) {
 	client, calls := sdkClient(t, func(response http.ResponseWriter, _ *http.Request) { _, _ = response.Write([]byte(`{"allowed":true}`)) })
-	authorizer, err := New(client)
+	authorizer, err := New(client, directSubject)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +112,7 @@ func TestDirectRequestValidationDoesNotCallSDK(t *testing.T) {
 
 func TestAnonymousIsUnauthenticated(t *testing.T) {
 	client, calls := sdkClient(t, func(response http.ResponseWriter, _ *http.Request) { _, _ = response.Write([]byte(`{"allowed":true}`)) })
-	authorizer, _ := New(client)
+	authorizer, _ := New(client, directSubject)
 	checkRequest := request()
 	checkRequest.Actor = security.Actor{Type: security.ActorTypeAnonymous}
 	_, err := performCheck(context.Background(), authorizer, checkRequest)
@@ -121,13 +129,13 @@ func TestCheckMapsActorRequest(t *testing.T) {
 		response.Header().Set("Content-Type", "application/json")
 		_, _ = response.Write([]byte(`{"allowed":true}`))
 	})
-	authorizer, _ := New(client)
+	authorizer, _ := New(client, directSubject)
 	allowed, err := performCheck(context.Background(), authorizer, request())
 	if err != nil || !allowed {
 		t.Fatalf("allowed = %v, error = %v", allowed, err)
 	}
 	gotBody := <-body
-	for _, want := range []string{`"user":"human:alice"`, `"relation":"reader"`, `"object":"document:doc-1"`} {
+	for _, want := range []string{`"user":"principal:alice"`, `"relation":"reader"`, `"object":"document:doc-1"`} {
 		if !strings.Contains(gotBody, want) {
 			t.Fatalf("body missing %s: %s", want, gotBody)
 		}
@@ -168,7 +176,7 @@ func TestCheckPreservesProviderErrorTypes(t *testing.T) {
 				response.WriteHeader(test.status)
 				_, _ = response.Write([]byte(`{"code":"internal_error","message":"provider-secret"}`))
 			})
-			authorizer, _ := New(client)
+			authorizer, _ := New(client, directSubject)
 			_, err := performCheck(context.Background(), authorizer, request())
 			if err == nil || !test.check(err) {
 				t.Fatalf("unexpected error classification: %v", err)
@@ -179,7 +187,7 @@ func TestCheckPreservesProviderErrorTypes(t *testing.T) {
 
 func TestCheckPreservesContextCancellation(t *testing.T) {
 	client, _ := sdkClient(t, func(http.ResponseWriter, *http.Request) {})
-	authorizer, _ := New(client)
+	authorizer, _ := New(client, directSubject)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	_, err := performCheck(ctx, authorizer, request())
@@ -190,7 +198,7 @@ func TestCheckPreservesContextCancellation(t *testing.T) {
 
 func TestPublicMethodsRejectNilContextWithoutCallingSDK(t *testing.T) {
 	client, calls := sdkClient(t, func(response http.ResponseWriter, _ *http.Request) { _, _ = response.Write([]byte(`{"allowed":true}`)) })
-	authorizer, _ := New(client)
+	authorizer, _ := New(client, directSubject)
 	checkRequest := request()
 	if _, err := performCheck(nil, authorizer, checkRequest); !stderrors.Is(err, ErrInvalidInput) {
 		t.Fatalf("Check error=%v", err)
@@ -211,7 +219,7 @@ func TestBatchCheckOrderAndCardinality(t *testing.T) {
 		response.Header().Set("Content-Type", "application/json")
 		_, _ = response.Write([]byte(`{"result":{"1":{"allowed":false},"0":{"allowed":true}}}`))
 	})
-	authorizer, _ := New(client)
+	authorizer, _ := New(client, directSubject)
 	if empty, err := authorizer.BatchCheck(context.Background(), nil); err != nil || len(empty) != 0 {
 		t.Fatalf("empty = %v, error = %v", empty, err)
 	}
@@ -243,7 +251,7 @@ func TestBatchCheckRejectsItemAndProtocolErrors(t *testing.T) {
 				response.Header().Set("Content-Type", "application/json")
 				_, _ = response.Write([]byte(test.response))
 			})
-			authorizer, _ := New(client)
+			authorizer, _ := New(client, directSubject)
 			results, err := authorizer.BatchCheck(context.Background(), []Request{request()})
 			if err == nil || results != nil || stderrors.Is(err, ErrUnavailable) != test.unavailable {
 				t.Fatalf("results = %v, error = %v", results, err)
@@ -271,7 +279,7 @@ func TestListAllowedRequiresExactPrefix(t *testing.T) {
 				response.Header().Set("Content-Type", "application/json")
 				_, _ = response.Write([]byte(`{"objects":` + test.objects + `}`))
 			})
-			authorizer, _ := New(client)
+			authorizer, _ := New(client, directSubject)
 			ids, err := authorizer.ListAllowed(context.Background(), request().Actor, "reader", "document")
 			if test.wantFail {
 				if err == nil || ids != nil {
@@ -306,7 +314,7 @@ func TestCheckPreservesTransportFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	authorizer, _ := New(client)
+	authorizer, _ := New(client, directSubject)
 	_, err = performCheck(context.Background(), authorizer, request())
 	if !stderrors.Is(err, sentinel) {
 		t.Fatalf("error = %v", err)

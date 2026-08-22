@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package iam.session.v1;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1;sessionpb";
+
+// SessionService owns IAM Login Session lifecycle commands.
+service SessionService {
+  option (plateau.security.authz.v1.service_default) = {mode: AUTHZ_MODE_NONE};
+
+  // Logout revokes the authenticated current browser session and its token sessions.
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/sessions/current:logout"
+      body: "*"
+    };
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+  }
+}
+
+// SessionErrorReason contains IAM Login Session lifecycle failures.
+enum SessionErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  SESSION_ERROR_REASON_UNSPECIFIED = 0;
+  SESSION_ERROR_REASON_REVOKED = 1 [(servora.errors.v1.code) = 401];
+}
+
+// Session is safe Login Session metadata. The opaque cookie secret is never exposed by Proto.
+message Session {
+  option (google.api.resource) = {
+    type: "iam.plateau.dev/Session"
+    pattern: "sessions/{session}"
+    singular: "session"
+    plural: "sessions"
+  };
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+  string session_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp last_seen_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp idle_expires_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp absolute_expires_time = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {}

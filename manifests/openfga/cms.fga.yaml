@@ -1,0 +1,19 @@
+name: cms IAM identity projection tests
+model_file: fga.mod
+
+tuples:
+  - user: user:iam-user-1
+    relation: iam_identity
+    object: cms_user:cms-user-1
+
+tests:
+  - name: CMS user projection references its IAM identity explicitly
+    check:
+      - user: user:iam-user-1
+        object: cms_user:cms-user-1
+        assertions:
+          iam_identity: true
+      - user: user:other-iam-user
+        object: cms_user:cms-user-1
+        assertions:
+          iam_identity: false

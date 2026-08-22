@@ -12,9 +12,6 @@ var _authnRules = map[string]*v1.AuthnRule{
 	"/iam.authn.v1.AuthnService/Login": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
 	},
-	"/iam.authn.v1.AuthnService/Logout": {
-		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
-	},
 }
 
 // AuthnRules returns the authentication rules declared via Plateau AuthN annotations.

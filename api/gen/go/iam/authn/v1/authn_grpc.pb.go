@@ -19,20 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthnService_Login_FullMethodName  = "/iam.authn.v1.AuthnService/Login"
-	AuthnService_Logout_FullMethodName = "/iam.authn.v1.AuthnService/Logout"
+	AuthnService_Login_FullMethodName = "/iam.authn.v1.AuthnService/Login"
 )
 
 // AuthnServiceClient is the client API for AuthnService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AuthnService owns email/password authentication and browser sessions.
+// AuthnService owns email/password authentication.
 type AuthnServiceClient interface {
 	// Login verifies credentials and establishes one opaque browser session.
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
-	// Logout revokes the current browser session identified by the session cookie.
-	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 }
 
 type authnServiceClient struct {
@@ -53,26 +50,14 @@ func (c *authnServiceClient) Login(ctx context.Context, in *LoginRequest, opts .
 	return out, nil
 }
 
-func (c *authnServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LogoutResponse)
-	err := c.cc.Invoke(ctx, AuthnService_Logout_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthnServiceServer is the server API for AuthnService service.
 // All implementations must embed UnimplementedAuthnServiceServer
 // for forward compatibility.
 //
-// AuthnService owns email/password authentication and browser sessions.
+// AuthnService owns email/password authentication.
 type AuthnServiceServer interface {
 	// Login verifies credentials and establishes one opaque browser session.
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-	// Logout revokes the current browser session identified by the session cookie.
-	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	mustEmbedUnimplementedAuthnServiceServer()
 }
 
@@ -85,9 +70,6 @@ type UnimplementedAuthnServiceServer struct{}
 
 func (UnimplementedAuthnServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Login not implemented")
-}
-func (UnimplementedAuthnServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Logout not implemented")
 }
 func (UnimplementedAuthnServiceServer) mustEmbedUnimplementedAuthnServiceServer() {}
 func (UnimplementedAuthnServiceServer) testEmbeddedByValue()                      {}
@@ -128,24 +110,6 @@ func _AuthnService_Login_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthnService_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LogoutRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthnServiceServer).Logout(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthnService_Logout_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthnServiceServer).Logout(ctx, req.(*LogoutRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthnService_ServiceDesc is the grpc.ServiceDesc for AuthnService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,10 +120,6 @@ var AuthnService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _AuthnService_Login_Handler,
-		},
-		{
-			MethodName: "Logout",
-			Handler:    _AuthnService_Logout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

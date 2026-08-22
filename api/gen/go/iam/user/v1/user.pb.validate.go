@@ -412,8 +412,6 @@ func (m *CreateUserRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for UserId
-
 	if all {
 		switch v := interface{}(m.GetUser()).(type) {
 		case interface{ ValidateAll() error }:
@@ -442,6 +440,10 @@ func (m *CreateUserRequest) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for UserId
+
+	// no validation rules for Password
 
 	if len(errors) > 0 {
 		return CreateUserRequestMultiError(errors)

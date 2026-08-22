@@ -9,9 +9,6 @@ import (
 
 // _authnRules is the immutable backing store for AuthnRules.
 var _authnRules = map[string]*v1.AuthnRule{
-	"/iam.account.v1.AccountService/Activate": {
-		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
-	},
 	"/iam.account.v1.AccountService/ChangePassword": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},

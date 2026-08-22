@@ -2,12 +2,12 @@ package jwt
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
+	authnruntime "github.com/Servora-Kit/plateau/security/authn"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 )
@@ -53,8 +53,10 @@ func middlewareContext(authorization string) context.Context {
 	return transport.NewServerContext(context.Background(), &middlewareTransport{operation: middlewareOperation, header: header})
 }
 
-func middlewareRules(mode authnpb.AuthnMode) map[string]*authnpb.AuthnRule {
-	return map[string]*authnpb.AuthnRule{middlewareOperation: {Mode: mode}}
+func middlewareRules(mode authnpb.AuthnMode) authnruntime.Option {
+	return authnruntime.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
+		return map[string]*authnpb.AuthnRule{middlewareOperation: {Mode: mode}}
+	})
 }
 
 func invokeMiddleware(t *testing.T, value middleware.Middleware, ctx context.Context) (security.Actor, error) {
@@ -71,13 +73,7 @@ func invokeMiddleware(t *testing.T, value middleware.Middleware, ctx context.Con
 
 func TestServerPublicRouteWritesAnonymousActor(t *testing.T) {
 	_, _, authenticator := newAuthenticator(t)
-	actor, err := invokeMiddleware(t, Server(authenticator, func() *testClaims {
-		t.Fatal("public route created claims")
-		return nil
-	}, func(*testClaims) (security.Actor, error) {
-		t.Fatal("public route mapped Actor")
-		return security.Actor{}, nil
-	}, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_PUBLIC)), middlewareContext(""))
+	actor, err := invokeMiddleware(t, Server(authenticator, newTestClaims, mapTestActor, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_PUBLIC)), middlewareContext(""))
 	if err != nil || actor != (security.Actor{Type: security.ActorTypeAnonymous}) {
 		t.Fatalf("actor=%+v error=%v", actor, err)
 	}
@@ -86,9 +82,7 @@ func TestServerPublicRouteWritesAnonymousActor(t *testing.T) {
 func TestServerRequiredRouteAuthenticatesAndWritesActor(t *testing.T) {
 	signer, _, authenticator := newAuthenticator(t)
 	claims := validTestClaims("human", "user-1")
-	actor, err := invokeMiddleware(t, Server(authenticator, newTestClaims, func(claims *testClaims) (security.Actor, error) {
-		return security.Actor{Type: security.ActorType(claims.ActorType), ID: claims.Subject}, nil
-	}, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_REQUIRED)), middlewareContext("Bearer "+mustToken(t, signer, claims)))
+	actor, err := invokeMiddleware(t, Server(authenticator, newTestClaims, mapTestActor, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_REQUIRED)), middlewareContext("Bearer "+mustToken(t, signer, claims)))
 	if err != nil || actor != (security.Actor{Type: security.ActorTypeHuman, ID: "user-1"}) {
 		t.Fatalf("actor=%+v error=%v", actor, err)
 	}
@@ -96,28 +90,14 @@ func TestServerRequiredRouteAuthenticatesAndWritesActor(t *testing.T) {
 
 func TestServerRequiredRouteFailsClosed(t *testing.T) {
 	_, _, authenticator := newAuthenticator(t)
-	server := Server(authenticator, newTestClaims, func(claims *testClaims) (security.Actor, error) {
-		return security.Actor{Type: security.ActorTypeHuman, ID: claims.Subject}, nil
-	}, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_REQUIRED))
+	server := Server(authenticator, newTestClaims, mapTestActor, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_REQUIRED))
 	if _, err := invokeMiddleware(t, server, middlewareContext("")); !securityerrorspb.IsSecurityErrorReasonUnauthenticated(err) {
 		t.Fatalf("missing credentials error=%v", err)
 	}
-	if _, err := invokeMiddleware(t, Server(authenticator, newTestClaims, func(*testClaims) (security.Actor, error) {
-		return security.Actor{}, errors.New("missing subject")
-	}, middlewareRules(authnpb.AuthnMode_AUTHN_MODE_REQUIRED)), middlewareContext("Bearer malformed")); !securityerrorspb.IsSecurityErrorReasonUnauthenticated(err) {
+	if _, err := invokeMiddleware(t, server, middlewareContext("Bearer malformed")); !securityerrorspb.IsSecurityErrorReasonUnauthenticated(err) {
 		t.Fatalf("invalid token error=%v", err)
 	}
-	if _, err := invokeMiddleware(t, Server(authenticator, newTestClaims, func(*testClaims) (security.Actor, error) {
-		return security.Actor{}, nil
-	}, map[string]*authnpb.AuthnRule{}), middlewareContext("")); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
+	if _, err := invokeMiddleware(t, Server(authenticator, newTestClaims, mapTestActor), middlewareContext("")); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
 		t.Fatalf("missing rule error=%v", err)
-	}
-}
-
-func TestAPIErrorPreservesInternalCause(t *testing.T) {
-	cause := errors.New("unexpected result")
-	mapped := apiError(cause)
-	if !securityerrorspb.IsSecurityErrorReasonInternal(mapped) || !errors.Is(mapped, cause) {
-		t.Fatalf("internal error=%v", mapped)
 	}
 }

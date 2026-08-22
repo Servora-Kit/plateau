@@ -8,12 +8,16 @@ import "google/api/field_behavior.proto";
 import "google/protobuf/field_mask.proto";
 import "iam/user/v1/user.proto";
 import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
 import "servora/errors/v1/errors.proto";
+import "buf/validate/validate.proto";
+import "servora/redact/v3/redact.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;accountpb";
 
 // AccountService owns self-service registration, profile and recovery flows.
 service AccountService {
+  option (plateau.security.authz.v1.service_default) = {mode: AUTHZ_MODE_NONE};
   // Register creates a pending user and sends an email-verification message.
   rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
@@ -41,16 +45,6 @@ service AccountService {
       body: "*"
     };
     option (google.api.method_signature) = "email,cap_token";
-    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
-  }
-
-  // Activate consumes an administrator-created activation token and sets a password.
-  rpc Activate(ActivateRequest) returns (ActivateResponse) {
-    option (google.api.http) = {
-      post: "/v1/iam/account/activate"
-      body: "*"
-    };
-    option (google.api.method_signature) = "token,password";
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
   }
 
@@ -115,12 +109,19 @@ enum AccountErrorReason {
 }
 
 message RegisterRequest {
+  // Service canonicalizes email before uniqueness checks and retains a display value separately.
   string email = 1 [(google.api.field_behavior) = REQUIRED];
-  // Password policy is enforced by the service; plaintext is never persisted.
-  string password = 2 [(google.api.field_behavior) = REQUIRED];
+  string password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
   iam.user.v1.UserProfile profile = 3 [(google.api.field_behavior) = OPTIONAL];
-  // CAP verification token, consumed once before the database transaction.
-  string cap_token = 4 [(google.api.field_behavior) = REQUIRED];
+  // One-time CAP verification token; consumed before account side effects.
+  string cap_token = 4 [
+    (google.api.field_behavior) = REQUIRED,
+    (servora.redact.v3.value).string = ""
+  ];
 }
 
 message RegisterResponse {
@@ -128,7 +129,11 @@ message RegisterResponse {
 }
 
 message VerifyEmailRequest {
-  string token = 1 [(google.api.field_behavior) = REQUIRED];
+  // One-time email verification token; never accepted from a query parameter.
+  string token = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (servora.redact.v3.value).string = ""
+  ];
 }
 
 message VerifyEmailResponse {
@@ -136,17 +141,13 @@ message VerifyEmailResponse {
 }
 
 message ResendVerificationEmailRequest {
+  // Service canonicalizes email before lookup; public responses do not reveal account existence.
   string email = 1 [(google.api.field_behavior) = REQUIRED];
-  string cap_token = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-message ActivateRequest {
-  string token = 1 [(google.api.field_behavior) = REQUIRED];
-  string password = 2 [(google.api.field_behavior) = REQUIRED];
-}
-
-message ActivateResponse {
-  iam.user.v1.User user = 1;
+  // One-time CAP verification token; consumed before sending a verification email.
+  string cap_token = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (servora.redact.v3.value).string = ""
+  ];
 }
 
 message GetProfileRequest {}
@@ -157,18 +158,40 @@ message UpdateProfileRequest {
 }
 
 message ChangePasswordRequest {
-  string current_password = 1 [(google.api.field_behavior) = REQUIRED];
-  string new_password = 2 [(google.api.field_behavior) = REQUIRED];
+  // Current password is verified but never logged or returned.
+  string current_password = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
+  string new_password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
 }
 
 message RequestPasswordResetRequest {
+  // Service canonicalizes email before lookup and always returns a generic response.
   string email = 1 [(google.api.field_behavior) = REQUIRED];
-  string cap_token = 2 [(google.api.field_behavior) = REQUIRED];
+  // One-time CAP verification token; consumed before issuing a reset token.
+  string cap_token = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (servora.redact.v3.value).string = ""
+  ];
 }
 
 message ConfirmPasswordResetRequest {
-  string token = 1 [(google.api.field_behavior) = REQUIRED];
-  string new_password = 2 [(google.api.field_behavior) = REQUIRED];
+  // One-time password-reset token; consumed atomically with password replacement.
+  string token = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (servora.redact.v3.value).string = ""
+  ];
+  string new_password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
 }
 
 message ResendVerificationEmailResponse {}

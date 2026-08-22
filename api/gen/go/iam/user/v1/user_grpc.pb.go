@@ -33,7 +33,7 @@ const (
 //
 // UserService exposes administrator-facing global user management.
 type UserServiceClient interface {
-	// CreateUser creates a pending user without accepting an initial password.
+	// CreateUser creates a pending user with an administrator-supplied initial password.
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error)
 	// GetUser returns one global IAM user by resource name.
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error)
@@ -121,7 +121,7 @@ func (c *userServiceClient) EnableUser(ctx context.Context, in *EnableUserReques
 //
 // UserService exposes administrator-facing global user management.
 type UserServiceServer interface {
-	// CreateUser creates a pending user without accepting an initial password.
+	// CreateUser creates a pending user with an administrator-supplied initial password.
 	CreateUser(context.Context, *CreateUserRequest) (*User, error)
 	// GetUser returns one global IAM user by resource name.
 	GetUser(context.Context, *GetUserRequest) (*User, error)

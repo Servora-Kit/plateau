@@ -1,0 +1,628 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /v1/iam/account/change-password:
+        post:
+            tags:
+                - AccountService
+            description: ChangePassword changes the current password and revokes other sessions.
+            operationId: AccountService_ChangePassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ChangePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ChangePasswordResponse'
+    /v1/iam/account/password-reset/confirm:
+        post:
+            tags:
+                - AccountService
+            description: ConfirmPasswordReset consumes a one-time reset token and sets a password.
+            operationId: AccountService_ConfirmPasswordReset
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ConfirmPasswordResetRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ConfirmPasswordResetResponse'
+    /v1/iam/account/password-reset/request:
+        post:
+            tags:
+                - AccountService
+            description: RequestPasswordReset always returns a generic success response.
+            operationId: AccountService_RequestPasswordReset
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RequestPasswordResetRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RequestPasswordResetResponse'
+    /v1/iam/account/profile:
+        get:
+            tags:
+                - AccountService
+            description: GetProfile returns the currently authenticated user's IAM resource.
+            operationId: AccountService_GetProfile
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetProfileResponse'
+        patch:
+            tags:
+                - AccountService
+            description: UpdateProfile updates the currently authenticated user's OIDC profile.
+            operationId: AccountService_UpdateProfile
+            parameters:
+                - name: updateMask
+                  in: query
+                  schema:
+                    type: string
+                    format: field-mask
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UserProfile'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UpdateProfileResponse'
+    /v1/iam/account/register:
+        post:
+            tags:
+                - AccountService
+            description: Register creates a pending user and sends an email-verification message.
+            operationId: AccountService_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RegisterResponse'
+    /v1/iam/account/resend-verification:
+        post:
+            tags:
+                - AccountService
+            description: ResendVerificationEmail uses a generic response to prevent account enumeration.
+            operationId: AccountService_ResendVerificationEmail
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ResendVerificationEmailRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ResendVerificationEmailResponse'
+    /v1/iam/account/verify-email:
+        post:
+            tags:
+                - AccountService
+            description: VerifyEmail consumes a one-time email-verification token.
+            operationId: AccountService_VerifyEmail
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/VerifyEmailRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VerifyEmailResponse'
+    /v1/iam/authn/login:
+        post:
+            tags:
+                - AuthnService
+            description: Login verifies credentials and establishes one opaque browser session.
+            operationId: AuthnService_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoginResponse'
+    /v1/iam/sessions/current:logout:
+        post:
+            tags:
+                - SessionService
+            description: Logout revokes the authenticated current browser session and its token sessions.
+            operationId: SessionService_Logout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LogoutRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LogoutResponse'
+    /v1/iam/users:
+        get:
+            tags:
+                - UserService
+            description: ListUsers returns a page of globally unique IAM users.
+            operationId: UserService_ListUsers
+            parameters:
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageToken
+                  in: query
+                  schema:
+                    type: string
+                - name: filter
+                  in: query
+                  schema:
+                    type: string
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListUsersResponse'
+        post:
+            tags:
+                - UserService
+            description: CreateUser creates a pending user with an administrator-supplied initial password.
+            operationId: UserService_CreateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/iam/users/users/{user}:
+        get:
+            tags:
+                - UserService
+            description: GetUser returns one global IAM user by resource name.
+            operationId: UserService_GetUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+        patch:
+            tags:
+                - UserService
+            description: UpdateUser updates administrator-editable profile fields.
+            operationId: UserService_UpdateUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+                - name: updateMask
+                  in: query
+                  schema:
+                    type: string
+                    format: field-mask
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/iam/users/users/{user}:disable:
+        post:
+            tags:
+                - UserService
+            description: DisableUser disables credentials and revokes every active session.
+            operationId: UserService_DisableUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DisableUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DisableUserResponse'
+    /v1/iam/users/users/{user}:enable:
+        post:
+            tags:
+                - UserService
+            description: EnableUser enables a disabled user without restoring revoked sessions.
+            operationId: UserService_EnableUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EnableUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/EnableUserResponse'
+components:
+    schemas:
+        ChangePasswordRequest:
+            required:
+                - currentPassword
+                - newPassword
+            type: object
+            properties:
+                currentPassword:
+                    type: string
+                    description: Current password is verified but never logged or returned.
+                newPassword:
+                    type: string
+        ChangePasswordResponse:
+            type: object
+            properties: {}
+        ConfirmPasswordResetRequest:
+            required:
+                - token
+                - newPassword
+            type: object
+            properties:
+                token:
+                    type: string
+                    description: One-time password-reset token; consumed atomically with password replacement.
+                newPassword:
+                    type: string
+        ConfirmPasswordResetResponse:
+            type: object
+            properties: {}
+        CreateUserRequest:
+            required:
+                - user
+                - password
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+                userId:
+                    type: string
+                    description: Optional CRUD resource ID; when supplied it must be a canonical UUIDv7.
+                password:
+                    type: string
+        DisableUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+                reason:
+                    type: string
+                etag:
+                    type: string
+        DisableUserResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+        EnableUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+                etag:
+                    type: string
+        EnableUserResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+        GetProfileResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+        ListUsersResponse:
+            type: object
+            properties:
+                users:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/User'
+                nextPageToken:
+                    type: string
+        LoginRequest:
+            required:
+                - email
+                - password
+            type: object
+            properties:
+                email:
+                    type: string
+                    description: Service canonicalizes email before locating the Login Identifier.
+                password:
+                    type: string
+        LoginResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+                session:
+                    $ref: '#/components/schemas/Session'
+        LogoutRequest:
+            type: object
+            properties: {}
+        LogoutResponse:
+            type: object
+            properties: {}
+        RegisterRequest:
+            required:
+                - email
+                - password
+                - capToken
+            type: object
+            properties:
+                email:
+                    type: string
+                    description: Service canonicalizes email before uniqueness checks and retains a display value separately.
+                password:
+                    type: string
+                profile:
+                    $ref: '#/components/schemas/UserProfile'
+                capToken:
+                    type: string
+                    description: One-time CAP verification token; consumed before account side effects.
+        RegisterResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+        RequestPasswordResetRequest:
+            required:
+                - email
+                - capToken
+            type: object
+            properties:
+                email:
+                    type: string
+                    description: Service canonicalizes email before lookup and always returns a generic response.
+                capToken:
+                    type: string
+                    description: One-time CAP verification token; consumed before issuing a reset token.
+        RequestPasswordResetResponse:
+            type: object
+            properties: {}
+        ResendVerificationEmailRequest:
+            required:
+                - email
+                - capToken
+            type: object
+            properties:
+                email:
+                    type: string
+                    description: Service canonicalizes email before lookup; public responses do not reveal account existence.
+                capToken:
+                    type: string
+                    description: One-time CAP verification token; consumed before sending a verification email.
+        ResendVerificationEmailResponse:
+            type: object
+            properties: {}
+        Session:
+            type: object
+            properties:
+                name:
+                    type: string
+                sessionId:
+                    readOnly: true
+                    type: string
+                createTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                lastSeenTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                idleExpiresTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                absoluteExpiresTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+            description: Session is safe Login Session metadata. The opaque cookie secret is never exposed by Proto.
+        UpdateProfileResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+        User:
+            required:
+                - email
+            type: object
+            properties:
+                name:
+                    type: string
+                userId:
+                    readOnly: true
+                    type: string
+                    description: Stable, never-reused UUIDv7 identity identifier generated by IAM.
+                email:
+                    type: string
+                    description: Email Login Identifier; service applies trim, Unicode NFC and Unicode case folding for lookup.
+                profile:
+                    allOf:
+                        - $ref: '#/components/schemas/UserProfile'
+                    description: OIDC standard profile fields only; no Tenant, Membership, role or metadata.
+                status:
+                    readOnly: true
+                    enum:
+                        - USER_STATUS_UNSPECIFIED
+                        - USER_STATUS_PENDING_EMAIL_VERIFICATION
+                        - USER_STATUS_ACTIVE
+                        - USER_STATUS_DISABLED
+                    type: string
+                    format: enum
+                emailVerified:
+                    readOnly: true
+                    type: boolean
+                    description: True only after the one-time email verification flow succeeds.
+                emailVerifiedTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                createTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                updateTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                etag:
+                    readOnly: true
+                    type: string
+            description: User is the globally unique IAM identity resource.
+        UserProfile:
+            type: object
+            properties:
+                name:
+                    type: string
+                givenName:
+                    type: string
+                familyName:
+                    type: string
+                nickname:
+                    type: string
+                preferredUsername:
+                    type: string
+                picture:
+                    type: string
+                locale:
+                    type: string
+            description: UserProfile contains the OIDC standard profile fields supported by IAM.
+        VerifyEmailRequest:
+            required:
+                - token
+            type: object
+            properties:
+                token:
+                    type: string
+                    description: One-time email verification token; never accepted from a query parameter.
+        VerifyEmailResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+tags:
+    - name: AccountService
+      description: AccountService owns self-service registration, profile and recovery flows.
+    - name: AuthnService
+      description: AuthnService owns email/password authentication.
+    - name: SessionService
+      description: SessionService owns IAM Login Session lifecycle commands.
+    - name: UserService
+      description: UserService exposes administrator-facing global user management.

@@ -14,9 +14,13 @@ import (
 	fgaclient "github.com/openfga/go-sdk/client"
 )
 
+// SubjectMapper maps one authenticated Actor to a concrete OpenFGA direct subject.
+type SubjectMapper func(security.Actor) (string, error)
+
 // Authorizer maps stable Actors and explicit resources to the official SDK.
 type Authorizer struct {
-	client *fgaclient.OpenFgaClient
+	client     *fgaclient.OpenFgaClient
+	mapSubject SubjectMapper
 }
 
 // Request is one concrete OpenFGA authorization check.
@@ -27,12 +31,15 @@ type Request struct {
 	ResourceID   string
 }
 
-// New constructs an OpenFGA authorization capability.
-func New(client *fgaclient.OpenFgaClient) (*Authorizer, error) {
+// New constructs an OpenFGA authorization capability with service-owned subject mapping.
+func New(client *fgaclient.OpenFgaClient, mapSubject SubjectMapper) (*Authorizer, error) {
 	if !validSDKClient(client) {
 		return nil, fmt.Errorf("openfga authz: sdk client is invalid")
 	}
-	return &Authorizer{client: client}, nil
+	if mapSubject == nil {
+		return nil, fmt.Errorf("openfga authz: subject mapper is nil")
+	}
+	return &Authorizer{client: client, mapSubject: mapSubject}, nil
 }
 
 // Check performs one OpenFGA authorization check.
@@ -43,7 +50,7 @@ func (authorizer *Authorizer) Check(ctx context.Context, actor security.Actor, a
 	if !validAuthorizer(authorizer) {
 		return false, fmt.Errorf("openfga authz: authorizer is invalid")
 	}
-	user, relation, object, err := requestParts(actor, action, resourceType, resourceID)
+	user, relation, object, err := authorizer.requestParts(actor, action, resourceType, resourceID)
 	if err != nil {
 		return false, err
 	}
@@ -72,7 +79,7 @@ func (authorizer *Authorizer) BatchCheck(ctx context.Context, requests []Request
 	}
 	items := make([]fgaclient.ClientBatchCheckItem, len(requests))
 	for index, request := range requests {
-		user, relation, object, err := requestParts(request.Actor, request.Action, request.ResourceType, request.ResourceID)
+		user, relation, object, err := authorizer.requestParts(request.Actor, request.Action, request.ResourceType, request.ResourceID)
 		if err != nil {
 			return nil, fmt.Errorf("openfga batch check item[%d]: %w", index, err)
 		}
@@ -125,7 +132,7 @@ func (authorizer *Authorizer) ListAllowed(ctx context.Context, actor security.Ac
 	if !validAuthorizer(authorizer) {
 		return nil, fmt.Errorf("openfga authz: authorizer is invalid")
 	}
-	user, err := openFGASubject(actor)
+	user, err := authorizer.subject(actor)
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +169,8 @@ func (authorizer *Authorizer) ListAllowed(ctx context.Context, actor security.Ac
 	return ids, nil
 }
 
-func requestParts(actor security.Actor, action, resourceType, resourceID string) (string, string, string, error) {
-	user, err := openFGASubject(actor)
+func (authorizer *Authorizer) requestParts(actor security.Actor, action, resourceType, resourceID string) (string, string, string, error) {
+	user, err := authorizer.subject(actor)
 	if err != nil {
 		return "", "", "", err
 	}
@@ -178,18 +185,22 @@ func requestParts(actor security.Actor, action, resourceType, resourceID string)
 	return user, relation, object, nil
 }
 
-func openFGASubject(actor security.Actor) (string, error) {
+func (authorizer *Authorizer) subject(actor security.Actor) (string, error) {
 	if !actor.Valid() {
 		return "", fmt.Errorf("%w: actor is invalid", ErrInvalidInput)
 	}
 	if actor.Type == security.ActorTypeAnonymous {
 		return "", fmt.Errorf("%w: anonymous actor cannot access protected resources", ErrUnauthenticated)
 	}
-	actorType := string(actor.Type)
-	if actor.ID == "*" || !validResourceID(actor.ID, 512-utf8.RuneCountInString(actorType)-1) {
-		return "", fmt.Errorf("%w: actor cannot be represented as a provider subject", ErrInvalidInput)
+	subject, err := authorizer.mapSubject(actor)
+	if err != nil {
+		return "", fmt.Errorf("openfga authz: map Actor subject: %w", err)
 	}
-	return actorType + ":" + actor.ID, nil
+	subjectType, subjectID, ok := strings.Cut(subject, ":")
+	if !ok || !validProviderName(subjectType, 254) || subjectID == "*" || !validResourceID(subjectID, 512-utf8.RuneCountInString(subjectType)-1) {
+		return "", fmt.Errorf("%w: mapped provider subject is invalid", ErrInvalidInput)
+	}
+	return subject, nil
 }
 
 func relationName(action string) (string, error) {
@@ -245,5 +256,5 @@ func validSDKClient(client *fgaclient.OpenFgaClient) bool {
 }
 
 func validAuthorizer(authorizer *Authorizer) bool {
-	return authorizer != nil && validSDKClient(authorizer.client)
+	return authorizer != nil && validSDKClient(authorizer.client) && authorizer.mapSubject != nil
 }

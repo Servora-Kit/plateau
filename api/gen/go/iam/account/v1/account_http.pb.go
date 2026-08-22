@@ -17,7 +17,6 @@ var _ = new(context.Context)
 
 const _ = http.SupportPackageIsVersion3
 
-const OperationAccountServiceActivate = "/iam.account.v1.AccountService/Activate"
 const OperationAccountServiceChangePassword = "/iam.account.v1.AccountService/ChangePassword"
 const OperationAccountServiceConfirmPasswordReset = "/iam.account.v1.AccountService/ConfirmPasswordReset"
 const OperationAccountServiceGetProfile = "/iam.account.v1.AccountService/GetProfile"
@@ -28,8 +27,6 @@ const OperationAccountServiceUpdateProfile = "/iam.account.v1.AccountService/Upd
 const OperationAccountServiceVerifyEmail = "/iam.account.v1.AccountService/VerifyEmail"
 
 type AccountServiceHTTPServer interface {
-	// Activate Activate consumes an administrator-created activation token and sets a password.
-	Activate(context.Context, *ActivateRequest) (*ActivateResponse, error)
 	// ChangePassword ChangePassword changes the current password and revokes other sessions.
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	// ConfirmPasswordReset ConfirmPasswordReset consumes a one-time reset token and sets a password.
@@ -53,7 +50,6 @@ func RegisterAccountServiceHTTPServer(s *http.Server, srv AccountServiceHTTPServ
 	r.Handle("POST", "/v1/iam/account/register", _AccountService_Register0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/verify-email", _AccountService_VerifyEmail0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/resend-verification", _AccountService_ResendVerificationEmail0_HTTP_Handler(srv))
-	r.Handle("POST", "/v1/iam/account/activate", _AccountService_Activate0_HTTP_Handler(srv))
 	r.Handle("GET", "/v1/iam/account/profile", _AccountService_GetProfile0_HTTP_Handler(srv))
 	r.Handle("PATCH", "/v1/iam/account/profile", _AccountService_UpdateProfile0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/change-password", _AccountService_ChangePassword0_HTTP_Handler(srv))
@@ -114,25 +110,6 @@ func _AccountService_ResendVerificationEmail0_HTTP_Handler(srv AccountServiceHTT
 			return err
 		}
 		reply := out.(*ResendVerificationEmailResponse)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _AccountService_Activate0_HTTP_Handler(srv AccountServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in ActivateRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationAccountServiceActivate)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.Activate(ctx, req.(*ActivateRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*ActivateResponse)
 		return ctx.Result(200, reply)
 	}
 }
@@ -236,8 +213,6 @@ func _AccountService_ConfirmPasswordReset0_HTTP_Handler(srv AccountServiceHTTPSe
 }
 
 type AccountServiceHTTPClient interface {
-	// Activate Activate consumes an administrator-created activation token and sets a password.
-	Activate(ctx context.Context, req *ActivateRequest, opts ...http.CallOption) (rsp *ActivateResponse, err error)
 	// ChangePassword ChangePassword changes the current password and revokes other sessions.
 	ChangePassword(ctx context.Context, req *ChangePasswordRequest, opts ...http.CallOption) (rsp *ChangePasswordResponse, err error)
 	// ConfirmPasswordReset ConfirmPasswordReset consumes a one-time reset token and sets a password.
@@ -262,24 +237,6 @@ type AccountServiceHTTPClientImpl struct {
 
 func NewAccountServiceHTTPClient(client *http.Client) AccountServiceHTTPClient {
 	return &AccountServiceHTTPClientImpl{client}
-}
-
-// Activate Activate consumes an administrator-created activation token and sets a password.
-func (c *AccountServiceHTTPClientImpl) Activate(ctx context.Context, in *ActivateRequest, opts ...http.CallOption) (*ActivateResponse, error) {
-	var out ActivateResponse
-	pattern := "/v1/iam/account/activate"
-	path := http.BuildPath(pattern, in)
-	opts = append([]http.CallOption{
-		http.Accept("application/protojson"),
-		http.ContentType("application/protojson"),
-		http.Operation(OperationAccountServiceActivate),
-		http.PathTemplate(pattern),
-	}, opts...)
-	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
 }
 
 // ChangePassword ChangePassword changes the current password and revokes other sessions.

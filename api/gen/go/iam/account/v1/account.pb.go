@@ -7,9 +7,12 @@
 package accountpb
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
+	_ "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -90,11 +93,11 @@ func (AccountErrorReason) EnumDescriptor() ([]byte, []int) {
 
 type RegisterRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Email string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	// Password policy is enforced by the service; plaintext is never persisted.
+	// Service canonicalizes email before uniqueness checks and retains a display value separately.
+	Email    string          `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
 	Password string          `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	Profile  *v1.UserProfile `protobuf:"bytes,3,opt,name=profile,proto3" json:"profile,omitempty"`
-	// CAP verification token, consumed once before the database transaction.
+	// One-time CAP verification token; consumed before account side effects.
 	CapToken      string `protobuf:"bytes,4,opt,name=cap_token,json=capToken,proto3" json:"cap_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -203,8 +206,9 @@ func (x *RegisterResponse) GetUser() *v1.User {
 }
 
 type VerifyEmailRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// One-time email verification token; never accepted from a query parameter.
+	Token         string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -291,9 +295,11 @@ func (x *VerifyEmailResponse) GetUser() *v1.User {
 }
 
 type ResendVerificationEmailRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	CapToken      string                 `protobuf:"bytes,2,opt,name=cap_token,json=capToken,proto3" json:"cap_token,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Service canonicalizes email before lookup; public responses do not reveal account existence.
+	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	// One-time CAP verification token; consumed before sending a verification email.
+	CapToken      string `protobuf:"bytes,2,opt,name=cap_token,json=capToken,proto3" json:"cap_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -342,102 +348,6 @@ func (x *ResendVerificationEmailRequest) GetCapToken() string {
 	return ""
 }
 
-type ActivateRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ActivateRequest) Reset() {
-	*x = ActivateRequest{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ActivateRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ActivateRequest) ProtoMessage() {}
-
-func (x *ActivateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ActivateRequest.ProtoReflect.Descriptor instead.
-func (*ActivateRequest) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ActivateRequest) GetToken() string {
-	if x != nil {
-		return x.Token
-	}
-	return ""
-}
-
-func (x *ActivateRequest) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-type ActivateResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *v1.User               `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ActivateResponse) Reset() {
-	*x = ActivateResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ActivateResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ActivateResponse) ProtoMessage() {}
-
-func (x *ActivateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ActivateResponse.ProtoReflect.Descriptor instead.
-func (*ActivateResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ActivateResponse) GetUser() *v1.User {
-	if x != nil {
-		return x.User
-	}
-	return nil
-}
-
 type GetProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -446,7 +356,7 @@ type GetProfileRequest struct {
 
 func (x *GetProfileRequest) Reset() {
 	*x = GetProfileRequest{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[7]
+	mi := &file_iam_account_v1_account_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -458,7 +368,7 @@ func (x *GetProfileRequest) String() string {
 func (*GetProfileRequest) ProtoMessage() {}
 
 func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[7]
+	mi := &file_iam_account_v1_account_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -471,7 +381,7 @@ func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProfileRequest.ProtoReflect.Descriptor instead.
 func (*GetProfileRequest) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{7}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{5}
 }
 
 type UpdateProfileRequest struct {
@@ -484,7 +394,7 @@ type UpdateProfileRequest struct {
 
 func (x *UpdateProfileRequest) Reset() {
 	*x = UpdateProfileRequest{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[8]
+	mi := &file_iam_account_v1_account_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -496,7 +406,7 @@ func (x *UpdateProfileRequest) String() string {
 func (*UpdateProfileRequest) ProtoMessage() {}
 
 func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[8]
+	mi := &file_iam_account_v1_account_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -509,7 +419,7 @@ func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProfileRequest.ProtoReflect.Descriptor instead.
 func (*UpdateProfileRequest) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{8}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateProfileRequest) GetProfile() *v1.UserProfile {
@@ -527,16 +437,17 @@ func (x *UpdateProfileRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
 }
 
 type ChangePasswordRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	CurrentPassword string                 `protobuf:"bytes,1,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
-	NewPassword     string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Current password is verified but never logged or returned.
+	CurrentPassword string `protobuf:"bytes,1,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
+	NewPassword     string `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ChangePasswordRequest) Reset() {
 	*x = ChangePasswordRequest{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[9]
+	mi := &file_iam_account_v1_account_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -548,7 +459,7 @@ func (x *ChangePasswordRequest) String() string {
 func (*ChangePasswordRequest) ProtoMessage() {}
 
 func (x *ChangePasswordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[9]
+	mi := &file_iam_account_v1_account_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -561,7 +472,7 @@ func (x *ChangePasswordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangePasswordRequest.ProtoReflect.Descriptor instead.
 func (*ChangePasswordRequest) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{9}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ChangePasswordRequest) GetCurrentPassword() string {
@@ -579,16 +490,18 @@ func (x *ChangePasswordRequest) GetNewPassword() string {
 }
 
 type RequestPasswordResetRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	CapToken      string                 `protobuf:"bytes,2,opt,name=cap_token,json=capToken,proto3" json:"cap_token,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Service canonicalizes email before lookup and always returns a generic response.
+	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	// One-time CAP verification token; consumed before issuing a reset token.
+	CapToken      string `protobuf:"bytes,2,opt,name=cap_token,json=capToken,proto3" json:"cap_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RequestPasswordResetRequest) Reset() {
 	*x = RequestPasswordResetRequest{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[10]
+	mi := &file_iam_account_v1_account_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -600,7 +513,7 @@ func (x *RequestPasswordResetRequest) String() string {
 func (*RequestPasswordResetRequest) ProtoMessage() {}
 
 func (x *RequestPasswordResetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[10]
+	mi := &file_iam_account_v1_account_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -613,7 +526,7 @@ func (x *RequestPasswordResetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestPasswordResetRequest.ProtoReflect.Descriptor instead.
 func (*RequestPasswordResetRequest) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{10}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RequestPasswordResetRequest) GetEmail() string {
@@ -631,16 +544,17 @@ func (x *RequestPasswordResetRequest) GetCapToken() string {
 }
 
 type ConfirmPasswordResetRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	NewPassword   string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// One-time password-reset token; consumed atomically with password replacement.
+	Token         string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	NewPassword   string `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ConfirmPasswordResetRequest) Reset() {
 	*x = ConfirmPasswordResetRequest{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[11]
+	mi := &file_iam_account_v1_account_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -652,7 +566,7 @@ func (x *ConfirmPasswordResetRequest) String() string {
 func (*ConfirmPasswordResetRequest) ProtoMessage() {}
 
 func (x *ConfirmPasswordResetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[11]
+	mi := &file_iam_account_v1_account_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -665,7 +579,7 @@ func (x *ConfirmPasswordResetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmPasswordResetRequest.ProtoReflect.Descriptor instead.
 func (*ConfirmPasswordResetRequest) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{11}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ConfirmPasswordResetRequest) GetToken() string {
@@ -690,7 +604,7 @@ type ResendVerificationEmailResponse struct {
 
 func (x *ResendVerificationEmailResponse) Reset() {
 	*x = ResendVerificationEmailResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[12]
+	mi := &file_iam_account_v1_account_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -702,7 +616,7 @@ func (x *ResendVerificationEmailResponse) String() string {
 func (*ResendVerificationEmailResponse) ProtoMessage() {}
 
 func (x *ResendVerificationEmailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[12]
+	mi := &file_iam_account_v1_account_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -715,7 +629,7 @@ func (x *ResendVerificationEmailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendVerificationEmailResponse.ProtoReflect.Descriptor instead.
 func (*ResendVerificationEmailResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{12}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{10}
 }
 
 type GetProfileResponse struct {
@@ -727,7 +641,7 @@ type GetProfileResponse struct {
 
 func (x *GetProfileResponse) Reset() {
 	*x = GetProfileResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[13]
+	mi := &file_iam_account_v1_account_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -739,7 +653,7 @@ func (x *GetProfileResponse) String() string {
 func (*GetProfileResponse) ProtoMessage() {}
 
 func (x *GetProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[13]
+	mi := &file_iam_account_v1_account_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -752,7 +666,7 @@ func (x *GetProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProfileResponse.ProtoReflect.Descriptor instead.
 func (*GetProfileResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{13}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetProfileResponse) GetUser() *v1.User {
@@ -771,7 +685,7 @@ type UpdateProfileResponse struct {
 
 func (x *UpdateProfileResponse) Reset() {
 	*x = UpdateProfileResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[14]
+	mi := &file_iam_account_v1_account_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -783,7 +697,7 @@ func (x *UpdateProfileResponse) String() string {
 func (*UpdateProfileResponse) ProtoMessage() {}
 
 func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[14]
+	mi := &file_iam_account_v1_account_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -796,7 +710,7 @@ func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProfileResponse.ProtoReflect.Descriptor instead.
 func (*UpdateProfileResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{14}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateProfileResponse) GetUser() *v1.User {
@@ -814,7 +728,7 @@ type ChangePasswordResponse struct {
 
 func (x *ChangePasswordResponse) Reset() {
 	*x = ChangePasswordResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[15]
+	mi := &file_iam_account_v1_account_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +740,7 @@ func (x *ChangePasswordResponse) String() string {
 func (*ChangePasswordResponse) ProtoMessage() {}
 
 func (x *ChangePasswordResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[15]
+	mi := &file_iam_account_v1_account_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -839,7 +753,7 @@ func (x *ChangePasswordResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangePasswordResponse.ProtoReflect.Descriptor instead.
 func (*ChangePasswordResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{15}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{13}
 }
 
 type RequestPasswordResetResponse struct {
@@ -850,7 +764,7 @@ type RequestPasswordResetResponse struct {
 
 func (x *RequestPasswordResetResponse) Reset() {
 	*x = RequestPasswordResetResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[16]
+	mi := &file_iam_account_v1_account_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -862,7 +776,7 @@ func (x *RequestPasswordResetResponse) String() string {
 func (*RequestPasswordResetResponse) ProtoMessage() {}
 
 func (x *RequestPasswordResetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[16]
+	mi := &file_iam_account_v1_account_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -875,7 +789,7 @@ func (x *RequestPasswordResetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestPasswordResetResponse.ProtoReflect.Descriptor instead.
 func (*RequestPasswordResetResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{16}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{14}
 }
 
 type ConfirmPasswordResetResponse struct {
@@ -886,7 +800,7 @@ type ConfirmPasswordResetResponse struct {
 
 func (x *ConfirmPasswordResetResponse) Reset() {
 	*x = ConfirmPasswordResetResponse{}
-	mi := &file_iam_account_v1_account_proto_msgTypes[17]
+	mi := &file_iam_account_v1_account_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -898,7 +812,7 @@ func (x *ConfirmPasswordResetResponse) String() string {
 func (*ConfirmPasswordResetResponse) ProtoMessage() {}
 
 func (x *ConfirmPasswordResetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_account_v1_account_proto_msgTypes[17]
+	mi := &file_iam_account_v1_account_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -911,47 +825,42 @@ func (x *ConfirmPasswordResetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmPasswordResetResponse.ProtoReflect.Descriptor instead.
 func (*ConfirmPasswordResetResponse) Descriptor() ([]byte, []int) {
-	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{17}
+	return file_iam_account_v1_account_proto_rawDescGZIP(), []int{15}
 }
 
 var File_iam_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_iam_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"\x1ciam/account/v1/account.proto\x12\x0eiam.account.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\"\xa8\x01\n" +
+	"\x1ciam/account/v1/account.proto\x12\x0eiam.account.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\"\xbe\x01\n" +
 	"\x0fRegisterRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12\x1f\n" +
-	"\bpassword\x18\x02 \x01(\tB\x03\xe0A\x02R\bpassword\x127\n" +
-	"\aprofile\x18\x03 \x01(\v2\x18.iam.user.v1.UserProfileB\x03\xe0A\x01R\aprofile\x12 \n" +
-	"\tcap_token\x18\x04 \x01(\tB\x03\xe0A\x02R\bcapToken\"9\n" +
+	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12/\n" +
+	"\bpassword\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x127\n" +
+	"\aprofile\x18\x03 \x01(\v2\x18.iam.user.v1.UserProfileB\x03\xe0A\x01R\aprofile\x12&\n" +
+	"\tcap_token\x18\x04 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\bcapToken\"9\n" +
 	"\x10RegisterResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"/\n" +
-	"\x12VerifyEmailRequest\x12\x19\n" +
-	"\x05token\x18\x01 \x01(\tB\x03\xe0A\x02R\x05token\"<\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"5\n" +
+	"\x12VerifyEmailRequest\x12\x1f\n" +
+	"\x05token\x18\x01 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\x05token\"<\n" +
 	"\x13VerifyEmailResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"]\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"c\n" +
 	"\x1eResendVerificationEmailRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12 \n" +
-	"\tcap_token\x18\x02 \x01(\tB\x03\xe0A\x02R\bcapToken\"M\n" +
-	"\x0fActivateRequest\x12\x19\n" +
-	"\x05token\x18\x01 \x01(\tB\x03\xe0A\x02R\x05token\x12\x1f\n" +
-	"\bpassword\x18\x02 \x01(\tB\x03\xe0A\x02R\bpassword\"9\n" +
-	"\x10ActivateResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"\x13\n" +
+	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12&\n" +
+	"\tcap_token\x18\x02 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\bcapToken\"\x13\n" +
 	"\x11GetProfileRequest\"\x91\x01\n" +
 	"\x14UpdateProfileRequest\x127\n" +
 	"\aprofile\x18\x01 \x01(\v2\x18.iam.user.v1.UserProfileB\x03\xe0A\x02R\aprofile\x12@\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x03\xe0A\x01R\n" +
-	"updateMask\"o\n" +
-	"\x15ChangePasswordRequest\x12.\n" +
-	"\x10current_password\x18\x01 \x01(\tB\x03\xe0A\x02R\x0fcurrentPassword\x12&\n" +
-	"\fnew_password\x18\x02 \x01(\tB\x03\xe0A\x02R\vnewPassword\"Z\n" +
+	"updateMask\"\x8f\x01\n" +
+	"\x15ChangePasswordRequest\x12>\n" +
+	"\x10current_password\x18\x01 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\x126\n" +
+	"\fnew_password\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"`\n" +
 	"\x1bRequestPasswordResetRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12 \n" +
-	"\tcap_token\x18\x02 \x01(\tB\x03\xe0A\x02R\bcapToken\"`\n" +
-	"\x1bConfirmPasswordResetRequest\x12\x19\n" +
-	"\x05token\x18\x01 \x01(\tB\x03\xe0A\x02R\x05token\x12&\n" +
-	"\fnew_password\x18\x02 \x01(\tB\x03\xe0A\x02R\vnewPassword\"!\n" +
+	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12&\n" +
+	"\tcap_token\x18\x02 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\bcapToken\"v\n" +
+	"\x1bConfirmPasswordResetRequest\x12\x1f\n" +
+	"\x05token\x18\x01 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\x05token\x126\n" +
+	"\fnew_password\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"!\n" +
 	"\x1fResendVerificationEmailResponse\";\n" +
 	"\x12GetProfileResponse\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\">\n" +
@@ -967,18 +876,18 @@ const file_iam_account_v1_account_proto_rawDesc = "" +
 	"%ACCOUNT_ERROR_REASON_INVALID_PASSWORD\x10\x03\x1a\x05\xa8\xd4\x18\x90\x03\x128\n" +
 	"-ACCOUNT_ERROR_REASON_EMAIL_ALREADY_REGISTERED\x10\x04\x1a\x05\xa8\xd4\x18\x99\x03\x12-\n" +
 	"\"ACCOUNT_ERROR_REASON_USER_DISABLED\x10\x05\x1a\x05\xa8\xd4\x18\x93\x03\x12/\n" +
-	"$ACCOUNT_ERROR_REASON_UNAUTHENTICATED\x10\x06\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xe5\v\n" +
+	"$ACCOUNT_ERROR_REASON_UNAUTHENTICATED\x10\x06\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xe1\n" +
+	"\n" +
 	"\x0eAccountService\x12\x9b\x01\n" +
 	"\bRegister\x12\x1f.iam.account.v1.RegisterRequest\x1a .iam.account.v1.RegisterResponse\"L\xdaA email,password,profile,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/iam/account/register\x12\x8d\x01\n" +
 	"\vVerifyEmail\x12\".iam.account.v1.VerifyEmailRequest\x1a#.iam.account.v1.VerifyEmailResponse\"5\xdaA\x05token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/iam/account/verify-email\x12\xc2\x01\n" +
-	"\x17ResendVerificationEmail\x12..iam.account.v1.ResendVerificationEmailRequest\x1a/.iam.account.v1.ResendVerificationEmailResponse\"F\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/account/resend-verification\x12\x89\x01\n" +
-	"\bActivate\x12\x1f.iam.account.v1.ActivateRequest\x1a .iam.account.v1.ActivateResponse\":\xdaA\x0etoken,password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/iam/account/activate\x12z\n" +
+	"\x17ResendVerificationEmail\x12..iam.account.v1.ResendVerificationEmailRequest\x1a/.iam.account.v1.ResendVerificationEmailResponse\"F\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/account/resend-verification\x12z\n" +
 	"\n" +
 	"GetProfile\x12!.iam.account.v1.GetProfileRequest\x1a\".iam.account.v1.GetProfileResponse\"%\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/iam/account/profile\x12\xa2\x01\n" +
 	"\rUpdateProfile\x12$.iam.account.v1.UpdateProfileRequest\x1a%.iam.account.v1.UpdateProfileResponse\"D\xdaA\x13profile,update_mask\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\":\aprofile2\x17/v1/iam/account/profile\x12\xb1\x01\n" +
 	"\x0eChangePassword\x12%.iam.account.v1.ChangePasswordRequest\x1a&.iam.account.v1.ChangePasswordResponse\"P\xdaA\x1dcurrent_password,new_password\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/iam/account/change-password\x12\xbc\x01\n" +
 	"\x14RequestPasswordReset\x12+.iam.account.v1.RequestPasswordResetRequest\x1a,.iam.account.v1.RequestPasswordResetResponse\"I\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/request\x12\xbf\x01\n" +
-	"\x14ConfirmPasswordReset\x12+.iam.account.v1.ConfirmPasswordResetRequest\x1a,.iam.account.v1.ConfirmPasswordResetResponse\"L\xdaA\x12token,new_password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/confirmBDZBgithub.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;accountpbb\x06proto3"
+	"\x14ConfirmPasswordReset\x12+.iam.account.v1.ConfirmPasswordResetRequest\x1a,.iam.account.v1.ConfirmPasswordResetResponse\"L\xdaA\x12token,new_password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/confirm\x1a\x06\xca\xc1\x18\x02\b\x01BDZBgithub.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;accountpbb\x06proto3"
 
 var (
 	file_iam_account_v1_account_proto_rawDescOnce sync.Once
@@ -993,7 +902,7 @@ func file_iam_account_v1_account_proto_rawDescGZIP() []byte {
 }
 
 var file_iam_account_v1_account_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_iam_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_iam_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_iam_account_v1_account_proto_goTypes = []any{
 	(AccountErrorReason)(0),                 // 0: iam.account.v1.AccountErrorReason
 	(*RegisterRequest)(nil),                 // 1: iam.account.v1.RegisterRequest
@@ -1001,55 +910,50 @@ var file_iam_account_v1_account_proto_goTypes = []any{
 	(*VerifyEmailRequest)(nil),              // 3: iam.account.v1.VerifyEmailRequest
 	(*VerifyEmailResponse)(nil),             // 4: iam.account.v1.VerifyEmailResponse
 	(*ResendVerificationEmailRequest)(nil),  // 5: iam.account.v1.ResendVerificationEmailRequest
-	(*ActivateRequest)(nil),                 // 6: iam.account.v1.ActivateRequest
-	(*ActivateResponse)(nil),                // 7: iam.account.v1.ActivateResponse
-	(*GetProfileRequest)(nil),               // 8: iam.account.v1.GetProfileRequest
-	(*UpdateProfileRequest)(nil),            // 9: iam.account.v1.UpdateProfileRequest
-	(*ChangePasswordRequest)(nil),           // 10: iam.account.v1.ChangePasswordRequest
-	(*RequestPasswordResetRequest)(nil),     // 11: iam.account.v1.RequestPasswordResetRequest
-	(*ConfirmPasswordResetRequest)(nil),     // 12: iam.account.v1.ConfirmPasswordResetRequest
-	(*ResendVerificationEmailResponse)(nil), // 13: iam.account.v1.ResendVerificationEmailResponse
-	(*GetProfileResponse)(nil),              // 14: iam.account.v1.GetProfileResponse
-	(*UpdateProfileResponse)(nil),           // 15: iam.account.v1.UpdateProfileResponse
-	(*ChangePasswordResponse)(nil),          // 16: iam.account.v1.ChangePasswordResponse
-	(*RequestPasswordResetResponse)(nil),    // 17: iam.account.v1.RequestPasswordResetResponse
-	(*ConfirmPasswordResetResponse)(nil),    // 18: iam.account.v1.ConfirmPasswordResetResponse
-	(*v1.UserProfile)(nil),                  // 19: iam.user.v1.UserProfile
-	(*v1.User)(nil),                         // 20: iam.user.v1.User
-	(*fieldmaskpb.FieldMask)(nil),           // 21: google.protobuf.FieldMask
+	(*GetProfileRequest)(nil),               // 6: iam.account.v1.GetProfileRequest
+	(*UpdateProfileRequest)(nil),            // 7: iam.account.v1.UpdateProfileRequest
+	(*ChangePasswordRequest)(nil),           // 8: iam.account.v1.ChangePasswordRequest
+	(*RequestPasswordResetRequest)(nil),     // 9: iam.account.v1.RequestPasswordResetRequest
+	(*ConfirmPasswordResetRequest)(nil),     // 10: iam.account.v1.ConfirmPasswordResetRequest
+	(*ResendVerificationEmailResponse)(nil), // 11: iam.account.v1.ResendVerificationEmailResponse
+	(*GetProfileResponse)(nil),              // 12: iam.account.v1.GetProfileResponse
+	(*UpdateProfileResponse)(nil),           // 13: iam.account.v1.UpdateProfileResponse
+	(*ChangePasswordResponse)(nil),          // 14: iam.account.v1.ChangePasswordResponse
+	(*RequestPasswordResetResponse)(nil),    // 15: iam.account.v1.RequestPasswordResetResponse
+	(*ConfirmPasswordResetResponse)(nil),    // 16: iam.account.v1.ConfirmPasswordResetResponse
+	(*v1.UserProfile)(nil),                  // 17: iam.user.v1.UserProfile
+	(*v1.User)(nil),                         // 18: iam.user.v1.User
+	(*fieldmaskpb.FieldMask)(nil),           // 19: google.protobuf.FieldMask
 }
 var file_iam_account_v1_account_proto_depIdxs = []int32{
-	19, // 0: iam.account.v1.RegisterRequest.profile:type_name -> iam.user.v1.UserProfile
-	20, // 1: iam.account.v1.RegisterResponse.user:type_name -> iam.user.v1.User
-	20, // 2: iam.account.v1.VerifyEmailResponse.user:type_name -> iam.user.v1.User
-	20, // 3: iam.account.v1.ActivateResponse.user:type_name -> iam.user.v1.User
-	19, // 4: iam.account.v1.UpdateProfileRequest.profile:type_name -> iam.user.v1.UserProfile
-	21, // 5: iam.account.v1.UpdateProfileRequest.update_mask:type_name -> google.protobuf.FieldMask
-	20, // 6: iam.account.v1.GetProfileResponse.user:type_name -> iam.user.v1.User
-	20, // 7: iam.account.v1.UpdateProfileResponse.user:type_name -> iam.user.v1.User
-	1,  // 8: iam.account.v1.AccountService.Register:input_type -> iam.account.v1.RegisterRequest
-	3,  // 9: iam.account.v1.AccountService.VerifyEmail:input_type -> iam.account.v1.VerifyEmailRequest
-	5,  // 10: iam.account.v1.AccountService.ResendVerificationEmail:input_type -> iam.account.v1.ResendVerificationEmailRequest
-	6,  // 11: iam.account.v1.AccountService.Activate:input_type -> iam.account.v1.ActivateRequest
-	8,  // 12: iam.account.v1.AccountService.GetProfile:input_type -> iam.account.v1.GetProfileRequest
-	9,  // 13: iam.account.v1.AccountService.UpdateProfile:input_type -> iam.account.v1.UpdateProfileRequest
-	10, // 14: iam.account.v1.AccountService.ChangePassword:input_type -> iam.account.v1.ChangePasswordRequest
-	11, // 15: iam.account.v1.AccountService.RequestPasswordReset:input_type -> iam.account.v1.RequestPasswordResetRequest
-	12, // 16: iam.account.v1.AccountService.ConfirmPasswordReset:input_type -> iam.account.v1.ConfirmPasswordResetRequest
-	2,  // 17: iam.account.v1.AccountService.Register:output_type -> iam.account.v1.RegisterResponse
-	4,  // 18: iam.account.v1.AccountService.VerifyEmail:output_type -> iam.account.v1.VerifyEmailResponse
-	13, // 19: iam.account.v1.AccountService.ResendVerificationEmail:output_type -> iam.account.v1.ResendVerificationEmailResponse
-	7,  // 20: iam.account.v1.AccountService.Activate:output_type -> iam.account.v1.ActivateResponse
-	14, // 21: iam.account.v1.AccountService.GetProfile:output_type -> iam.account.v1.GetProfileResponse
-	15, // 22: iam.account.v1.AccountService.UpdateProfile:output_type -> iam.account.v1.UpdateProfileResponse
-	16, // 23: iam.account.v1.AccountService.ChangePassword:output_type -> iam.account.v1.ChangePasswordResponse
-	17, // 24: iam.account.v1.AccountService.RequestPasswordReset:output_type -> iam.account.v1.RequestPasswordResetResponse
-	18, // 25: iam.account.v1.AccountService.ConfirmPasswordReset:output_type -> iam.account.v1.ConfirmPasswordResetResponse
-	17, // [17:26] is the sub-list for method output_type
-	8,  // [8:17] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	17, // 0: iam.account.v1.RegisterRequest.profile:type_name -> iam.user.v1.UserProfile
+	18, // 1: iam.account.v1.RegisterResponse.user:type_name -> iam.user.v1.User
+	18, // 2: iam.account.v1.VerifyEmailResponse.user:type_name -> iam.user.v1.User
+	17, // 3: iam.account.v1.UpdateProfileRequest.profile:type_name -> iam.user.v1.UserProfile
+	19, // 4: iam.account.v1.UpdateProfileRequest.update_mask:type_name -> google.protobuf.FieldMask
+	18, // 5: iam.account.v1.GetProfileResponse.user:type_name -> iam.user.v1.User
+	18, // 6: iam.account.v1.UpdateProfileResponse.user:type_name -> iam.user.v1.User
+	1,  // 7: iam.account.v1.AccountService.Register:input_type -> iam.account.v1.RegisterRequest
+	3,  // 8: iam.account.v1.AccountService.VerifyEmail:input_type -> iam.account.v1.VerifyEmailRequest
+	5,  // 9: iam.account.v1.AccountService.ResendVerificationEmail:input_type -> iam.account.v1.ResendVerificationEmailRequest
+	6,  // 10: iam.account.v1.AccountService.GetProfile:input_type -> iam.account.v1.GetProfileRequest
+	7,  // 11: iam.account.v1.AccountService.UpdateProfile:input_type -> iam.account.v1.UpdateProfileRequest
+	8,  // 12: iam.account.v1.AccountService.ChangePassword:input_type -> iam.account.v1.ChangePasswordRequest
+	9,  // 13: iam.account.v1.AccountService.RequestPasswordReset:input_type -> iam.account.v1.RequestPasswordResetRequest
+	10, // 14: iam.account.v1.AccountService.ConfirmPasswordReset:input_type -> iam.account.v1.ConfirmPasswordResetRequest
+	2,  // 15: iam.account.v1.AccountService.Register:output_type -> iam.account.v1.RegisterResponse
+	4,  // 16: iam.account.v1.AccountService.VerifyEmail:output_type -> iam.account.v1.VerifyEmailResponse
+	11, // 17: iam.account.v1.AccountService.ResendVerificationEmail:output_type -> iam.account.v1.ResendVerificationEmailResponse
+	12, // 18: iam.account.v1.AccountService.GetProfile:output_type -> iam.account.v1.GetProfileResponse
+	13, // 19: iam.account.v1.AccountService.UpdateProfile:output_type -> iam.account.v1.UpdateProfileResponse
+	14, // 20: iam.account.v1.AccountService.ChangePassword:output_type -> iam.account.v1.ChangePasswordResponse
+	15, // 21: iam.account.v1.AccountService.RequestPasswordReset:output_type -> iam.account.v1.RequestPasswordResetResponse
+	16, // 22: iam.account.v1.AccountService.ConfirmPasswordReset:output_type -> iam.account.v1.ConfirmPasswordResetResponse
+	15, // [15:23] is the sub-list for method output_type
+	7,  // [7:15] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_iam_account_v1_account_proto_init() }
@@ -1063,7 +967,7 @@ func file_iam_account_v1_account_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_iam_account_v1_account_proto_rawDesc), len(file_iam_account_v1_account_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   18,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

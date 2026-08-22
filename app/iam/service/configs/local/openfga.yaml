@@ -1,0 +1,5 @@
+openfga:
+  api_url: "${FGA_API_URL:http://localhost:18080}"
+  store_id: "${FGA_STORE_ID}"
+  model_id: "${FGA_MODEL_ID}"
+  api_token: "${FGA_API_TOKEN:}"

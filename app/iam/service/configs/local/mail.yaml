@@ -1,0 +1,12 @@
+mail:
+  smtp:
+    host: "${IAM_SMTP_HOST:localhost}"
+    port: 1025
+    username: "${IAM_SMTP_USERNAME:}"
+    password: "${IAM_SMTP_PASSWORD:}"
+    tls: false
+    skip_verify_ssl: false
+    send_timeout: 10s
+  from:
+    address: "${IAM_MAIL_FROM_ADDRESS:no-reply@plateau.local}"
+    name: "${IAM_MAIL_FROM_NAME:Plateau IAM}"

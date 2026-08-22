@@ -8,10 +8,16 @@ server:
       addr: "0.0.0.0:8001"
       timeout: 30s
 
+data:
+  database:
+    driver: postgresql
+    source: "${IAM_DATABASE_SOURCE:postgres://plateau_iam_app:plateau_iam_pwd@localhost:5432/plateau_iam?sslmode=disable}"
+
 app:
   name: iam.service
   version: dev
   env: dev
+  external_url: "${IAM_PUBLIC_ORIGIN:http://localhost:8000}"
 
 obs:
   log:

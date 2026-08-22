@@ -1,0 +1,5 @@
+module cms
+
+type cms_user
+  relations
+    define iam_identity: [user]

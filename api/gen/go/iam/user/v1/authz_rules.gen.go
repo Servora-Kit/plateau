@@ -12,37 +12,37 @@ var _authzRules = map[string]*v1.AuthzRule{
 	"/iam.user.v1.UserService/CreateUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "can_manage_users",
-		ResourceType: "platform",
+		ResourceType: "plateau",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "default"},
 	},
 	"/iam.user.v1.UserService/DisableUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "can_manage_users",
-		ResourceType: "platform",
+		ResourceType: "plateau",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "default"},
 	},
 	"/iam.user.v1.UserService/EnableUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "can_manage_users",
-		ResourceType: "platform",
+		ResourceType: "plateau",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "default"},
 	},
 	"/iam.user.v1.UserService/GetUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "can_manage_users",
-		ResourceType: "platform",
+		ResourceType: "plateau",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "default"},
 	},
 	"/iam.user.v1.UserService/ListUsers": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "can_manage_users",
-		ResourceType: "platform",
+		ResourceType: "plateau",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "default"},
 	},
 	"/iam.user.v1.UserService/UpdateUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "can_manage_users",
-		ResourceType: "platform",
+		ResourceType: "plateau",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "default"},
 	},
 }

@@ -7,13 +7,16 @@
 package authnpb
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	v11 "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
+	_ "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -26,15 +29,12 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// AuthnErrorReason contains intentionally generic credential/session failures.
+// AuthnErrorReason contains intentionally generic credential failures.
 type AuthnErrorReason int32
 
 const (
 	AuthnErrorReason_AUTHN_ERROR_REASON_UNSPECIFIED         AuthnErrorReason = 0
 	AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_CREDENTIALS AuthnErrorReason = 1
-	AuthnErrorReason_AUTHN_ERROR_REASON_SESSION_REVOKED     AuthnErrorReason = 2
-	AuthnErrorReason_AUTHN_ERROR_REASON_USER_DISABLED       AuthnErrorReason = 3
-	AuthnErrorReason_AUTHN_ERROR_REASON_USER_NOT_ACTIVE     AuthnErrorReason = 4
 )
 
 // Enum value maps for AuthnErrorReason.
@@ -42,16 +42,10 @@ var (
 	AuthnErrorReason_name = map[int32]string{
 		0: "AUTHN_ERROR_REASON_UNSPECIFIED",
 		1: "AUTHN_ERROR_REASON_INVALID_CREDENTIALS",
-		2: "AUTHN_ERROR_REASON_SESSION_REVOKED",
-		3: "AUTHN_ERROR_REASON_USER_DISABLED",
-		4: "AUTHN_ERROR_REASON_USER_NOT_ACTIVE",
 	}
 	AuthnErrorReason_value = map[string]int32{
 		"AUTHN_ERROR_REASON_UNSPECIFIED":         0,
 		"AUTHN_ERROR_REASON_INVALID_CREDENTIALS": 1,
-		"AUTHN_ERROR_REASON_SESSION_REVOKED":     2,
-		"AUTHN_ERROR_REASON_USER_DISABLED":       3,
-		"AUTHN_ERROR_REASON_USER_NOT_ACTIVE":     4,
 	}
 )
 
@@ -82,102 +76,18 @@ func (AuthnErrorReason) EnumDescriptor() ([]byte, []int) {
 	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{0}
 }
 
-// Session is safe browser-session metadata; the opaque cookie secret is never exposed.
-type Session struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	Name                string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	SessionId           string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	CreateTime          *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	LastSeenTime        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_seen_time,json=lastSeenTime,proto3" json:"last_seen_time,omitempty"`
-	IdleExpiresTime     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=idle_expires_time,json=idleExpiresTime,proto3" json:"idle_expires_time,omitempty"`
-	AbsoluteExpiresTime *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=absolute_expires_time,json=absoluteExpiresTime,proto3" json:"absolute_expires_time,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
-}
-
-func (x *Session) Reset() {
-	*x = Session{}
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Session) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Session) ProtoMessage() {}
-
-func (x *Session) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Session.ProtoReflect.Descriptor instead.
-func (*Session) Descriptor() ([]byte, []int) {
-	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *Session) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Session) GetSessionId() string {
-	if x != nil {
-		return x.SessionId
-	}
-	return ""
-}
-
-func (x *Session) GetCreateTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreateTime
-	}
-	return nil
-}
-
-func (x *Session) GetLastSeenTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastSeenTime
-	}
-	return nil
-}
-
-func (x *Session) GetIdleExpiresTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.IdleExpiresTime
-	}
-	return nil
-}
-
-func (x *Session) GetAbsoluteExpiresTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AbsoluteExpiresTime
-	}
-	return nil
-}
-
 type LoginRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Service canonicalizes email before locating the Login Identifier.
+	Email         string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LoginRequest) Reset() {
 	*x = LoginRequest{}
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[1]
+	mi := &file_iam_authn_v1_authn_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -189,7 +99,7 @@ func (x *LoginRequest) String() string {
 func (*LoginRequest) ProtoMessage() {}
 
 func (x *LoginRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[1]
+	mi := &file_iam_authn_v1_authn_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -202,7 +112,7 @@ func (x *LoginRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
 func (*LoginRequest) Descriptor() ([]byte, []int) {
-	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{1}
+	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *LoginRequest) GetEmail() string {
@@ -222,14 +132,14 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	User          *v1.User               `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Session       *Session               `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
+	Session       *v11.Session           `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LoginResponse) Reset() {
 	*x = LoginResponse{}
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[2]
+	mi := &file_iam_authn_v1_authn_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -241,7 +151,7 @@ func (x *LoginResponse) String() string {
 func (*LoginResponse) ProtoMessage() {}
 
 func (x *LoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[2]
+	mi := &file_iam_authn_v1_authn_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -254,7 +164,7 @@ func (x *LoginResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
 func (*LoginResponse) Descriptor() ([]byte, []int) {
-	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{2}
+	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *LoginResponse) GetUser() *v1.User {
@@ -264,117 +174,29 @@ func (x *LoginResponse) GetUser() *v1.User {
 	return nil
 }
 
-func (x *LoginResponse) GetSession() *Session {
+func (x *LoginResponse) GetSession() *v11.Session {
 	if x != nil {
 		return x.Session
 	}
 	return nil
 }
 
-type LogoutRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LogoutRequest) Reset() {
-	*x = LogoutRequest{}
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LogoutRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LogoutRequest) ProtoMessage() {}
-
-func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
-func (*LogoutRequest) Descriptor() ([]byte, []int) {
-	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{3}
-}
-
-type LogoutResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LogoutResponse) Reset() {
-	*x = LogoutResponse{}
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LogoutResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LogoutResponse) ProtoMessage() {}
-
-func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_authn_v1_authn_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
-func (*LogoutResponse) Descriptor() ([]byte, []int) {
-	return file_iam_authn_v1_authn_proto_rawDescGZIP(), []int{4}
-}
-
 var File_iam_authn_v1_authn_proto protoreflect.FileDescriptor
 
 const file_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\n" +
-	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\"\xb6\x03\n" +
-	"\aSession\x12\x17\n" +
-	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12\"\n" +
-	"\n" +
-	"session_id\x18\x02 \x01(\tB\x03\xe0A\x03R\tsessionId\x12@\n" +
-	"\vcreate_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
-	"createTime\x12E\n" +
-	"\x0elast_seen_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\flastSeenTime\x12K\n" +
-	"\x11idle_expires_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\x0fidleExpiresTime\x12S\n" +
-	"\x15absolute_expires_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\x13absoluteExpiresTime:C\xeaA@\n" +
-	"\x17iam.plateau.dev/Session\x12\x12sessions/{session}*\bsessions2\asession\"J\n" +
+	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1ciam/session/v1/session.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"Z\n" +
 	"\fLoginRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12\x1f\n" +
-	"\bpassword\x18\x02 \x01(\tB\x03\xe0A\x02R\bpassword\"g\n" +
+	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12/\n" +
+	"\bpassword\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\"i\n" +
 	"\rLoginResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\x12/\n" +
-	"\asession\x18\x02 \x01(\v2\x15.iam.authn.v1.SessionR\asession\"\x0f\n" +
-	"\rLogoutRequest\"\x10\n" +
-	"\x0eLogoutResponse*\xfb\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\x121\n" +
+	"\asession\x18\x02 \x01(\v2\x17.iam.session.v1.SessionR\asession*p\n" +
 	"\x10AuthnErrorReason\x12\"\n" +
 	"\x1eAUTHN_ERROR_REASON_UNSPECIFIED\x10\x00\x121\n" +
-	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x12-\n" +
-	"\"AUTHN_ERROR_REASON_SESSION_REVOKED\x10\x02\x1a\x05\xa8\xd4\x18\x91\x03\x12+\n" +
-	" AUTHN_ERROR_REASON_USER_DISABLED\x10\x03\x1a\x05\xa8\xd4\x18\x91\x03\x12-\n" +
-	"\"AUTHN_ERROR_REASON_USER_NOT_ACTIVE\x10\x04\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xf3\x01\n" +
+	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\x8f\x01\n" +
 	"\fAuthnService\x12w\n" +
-	"\x05Login\x12\x1a.iam.authn.v1.LoginRequest\x1a\x1b.iam.authn.v1.LoginResponse\"5\xdaA\x0eemail,password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/login\x12j\n" +
-	"\x06Logout\x12\x1b.iam.authn.v1.LogoutRequest\x1a\x1c.iam.authn.v1.LogoutResponse\"%\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/iam/authn/logoutB@Z>github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1;authnpbb\x06proto3"
+	"\x05Login\x12\x1a.iam.authn.v1.LoginRequest\x1a\x1b.iam.authn.v1.LoginResponse\"5\xdaA\x0eemail,password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/login\x1a\x06\xca\xc1\x18\x02\b\x01B@Z>github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1;authnpbb\x06proto3"
 
 var (
 	file_iam_authn_v1_authn_proto_rawDescOnce sync.Once
@@ -389,33 +211,24 @@ func file_iam_authn_v1_authn_proto_rawDescGZIP() []byte {
 }
 
 var file_iam_authn_v1_authn_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_iam_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_iam_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_iam_authn_v1_authn_proto_goTypes = []any{
-	(AuthnErrorReason)(0),         // 0: iam.authn.v1.AuthnErrorReason
-	(*Session)(nil),               // 1: iam.authn.v1.Session
-	(*LoginRequest)(nil),          // 2: iam.authn.v1.LoginRequest
-	(*LoginResponse)(nil),         // 3: iam.authn.v1.LoginResponse
-	(*LogoutRequest)(nil),         // 4: iam.authn.v1.LogoutRequest
-	(*LogoutResponse)(nil),        // 5: iam.authn.v1.LogoutResponse
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
-	(*v1.User)(nil),               // 7: iam.user.v1.User
+	(AuthnErrorReason)(0), // 0: iam.authn.v1.AuthnErrorReason
+	(*LoginRequest)(nil),  // 1: iam.authn.v1.LoginRequest
+	(*LoginResponse)(nil), // 2: iam.authn.v1.LoginResponse
+	(*v1.User)(nil),       // 3: iam.user.v1.User
+	(*v11.Session)(nil),   // 4: iam.session.v1.Session
 }
 var file_iam_authn_v1_authn_proto_depIdxs = []int32{
-	6, // 0: iam.authn.v1.Session.create_time:type_name -> google.protobuf.Timestamp
-	6, // 1: iam.authn.v1.Session.last_seen_time:type_name -> google.protobuf.Timestamp
-	6, // 2: iam.authn.v1.Session.idle_expires_time:type_name -> google.protobuf.Timestamp
-	6, // 3: iam.authn.v1.Session.absolute_expires_time:type_name -> google.protobuf.Timestamp
-	7, // 4: iam.authn.v1.LoginResponse.user:type_name -> iam.user.v1.User
-	1, // 5: iam.authn.v1.LoginResponse.session:type_name -> iam.authn.v1.Session
-	2, // 6: iam.authn.v1.AuthnService.Login:input_type -> iam.authn.v1.LoginRequest
-	4, // 7: iam.authn.v1.AuthnService.Logout:input_type -> iam.authn.v1.LogoutRequest
-	3, // 8: iam.authn.v1.AuthnService.Login:output_type -> iam.authn.v1.LoginResponse
-	5, // 9: iam.authn.v1.AuthnService.Logout:output_type -> iam.authn.v1.LogoutResponse
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	3, // 0: iam.authn.v1.LoginResponse.user:type_name -> iam.user.v1.User
+	4, // 1: iam.authn.v1.LoginResponse.session:type_name -> iam.session.v1.Session
+	1, // 2: iam.authn.v1.AuthnService.Login:input_type -> iam.authn.v1.LoginRequest
+	2, // 3: iam.authn.v1.AuthnService.Login:output_type -> iam.authn.v1.LoginResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_iam_authn_v1_authn_proto_init() }
@@ -429,7 +242,7 @@ func file_iam_authn_v1_authn_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_iam_authn_v1_authn_proto_rawDesc), len(file_iam_authn_v1_authn_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   5,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

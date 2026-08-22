@@ -1,0 +1,15 @@
+oidc:
+  issuer: "${IAM_PUBLIC_ORIGIN:http://localhost:8000}"
+  signing_key_path: "${IAM_OIDC_SIGNING_KEY_PATH:./configs/local/secrets/oidc-signing.pem}"
+  crypto_key_path: "${IAM_OIDC_CRYPTO_KEY_PATH:./configs/local/secrets/oidc-crypto.key}"
+  clients:
+    - client_id: test-web
+      client_secret: "${IAM_TEST_WEB_CLIENT_SECRET}"
+      redirect_uris:
+        - "${IAM_TEST_WEB_REDIRECT_URI:http://localhost:3001/callback}"
+      allowed_scopes:
+        - openid
+        - profile
+        - email
+        - offline_access
+      trusted: true

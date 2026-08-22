@@ -11,6 +11,7 @@ import (
 	authzpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
+	authzruntime "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -39,8 +40,10 @@ func authzMiddlewareContext() context.Context {
 	return transport.NewServerContext(context.Background(), &authzMiddlewareTransport{operation: middlewareOperation})
 }
 
-func authzMiddlewareRules(rule *authzpb.AuthzRule) map[string]*authzpb.AuthzRule {
-	return map[string]*authzpb.AuthzRule{middlewareOperation: rule}
+func authzMiddlewareRules(rule *authzpb.AuthzRule) authzruntime.Option {
+	return authzruntime.WithRulesFuncs(func() map[string]*authzpb.AuthzRule {
+		return map[string]*authzpb.AuthzRule{middlewareOperation: rule}
+	})
 }
 
 func invokeAuthzMiddleware(t *testing.T, value middleware.Middleware, ctx context.Context, request any) (any, error) {
@@ -71,7 +74,7 @@ func middlewareAuthorizer(t *testing.T, status int, body string) (*Authorizer, *
 		}
 		_, _ = response.Write([]byte(body))
 	})
-	authorizer, err := New(client)
+	authorizer, err := New(client, directSubject)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,13 +146,13 @@ func TestAPIErrorMapsNetworkFailure(t *testing.T) {
 
 func TestServerRequiresTransportAndRule(t *testing.T) {
 	authorizer, _ := middlewareAuthorizer(t, 0, `{"allowed":true}`)
-	if _, err := invokeAuthzMiddleware(t, Server(authorizer, map[string]*authzpb.AuthzRule{}), nil, nil); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
+	if _, err := invokeAuthzMiddleware(t, Server(authorizer), nil, nil); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
 		t.Fatalf("nil context error=%v", err)
 	}
-	if _, err := invokeAuthzMiddleware(t, Server(authorizer, map[string]*authzpb.AuthzRule{}), context.Background(), nil); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
+	if _, err := invokeAuthzMiddleware(t, Server(authorizer), context.Background(), nil); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
 		t.Fatalf("missing transport error=%v", err)
 	}
-	if _, err := invokeAuthzMiddleware(t, Server(authorizer, map[string]*authzpb.AuthzRule{}), authzMiddlewareContext(), nil); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
+	if _, err := invokeAuthzMiddleware(t, Server(authorizer), authzMiddlewareContext(), nil); !securityerrorspb.IsSecurityErrorReasonInternal(err) {
 		t.Fatalf("missing rule error=%v", err)
 	}
 }

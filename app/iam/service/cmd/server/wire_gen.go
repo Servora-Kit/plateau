@@ -7,22 +7,24 @@
 package main
 
 import (
-	"context"
-	"github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
-	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
-	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
-	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
-	"github.com/Servora-Kit/plateau/app/audit/service/internal/server"
-	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
-	"github.com/Servora-Kit/servora/contrib/kafka"
+	"github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/authz"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/mail"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/oidc"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/server"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/service"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/startup"
+	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	"github.com/go-kratos/kratos/v3"
-	"github.com/twmb/franz-go/pkg/kgo"
-	"log/slog"
 )
 
 import (
@@ -31,7 +33,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *clickhousepb.ClickHouse, auditContract *auditconfpb.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oidcconfv1.OIDC, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -43,40 +45,235 @@ func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *click
 	if err != nil {
 		return nil, nil, err
 	}
-	conn, err := data.NewClickHouseClient(clickHouse, logger)
+	corev1Data := corev1Bootstrap.Data
+	driver, err := data.NewEntDriver(corev1Data)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	dataData, cleanup2, err := data.NewData(conn, auditConsumerConfig, logger)
+	client, cleanup2, err := data.NewDBClient(driver)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	auditRepo := data.NewAuditRepo(dataData, logger)
-	auditUsecase := biz.NewAuditUsecase(auditRepo)
-	auditService := service.NewAuditService(auditUsecase)
-	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, logger, auditService)
-	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger, auditService)
-	client, err := newKafkaClient(kafka, auditContract, logger)
+	redisClient, cleanup3, err := data.NewRedisClient(redis, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	batchWriter := data.NewBatchWriter(dataData, auditConsumerConfig, client, logger)
-	consumer := data.NewConsumer(client, batchWriter, kafka, auditContract, logger)
-	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, consumer)
+	openFgaClient, err := data.NewFGAClient(openFGA)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	dataData, err := data.NewData(client, redisClient, openFgaClient, logger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userRepo, err := data.NewUserRepository(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	sessionRepo, err := data.NewSessionRepository(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	tokenSessionRepo, err := data.NewTokenSessionRepository(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo, tokenSessionRepo)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	v, err := authn.NewSessionAuthenticator(sessionUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authorizer, err := authz.NewOpenFGAAuthorizer(openFgaClient)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	credentialRepo, err := data.NewCredentialRepository(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authenticationUsecase, err := biz.NewAuthenticationUsecase(userRepo, credentialRepo, sessionUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authnService, err := service.NewAuthnService(authenticationUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	sessionService, err := service.NewSessionService(sessionUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	verificationTokenRepo, err := data.NewVerificationTokenRepo(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	passwordResetTokenRepo, err := data.NewPasswordResetTokenRepository(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	capCap := data.NewCAP(dataData)
+	capVerifier := data.NewCAPVerifier(capCap)
+	sender, err := mail.NewSender(mailpbMail)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	from, err := mail.NewFrom(mailpbMail)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	templates, err := mail.NewTemplates()
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	mailer, err := mail.NewMailer(sender, from, templates)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	mailSender := mail.NewMailSender(mailer)
+	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, sessionUsecase, runtime)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	accountService, err := service.NewAccountService(accountUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userUsecase, err := biz.NewUserUsecase(accountUsecase, userRepo, sessionUsecase, logger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userService, err := service.NewUserService(userUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, v, authorizer, authnService, sessionService, accountService, userService, logger)
+	oidcStorage, err := oidc.NewOIDCStorage(client, oidcconfv1OIDC)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	iamProvider, err := oidc.NewIAMProvider(oidcconfv1OIDC, oidcStorage, sessionUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, capCap, iamProvider, v, authorizer, authnService, sessionService, accountService, userService, logger)
+	initialAdminCreator, err := data.NewInitialAdminCreator(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	adminRelationWriter, err := data.NewAdminRelationWriter(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	adminInitializer, err := biz.NewAdminInitializer(iam, userRepo, initialAdminCreator, adminRelationWriter, logger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	oidcInitializer, err := oidc.NewOIDCInitializer(oidcconfv1OIDC, oidcStorage)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	initializer, err := startup.NewInitializer(adminInitializer, oidcInitializer)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, initializer, dataData)
 	return kratosApp, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
-}
-
-// wire.go:
-
-func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditconfpb.AuditContract, l *slog.Logger) (*kgo.Client, error) {
-	topic := data.DefaultTopic(auditCfg)
-	group := data.DefaultConsumerGroup(cfg)
-	return kafka.NewClientOptional(context.Background(), cfg, l, kgo.ConsumerGroup(group), kgo.ConsumeTopics(topic), kgo.DisableAutoCommit())
 }

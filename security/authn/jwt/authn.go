@@ -3,15 +3,11 @@ package jwt
 import (
 	"context"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
-	"os"
 	"reflect"
 	"strings"
 
 	jwtconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
-	jwtkeypb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1"
 	security "github.com/Servora-Kit/plateau/security"
 	securityjwt "github.com/Servora-Kit/plateau/security/jwt"
 	"github.com/golang-jwt/jwt/v5"
@@ -38,7 +34,6 @@ func New(config *jwtconfpb.JwtAuthnConfig) (*Authenticator, error) {
 	if audience == "" || audience != config.GetAudience() {
 		return nil, fmt.Errorf("jwt authn: audience must be non-empty without surrounding whitespace")
 	}
-
 	keyConfigs := config.GetVerificationKeys()
 	if len(keyConfigs) == 0 {
 		return nil, fmt.Errorf("jwt authn: verification key set is empty")
@@ -80,23 +75,15 @@ func New(config *jwtconfpb.JwtAuthnConfig) (*Authenticator, error) {
 	}, nil
 }
 
-// Authenticate validates one Authorization header and maps fresh verified claims
-// to one stable human or service Actor. newClaims must return a fresh, non-nil,
-// mutable pointer on every call and initialize any pointer-embedded registered claims.
-func Authenticate[T jwt.Claims](
-	ctx context.Context,
-	authenticator *Authenticator,
-	authorization string,
-	newClaims func() T,
-	mapActor func(T) (security.Actor, error),
-) (security.Actor, error) {
+// Authenticate validates one Authorization header and maps fresh verified claims to one stable Actor.
+func Authenticate[T jwt.Claims](ctx context.Context, authenticator *Authenticator, authorization string, newClaims func() T, mapActor func(T) (security.Actor, error)) (security.Actor, error) {
 	if ctx == nil {
 		return security.Actor{}, fmt.Errorf("jwt authn: context is nil")
 	}
 	if err := ctx.Err(); err != nil {
 		return security.Actor{}, err
 	}
-	if authenticator == nil || authenticator.verifier == nil || authenticator.claimsValidator == nil {
+	if !validAuthenticator(authenticator) {
 		return security.Actor{}, fmt.Errorf("jwt authn: authenticator is invalid")
 	}
 	if newClaims == nil {
@@ -105,7 +92,6 @@ func Authenticate[T jwt.Claims](
 	if mapActor == nil {
 		return security.Actor{}, fmt.Errorf("jwt authn: actor mapper is nil")
 	}
-
 	tokenString, err := bearerToken(authorization)
 	if err != nil {
 		return security.Actor{}, err
@@ -124,7 +110,6 @@ func Authenticate[T jwt.Claims](
 	if err := authenticator.claimsValidator.Validate(claims); err != nil {
 		return security.Actor{}, fmt.Errorf("%w: %w", ErrInvalidToken, err)
 	}
-
 	actor, err := mapActor(claims)
 	if err != nil {
 		return security.Actor{}, fmt.Errorf("%w: %w", ErrActorMapping, err)
@@ -143,7 +128,6 @@ func claimsFromFactory[T jwt.Claims](factory func() T) (claims T, err error) {
 			err = fmt.Errorf("jwt authn: claims factory returned uninitialized claims")
 		}
 	}()
-
 	claims = factory()
 	value := reflect.ValueOf(claims)
 	if !value.IsValid() || value.Kind() != reflect.Pointer {
@@ -161,57 +145,6 @@ func claimsFromFactory[T jwt.Claims](factory func() T) (claims T, err error) {
 	return claims, nil
 }
 
-func publicKeyData(config *jwtkeypb.VerificationKey) ([]byte, error) {
-	switch source := config.GetSource().(type) {
-	case *jwtkeypb.VerificationKey_PublicKeyPem:
-		if source == nil || strings.TrimSpace(source.PublicKeyPem) == "" {
-			return nil, fmt.Errorf("public_key_pem is empty")
-		}
-		return []byte(source.PublicKeyPem), nil
-	case *jwtkeypb.VerificationKey_PublicKeyPath:
-		if source == nil || strings.TrimSpace(source.PublicKeyPath) == "" {
-			return nil, fmt.Errorf("public_key_path is empty")
-		}
-		data, err := os.ReadFile(source.PublicKeyPath)
-		if err != nil {
-			return nil, fmt.Errorf("read public_key_path: %w", err)
-		}
-		return data, nil
-	default:
-		return nil, fmt.Errorf("exactly one public key source is required")
-	}
-}
-
-func parsePublicKey(data []byte) (*rsa.PublicKey, error) {
-	block, _ := pem.Decode(data)
-	if block == nil {
-		return nil, fmt.Errorf("failed to decode public key PEM")
-	}
-	if publicKey, err := x509.ParsePKIXPublicKey(block.Bytes); err == nil {
-		rsaKey, ok := publicKey.(*rsa.PublicKey)
-		if !ok {
-			return nil, fmt.Errorf("public key is not RSA")
-		}
-		return rsaKey, nil
-	}
-	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("parse RSA public key: %w", err)
-	}
-	return publicKey, nil
-}
-
-func bearerToken(authorization string) (string, error) {
-	if authorization == "" {
-		return "", ErrMissingCredentials
-	}
-	parts := strings.Fields(authorization)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") || parts[1] == "" {
-		return "", ErrMalformedCredentials
-	}
-	return parts[1], nil
-}
-
 func validateTokenType(token *jwt.Token) error {
 	if token == nil {
 		return fmt.Errorf("%w: token is nil", ErrInvalidToken)
@@ -221,4 +154,8 @@ func validateTokenType(token *jwt.Token) error {
 		return fmt.Errorf("%w: unexpected token type", ErrInvalidToken)
 	}
 	return nil
+}
+
+func validAuthenticator(authenticator *Authenticator) bool {
+	return authenticator != nil && authenticator.verifier != nil && authenticator.claimsValidator != nil
 }

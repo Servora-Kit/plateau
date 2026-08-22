@@ -22,7 +22,6 @@ const (
 	AccountService_Register_FullMethodName                = "/iam.account.v1.AccountService/Register"
 	AccountService_VerifyEmail_FullMethodName             = "/iam.account.v1.AccountService/VerifyEmail"
 	AccountService_ResendVerificationEmail_FullMethodName = "/iam.account.v1.AccountService/ResendVerificationEmail"
-	AccountService_Activate_FullMethodName                = "/iam.account.v1.AccountService/Activate"
 	AccountService_GetProfile_FullMethodName              = "/iam.account.v1.AccountService/GetProfile"
 	AccountService_UpdateProfile_FullMethodName           = "/iam.account.v1.AccountService/UpdateProfile"
 	AccountService_ChangePassword_FullMethodName          = "/iam.account.v1.AccountService/ChangePassword"
@@ -42,8 +41,6 @@ type AccountServiceClient interface {
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error)
 	// ResendVerificationEmail uses a generic response to prevent account enumeration.
 	ResendVerificationEmail(ctx context.Context, in *ResendVerificationEmailRequest, opts ...grpc.CallOption) (*ResendVerificationEmailResponse, error)
-	// Activate consumes an administrator-created activation token and sets a password.
-	Activate(ctx context.Context, in *ActivateRequest, opts ...grpc.CallOption) (*ActivateResponse, error)
 	// GetProfile returns the currently authenticated user's IAM resource.
 	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
 	// UpdateProfile updates the currently authenticated user's OIDC profile.
@@ -88,16 +85,6 @@ func (c *accountServiceClient) ResendVerificationEmail(ctx context.Context, in *
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResendVerificationEmailResponse)
 	err := c.cc.Invoke(ctx, AccountService_ResendVerificationEmail_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *accountServiceClient) Activate(ctx context.Context, in *ActivateRequest, opts ...grpc.CallOption) (*ActivateResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ActivateResponse)
-	err := c.cc.Invoke(ctx, AccountService_Activate_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +153,6 @@ type AccountServiceServer interface {
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error)
 	// ResendVerificationEmail uses a generic response to prevent account enumeration.
 	ResendVerificationEmail(context.Context, *ResendVerificationEmailRequest) (*ResendVerificationEmailResponse, error)
-	// Activate consumes an administrator-created activation token and sets a password.
-	Activate(context.Context, *ActivateRequest) (*ActivateResponse, error)
 	// GetProfile returns the currently authenticated user's IAM resource.
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	// UpdateProfile updates the currently authenticated user's OIDC profile.
@@ -196,9 +181,6 @@ func (UnimplementedAccountServiceServer) VerifyEmail(context.Context, *VerifyEma
 }
 func (UnimplementedAccountServiceServer) ResendVerificationEmail(context.Context, *ResendVerificationEmailRequest) (*ResendVerificationEmailResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResendVerificationEmail not implemented")
-}
-func (UnimplementedAccountServiceServer) Activate(context.Context, *ActivateRequest) (*ActivateResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Activate not implemented")
 }
 func (UnimplementedAccountServiceServer) GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProfile not implemented")
@@ -286,24 +268,6 @@ func _AccountService_ResendVerificationEmail_Handler(srv interface{}, ctx contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountServiceServer).ResendVerificationEmail(ctx, req.(*ResendVerificationEmailRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AccountService_Activate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ActivateRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccountServiceServer).Activate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AccountService_Activate_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServiceServer).Activate(ctx, req.(*ActivateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -416,10 +380,6 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ResendVerificationEmail",
 			Handler:    _AccountService_ResendVerificationEmail_Handler,
-		},
-		{
-			MethodName: "Activate",
-			Handler:    _AccountService_Activate_Handler,
 		},
 		{
 			MethodName: "GetProfile",

@@ -18,8 +18,8 @@ ENV_FILE := env("ENV_FILE", join(ROOT_DIR, ".env"))
 FGA_API_URL := env("FGA_API_URL", "")
 OPENFGA_MODEL := env("OPENFGA_MODEL", "manifests/openfga/fga.mod")
 OPENFGA_TESTS := env("OPENFGA_TESTS", "manifests/openfga/*.fga.yaml")
-OPENFGA_SCRIPT_UNIX := env("OPENFGA_SCRIPT_UNIX", join(ROOT_DIR, "manifests/scripts/openfga.sh"))
-OPENFGA_SCRIPT_WINDOWS := env("OPENFGA_SCRIPT_WINDOWS", join(ROOT_DIR, "manifests/scripts/openfga.ps1"))
+OPENFGA_SCRIPT_UNIX := env("OPENFGA_SCRIPT_UNIX", join(ROOT_DIR, "manifests/scripts/openfga/openfga.sh"))
+OPENFGA_SCRIPT_WINDOWS := env("OPENFGA_SCRIPT_WINDOWS", join(ROOT_DIR, "manifests/scripts/openfga/openfga.ps1"))
 VERSION_ENV := env("VERSION", "")
 VERSION := if VERSION_ENV != "" { VERSION_ENV } else { `git describe --tags --always --dirty` }
 GOVERSION := `go version`

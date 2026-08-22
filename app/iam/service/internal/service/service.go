@@ -2,5 +2,5 @@ package service
 
 import "github.com/google/wire"
 
-// ProviderSet provides all service layer dependencies.
-var ProviderSet = wire.NewSet()
+// ProviderSet provides all generated IAM service implementations.
+var ProviderSet = wire.NewSet(NewAuthnService, NewSessionService, NewAccountService, NewUserService)

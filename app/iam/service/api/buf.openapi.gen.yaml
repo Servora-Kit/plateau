@@ -18,9 +18,11 @@ inputs:
           - app/iam/service/api/protos/iam/user/v1
           - app/iam/service/api/protos/iam/account/v1
           - app/iam/service/api/protos/iam/authn/v1
+          - app/iam/service/api/protos/iam/session/v1
 
 plugins:
     - local: protoc-gen-openapi
+      strategy: all
       out: app/iam/service/api/internal/assets
       opt:
           - naming=json

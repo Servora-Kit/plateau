@@ -42,7 +42,7 @@ services:
         condition: service_healthy
     entrypoint: ["/bin/sh", "/provision/create-databases.sh"]
     volumes:
-      - ./manifests/scripts/postgres-init:/provision:ro
+      - ./manifests/scripts/postgres:/provision:ro
     networks:
       - plateau-network
 

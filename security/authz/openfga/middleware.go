@@ -12,6 +12,7 @@ import (
 	authzpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
+	authzruntime "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 	fgasdk "github.com/openfga/go-sdk"
@@ -21,10 +22,11 @@ import (
 )
 
 // Server constructs OpenFGA-specific route authorization middleware.
-func Server(authorizer *Authorizer, rules map[string]*authzpb.AuthzRule) middleware.Middleware {
+func Server(authorizer *Authorizer, opts ...authzruntime.Option) middleware.Middleware {
 	if !validAuthorizer(authorizer) {
 		panic("openfga authz: authorizer is invalid")
 	}
+	rules := authzruntime.NewRules(opts...)
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, request any) (any, error) {
 			if ctx == nil {

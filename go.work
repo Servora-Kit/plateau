@@ -5,4 +5,7 @@ use (
 	./api/gen
 	./app/audit/service
 	./app/example/service
+	./app/iam/service
+	../servora
+	../servora/api/gen
 )

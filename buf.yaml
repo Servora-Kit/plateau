@@ -10,6 +10,7 @@ modules:
 deps:
   - buf.build/servora/servora
   - buf.build/googleapis/googleapis
+  - buf.build/bufbuild/protovalidate
 
 breaking:
   use:

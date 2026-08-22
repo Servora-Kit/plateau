@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package iam.oidc.conf.v1;
+
+import "servora/conf/v1/annotations.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1;oidcconfv1";
+
+// OIDC configures the Plateau IAM OpenID Provider.
+message OIDC {
+  option (servora.conf.v1.section) = {
+    key: "oidc"
+    optional: false
+  };
+
+  // The single public origin used as issuer, IAM Web origin and mail-link base.
+  string issuer = 1 [(servora.conf.v1.field) = {required: true}];
+  // Stable RS256 private-key path; this key is distinct from TLS and crypto keys.
+  string signing_key_path = 2 [(servora.conf.v1.field) = {required: true}];
+  // Stable zitadel/oidc provider crypto-key path, distinct from signing and TLS keys.
+  string crypto_key_path = 3 [(servora.conf.v1.field) = {required: true}];
+  // Static first-party confidential clients. Provider supports only the fixed four scopes:
+  // openid, profile, email and offline_access.
+  repeated OAuthClient clients = 4;
+}
+
+// OAuthClient is a static confidential OAuth client seed.
+message OAuthClient {
+  string client_id = 1 [(servora.conf.v1.field) = {required: true}];
+  // Raw secret is configuration input only; IAM persists only its hash.
+  string client_secret = 2 [(servora.conf.v1.field) = {required: true}];
+  // Redirect URIs are compared exactly; wildcards are not supported.
+  repeated string redirect_uris = 3;
+  // Requested scopes must be in both this list and Provider's fixed scope set.
+  repeated string allowed_scopes = 4;
+  // First version requires trusted=true because consent interaction is not implemented; login and client authentication remain mandatory.
+  bool trusted = 5;
+}

@@ -35,6 +35,10 @@ func newPointerClaims() *pointerClaims {
 
 func newTestClaims() *testClaims { return &testClaims{} }
 
+func mapTestActor(claims *testClaims) (security.Actor, error) {
+	return security.Actor{Type: security.ActorType(claims.ActorType), ID: claims.Subject}, nil
+}
+
 func TestAuthenticateMapsHumanAndServiceActors(t *testing.T) {
 	signer, _, authenticator := newAuthenticator(t)
 	for _, want := range []struct {
