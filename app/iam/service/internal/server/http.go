@@ -32,6 +32,7 @@ func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metri
 		WithMetrics(m).
 		Build()
 	ms = append(ms,
+		cookieOriginProtection(oidcProvider.PublicOrigin()),
 		session.Server(sessionAuthn, authnsecurity.WithRulesFuncs(authnpb.AuthnRules, sessionpb.AuthnRules, accountpb.AuthnRules, userpb.AuthnRules)),
 		openfga.Server(authorizer, authzsecurity.WithRulesFuncs(authnpb.AuthzRules, sessionpb.AuthzRules, accountpb.AuthzRules, userpb.AuthzRules)),
 	)

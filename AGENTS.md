@@ -6,11 +6,23 @@ Servora 平台服务、主要参考应用与产品安全生态；当前包含安
 
 - 根 `go.work` 连接生成模块与各微服务；基础设施 provider 的业务日志由 data/bootstrap 边界决定
 - Proto 统一由根 `just gen` 刷新 Go、TypeScript、OpenAPI、Wire 与 Ent
-- `api/gen/go/`、`api/gen/ts/`、服务 Web generated client 与 `wire_gen.go` 只由生成命令维护
-- ClickHouse 连接使用 `infra/clickhouse.NewConnOptional(ctx, cfg)`，不传业务 logger；未知 compression 配置必须作为错误处理
-- Audit Kafka 通过显式 `kafka.WithSlogLogger(log.With("scope", "audit/kafka"))` 接入原生日志，并单独传入 consumer/producer 角色 Option
 - 修改 OpenFGA model 后运行 `just openfga-model-apply`
 - AuthN/AuthZ 代码生成插件从当前 checkout 的 `cmd/` 本地安装
+
+## 本地端口
+
+- 从 `10000` 起，每个应用固定分配 10 个端口：`+0` HTTP、`+1` gRPC、`+2` Web，`+3～+9` 预留；新增应用登记下一个空闲段，不重排已有编号。
+- 此约定用于本地监听和 Docker 宿主机映射；容器内部端口、共享中间件端口和生产公开端口不受影响。同一应用的原生运行与容器映射不可同时占用相同端口。
+- Web 的 dev 与 preview/start 默认共用 Web 端口，不同时启动。改动 IAM 公开入口时，同步 `IAM_PUBLIC_ORIGIN`、Web 端口和后端代理地址。
+
+| 应用 | 端口段 | HTTP | gRPC | Web |
+|---|---|---|---|---|
+| IAM | 10000–10009 | 10000 | 10001 | 10002 |
+| Audit | 10010–10019 | 10010 | 10011 | 10012（预留） |
+| CMS（占位） | 10020–10029 | 10020（预留） | 10021（预留） | 10022（预留） |
+| Example | 10030–10039 | 10030 | 10031 | 10032 |
+| Test | 10040–10049 | 10040（预留） | 10041（预留） | 10042 |
+| Admin（占位） | 10050–10059 | 10050（预留） | 10051（预留） | 10052（预留） |
 
 ## 目录结构
 
@@ -50,6 +62,11 @@ just api-ts-check
 just openfga-model-validate
 just openfga-model-test
 just openfga-model-apply
+just web::iam::dev
+just web::iam::build
+just web::iam::preview
+just web::iam::typecheck
+just web::iam::lint
 ```
 
 `api/gen` 与 `app/*/web` 共用根 pnpm workspace 和 lockfile。新增平台服务参考 `app/example`。

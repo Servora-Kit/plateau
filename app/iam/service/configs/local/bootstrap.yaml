@@ -3,11 +3,11 @@ server:
     api_docs:
       enable: true
     listen:
-      addr: "0.0.0.0:8000"
+      addr: "0.0.0.0:10000"
       timeout: 30s
   grpc:
     listen:
-      addr: "0.0.0.0:8001"
+      addr: "0.0.0.0:10001"
       timeout: 30s
 
 data:
@@ -19,7 +19,7 @@ app:
   name: iam.service
   version: dev
   env: dev
-  external_url: "${IAM_PUBLIC_ORIGIN:http://localhost:8000}"
+  external_url: "${IAM_PUBLIC_ORIGIN:http://localhost:10002}"
 
 obs:
   log:

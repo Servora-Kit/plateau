@@ -4,33 +4,31 @@
   "type": "module",
   "sideEffects": false,
   "files": [
-    "dist"
+    "ts"
   ],
   "exports": {
     "./*.errors": {
-      "types": "./dist/*.errors.d.ts",
-      "import": "./dist/*.errors.js"
+      "types": "./ts/*.errors.ts",
+      "import": "./ts/*.errors.ts"
     },
     "./*.crud": {
-      "types": "./dist/*.crud.d.ts",
-      "import": "./dist/*.crud.js"
+      "types": "./ts/*.crud.ts",
+      "import": "./ts/*.crud.ts"
     },
     "./*": {
-      "types": "./dist/*/index.d.ts",
-      "import": "./dist/*/index.js"
+      "types": "./ts/*/index.ts",
+      "import": "./ts/*/index.ts"
     }
   },
   "scripts": {
-    "clean": "node scripts/clean-dist.mjs",
-    "prebuild": "pnpm run clean",
-    "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@servora/proto-utils": "^0.1.6"
   },
   "devDependencies": {
-    "typescript": "~6.0.0"
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "engines": {
     "node": "^22.18.0 || >=24.12.0"

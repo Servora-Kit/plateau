@@ -78,6 +78,14 @@ func NewIAMProvider(
 	return provider, nil
 }
 
+// PublicOrigin 返回已校验并规范化的 IAM 公开来源。
+func (provider *IAMProvider) PublicOrigin() string {
+	if provider == nil {
+		return ""
+	}
+	return provider.issuer
+}
+
 func (provider *IAMProvider) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/.well-known/openid-configuration" {
 		provider.serveDiscovery(response)

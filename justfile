@@ -80,13 +80,11 @@ api-go:
 [working-directory(ROOT_DIR)]
 api-ts:
     @buf generate --template "{{ BUF_TS_GEN_TEMPLATE }}"
-    @"{{ PNPM }}" --filter {{ API_TS_PACKAGE }} build
 
 [windows]
 [working-directory(ROOT_DIR)]
 api-ts:
     @buf generate --template "{{ BUF_TS_GEN_TEMPLATE }}"
-    @& "{{ PNPM }}" --filter {{ API_TS_PACKAGE }} build
 
 [unix]
 [working-directory(ROOT_DIR)]
@@ -124,7 +122,7 @@ _clean-api-dist-files:
 _clean-api-dist-files:
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "{{ join(ROOT_DIR, "api/gen/dist") }}"
 
-build: gen service::_build web::_build
+build: gen service::_build web::build
 
 lint: api-ts-check lint-proto (service::lint LINT_GOWORK)
 

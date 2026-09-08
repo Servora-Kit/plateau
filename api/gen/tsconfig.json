@@ -4,12 +4,10 @@
     "lib": ["ES2023"],
     "module": "NodeNext",
     "strict": true,
-    "declaration": true,
-    "outDir": "dist",
     "rootDir": "ts",
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "noEmitOnError": true
+    "noEmit": true
   },
   "include": ["ts/**/*.ts"]
 }

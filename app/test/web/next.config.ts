@@ -5,6 +5,7 @@ const workspaceRoot = path.join(__dirname, "../../..");
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: workspaceRoot,
+  transpilePackages: ["@plateau/api"],
   turbopack: {
     root: workspaceRoot,
   },

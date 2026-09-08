@@ -3,6 +3,7 @@ linkWorkspacePackages: true
 packages:
   - "api/gen"
   - "app/*/web"
+  - "web/packages/*"
 
 minimumReleaseAgeExclude:
   - "@servora/proto-utils"

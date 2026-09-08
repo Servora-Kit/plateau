@@ -1,19 +1,27 @@
-import { Button } from "@/components/ui/button"
+import Link from "next/link"
+
+import { AuthShell } from "@/components/auth-shell"
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
+    <AuthShell
+      title="Plateau 账户"
+      description="登录或创建账户以继续使用 Plateau 服务。"
+    >
+      <div className="grid gap-3">
+        <Link
+          href="/login/"
+          className="flex h-10 items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground"
+        >
+          登录
+        </Link>
+        <Link
+          href="/register/"
+          className="flex h-10 items-center justify-center rounded-lg border text-sm font-medium"
+        >
+          创建账户
+        </Link>
       </div>
-    </div>
+    </AuthShell>
   )
 }

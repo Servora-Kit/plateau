@@ -1,13 +1,13 @@
-# IAM Web 静态部署与 OIDC Provider 边界
+# IAM Web Next 运行与 OIDC Provider 边界
 
 > Status: accepted
 
-`iam/web` 是 IAM OIDC Provider 的同源静态交互界面，采用 Next.js static export 和浏览器 CSR；IAM Go service 负责 IAM API、HttpOnly 登录会话、CAP 与 OIDC 协议。Web 静态资源作为独立部署单元提供，公开入口由网关保持单一 origin 并按路径转发页面资源与 Go 接口，避免把前端发布和静态资源生命周期耦合到 Go service。
+`iam/web` 是 IAM OIDC Provider 的同源交互界面，采用 Next.js 原生开发、构建和生产服务，页面业务交互保持浏览器 CSR；IAM Go service 负责 IAM API、HttpOnly 登录会话、CAP 与 OIDC 协议。Next 提供页面及资源，并通过原生路径转发维持单一公开 origin；前端与 Go 独立发布，不增加第二套认证会话或业务 BFF。
 
 ## Considered Options
 
-- **在 IAM Go service 中嵌入 Web 资源**：不采用。独立静态部署可以支持前端本地热重载和独立发布，Go service 专注 API、CAP 与 OIDC。
-- **让 IAM Web 使用 Next.js 请求时服务端运行时**：不采用。认证、会话和协议状态已经由 Go service 管理，静态页面加同源 API 足够完成 IAM 交互。
+- **在 IAM Go service 中嵌入 Web 资源**：不采用。前端独立运行与发布，Go service 专注 API、CAP 与 OIDC。
+- **使用 Next 静态导出**：不采用。优先使用 Next 原生开发热重载、路由转发和生产预览，不围绕导出产物自建代理或启动服务。
 - **让 IAM Web 直接成为 OAuth client**：不采用。IAM Web 只承载 Provider 自有登录交互，不接触 OAuth client 密钥和 token。
 
 ## Consequences

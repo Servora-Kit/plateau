@@ -1,15 +1,26 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import type { Metadata, Viewport } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
+export const metadata: Metadata = {
+  title: {
+    default: "Plateau 账户",
+    template: "%s｜Plateau 账户",
+  },
+  description: "登录并管理您的 Plateau 账户",
+  referrer: "no-referrer",
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  colorScheme: "light dark",
+}
 
 export default function RootLayout({
   children,
@@ -17,12 +28,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
-    >
-      <body>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body className="min-h-dvh antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

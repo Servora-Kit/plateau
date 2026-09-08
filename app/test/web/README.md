@@ -14,7 +14,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+在浏览器打开 [http://localhost:10042](http://localhost:10042) 查看页面。
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

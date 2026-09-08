@@ -79,8 +79,6 @@ format:
 format:
     @& "{{ PNPM }}" run format
 
-_build: build
-
 [unix]
 _clean-files:
     rm -rf -- "{{ join(COMPONENT_DIR, "dist") }}" "{{ join(COMPONENT_DIR, ".vite") }}"

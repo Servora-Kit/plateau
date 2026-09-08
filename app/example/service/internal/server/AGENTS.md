@@ -11,4 +11,4 @@ Transport assembly for the CRUD reference service.
 
 - Register the generated `UserService` contract on both internal gRPC and Kratos HTTP; do not define a duplicate HTTP-only Proto service.
 - Keep transport setup free of CRUD business semantics; service/biz own name, scope, lifecycle, and AIP-164 decisions.
-- HTTP listens on `127.0.0.1:28080` for local use; do not add database or browser lifecycle management here.
+- 本地 HTTP/gRPC 分别监听 `127.0.0.1:10030`、`127.0.0.1:10031`；不要在此处管理数据库或浏览器生命周期。

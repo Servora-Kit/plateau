@@ -1,0 +1,78 @@
+import "../../../just/settings.just"
+
+COMPONENT_DIR := module_directory()
+ROOT_DIR := clean(join(COMPONENT_DIR, "../../.."))
+PNPM := env("PNPM", "pnpm")
+WEB_PACKAGE := "@plateau/iam-web"
+
+run: dev
+
+[unix]
+[working-directory(ROOT_DIR)]
+dev *args:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run dev {{ args }}
+
+[windows]
+[working-directory(ROOT_DIR)]
+dev *args:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run dev {{ args }}
+
+[unix]
+[working-directory(ROOT_DIR)]
+build:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run build
+
+[windows]
+[working-directory(ROOT_DIR)]
+build:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run build
+
+[unix]
+[working-directory(ROOT_DIR)]
+preview *args:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run preview {{ args }}
+
+[windows]
+[working-directory(ROOT_DIR)]
+preview *args:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run preview {{ args }}
+
+[unix]
+[working-directory(ROOT_DIR)]
+start *args:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run start {{ args }}
+
+[windows]
+[working-directory(ROOT_DIR)]
+start *args:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run start {{ args }}
+
+[unix]
+[working-directory(ROOT_DIR)]
+typecheck:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run typecheck
+
+[windows]
+[working-directory(ROOT_DIR)]
+typecheck:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run typecheck
+
+[unix]
+[working-directory(ROOT_DIR)]
+lint:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run lint
+
+[windows]
+[working-directory(ROOT_DIR)]
+lint:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run lint
+
+[unix]
+_clean-files:
+    rm -rf -- "{{ join(COMPONENT_DIR, ".next") }}"
+
+[windows]
+_clean-files:
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "{{ join(COMPONENT_DIR, ".next") }}"
+
+clean: _clean-files

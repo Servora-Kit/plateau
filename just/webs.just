@@ -2,11 +2,10 @@ import "settings.just"
 
 mod example '../app/example/web/justfile'
 mod test '../app/test/web/justfile'
+mod iam '../app/iam/web/justfile'
 
-_build: example::_build test::_build
+build: example::build test::build iam::build
 
-build: example::build test::build
+lint: example::lint test::lint iam::lint
 
-lint: example::lint test::lint
-
-clean: example::clean test::clean
+clean: example::clean test::clean iam::clean

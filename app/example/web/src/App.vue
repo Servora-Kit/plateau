@@ -11,7 +11,7 @@ import { RouterView } from 'vue-router'
       </a>
       <div class="runtime-badge">
         <span class="runtime-badge__pulse" aria-hidden="true"></span>
-        example.service · localhost:28080
+        example.service · localhost:10030
       </div>
     </header>
     <main>

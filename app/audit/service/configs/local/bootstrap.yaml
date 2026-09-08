@@ -1,11 +1,11 @@
 server:
   http:
     listen:
-      addr: "0.0.0.0:8000"
+      addr: "0.0.0.0:10010"
       timeout: 30s
   grpc:
     listen:
-      addr: "0.0.0.0:8001"
+      addr: "0.0.0.0:10011"
       timeout: 30s
 
 app:
@@ -40,4 +40,4 @@ registry:
       - "traefik.http.routers.audit-api.rule=PathPrefix(`/v1/audit`)"
       - "traefik.http.routers.audit-api.entrypoints=web"
       - "traefik.http.routers.audit-api.service=audit-http"
-      - "traefik.http.services.audit-http.loadbalancer.server.port=8000"
+      - "traefik.http.services.audit-http.loadbalancer.server.port=10010"

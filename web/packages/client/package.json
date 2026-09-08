@@ -1,0 +1,25 @@
+{
+  "name": "@plateau/client",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "files": ["src"],
+  "exports": {
+    ".": "./src/index.ts",
+    "./http": "./src/http.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
+    "@servora/proto-utils": "^0.1.9",
+    "ofetch": "^1.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

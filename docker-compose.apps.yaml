@@ -9,8 +9,8 @@ services:
             - ./app/audit/service/configs/docker:/app/configs:ro
             - audit-logs:/app/logs
         ports:
-            - "10000:8000"
-            - "10001:8001"
+            - "10010:8000"
+            - "10011:8001"
         depends_on:
             consul:
                 condition: service_healthy

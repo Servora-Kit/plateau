@@ -1,11 +1,11 @@
 server:
   http:
     listen:
-      addr: "127.0.0.1:28080"
+      addr: "127.0.0.1:10030"
       timeout: 30s
   grpc:
     listen:
-      addr: "127.0.0.1:28081"
+      addr: "127.0.0.1:10031"
       timeout: 30s
 
 data:

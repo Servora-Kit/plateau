@@ -49,8 +49,6 @@ lint:
 lint:
     @& "{{ PNPM }}" run lint
 
-_build: build
-
 [unix]
 _clean-files:
     rm -rf -- "{{ join(COMPONENT_DIR, ".next") }}"
