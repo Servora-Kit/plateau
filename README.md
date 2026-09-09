@@ -25,7 +25,7 @@
 - **Example**（`app/example/service/`）：Servora CRUD 生态示例服务
   - 是 servora 的经典用法，也是官方推荐的代码布局
 
-- **Audit**（`app/audit/service/`）：全链路审计日志服务
+- **Audit**（`app/audit/service/`）：全链路审计日志服务（停止维护，待后期重构）
   - 基于 Kafka 消费审计事件
   - ClickHouse 持久化存储
   - 审计日志查询 API
