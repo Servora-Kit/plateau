@@ -7,10 +7,9 @@
 
 `app/` 存放可运行服务，每个服务目录都是独立 Go module，并通过根 `go.work` 纳管。当前包含：
 
-- `app/example/service/` + `app/example/web/`：最小 CRUD 参考模板（`example.servora.dev/User`），新增平台级微服务的推荐起点
 - `app/iam/service/` + `app/iam/web/`：主要业务实践（账号/会话/OIDC/AuthZ）
-- `app/audit/service/`：审计微服务，只消费 generic CloudEvents
-- `app/admin/web/`、`app/cms/web/`：前端
+- `app/example/service/` + `app/example/web/`：最小 CRUD 参考模板（`example.servora.dev/User`），新增平台级微服务的推荐起点
+- `app/audit/service/`：审计微服务，不再更新和做参考，等待后期重构
 - `app/test/web/`：Next.js 构建验证入口
 
 各服务目录可包含：
