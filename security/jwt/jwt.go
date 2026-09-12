@@ -70,10 +70,10 @@ func (signer *Signer) Sign(claims jwt.Claims) (string, error) {
 
 // PublicKey returns a detached copy of this signer's RSA public key.
 func (signer *Signer) PublicKey() *rsa.PublicKey {
-	if signer == nil || signer.key == nil || signer.key.PublicKey.N == nil {
+	if signer == nil || signer.key == nil || signer.key.N == nil {
 		return nil
 	}
-	return &rsa.PublicKey{N: new(big.Int).Set(signer.key.PublicKey.N), E: signer.key.PublicKey.E}
+	return &rsa.PublicKey{N: new(big.Int).Set(signer.key.N), E: signer.key.E}
 }
 
 // KID returns the stable public-key-derived key ID.

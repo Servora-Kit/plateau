@@ -20,8 +20,7 @@ func config() *sessionpb.Session {
 }
 func newManager(t *testing.T) (*scs.SessionManager, *memstore.MemStore) {
 	t.Helper()
-	store := memstore.New()
-	t.Cleanup(store.StopCleanup)
+	store := memstore.NewWithCleanupInterval(0)
 	manager, err := New(config(), store)
 	if err != nil {
 		t.Fatal(err)

@@ -346,9 +346,13 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		t.Fatal(err)
 	}
 	adminDB := stdlib.OpenDB(*configPG)
+	t.Cleanup(func() {
+		if err := adminDB.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	schema := "oidc_" + uuid.NewString()[:8]
 	if _, err := adminDB.ExecContext(ctx, "CREATE SCHEMA "+schema); err != nil {
-		adminDB.Close()
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
@@ -356,14 +360,17 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		if err != nil {
 			t.Error(err)
 		}
-		adminDB.Close()
 	})
 	configPG.RuntimeParams["search_path"] = schema
 	database := stdlib.OpenDB(*configPG)
+	t.Cleanup(func() {
+		if err := database.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	driver := entsql.OpenDB(dialect.Postgres, database)
 	client, cleanupDB, err := data.NewDBClient(driver)
 	if err != nil {
-		database.Close()
 		t.Fatal(err)
 	}
 	t.Cleanup(cleanupDB)

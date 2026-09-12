@@ -39,6 +39,7 @@ func TestActorContext(t *testing.T) {
 	if _, ok := ActorFrom(context.Background()); ok {
 		t.Fatal("ActorFrom() accepted missing actor")
 	}
+	//nolint:staticcheck // SA1012: deliberately verify that a nil context has no Actor.
 	if _, ok := ActorFrom(nil); ok {
 		t.Fatal("ActorFrom() accepted nil context")
 	}

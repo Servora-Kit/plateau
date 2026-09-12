@@ -27,9 +27,13 @@ func newPostgresTestClient(t *testing.T) (*entmodel.Client, *sql.DB) {
 		t.Fatal(err)
 	}
 	admin := stdlib.OpenDB(*config)
+	t.Cleanup(func() {
+		if err := admin.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	schema := "test_" + uuid.NewString()[:8]
 	if _, err := admin.ExecContext(t.Context(), "CREATE SCHEMA "+schema); err != nil {
-		admin.Close()
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
@@ -38,11 +42,14 @@ func newPostgresTestClient(t *testing.T) (*entmodel.Client, *sql.DB) {
 		if _, err := admin.ExecContext(ctx, "DROP SCHEMA "+schema+" CASCADE"); err != nil {
 			t.Error(err)
 		}
-		admin.Close()
 	})
 	config.RuntimeParams["search_path"] = schema
 	db := stdlib.OpenDB(*config)
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() {
+		if err := db.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	driver := entsql.OpenDB(dialect.Postgres, db)
 	client, cleanup, err := NewDBClient(driver)
 	if err != nil {

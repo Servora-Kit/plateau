@@ -85,7 +85,9 @@ func TestOAuthClientFailureStopsBusinessRequest(t *testing.T) {
 				config := clientcredentials.Config{ClientID: "admin", ClientSecret: serviceSecret, TokenURL: "https://iam.example/oauth/token", AuthStyle: oauth2.AuthStyleInHeader}
 				client := oauth2.NewClient(ctx, config.TokenSource(ctx))
 				if response, err := client.Get("https://business.example/change"); err == nil {
-					response.Body.Close()
+					if err := response.Body.Close(); err != nil {
+						t.Error(err)
+					}
 					t.Fatal("token failure was ignored")
 				}
 				if exchanges.Load() != 1 || business.Load() != 0 {
@@ -111,7 +113,7 @@ func TestOAuthClientDoesNotReplayHTTPAuthFailures(t *testing.T) {
 			client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "access-token", TokenType: "Bearer"}))
 			response, err := client.Post("https://business.example/change", "application/json", strings.NewReader("{}"))
 			check(t, err)
-			response.Body.Close()
+			check(t, response.Body.Close())
 			if calls != 1 || response.StatusCode != code {
 				t.Fatalf("HTTP request was replayed: %d", calls)
 			}

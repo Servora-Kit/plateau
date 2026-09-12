@@ -26,7 +26,9 @@ func TestDiscoveryAndExplicitSources(t *testing.T) {
 	discoveries := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/keys" {
-			json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: signer.PublicKey(), KeyID: signer.KID(), Algorithm: "RS256", Use: "sig"}}})
+			if err := json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: signer.PublicKey(), KeyID: signer.KID(), Algorithm: "RS256", Use: "sig"}}}); err != nil {
+				t.Error(err)
+			}
 			return
 		}
 		discoveries++
@@ -34,7 +36,9 @@ func TestDiscoveryAndExplicitSources(t *testing.T) {
 		if badIssuer {
 			value += "/wrong"
 		}
-		json.NewEncoder(w).Encode(map[string]string{"issuer": value, "jwks_uri": issuer + "/keys"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"issuer": value, "jwks_uri": issuer + "/keys"}); err != nil {
+			t.Error(err)
+		}
 	}))
 	defer server.Close()
 	issuer = server.URL

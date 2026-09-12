@@ -200,12 +200,15 @@ func TestPublicMethodsRejectNilContextWithoutCallingSDK(t *testing.T) {
 	client, calls := sdkClient(t, func(response http.ResponseWriter, _ *http.Request) { _, _ = response.Write([]byte(`{"allowed":true}`)) })
 	authorizer, _ := New(client, directSubject)
 	checkRequest := request()
+	//nolint:staticcheck // SA1012: deliberately pass nil to verify rejection before SDK access.
 	if _, err := performCheck(nil, authorizer, checkRequest); !stderrors.Is(err, ErrInvalidInput) {
 		t.Fatalf("Check error=%v", err)
 	}
+	//nolint:staticcheck // SA1012: deliberately pass nil to verify rejection before SDK access.
 	if results, err := authorizer.BatchCheck(nil, []Request{checkRequest}); !stderrors.Is(err, ErrInvalidInput) || results != nil {
 		t.Fatalf("BatchCheck results=%v error=%v", results, err)
 	}
+	//nolint:staticcheck // SA1012: deliberately pass nil to verify rejection before SDK access.
 	if ids, err := authorizer.ListAllowed(nil, checkRequest.Actor, checkRequest.Action, checkRequest.ResourceType); !stderrors.Is(err, ErrInvalidInput) || ids != nil {
 		t.Fatalf("ListAllowed ids=%v error=%v", ids, err)
 	}

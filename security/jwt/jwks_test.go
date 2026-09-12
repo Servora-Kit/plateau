@@ -30,7 +30,9 @@ func TestJWKSCacheRefreshAndCleanup(t *testing.T) {
 			w.WriteHeader(503)
 			return
 		}
-		json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: current.PublicKey(), KeyID: current.KID(), Algorithm: "RS256", Use: "sig"}}})
+		if err := json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: current.PublicKey(), KeyID: current.KID(), Algorithm: "RS256", Use: "sig"}}}); err != nil {
+			t.Error(err)
+		}
 	}))
 	t.Cleanup(server.Close)
 	synctest.Test(t, func(t *testing.T) {

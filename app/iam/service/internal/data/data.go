@@ -40,10 +40,10 @@ type Data struct {
 // NewData installs the generated database, Redis and official OpenFGA clients.
 func NewData(client *entmodel.Client, redis *redis.Client, openFGA *fgaclient.OpenFgaClient, l *slog.Logger) (*Data, error) {
 	if client == nil {
-		return nil, fmt.Errorf("Ent client is nil")
+		return nil, fmt.Errorf("ent client is nil")
 	}
 	if redis == nil {
-		return nil, fmt.Errorf("Redis client is nil")
+		return nil, fmt.Errorf("redis client is nil")
 	}
 	if openFGA == nil {
 		return nil, fmt.Errorf("OpenFGA client is nil")

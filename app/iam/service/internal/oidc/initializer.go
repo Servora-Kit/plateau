@@ -92,6 +92,10 @@ func (initializer *OIDCInitializer) reconcileClient(
 	clientID string,
 	redirectURIs, scopes []string,
 ) error {
+	responseTypes := []string{}
+	if slices.Contains(configured.GetAllowedGrantTypes(), string(oidc.GrantTypeCode)) {
+		responseTypes = []string{string(oidc.ResponseTypeCode)}
+	}
 	_, err := initializer.storage.client.OAuthClient.Get(ctx, clientID)
 	if ent.IsNotFound(err) {
 		secretHash := biz.HashOpaqueSecret(configured.GetClientSecret())
@@ -100,7 +104,7 @@ func (initializer *OIDCInitializer) reconcileClient(
 			SetSecretHash(secretHash).
 			SetRedirectUris(redirectURIs).
 			SetAllowedGrantTypes(deduplicate(configured.GetAllowedGrantTypes())).
-			SetAllowedResponseTypes(configuredResponseTypes(configured)).
+			SetAllowedResponseTypes(responseTypes).
 			SetAllowedScopes(scopes).
 			SetAudiences(deduplicate(configured.GetAudiences())).
 			SetTrusted(configured.GetTrusted()).
@@ -116,7 +120,7 @@ func (initializer *OIDCInitializer) reconcileClient(
 		SetSecretHash(biz.HashOpaqueSecret(configured.GetClientSecret())).
 		SetRedirectUris(redirectURIs).
 		SetAllowedGrantTypes(deduplicate(configured.GetAllowedGrantTypes())).
-		SetAllowedResponseTypes(configuredResponseTypes(configured)).
+		SetAllowedResponseTypes(responseTypes).
 		SetAllowedScopes(scopes).
 		SetAudiences(deduplicate(configured.GetAudiences())).
 		SetTrusted(configured.GetTrusted()).
@@ -221,11 +225,4 @@ func deduplicate(values []string) []string {
 		result = append(result, value)
 	}
 	return result
-}
-
-func configuredResponseTypes(config *oidcconfpb.OAuthClient) []string {
-	if slices.Contains(config.GetAllowedGrantTypes(), string(oidc.GrantTypeCode)) {
-		return []string{string(oidc.ResponseTypeCode)}
-	}
-	return []string{}
 }

@@ -233,10 +233,11 @@ func validProviderName(value string, maxLength int) bool {
 		return false
 	}
 	for _, character := range value {
-		if !(character == '_' || character >= 'a' && character <= 'z' ||
-			character >= 'A' && character <= 'Z' || character >= '0' && character <= '9') {
-			return false
+		if character == '_' || character >= 'a' && character <= 'z' ||
+			character >= 'A' && character <= 'Z' || character >= '0' && character <= '9' {
+			continue
 		}
+		return false
 	}
 	return true
 }
@@ -252,7 +253,7 @@ func validResourceID(value string, maxLength int) bool {
 }
 
 func validSDKClient(client *fgaclient.OpenFgaClient) bool {
-	return client != nil && client.APIClient.OpenFgaApi != nil
+	return client != nil && client.OpenFgaApi != nil
 }
 
 func validAuthorizer(authorizer *Authorizer) bool {

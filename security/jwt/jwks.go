@@ -20,7 +20,8 @@ func NewJWKS(ctx context.Context, config *jwtpb.JWKS) (*Verifier, func(), error)
 	if err != nil || uri.Host == "" || uri.User != nil || uri.Fragment != "" {
 		return nil, nil, fmt.Errorf("jwt: invalid JWKS URI")
 	}
-	if uri.Scheme != "https" && !(uri.Scheme == "http" && (uri.Hostname() == "localhost" || uri.Hostname() == "127.0.0.1" || uri.Hostname() == "::1")) {
+	loopback := uri.Hostname() == "localhost" || uri.Hostname() == "127.0.0.1" || uri.Hostname() == "::1"
+	if uri.Scheme != "https" && (uri.Scheme != "http" || !loopback) {
 		return nil, nil, fmt.Errorf("jwt: JWKS requires HTTPS except on loopback")
 	}
 	lifecycle, cancel := context.WithCancel(ctx)
