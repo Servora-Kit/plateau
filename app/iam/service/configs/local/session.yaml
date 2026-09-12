@@ -1,0 +1,5 @@
+session:
+  lifetime: 2592000s # 30 天
+  idle_timeout: 604800s # 7 天
+  cookie:
+    name: __Host-iam_session

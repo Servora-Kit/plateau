@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/security/password"
 )
@@ -22,7 +21,7 @@ type PasswordCredential struct {
 
 type CredentialRepo interface {
 	FindActivePassword(context.Context, string) (*PasswordCredential, error)
-	ReplacePassword(context.Context, string, string, string, time.Time) error
+	ReplacePassword(context.Context, string, string, string, string, string, time.Time) error
 }
 
 type AuthenticationUsecase struct {
@@ -40,35 +39,35 @@ func NewAuthenticationUsecase(users UserRepo, credentials CredentialRepo, sessio
 }
 
 // Login verifies email/password and creates one independent opaque session.
-func (uc *AuthenticationUsecase) Login(ctx context.Context, email, plaintextPassword string) (*userpb.User, *sessionpb.Session, string, error) {
+func (uc *AuthenticationUsecase) Login(ctx context.Context, email, plaintextPassword string) (*userpb.User, *LoginSession, error) {
 	canonical, _, err := NormalizeEmail(email)
 	if err != nil {
-		return nil, nil, "", ErrInvalidCredentials
+		return nil, nil, ErrInvalidCredentials
 	}
 	user, err := uc.users.FindByEmail(ctx, canonical)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return nil, nil, "", ErrInvalidCredentials
+			return nil, nil, ErrInvalidCredentials
 		}
-		return nil, nil, "", fmt.Errorf("find login user: %w", err)
+		return nil, nil, fmt.Errorf("find login user: %w", err)
 	}
 	if user.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !user.GetEmailVerified() {
-		return nil, nil, "", ErrInvalidCredentials
+		return nil, nil, ErrInvalidCredentials
 	}
 	credential, err := uc.credentials.FindActivePassword(ctx, user.GetUserId())
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return nil, nil, "", ErrInvalidCredentials
+			return nil, nil, ErrInvalidCredentials
 		}
-		return nil, nil, "", fmt.Errorf("find password credential: %w", err)
+		return nil, nil, fmt.Errorf("find password credential: %w", err)
 	}
 	match, _, err := password.Compare(plaintextPassword, credential.PasswordHash)
 	if err != nil || !match {
-		return nil, nil, "", ErrInvalidCredentials
+		return nil, nil, ErrInvalidCredentials
 	}
-	session, secret, err := uc.sessions.Create(ctx, user.GetUserId())
+	session, err := uc.sessions.Create(ctx, user.GetUserId())
 	if err != nil {
-		return nil, nil, "", fmt.Errorf("create login session: %w", err)
+		return nil, nil, fmt.Errorf("create login session: %w", err)
 	}
-	return user, session, secret, nil
+	return user, session, nil
 }

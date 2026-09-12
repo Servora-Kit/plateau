@@ -50,3 +50,37 @@ func parsePublicKey(data []byte) (*rsa.PublicKey, error) {
 	}
 	return publicKey, nil
 }
+
+// NewFromConfig loads a static verification-key configuration.
+func NewFromConfig(keyConfigs []*jwtkeypb.VerificationKey) (*Verifier, error) {
+	if len(keyConfigs) == 0 {
+		return nil, fmt.Errorf("jwt: verification key set is empty")
+	}
+	keys := make(map[string]*rsa.PublicKey, len(keyConfigs))
+	for index, keyConfig := range keyConfigs {
+		if keyConfig == nil {
+			return nil, fmt.Errorf("jwt: verification_keys[%d] is nil", index)
+		}
+		kid := strings.TrimSpace(keyConfig.GetKid())
+		if kid == "" || kid != keyConfig.GetKid() {
+			return nil, fmt.Errorf("jwt: verification_keys[%d].kid must be non-empty without surrounding whitespace", index)
+		}
+		if _, exists := keys[kid]; exists {
+			return nil, fmt.Errorf("jwt: duplicate verification KID %q", kid)
+		}
+		data, err := publicKeyData(keyConfig)
+		if err != nil {
+			return nil, fmt.Errorf("jwt: verification_keys[%d] KID %q: %w", index, kid, err)
+		}
+		publicKey, err := parsePublicKey(data)
+		if err != nil {
+			return nil, fmt.Errorf("jwt: verification_keys[%d] KID %q: %w", index, kid, err)
+		}
+		keys[kid] = publicKey
+	}
+	verifier, err := New(keys)
+	if err != nil {
+		return nil, fmt.Errorf("jwt: verifier config: %w", err)
+	}
+	return verifier, nil
+}

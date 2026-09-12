@@ -20,6 +20,10 @@ type OAuthAccessToken struct {
 	ID string `json:"id,omitempty"`
 	// TokenSessionID holds the value of the "token_session_id" field.
 	TokenSessionID string `json:"token_session_id,omitempty"`
+	// ActorType holds the value of the "actor_type" field.
+	ActorType oauthaccesstoken.ActorType `json:"actor_type,omitempty"`
+	// Audiences holds the value of the "audiences" field.
+	Audiences []string `json:"audiences,omitempty"`
 	// Subject holds the value of the "subject" field.
 	Subject string `json:"subject,omitempty"`
 	// ClientID holds the value of the "client_id" field.
@@ -40,9 +44,9 @@ func (*OAuthAccessToken) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case oauthaccesstoken.FieldScopes:
+		case oauthaccesstoken.FieldAudiences, oauthaccesstoken.FieldScopes:
 			values[i] = new([]byte)
-		case oauthaccesstoken.FieldID, oauthaccesstoken.FieldTokenSessionID, oauthaccesstoken.FieldSubject, oauthaccesstoken.FieldClientID:
+		case oauthaccesstoken.FieldID, oauthaccesstoken.FieldTokenSessionID, oauthaccesstoken.FieldActorType, oauthaccesstoken.FieldSubject, oauthaccesstoken.FieldClientID:
 			values[i] = new(sql.NullString)
 		case oauthaccesstoken.FieldIssuedTime, oauthaccesstoken.FieldExpiresTime, oauthaccesstoken.FieldRevokedTime:
 			values[i] = new(sql.NullTime)
@@ -72,6 +76,20 @@ func (_m *OAuthAccessToken) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field token_session_id", values[i])
 			} else if value.Valid {
 				_m.TokenSessionID = value.String
+			}
+		case oauthaccesstoken.FieldActorType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field actor_type", values[i])
+			} else if value.Valid {
+				_m.ActorType = oauthaccesstoken.ActorType(value.String)
+			}
+		case oauthaccesstoken.FieldAudiences:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field audiences", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Audiences); err != nil {
+					return fmt.Errorf("unmarshal field audiences: %w", err)
+				}
 			}
 		case oauthaccesstoken.FieldSubject:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -150,6 +168,12 @@ func (_m *OAuthAccessToken) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("token_session_id=")
 	builder.WriteString(_m.TokenSessionID)
+	builder.WriteString(", ")
+	builder.WriteString("actor_type=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ActorType))
+	builder.WriteString(", ")
+	builder.WriteString("audiences=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Audiences))
 	builder.WriteString(", ")
 	builder.WriteString("subject=")
 	builder.WriteString(_m.Subject)

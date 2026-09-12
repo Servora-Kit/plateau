@@ -1,0 +1,45 @@
+server:
+  http:
+    api_docs:
+      enable: true
+    listen:
+      addr: "0.0.0.0:10000"
+      timeout: 30s
+  grpc:
+    listen:
+      addr: "0.0.0.0:10001"
+      timeout: 30s
+
+data:
+  database:
+    driver: postgresql
+    source: "${IAM_DATABASE_SOURCE:postgres://plateau_iam_app:plateau_iam_pwd@postgres:5432/plateau_iam?sslmode=disable}"
+
+app:
+  name: iam.service
+  version: dev
+  env: dev
+  external_url: "${IAM_PUBLIC_ORIGIN:https://iam.plateau.local}"
+
+obs:
+  log:
+    level: 1
+    backends:
+      - stdout: {}
+      - file:
+          path: "./logs/iam.service.log"
+          max_size: 20
+          max_age: 30
+          max_backups: 10
+  trace:
+    endpoint: "otel-collector:4317"
+    insecure: true
+    sampling_ratio: 1.0
+  metrics:
+    enable: true
+
+registry:
+  consul:
+    addr: "${REGISTRY_CONSUL_ADDR:consul:8500}"
+    scheme: "${REGISTRY_CONSUL_SCHEME:http}"
+    datacenter: "${REGISTRY_CONSUL_DC:dc1}"

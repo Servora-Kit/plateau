@@ -10,13 +10,14 @@ import (
 	"strings"
 
 	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	httpsession "github.com/Servora-Kit/plateau/security/session"
+	"github.com/alexedwards/scs/v2"
 	httptransport "github.com/go-kratos/kratos/v3/transport/http"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
-
-const iamSessionCookieName = "__Host-iam_session"
 
 var oidcRoutePaths = []string{
 	"/.well-known/openid-configuration",
@@ -36,6 +37,7 @@ type IAMProvider struct {
 	issuer   string
 	storage  *OIDCStorage
 	sessions *biz.SessionUsecase
+	manager  *scs.SessionManager
 	handler  http.Handler
 }
 
@@ -43,8 +45,9 @@ func NewIAMProvider(
 	config *oidcconfpb.OIDC,
 	storage *OIDCStorage,
 	sessions *biz.SessionUsecase,
+	manager *scs.SessionManager,
 ) (*IAMProvider, error) {
-	if config == nil || storage == nil || sessions == nil {
+	if config == nil || storage == nil || sessions == nil || manager == nil {
 		return nil, fmt.Errorf("OIDC provider dependencies are nil")
 	}
 	issuer, insecure, err := normalizeIssuer(config.GetIssuer())
@@ -73,17 +76,9 @@ func NewIAMProvider(
 	if err != nil {
 		return nil, fmt.Errorf("create OIDC provider: %w", err)
 	}
-	provider := &IAMProvider{Provider: base, issuer: issuer, storage: storage, sessions: sessions}
+	provider := &IAMProvider{Provider: base, issuer: issuer, storage: storage, sessions: sessions, manager: manager}
 	provider.handler = op.CreateRouter(provider)
 	return provider, nil
-}
-
-// PublicOrigin 返回已校验并规范化的 IAM 公开来源。
-func (provider *IAMProvider) PublicOrigin() string {
-	if provider == nil {
-		return ""
-	}
-	return provider.issuer
 }
 
 func (provider *IAMProvider) ServeHTTP(response http.ResponseWriter, request *http.Request) {
@@ -171,7 +166,7 @@ func (provider *IAMProvider) serveDiscovery(response http.ResponseWriter) {
 		JwksURI:                                   provider.issuer + "/keys",
 		ScopesSupported:                           append([]string(nil), supportedScopes...),
 		ResponseTypesSupported:                    []string{string(oidc.ResponseTypeCode)},
-		GrantTypesSupported:                       []oidc.GrantType{oidc.GrantTypeCode, oidc.GrantTypeRefreshToken},
+		GrantTypesSupported:                       []oidc.GrantType{oidc.GrantTypeCode, oidc.GrantTypeRefreshToken, oidc.GrantTypeClientCredentials},
 		SubjectTypesSupported:                     []string{"public"},
 		IDTokenSigningAlgValuesSupported:          []string{"RS256"},
 		TokenEndpointAuthMethodsSupported:         []oidc.AuthMethod{oidc.AuthMethodBasic},
@@ -196,18 +191,22 @@ func (provider *IAMProvider) serveDiscovery(response http.ResponseWriter) {
 }
 
 func (provider *IAMProvider) completeAuthorization(response http.ResponseWriter, request *http.Request) {
+	if !httpsession.Loaded(request.Context(), provider.manager) {
+		http.Error(response, "browser session is unavailable", http.StatusInternalServerError)
+		return
+	}
 	requestID := request.URL.Query().Get("id")
 	if requestID == "" {
 		http.Error(response, "authorization request rejected", http.StatusBadRequest)
 		return
 	}
-	cookie, err := request.Cookie(iamSessionCookieName)
-	if err != nil || cookie.Value == "" {
+	loginID := provider.manager.GetString(request.Context(), iamauthn.LoginReferenceKey)
+	if loginID == "" {
 		redirectToLogin(response, request, requestID)
 		return
 	}
-	user, session, err := provider.sessions.Resolve(request.Context(), cookie.Value)
-	if err != nil || user == nil || session == nil || session.GetCreateTime() == nil {
+	user, session, err := provider.sessions.Resolve(request.Context(), loginID)
+	if err != nil || user == nil || session == nil || session.AuthTime.IsZero() {
 		redirectToLogin(response, request, requestID)
 		return
 	}
@@ -215,8 +214,8 @@ func (provider *IAMProvider) completeAuthorization(response http.ResponseWriter,
 		request.Context(),
 		requestID,
 		user.GetUserId(),
-		session.GetSessionId(),
-		session.GetCreateTime().AsTime(),
+		session.ID,
+		session.AuthTime,
 	); err != nil {
 		http.Error(response, "authorization request rejected", http.StatusBadRequest)
 		return

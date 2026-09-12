@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package plateau.security.session.v1;
+
+import "google/protobuf/duration.proto";
+import "servora/conf/v1/annotations.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1;sessionv1";
+
+// Session 配置应用独立的 HTTP 会话，存储由应用注入。
+message Session {
+  option (servora.conf.v1.section) = {
+    key: "session"
+    optional: false
+  };
+
+  google.protobuf.Duration lifetime = 1 [(servora.conf.v1.field) = {default: "24h"}];
+  google.protobuf.Duration idle_timeout = 2;
+  Cookie cookie = 3 [(servora.conf.v1.field) = {required: true}];
+}
+
+// Cookie 标识由应用明确配置，避免隐式共享登录状态。
+message Cookie {
+  string name = 1 [(servora.conf.v1.field) = {required: true}];
+  string path = 2 [(servora.conf.v1.field) = {default: "/"}];
+  string domain = 3;
+  // 省略时为 true；显式 false 由构造时的 Cookie 约束校验。
+  optional bool secure = 4;
+  optional bool http_only = 5;
+  string same_site = 6 [(servora.conf.v1.field) = {default: "lax"}];
+  optional bool persist = 7;
+}

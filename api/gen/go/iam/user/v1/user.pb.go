@@ -834,7 +834,7 @@ var File_iam_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x16iam/user/v1/user.proto\x12\viam.user.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"\x87\x03\n" +
+	"\x16iam/user/v1/user.proto\x12\viam.user.v1\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"\x87\x03\n" +
 	"\vUserProfile\x12\x1c\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\x01H\x00R\x04name\x88\x01\x01\x12'\n" +
 	"\n" +
@@ -913,17 +913,17 @@ const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\x17USER_STATUS_UNSPECIFIED\x10\x00\x12*\n" +
 	"&USER_STATUS_PENDING_EMAIL_VERIFICATION\x10\x01\x12\x16\n" +
 	"\x12USER_STATUS_ACTIVE\x10\x02\x12\x18\n" +
-	"\x14USER_STATUS_DISABLED\x10\x032\xbd\x06\n" +
-	"\vUserService\x12q\n" +
+	"\x14USER_STATUS_DISABLED\x10\x032\xd3\x04\n" +
+	"\vUserService\x12Y\n" +
 	"\n" +
-	"CreateUser\x12\x1e.iam.user.v1.CreateUserRequest\x1a\x11.iam.user.v1.User\"0\xdaA\x15user,user_id,password\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/v1/iam/users\x12f\n" +
-	"\aGetUser\x12\x1b.iam.user.v1.GetUserRequest\x1a\x11.iam.user.v1.User\"+\xdaA\x04name\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/iam/users/{name=users/*}\x12\x88\x01\n" +
-	"\tListUsers\x12\x1d.iam.user.v1.ListUsersRequest\x1a\x1e.iam.user.v1.ListUsersResponse\"<\xdaA$page_size,page_token,filter,order_by\x82\xd3\xe4\x93\x02\x0f\x12\r/v1/iam/users\x12\x83\x01\n" +
+	"CreateUser\x12\x1e.iam.user.v1.CreateUserRequest\x1a\x11.iam.user.v1.User\"\x18\xdaA\x15user,user_id,password\x12B\n" +
+	"\aGetUser\x12\x1b.iam.user.v1.GetUserRequest\x1a\x11.iam.user.v1.User\"\a\xdaA\x04name\x12s\n" +
+	"\tListUsers\x12\x1d.iam.user.v1.ListUsersRequest\x1a\x1e.iam.user.v1.ListUsersResponse\"'\xdaA$page_size,page_token,filter,order_by\x12T\n" +
 	"\n" +
-	"UpdateUser\x12\x1e.iam.user.v1.UpdateUserRequest\x1a\x11.iam.user.v1.User\"B\xdaA\x10user,update_mask\x82\xd3\xe4\x93\x02):\x04user2!/v1/iam/users/{user.name=users/*}\x12\x88\x01\n" +
-	"\vDisableUser\x12\x1f.iam.user.v1.DisableUserRequest\x1a .iam.user.v1.DisableUserResponse\"6\xdaA\x04name\x82\xd3\xe4\x93\x02):\x01*\"$/v1/iam/users/{name=users/*}:disable\x12\x84\x01\n" +
+	"UpdateUser\x12\x1e.iam.user.v1.UpdateUserRequest\x1a\x11.iam.user.v1.User\"\x13\xdaA\x10user,update_mask\x12Y\n" +
+	"\vDisableUser\x12\x1f.iam.user.v1.DisableUserRequest\x1a .iam.user.v1.DisableUserResponse\"\a\xdaA\x04name\x12V\n" +
 	"\n" +
-	"EnableUser\x12\x1e.iam.user.v1.EnableUserRequest\x1a\x1f.iam.user.v1.EnableUserResponse\"5\xdaA\x04name\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/users/{name=users/*}:enable\x1a0\xca\xc1\x18&\b\x02\x12\x10can_manage_users\x1a\aplateau\"\adefault\xea\xc7\x18\x02\b\x02B>Z<github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1;userpbb\x06proto3"
+	"EnableUser\x12\x1e.iam.user.v1.EnableUserRequest\x1a\x1f.iam.user.v1.EnableUserResponse\"\a\xdaA\x04name\x1a'\xca\xc1\x18\x1d\b\x02\x12\fmanage_users\x1a\x03iam\"\x06global\xea\xc7\x18\x02\b\x02B>Z<github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1;userpbb\x06proto3"
 
 var (
 	file_iam_user_v1_user_proto_rawDescOnce sync.Once

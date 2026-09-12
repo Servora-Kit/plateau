@@ -14,5 +14,5 @@ message IAM {
   };
 
   // Bootstrap creates this single platform administrator idempotently.
-  string bootstrap_admin_email = 1 [(servora.conf.v1.field) = {required: true}];
+  string bootstrap_user_email = 1 [(servora.conf.v1.field) = {required: true}];
 }

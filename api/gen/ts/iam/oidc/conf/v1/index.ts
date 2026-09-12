@@ -41,29 +41,37 @@ function encodeMultiSegmentPath(value: unknown): string {
 
 // OIDC configures the Plateau IAM OpenID Provider.
 export type OIDC = {
-  // Static first-party confidential clients. Provider supports only the fixed four scopes:
-  // openid, profile, email and offline_access.
+  // 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
   clients?: OAuthClient[];
   // Stable zitadel/oidc provider crypto-key path, distinct from signing and TLS keys.
   cryptoKeyPath?: string;
   // The single public origin used as issuer, IAM Web origin and mail-link base.
   issuer?: string;
+  serviceAccessTokenTtl?: wellKnownDuration;
   // Stable RS256 private-key path; this key is distinct from TLS and crypto keys.
   signingKeyPath?: string;
 };
 
-// OAuthClient is a static confidential OAuth client seed.
+// OAuthClient 配置使用客户端 ID 和密钥认证的应用。
 export type OAuthClient = {
-  // Requested scopes must be in both this list and Provider's fixed scope set.
+  allowedGrantTypes?: string[];
+  // 请求 scope 必须在允许集合中；用户流程还须符合提供方支持的用户 scope。
   allowedScopes?: string[];
+  audiences?: string[];
   clientId?: string;
   // Raw secret is configuration input only; IAM persists only its hash.
   clientSecret?: string;
   // Redirect URIs are compared exactly; wildcards are not supported.
   redirectUris?: string[];
-  // First version requires trusted=true because consent interaction is not implemented; login and client authentication remain mandatory.
+  // 用户交互流程须为受信应用，当前未实现同意页面；机器流程不依赖此项。
   trusted?: boolean;
 };
+
+// Generated output always contains 0, 3, 6, or 9 fractional digits,
+// depending on required precision, followed by the suffix "s".
+// Accepted are any fractional digits (also none) as long as they fit
+// into nano-seconds precision and the suffix "s" is required.
+type wellKnownDuration = string;
 
 
 // @@protoc_insertion_point(typescript-http-eof)

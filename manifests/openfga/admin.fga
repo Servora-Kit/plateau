@@ -1,0 +1,6 @@
+module admin
+
+type admin
+  relations
+    define admin: [user]
+    define manage_users: admin

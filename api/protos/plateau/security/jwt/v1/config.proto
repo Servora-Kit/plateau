@@ -4,6 +4,11 @@ package plateau.security.jwt.v1;
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1;jwtv1";
 
+// JWKS selects one trusted remote public-key set.
+message JWKS {
+  string uri = 1;
+}
+
 // VerificationKey describes one public key accepted by a JWT verifier.
 message VerificationKey {
   string kid = 1;

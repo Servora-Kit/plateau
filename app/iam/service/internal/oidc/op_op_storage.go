@@ -8,6 +8,7 @@ import (
 
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
@@ -58,6 +59,9 @@ func (storage *OIDCStorage) SetUserinfoFromToken(
 	if err != nil {
 		return err
 	}
+	if token.ActorType != oauthaccesstoken.ActorTypeHuman {
+		return storageNotFoundError{cause: fmt.Errorf("UserInfo requires a user access token")}
+	}
 	return storage.populateUserinfo(ctx, userinfo, token.Subject, token.ClientID, token.Scopes)
 }
 
@@ -72,6 +76,18 @@ func (storage *OIDCStorage) SetIntrospectionFromToken(
 	}
 	if clientID == "" || token.ClientID != clientID {
 		return storageNotFoundError{cause: fmt.Errorf("OAuth access token does not belong to introspecting client")}
+	}
+	if token.ActorType == oauthaccesstoken.ActorTypeService {
+		introspection.Active = true
+		introspection.Subject = token.Subject
+		introspection.ClientID = token.ClientID
+		introspection.Audience = slices.Clone(token.Audiences)
+		introspection.Scope = slices.Clone(token.Scopes)
+		introspection.TokenType = string(oidc.BearerToken)
+		introspection.IssuedAt = oidc.FromTime(token.IssuedTime)
+		introspection.Expiration = oidc.FromTime(token.ExpiresTime)
+		introspection.JWTID = token.ID
+		return nil
 	}
 	session, err := storage.client.OAuthTokenSession.Get(ctx, token.TokenSessionID)
 	if err != nil {

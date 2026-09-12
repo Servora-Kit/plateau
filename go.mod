@@ -4,15 +4,19 @@ go 1.27.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
+	github.com/MicahParks/jwkset v0.11.3
+	github.com/MicahParks/keyfunc/v3 v3.8.2
 	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260818130515-05007f733999
 	github.com/Servora-Kit/servora v0.9.1
 	github.com/Servora-Kit/servora/api/gen v0.9.1
 	github.com/alexedwards/argon2id v1.0.0
+	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/openfga/go-sdk v0.8.2
 	github.com/redis/go-redis/v9 v9.18.0
+	github.com/zitadel/oidc/v3 v3.49.2
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 )
 
@@ -47,6 +51,7 @@ require (
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60 // indirect
 	google.golang.org/grpc v1.82.1 // indirect

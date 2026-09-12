@@ -1,24 +1,34 @@
-name: iam authorization model tests
+name: IAM service authorization
 model_file: fga.mod
-
 tuples:
-  - user: user:bootstrap-admin
+  - user: service:admin
+    relation: manage_users
+    object: iam:global
+  - user: user:alice
     relation: admin
-    object: plateau:default
-
+    object: admin:global
 tests:
-  - name: bootstrap admin can manage IAM users
+  - name: explicit service grant
     check:
-      - user: user:bootstrap-admin
-        object: plateau:default
+      - user: service:admin
+        object: iam:global
         assertions:
-          admin: true
-          can_manage_users: true
-
-  - name: regular user cannot manage IAM users
+          manage_users: true
+      - user: service:unregistered
+        object: iam:global
+        assertions:
+          manage_users: false
+      - user: service:admin
+        object: iam:other
+        assertions:
+          manage_users: false
+  - name: human identity cannot substitute a service
     check:
-      - user: user:regular-user
-        object: plateau:default
+      - user: user:admin
+        object: iam:global
         assertions:
-          admin: false
-          can_manage_users: false
+          manage_users: false
+      - user: user:alice
+        object: iam:global
+        assertions:
+          manage_users: false

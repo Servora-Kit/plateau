@@ -79,7 +79,7 @@ func TestInTxCommitsRollsBackAndSupportsConditionalUpdate(t *testing.T) {
 	ctx := t.Context()
 
 	rollbackErr := errors.New("rollback transaction")
-	err := data.InTx(ctx, func(tx *entmodel.Tx) error {
+	err := inTx(ctx, data.ent, func(tx *entmodel.Tx) error {
 		if _, err := tx.User.Create().SetID("rolled-back-user").SetEtag("etag-1").Save(ctx); err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func TestInTxCommitsRollsBackAndSupportsConditionalUpdate(t *testing.T) {
 		t.Fatalf("rolled-back user lookup error = %v, want not found", err)
 	}
 
-	if err := data.InTx(ctx, func(tx *entmodel.Tx) error {
+	if err := inTx(ctx, data.ent, func(tx *entmodel.Tx) error {
 		_, err := tx.User.Create().SetID("committed-user").SetEtag("etag-1").Save(ctx)
 		return err
 	}); err != nil {
@@ -150,7 +150,7 @@ func TestInTxRejectsNilFunction(t *testing.T) {
 	t.Parallel()
 
 	data := &Data{}
-	if err := data.InTx(context.Background(), nil); err == nil {
+	if err := inTx(context.Background(), data.ent, nil); err == nil {
 		t.Fatal("InTx() error = nil, want nil function error")
 	}
 }
@@ -241,12 +241,12 @@ func TestUserRepositoryUpdateClearsOnlySelectedProfileFields(t *testing.T) {
 	}
 }
 
-func TestBootstrapUserCreatorCreatesActiveVerifiedAdmin(t *testing.T) {
+func TestBootstrapUserCreatorCreatesActiveVerifiedUser(t *testing.T) {
 	client := newTestEntClient(t)
 	data := &Data{ent: client}
-	creator, err := NewInitialAdminCreator(data)
+	creator, err := NewInitialUserCreator(data)
 	if err != nil {
-		t.Fatalf("NewInitialAdminCreator() error = %v", err)
+		t.Fatalf("NewInitialUserCreator() error = %v", err)
 	}
 	users, err := NewUserRepository(data)
 	if err != nil {
@@ -254,8 +254,8 @@ func TestBootstrapUserCreatorCreatesActiveVerifiedAdmin(t *testing.T) {
 	}
 
 	const userID = "01912345-6789-7abc-8def-0123456789ae"
-	if err := creator.CreateInitialAdmin(t.Context(), userID, "Admin@Example.com", "admin@example.com", "password-hash", time.Unix(1_700_000_000, 0)); err != nil {
-		t.Fatalf("CreateInitialAdmin() error = %v", err)
+	if err := creator.CreateInitialUser(t.Context(), userID, "Admin@Example.com", "admin@example.com", "password-hash", time.Unix(1_700_000_000, 0)); err != nil {
+		t.Fatalf("CreateInitialUser() error = %v", err)
 	}
 	admin, err := users.FindByEmail(t.Context(), "admin@example.com")
 	if err != nil {
@@ -267,7 +267,7 @@ func TestBootstrapUserCreatorCreatesActiveVerifiedAdmin(t *testing.T) {
 }
 
 func TestPasswordResetTokenConsumptionReplacesPasswordOnce(t *testing.T) {
-	client := newTestEntClient(t)
+	client, _ := newPostgresTestClient(t)
 	data := &Data{ent: client}
 	users, err := NewUserRepository(data)
 	if err != nil {
@@ -290,6 +290,9 @@ func TestPasswordResetTokenConsumptionReplacesPasswordOnce(t *testing.T) {
 	created, err := users.Create(t.Context(), resource, oldHash, email)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
+	}
+	if err := users.ActivateEmail(t.Context(), created.GetUserId(), time.Now()); err != nil {
+		t.Fatal(err)
 	}
 	tokenHash := biz.HashOpaqueSecret("reset-token")
 	if err := resetTokens.Create(t.Context(), created.GetUserId(), tokenHash, time.Now().Add(time.Hour)); err != nil {

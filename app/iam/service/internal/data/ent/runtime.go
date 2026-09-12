@@ -74,18 +74,10 @@ func init() {
 	iamloginsessionDescUserID := iamloginsessionFields[1].Descriptor()
 	// iamloginsession.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	iamloginsession.UserIDValidator = iamloginsessionDescUserID.Validators[0].(func(string) error)
-	// iamloginsessionDescSecretHash is the schema descriptor for secret_hash field.
-	iamloginsessionDescSecretHash := iamloginsessionFields[2].Descriptor()
-	// iamloginsession.SecretHashValidator is a validator for the "secret_hash" field. It is called by the builders before save.
-	iamloginsession.SecretHashValidator = iamloginsessionDescSecretHash.Validators[0].(func(string) error)
 	// iamloginsessionDescCreateTime is the schema descriptor for create_time field.
-	iamloginsessionDescCreateTime := iamloginsessionFields[3].Descriptor()
+	iamloginsessionDescCreateTime := iamloginsessionFields[2].Descriptor()
 	// iamloginsession.DefaultCreateTime holds the default value on creation for the create_time field.
 	iamloginsession.DefaultCreateTime = iamloginsessionDescCreateTime.Default.(func() time.Time)
-	// iamloginsessionDescLastSeenTime is the schema descriptor for last_seen_time field.
-	iamloginsessionDescLastSeenTime := iamloginsessionFields[4].Descriptor()
-	// iamloginsession.DefaultLastSeenTime holds the default value on creation for the last_seen_time field.
-	iamloginsession.DefaultLastSeenTime = iamloginsessionDescLastSeenTime.Default.(func() time.Time)
 	loginidentifierFields := schema.LoginIdentifier{}.Fields()
 	_ = loginidentifierFields
 	// loginidentifierDescUserID is the schema descriptor for user_id field.
@@ -116,20 +108,16 @@ func init() {
 	loginidentifier.UpdateDefaultUpdateTime = loginidentifierDescUpdateTime.UpdateDefault.(func() time.Time)
 	oauthaccesstokenFields := schema.OAuthAccessToken{}.Fields()
 	_ = oauthaccesstokenFields
-	// oauthaccesstokenDescTokenSessionID is the schema descriptor for token_session_id field.
-	oauthaccesstokenDescTokenSessionID := oauthaccesstokenFields[1].Descriptor()
-	// oauthaccesstoken.TokenSessionIDValidator is a validator for the "token_session_id" field. It is called by the builders before save.
-	oauthaccesstoken.TokenSessionIDValidator = oauthaccesstokenDescTokenSessionID.Validators[0].(func(string) error)
 	// oauthaccesstokenDescSubject is the schema descriptor for subject field.
-	oauthaccesstokenDescSubject := oauthaccesstokenFields[2].Descriptor()
+	oauthaccesstokenDescSubject := oauthaccesstokenFields[4].Descriptor()
 	// oauthaccesstoken.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
 	oauthaccesstoken.SubjectValidator = oauthaccesstokenDescSubject.Validators[0].(func(string) error)
 	// oauthaccesstokenDescClientID is the schema descriptor for client_id field.
-	oauthaccesstokenDescClientID := oauthaccesstokenFields[3].Descriptor()
+	oauthaccesstokenDescClientID := oauthaccesstokenFields[5].Descriptor()
 	// oauthaccesstoken.ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
 	oauthaccesstoken.ClientIDValidator = oauthaccesstokenDescClientID.Validators[0].(func(string) error)
 	// oauthaccesstokenDescIssuedTime is the schema descriptor for issued_time field.
-	oauthaccesstokenDescIssuedTime := oauthaccesstokenFields[5].Descriptor()
+	oauthaccesstokenDescIssuedTime := oauthaccesstokenFields[7].Descriptor()
 	// oauthaccesstoken.DefaultIssuedTime holds the default value on creation for the issued_time field.
 	oauthaccesstoken.DefaultIssuedTime = oauthaccesstokenDescIssuedTime.Default.(func() time.Time)
 	oauthauthorizationcodeFields := schema.OAuthAuthorizationCode{}.Fields()
@@ -173,15 +161,15 @@ func init() {
 	// oauthclient.SecretHashValidator is a validator for the "secret_hash" field. It is called by the builders before save.
 	oauthclient.SecretHashValidator = oauthclientDescSecretHash.Validators[0].(func(string) error)
 	// oauthclientDescTrusted is the schema descriptor for trusted field.
-	oauthclientDescTrusted := oauthclientFields[6].Descriptor()
+	oauthclientDescTrusted := oauthclientFields[7].Descriptor()
 	// oauthclient.DefaultTrusted holds the default value on creation for the trusted field.
 	oauthclient.DefaultTrusted = oauthclientDescTrusted.Default.(bool)
 	// oauthclientDescCreateTime is the schema descriptor for create_time field.
-	oauthclientDescCreateTime := oauthclientFields[7].Descriptor()
+	oauthclientDescCreateTime := oauthclientFields[8].Descriptor()
 	// oauthclient.DefaultCreateTime holds the default value on creation for the create_time field.
 	oauthclient.DefaultCreateTime = oauthclientDescCreateTime.Default.(func() time.Time)
 	// oauthclientDescUpdateTime is the schema descriptor for update_time field.
-	oauthclientDescUpdateTime := oauthclientFields[8].Descriptor()
+	oauthclientDescUpdateTime := oauthclientFields[9].Descriptor()
 	// oauthclient.DefaultUpdateTime holds the default value on creation for the update_time field.
 	oauthclient.DefaultUpdateTime = oauthclientDescUpdateTime.Default.(func() time.Time)
 	// oauthclient.UpdateDefaultUpdateTime holds the default value on update for the update_time field.

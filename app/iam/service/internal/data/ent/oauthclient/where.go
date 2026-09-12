@@ -149,6 +149,16 @@ func SecretHashContainsFold(v string) predicate.OAuthClient {
 	return predicate.OAuthClient(sql.FieldContainsFold(FieldSecretHash, v))
 }
 
+// AudiencesIsNil applies the IsNil predicate on the "audiences" field.
+func AudiencesIsNil() predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIsNull(FieldAudiences))
+}
+
+// AudiencesNotNil applies the NotNil predicate on the "audiences" field.
+func AudiencesNotNil() predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotNull(FieldAudiences))
+}
+
 // TrustedEQ applies the EQ predicate on the "trusted" field.
 func TrustedEQ(v bool) predicate.OAuthClient {
 	return predicate.OAuthClient(sql.FieldEQ(FieldTrusted, v))

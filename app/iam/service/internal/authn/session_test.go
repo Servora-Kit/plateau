@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	security "github.com/Servora-Kit/plateau/security"
@@ -15,7 +14,7 @@ import (
 func TestIAMSessionActorMappingAndContext(t *testing.T) {
 	value := &identity{
 		user:    &userpb.User{UserId: "user-1"},
-		session: &sessionpb.Session{SessionId: "session-1"},
+		session: &biz.LoginSession{ID: "session-1"},
 	}
 	actor, err := mapActor(value)
 	if err != nil || actor != (security.Actor{Type: security.ActorTypeHuman, ID: "user-1"}) {

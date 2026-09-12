@@ -26,12 +26,6 @@ func (_c *IAMLoginSessionCreate) SetUserID(v string) *IAMLoginSessionCreate {
 	return _c
 }
 
-// SetSecretHash sets the "secret_hash" field.
-func (_c *IAMLoginSessionCreate) SetSecretHash(v string) *IAMLoginSessionCreate {
-	_c.mutation.SetSecretHash(v)
-	return _c
-}
-
 // SetCreateTime sets the "create_time" field.
 func (_c *IAMLoginSessionCreate) SetCreateTime(v time.Time) *IAMLoginSessionCreate {
 	_c.mutation.SetCreateTime(v)
@@ -43,32 +37,6 @@ func (_c *IAMLoginSessionCreate) SetNillableCreateTime(v *time.Time) *IAMLoginSe
 	if v != nil {
 		_c.SetCreateTime(*v)
 	}
-	return _c
-}
-
-// SetLastSeenTime sets the "last_seen_time" field.
-func (_c *IAMLoginSessionCreate) SetLastSeenTime(v time.Time) *IAMLoginSessionCreate {
-	_c.mutation.SetLastSeenTime(v)
-	return _c
-}
-
-// SetNillableLastSeenTime sets the "last_seen_time" field if the given value is not nil.
-func (_c *IAMLoginSessionCreate) SetNillableLastSeenTime(v *time.Time) *IAMLoginSessionCreate {
-	if v != nil {
-		_c.SetLastSeenTime(*v)
-	}
-	return _c
-}
-
-// SetIdleExpiresTime sets the "idle_expires_time" field.
-func (_c *IAMLoginSessionCreate) SetIdleExpiresTime(v time.Time) *IAMLoginSessionCreate {
-	_c.mutation.SetIdleExpiresTime(v)
-	return _c
-}
-
-// SetAbsoluteExpiresTime sets the "absolute_expires_time" field.
-func (_c *IAMLoginSessionCreate) SetAbsoluteExpiresTime(v time.Time) *IAMLoginSessionCreate {
-	_c.mutation.SetAbsoluteExpiresTime(v)
 	return _c
 }
 
@@ -131,10 +99,6 @@ func (_c *IAMLoginSessionCreate) defaults() {
 		v := iamloginsession.DefaultCreateTime()
 		_c.mutation.SetCreateTime(v)
 	}
-	if _, ok := _c.mutation.LastSeenTime(); !ok {
-		v := iamloginsession.DefaultLastSeenTime()
-		_c.mutation.SetLastSeenTime(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -147,25 +111,8 @@ func (_c *IAMLoginSessionCreate) check() error {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "IAMLoginSession.user_id": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.SecretHash(); !ok {
-		return &ValidationError{Name: "secret_hash", err: errors.New(`ent: missing required field "IAMLoginSession.secret_hash"`)}
-	}
-	if v, ok := _c.mutation.SecretHash(); ok {
-		if err := iamloginsession.SecretHashValidator(v); err != nil {
-			return &ValidationError{Name: "secret_hash", err: fmt.Errorf(`ent: validator failed for field "IAMLoginSession.secret_hash": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.CreateTime(); !ok {
 		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "IAMLoginSession.create_time"`)}
-	}
-	if _, ok := _c.mutation.LastSeenTime(); !ok {
-		return &ValidationError{Name: "last_seen_time", err: errors.New(`ent: missing required field "IAMLoginSession.last_seen_time"`)}
-	}
-	if _, ok := _c.mutation.IdleExpiresTime(); !ok {
-		return &ValidationError{Name: "idle_expires_time", err: errors.New(`ent: missing required field "IAMLoginSession.idle_expires_time"`)}
-	}
-	if _, ok := _c.mutation.AbsoluteExpiresTime(); !ok {
-		return &ValidationError{Name: "absolute_expires_time", err: errors.New(`ent: missing required field "IAMLoginSession.absolute_expires_time"`)}
 	}
 	return nil
 }
@@ -206,25 +153,9 @@ func (_c *IAMLoginSessionCreate) createSpec() (*IAMLoginSession, *sqlgraph.Creat
 		_spec.SetField(iamloginsession.FieldUserID, field.TypeString, value)
 		_node.UserID = value
 	}
-	if value, ok := _c.mutation.SecretHash(); ok {
-		_spec.SetField(iamloginsession.FieldSecretHash, field.TypeString, value)
-		_node.SecretHash = value
-	}
 	if value, ok := _c.mutation.CreateTime(); ok {
 		_spec.SetField(iamloginsession.FieldCreateTime, field.TypeTime, value)
 		_node.CreateTime = value
-	}
-	if value, ok := _c.mutation.LastSeenTime(); ok {
-		_spec.SetField(iamloginsession.FieldLastSeenTime, field.TypeTime, value)
-		_node.LastSeenTime = value
-	}
-	if value, ok := _c.mutation.IdleExpiresTime(); ok {
-		_spec.SetField(iamloginsession.FieldIdleExpiresTime, field.TypeTime, value)
-		_node.IdleExpiresTime = value
-	}
-	if value, ok := _c.mutation.AbsoluteExpiresTime(); ok {
-		_spec.SetField(iamloginsession.FieldAbsoluteExpiresTime, field.TypeTime, value)
-		_node.AbsoluteExpiresTime = value
 	}
 	if value, ok := _c.mutation.RevokedTime(); ok {
 		_spec.SetField(iamloginsession.FieldRevokedTime, field.TypeTime, value)

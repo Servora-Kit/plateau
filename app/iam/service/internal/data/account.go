@@ -14,14 +14,14 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordresettoken"
 )
 
-type verificationTokenRepo struct{ data *Data }
+type verificationTokenRepo struct{ ent *entmodel.Client }
 
 // NewVerificationTokenRepo provides one-time email verification token operations.
 func NewVerificationTokenRepo(data *Data) (biz.VerificationTokenRepo, error) {
-	if data == nil {
+	if data == nil || data.ent == nil {
 		return nil, fmt.Errorf("verification token repository: data is nil")
 	}
-	return &verificationTokenRepo{data: data}, nil
+	return &verificationTokenRepo{ent: data.ent}, nil
 }
 
 func (repo *verificationTokenRepo) Create(ctx context.Context, userID, identifierID, tokenHash string, expires time.Time) error {
@@ -29,7 +29,7 @@ func (repo *verificationTokenRepo) Create(ctx context.Context, userID, identifie
 		return fmt.Errorf("verification token: user and token hash are required")
 	}
 	if identifierID == "" {
-		identifier, err := repo.data.ent.LoginIdentifier.Query().
+		identifier, err := repo.ent.LoginIdentifier.Query().
 			Where(loginidentifier.UserIDEQ(userID), loginidentifier.TypeEQ(biz.LoginIdentifierEmail)).
 			Only(ctx)
 		if err != nil {
@@ -41,7 +41,7 @@ func (repo *verificationTokenRepo) Create(ctx context.Context, userID, identifie
 	if err != nil {
 		return err
 	}
-	_, err = repo.data.ent.EmailVerificationToken.Create().
+	_, err = repo.ent.EmailVerificationToken.Create().
 		SetID(id).
 		SetUserID(userID).
 		SetLoginIdentifierID(identifierID).
@@ -58,7 +58,7 @@ func (repo *verificationTokenRepo) Consume(ctx context.Context, tokenHash string
 	if now.IsZero() {
 		now = time.Now()
 	}
-	entity, err := repo.data.ent.EmailVerificationToken.Query().
+	entity, err := repo.ent.EmailVerificationToken.Query().
 		Where(emailverificationtoken.TokenHashEQ(tokenHash)).
 		Only(ctx)
 	if err != nil {
@@ -70,7 +70,7 @@ func (repo *verificationTokenRepo) Consume(ctx context.Context, tokenHash string
 	if !now.Before(entity.ExpiresTime) {
 		return "", biz.ErrExpired
 	}
-	updated, err := repo.data.ent.EmailVerificationToken.UpdateOneID(entity.ID).
+	updated, err := repo.ent.EmailVerificationToken.UpdateOneID(entity.ID).
 		Where(emailverificationtoken.ConsumedTimeIsNil(), emailverificationtoken.ExpiresTimeGT(now)).
 		SetConsumedTime(now).
 		Save(ctx)
@@ -83,14 +83,14 @@ func (repo *verificationTokenRepo) Consume(ctx context.Context, tokenHash string
 	return updated.UserID, nil
 }
 
-type passwordResetTokenRepo struct{ data *Data }
+type passwordResetTokenRepo struct{ ent *entmodel.Client }
 
 // NewPasswordResetTokenRepository provides atomic reset-token consumption and password replacement.
 func NewPasswordResetTokenRepository(data *Data) (biz.PasswordResetTokenRepo, error) {
-	if data == nil {
+	if data == nil || data.ent == nil {
 		return nil, fmt.Errorf("password reset token repository: data is nil")
 	}
-	return &passwordResetTokenRepo{data: data}, nil
+	return &passwordResetTokenRepo{ent: data.ent}, nil
 }
 
 func (repo *passwordResetTokenRepo) Create(ctx context.Context, userID, tokenHash string, expires time.Time) error {
@@ -101,7 +101,7 @@ func (repo *passwordResetTokenRepo) Create(ctx context.Context, userID, tokenHas
 	if err != nil {
 		return err
 	}
-	_, err = repo.data.ent.PasswordResetToken.Create().SetID(id).SetUserID(userID).SetTokenHash(tokenHash).SetExpiresTime(expires).Save(ctx)
+	_, err = repo.ent.PasswordResetToken.Create().SetID(id).SetUserID(userID).SetTokenHash(tokenHash).SetExpiresTime(expires).Save(ctx)
 	return translateEntError(err)
 }
 
@@ -112,7 +112,7 @@ func (repo *passwordResetTokenRepo) ConsumeAndReplacePassword(ctx context.Contex
 	if now.IsZero() {
 		now = time.Now()
 	}
-	entity, err := repo.data.ent.PasswordResetToken.Query().Where(passwordresettoken.TokenHashEQ(tokenHash)).Only(ctx)
+	entity, err := repo.ent.PasswordResetToken.Query().Where(passwordresettoken.TokenHashEQ(tokenHash)).Only(ctx)
 	if err != nil {
 		return "", translateEntError(err)
 	}
@@ -123,7 +123,24 @@ func (repo *passwordResetTokenRepo) ConsumeAndReplacePassword(ctx context.Contex
 		return "", biz.ErrExpired
 	}
 	userID := entity.UserID
-	err = repo.data.InTx(ctx, func(tx *entmodel.Tx) error {
+	err = inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
+		current, err := lockUser(ctx, tx, userID)
+		if err != nil {
+			return err
+		}
+		if current.Status != biz.UserStatusActive {
+			return biz.ErrUserNotActive
+		}
+		entity, err = tx.PasswordResetToken.Get(ctx, entity.ID)
+		if err != nil {
+			return translateEntError(err)
+		}
+		if entity.ConsumedTime != nil {
+			return biz.ErrMutationMiss
+		}
+		if !now.Before(entity.ExpiresTime) {
+			return biz.ErrExpired
+		}
 		authenticatorEntity, err := tx.Authenticator.Query().Where(
 			authenticator.UserIDEQ(userID),
 			authenticator.TypeEQ(biz.AuthenticatorPassword),
@@ -150,7 +167,7 @@ func (repo *passwordResetTokenRepo) ConsumeAndReplacePassword(ctx context.Contex
 		if updated == nil {
 			return biz.ErrMutationMiss
 		}
-		return nil
+		return revokeUserSessions(ctx, tx, userID, "", now)
 	})
 	if err != nil {
 		return "", err

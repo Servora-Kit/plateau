@@ -16,6 +16,8 @@ type Tx struct {
 	Authenticator *AuthenticatorClient
 	// EmailVerificationToken is the client for interacting with the EmailVerificationToken builders.
 	EmailVerificationToken *EmailVerificationTokenClient
+	// HTTPSession is the client for interacting with the HTTPSession builders.
+	HTTPSession *HTTPSessionClient
 	// IAMLoginSession is the client for interacting with the IAMLoginSession builders.
 	IAMLoginSession *IAMLoginSessionClient
 	// LoginIdentifier is the client for interacting with the LoginIdentifier builders.
@@ -173,6 +175,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Authenticator = NewAuthenticatorClient(tx.config)
 	tx.EmailVerificationToken = NewEmailVerificationTokenClient(tx.config)
+	tx.HTTPSession = NewHTTPSessionClient(tx.config)
 	tx.IAMLoginSession = NewIAMLoginSessionClient(tx.config)
 	tx.LoginIdentifier = NewLoginIdentifierClient(tx.config)
 	tx.OAuthAccessToken = NewOAuthAccessTokenClient(tx.config)

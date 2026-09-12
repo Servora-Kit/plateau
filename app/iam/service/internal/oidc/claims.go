@@ -34,6 +34,9 @@ func (storage *OIDCStorage) activeAccessToken(
 	if err != nil {
 		return nil, fmt.Errorf("query OAuth access token: %w", err)
 	}
+	if token.ActorType == oauthaccesstoken.ActorTypeService {
+		return token, nil
+	}
 	sessionActive, err := storage.client.OAuthTokenSession.Query().
 		Where(oauthtokensession.IDEQ(token.TokenSessionID), oauthtokensession.RevokedTimeIsNil()).
 		Exist(ctx)

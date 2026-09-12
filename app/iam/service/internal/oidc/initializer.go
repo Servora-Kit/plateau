@@ -92,16 +92,17 @@ func (initializer *OIDCInitializer) reconcileClient(
 	clientID string,
 	redirectURIs, scopes []string,
 ) error {
-	existing, err := initializer.storage.client.OAuthClient.Get(ctx, clientID)
+	_, err := initializer.storage.client.OAuthClient.Get(ctx, clientID)
 	if ent.IsNotFound(err) {
 		secretHash := biz.HashOpaqueSecret(configured.GetClientSecret())
 		if _, err := initializer.storage.client.OAuthClient.Create().
 			SetID(clientID).
 			SetSecretHash(secretHash).
 			SetRedirectUris(redirectURIs).
-			SetAllowedGrantTypes([]string{string(oidc.GrantTypeCode), string(oidc.GrantTypeRefreshToken)}).
-			SetAllowedResponseTypes([]string{string(oidc.ResponseTypeCode)}).
+			SetAllowedGrantTypes(deduplicate(configured.GetAllowedGrantTypes())).
+			SetAllowedResponseTypes(configuredResponseTypes(configured)).
 			SetAllowedScopes(scopes).
+			SetAudiences(deduplicate(configured.GetAudiences())).
 			SetTrusted(configured.GetTrusted()).
 			Save(ctx); err != nil {
 			return fmt.Errorf("seed OAuth client %q: %w", clientID, err)
@@ -111,14 +112,13 @@ func (initializer *OIDCInitializer) reconcileClient(
 	if err != nil {
 		return fmt.Errorf("query OAuth client %q: %w", clientID, err)
 	}
-	if biz.HashOpaqueSecret(configured.GetClientSecret()) != existing.SecretHash {
-		return fmt.Errorf("configured OAuth client %q secret conflicts with persisted seed", clientID)
-	}
 	if _, err := initializer.storage.client.OAuthClient.UpdateOneID(clientID).
+		SetSecretHash(biz.HashOpaqueSecret(configured.GetClientSecret())).
 		SetRedirectUris(redirectURIs).
-		SetAllowedGrantTypes([]string{string(oidc.GrantTypeCode), string(oidc.GrantTypeRefreshToken)}).
-		SetAllowedResponseTypes([]string{string(oidc.ResponseTypeCode)}).
+		SetAllowedGrantTypes(deduplicate(configured.GetAllowedGrantTypes())).
+		SetAllowedResponseTypes(configuredResponseTypes(configured)).
 		SetAllowedScopes(scopes).
+		SetAudiences(deduplicate(configured.GetAudiences())).
 		SetTrusted(configured.GetTrusted()).
 		Save(ctx); err != nil {
 		return fmt.Errorf("reconcile OAuth client %q: %w", clientID, err)
@@ -134,7 +134,7 @@ func validateConfiguredClient(
 		return "", nil, nil, fmt.Errorf("OIDC client configuration is nil")
 	}
 	clientID := strings.TrimSpace(configured.GetClientId())
-	if clientID == "" {
+	if clientID == "" || clientID != configured.GetClientId() {
 		return "", nil, nil, fmt.Errorf("OIDC client ID is empty")
 	}
 	if _, duplicate := seenIDs[clientID]; duplicate {
@@ -144,11 +144,36 @@ func validateConfiguredClient(
 	if len(configured.GetClientSecret()) < 32 {
 		return "", nil, nil, fmt.Errorf("OIDC client %q secret must contain at least 32 bytes", clientID)
 	}
-	if !configured.GetTrusted() {
+	grants := deduplicate(configured.GetAllowedGrantTypes())
+	if len(grants) == 0 {
+		return "", nil, nil, fmt.Errorf("OAuth client %q requires allowed_grant_types", clientID)
+	}
+	for _, grant := range grants {
+		switch oidc.GrantType(grant) {
+		case oidc.GrantTypeCode, oidc.GrantTypeRefreshToken, oidc.GrantTypeClientCredentials:
+		default:
+			return "", nil, nil, fmt.Errorf("OAuth client %q has unsupported grant type %q", clientID, grant)
+		}
+	}
+	userFlow := slices.Contains(grants, string(oidc.GrantTypeCode))
+	if slices.Contains(grants, string(oidc.GrantTypeRefreshToken)) && !userFlow {
+		return "", nil, nil, fmt.Errorf("refresh grant requires authorization code grant")
+	}
+	if slices.Contains(grants, string(oidc.GrantTypeClientCredentials)) {
+		if len(configured.GetAudiences()) == 0 {
+			return "", nil, nil, fmt.Errorf("service OAuth client %q requires audiences", clientID)
+		}
+		for _, audience := range configured.GetAudiences() {
+			if strings.TrimSpace(audience) != audience || audience == "" {
+				return "", nil, nil, fmt.Errorf("service audience is empty or contains surrounding whitespace")
+			}
+		}
+	}
+	if userFlow && !configured.GetTrusted() {
 		return "", nil, nil, fmt.Errorf("OIDC client %q must be trusted because consent is unsupported", clientID)
 	}
 	redirectURIs := deduplicate(configured.GetRedirectUris())
-	if len(redirectURIs) == 0 {
+	if userFlow && len(redirectURIs) == 0 {
 		return "", nil, nil, fmt.Errorf("OIDC client %q requires a redirect URI", clientID)
 	}
 	for _, redirectURI := range redirectURIs {
@@ -157,11 +182,11 @@ func validateConfiguredClient(
 		}
 	}
 	scopes := deduplicate(configured.GetAllowedScopes())
-	if !slices.Contains(scopes, oidc.ScopeOpenID) {
+	if userFlow && !slices.Contains(scopes, oidc.ScopeOpenID) {
 		return "", nil, nil, fmt.Errorf("OIDC client %q must allow the openid scope", clientID)
 	}
 	for _, scope := range scopes {
-		if !slices.Contains(supportedScopes, scope) {
+		if userFlow && !slices.Contains(supportedScopes, scope) {
 			return "", nil, nil, fmt.Errorf("OIDC client %q contains unsupported scope %q", clientID, scope)
 		}
 	}
@@ -196,4 +221,11 @@ func deduplicate(values []string) []string {
 		result = append(result, value)
 	}
 	return result
+}
+
+func configuredResponseTypes(config *oidcconfpb.OAuthClient) []string {
+	if slices.Contains(config.GetAllowedGrantTypes(), string(oidc.GrantTypeCode)) {
+		return []string{string(oidc.ResponseTypeCode)}
+	}
+	return []string{}
 }

@@ -29,48 +29,6 @@ func (_u *IAMLoginSessionUpdate) Where(ps ...predicate.IAMLoginSession) *IAMLogi
 	return _u
 }
 
-// SetSecretHash sets the "secret_hash" field.
-func (_u *IAMLoginSessionUpdate) SetSecretHash(v string) *IAMLoginSessionUpdate {
-	_u.mutation.SetSecretHash(v)
-	return _u
-}
-
-// SetNillableSecretHash sets the "secret_hash" field if the given value is not nil.
-func (_u *IAMLoginSessionUpdate) SetNillableSecretHash(v *string) *IAMLoginSessionUpdate {
-	if v != nil {
-		_u.SetSecretHash(*v)
-	}
-	return _u
-}
-
-// SetLastSeenTime sets the "last_seen_time" field.
-func (_u *IAMLoginSessionUpdate) SetLastSeenTime(v time.Time) *IAMLoginSessionUpdate {
-	_u.mutation.SetLastSeenTime(v)
-	return _u
-}
-
-// SetNillableLastSeenTime sets the "last_seen_time" field if the given value is not nil.
-func (_u *IAMLoginSessionUpdate) SetNillableLastSeenTime(v *time.Time) *IAMLoginSessionUpdate {
-	if v != nil {
-		_u.SetLastSeenTime(*v)
-	}
-	return _u
-}
-
-// SetIdleExpiresTime sets the "idle_expires_time" field.
-func (_u *IAMLoginSessionUpdate) SetIdleExpiresTime(v time.Time) *IAMLoginSessionUpdate {
-	_u.mutation.SetIdleExpiresTime(v)
-	return _u
-}
-
-// SetNillableIdleExpiresTime sets the "idle_expires_time" field if the given value is not nil.
-func (_u *IAMLoginSessionUpdate) SetNillableIdleExpiresTime(v *time.Time) *IAMLoginSessionUpdate {
-	if v != nil {
-		_u.SetIdleExpiresTime(*v)
-	}
-	return _u
-}
-
 // SetRevokedTime sets the "revoked_time" field.
 func (_u *IAMLoginSessionUpdate) SetRevokedTime(v time.Time) *IAMLoginSessionUpdate {
 	_u.mutation.SetRevokedTime(v)
@@ -123,16 +81,6 @@ func (_u *IAMLoginSessionUpdate) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (_u *IAMLoginSessionUpdate) check() error {
-	if v, ok := _u.mutation.SecretHash(); ok {
-		if err := iamloginsession.SecretHashValidator(v); err != nil {
-			return &ValidationError{Name: "secret_hash", err: fmt.Errorf(`ent: validator failed for field "IAMLoginSession.secret_hash": %w`, err)}
-		}
-	}
-	return nil
-}
-
 // Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
 func (_u *IAMLoginSessionUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *IAMLoginSessionUpdate {
 	_u.modifiers = append(_u.modifiers, modifiers...)
@@ -140,9 +88,6 @@ func (_u *IAMLoginSessionUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder))
 }
 
 func (_u *IAMLoginSessionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
-	if err := _u.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(iamloginsession.Table, iamloginsession.Columns, sqlgraph.NewFieldSpec(iamloginsession.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -150,15 +95,6 @@ func (_u *IAMLoginSessionUpdate) sqlSave(ctx context.Context) (_node int, err er
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := _u.mutation.SecretHash(); ok {
-		_spec.SetField(iamloginsession.FieldSecretHash, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.LastSeenTime(); ok {
-		_spec.SetField(iamloginsession.FieldLastSeenTime, field.TypeTime, value)
-	}
-	if value, ok := _u.mutation.IdleExpiresTime(); ok {
-		_spec.SetField(iamloginsession.FieldIdleExpiresTime, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.RevokedTime(); ok {
 		_spec.SetField(iamloginsession.FieldRevokedTime, field.TypeTime, value)
@@ -186,48 +122,6 @@ type IAMLoginSessionUpdateOne struct {
 	hooks     []Hook
 	mutation  *IAMLoginSessionMutation
 	modifiers []func(*sql.UpdateBuilder)
-}
-
-// SetSecretHash sets the "secret_hash" field.
-func (_u *IAMLoginSessionUpdateOne) SetSecretHash(v string) *IAMLoginSessionUpdateOne {
-	_u.mutation.SetSecretHash(v)
-	return _u
-}
-
-// SetNillableSecretHash sets the "secret_hash" field if the given value is not nil.
-func (_u *IAMLoginSessionUpdateOne) SetNillableSecretHash(v *string) *IAMLoginSessionUpdateOne {
-	if v != nil {
-		_u.SetSecretHash(*v)
-	}
-	return _u
-}
-
-// SetLastSeenTime sets the "last_seen_time" field.
-func (_u *IAMLoginSessionUpdateOne) SetLastSeenTime(v time.Time) *IAMLoginSessionUpdateOne {
-	_u.mutation.SetLastSeenTime(v)
-	return _u
-}
-
-// SetNillableLastSeenTime sets the "last_seen_time" field if the given value is not nil.
-func (_u *IAMLoginSessionUpdateOne) SetNillableLastSeenTime(v *time.Time) *IAMLoginSessionUpdateOne {
-	if v != nil {
-		_u.SetLastSeenTime(*v)
-	}
-	return _u
-}
-
-// SetIdleExpiresTime sets the "idle_expires_time" field.
-func (_u *IAMLoginSessionUpdateOne) SetIdleExpiresTime(v time.Time) *IAMLoginSessionUpdateOne {
-	_u.mutation.SetIdleExpiresTime(v)
-	return _u
-}
-
-// SetNillableIdleExpiresTime sets the "idle_expires_time" field if the given value is not nil.
-func (_u *IAMLoginSessionUpdateOne) SetNillableIdleExpiresTime(v *time.Time) *IAMLoginSessionUpdateOne {
-	if v != nil {
-		_u.SetIdleExpiresTime(*v)
-	}
-	return _u
 }
 
 // SetRevokedTime sets the "revoked_time" field.
@@ -295,16 +189,6 @@ func (_u *IAMLoginSessionUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (_u *IAMLoginSessionUpdateOne) check() error {
-	if v, ok := _u.mutation.SecretHash(); ok {
-		if err := iamloginsession.SecretHashValidator(v); err != nil {
-			return &ValidationError{Name: "secret_hash", err: fmt.Errorf(`ent: validator failed for field "IAMLoginSession.secret_hash": %w`, err)}
-		}
-	}
-	return nil
-}
-
 // Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
 func (_u *IAMLoginSessionUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *IAMLoginSessionUpdateOne {
 	_u.modifiers = append(_u.modifiers, modifiers...)
@@ -312,9 +196,6 @@ func (_u *IAMLoginSessionUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilde
 }
 
 func (_u *IAMLoginSessionUpdateOne) sqlSave(ctx context.Context) (_node *IAMLoginSession, err error) {
-	if err := _u.check(); err != nil {
-		return _node, err
-	}
 	_spec := sqlgraph.NewUpdateSpec(iamloginsession.Table, iamloginsession.Columns, sqlgraph.NewFieldSpec(iamloginsession.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
@@ -339,15 +220,6 @@ func (_u *IAMLoginSessionUpdateOne) sqlSave(ctx context.Context) (_node *IAMLogi
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := _u.mutation.SecretHash(); ok {
-		_spec.SetField(iamloginsession.FieldSecretHash, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.LastSeenTime(); ok {
-		_spec.SetField(iamloginsession.FieldLastSeenTime, field.TypeTime, value)
-	}
-	if value, ok := _u.mutation.IdleExpiresTime(); ok {
-		_spec.SetField(iamloginsession.FieldIdleExpiresTime, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.RevokedTime(); ok {
 		_spec.SetField(iamloginsession.FieldRevokedTime, field.TypeTime, value)

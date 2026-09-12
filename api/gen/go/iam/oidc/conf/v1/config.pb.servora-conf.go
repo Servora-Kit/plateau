@@ -5,6 +5,7 @@ package oidcconfv1
 
 import (
 	fmt "fmt"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
 // CheckRequired reports the first required-but-missing field on OAuthClient.
@@ -20,6 +21,9 @@ func (m *OAuthClient) CheckRequired() error {
 	if m.ClientSecret == "" {
 		return fmt.Errorf("iam.oidc.conf.v1.oauthclient.client_secret is required")
 	}
+	if len(m.AllowedGrantTypes) == 0 {
+		return fmt.Errorf("iam.oidc.conf.v1.oauthclient.allowed_grant_types is required")
+	}
 	return nil
 }
 
@@ -34,6 +38,18 @@ func (m *OAuthClient) ApplyConf() error {
 
 // SectionKey returns the configuration section key declared on OIDC.
 func (*OIDC) SectionKey() string { return "oidc" }
+
+// ApplyDefaults populates zero-valued fields on OIDC with the literal
+// defaults declared via (servora.conf.v1.field) annotations, then cascades
+// into nested messages that themselves declare defaults.
+func (m *OIDC) ApplyDefaults() {
+	if m == nil {
+		return
+	}
+	if m.ServiceAccessTokenTtl == nil {
+		m.ServiceAccessTokenTtl = durationpb.New(300000000000) // 5m
+	}
+}
 
 // CheckRequired reports the first required-but-missing field on OIDC.
 // Fields marked (servora.conf.v1.field) = { required: true } must have a
@@ -60,5 +76,6 @@ func (m *OIDC) ApplyConf() error {
 	if err := m.CheckRequired(); err != nil {
 		return err
 	}
+	m.ApplyDefaults()
 	return nil
 }

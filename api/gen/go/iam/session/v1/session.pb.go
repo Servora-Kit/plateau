@@ -13,7 +13,6 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -73,91 +72,6 @@ func (SessionErrorReason) EnumDescriptor() ([]byte, []int) {
 	return file_iam_session_v1_session_proto_rawDescGZIP(), []int{0}
 }
 
-// Session is safe Login Session metadata. The opaque cookie secret is never exposed by Proto.
-type Session struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	Name                string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	SessionId           string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	CreateTime          *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	LastSeenTime        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_seen_time,json=lastSeenTime,proto3" json:"last_seen_time,omitempty"`
-	IdleExpiresTime     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=idle_expires_time,json=idleExpiresTime,proto3" json:"idle_expires_time,omitempty"`
-	AbsoluteExpiresTime *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=absolute_expires_time,json=absoluteExpiresTime,proto3" json:"absolute_expires_time,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
-}
-
-func (x *Session) Reset() {
-	*x = Session{}
-	mi := &file_iam_session_v1_session_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Session) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Session) ProtoMessage() {}
-
-func (x *Session) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_session_v1_session_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Session.ProtoReflect.Descriptor instead.
-func (*Session) Descriptor() ([]byte, []int) {
-	return file_iam_session_v1_session_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *Session) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Session) GetSessionId() string {
-	if x != nil {
-		return x.SessionId
-	}
-	return ""
-}
-
-func (x *Session) GetCreateTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreateTime
-	}
-	return nil
-}
-
-func (x *Session) GetLastSeenTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastSeenTime
-	}
-	return nil
-}
-
-func (x *Session) GetIdleExpiresTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.IdleExpiresTime
-	}
-	return nil
-}
-
-func (x *Session) GetAbsoluteExpiresTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AbsoluteExpiresTime
-	}
-	return nil
-}
-
 type LogoutRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -166,7 +80,7 @@ type LogoutRequest struct {
 
 func (x *LogoutRequest) Reset() {
 	*x = LogoutRequest{}
-	mi := &file_iam_session_v1_session_proto_msgTypes[1]
+	mi := &file_iam_session_v1_session_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -178,7 +92,7 @@ func (x *LogoutRequest) String() string {
 func (*LogoutRequest) ProtoMessage() {}
 
 func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_session_v1_session_proto_msgTypes[1]
+	mi := &file_iam_session_v1_session_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -191,7 +105,7 @@ func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
 func (*LogoutRequest) Descriptor() ([]byte, []int) {
-	return file_iam_session_v1_session_proto_rawDescGZIP(), []int{1}
+	return file_iam_session_v1_session_proto_rawDescGZIP(), []int{0}
 }
 
 type LogoutResponse struct {
@@ -202,7 +116,7 @@ type LogoutResponse struct {
 
 func (x *LogoutResponse) Reset() {
 	*x = LogoutResponse{}
-	mi := &file_iam_session_v1_session_proto_msgTypes[2]
+	mi := &file_iam_session_v1_session_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -214,7 +128,7 @@ func (x *LogoutResponse) String() string {
 func (*LogoutResponse) ProtoMessage() {}
 
 func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_session_v1_session_proto_msgTypes[2]
+	mi := &file_iam_session_v1_session_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -227,24 +141,14 @@ func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
 func (*LogoutResponse) Descriptor() ([]byte, []int) {
-	return file_iam_session_v1_session_proto_rawDescGZIP(), []int{2}
+	return file_iam_session_v1_session_proto_rawDescGZIP(), []int{1}
 }
 
 var File_iam_session_v1_session_proto protoreflect.FileDescriptor
 
 const file_iam_session_v1_session_proto_rawDesc = "" +
 	"\n" +
-	"\x1ciam/session/v1/session.proto\x12\x0eiam.session.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\"\xb6\x03\n" +
-	"\aSession\x12\x17\n" +
-	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12\"\n" +
-	"\n" +
-	"session_id\x18\x02 \x01(\tB\x03\xe0A\x03R\tsessionId\x12@\n" +
-	"\vcreate_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
-	"createTime\x12E\n" +
-	"\x0elast_seen_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\flastSeenTime\x12K\n" +
-	"\x11idle_expires_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\x0fidleExpiresTime\x12S\n" +
-	"\x15absolute_expires_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\x13absoluteExpiresTime:C\xeaA@\n" +
-	"\x17iam.plateau.dev/Session\x12\x12sessions/{session}*\bsessions2\asession\"\x0f\n" +
+	"\x1ciam/session/v1/session.proto\x12\x0eiam.session.v1\x1a\x1cgoogle/api/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
 	"\x0eLogoutResponse*j\n" +
 	"\x12SessionErrorReason\x12$\n" +
@@ -266,26 +170,20 @@ func file_iam_session_v1_session_proto_rawDescGZIP() []byte {
 }
 
 var file_iam_session_v1_session_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_iam_session_v1_session_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_iam_session_v1_session_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_iam_session_v1_session_proto_goTypes = []any{
-	(SessionErrorReason)(0),       // 0: iam.session.v1.SessionErrorReason
-	(*Session)(nil),               // 1: iam.session.v1.Session
-	(*LogoutRequest)(nil),         // 2: iam.session.v1.LogoutRequest
-	(*LogoutResponse)(nil),        // 3: iam.session.v1.LogoutResponse
-	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
+	(SessionErrorReason)(0), // 0: iam.session.v1.SessionErrorReason
+	(*LogoutRequest)(nil),   // 1: iam.session.v1.LogoutRequest
+	(*LogoutResponse)(nil),  // 2: iam.session.v1.LogoutResponse
 }
 var file_iam_session_v1_session_proto_depIdxs = []int32{
-	4, // 0: iam.session.v1.Session.create_time:type_name -> google.protobuf.Timestamp
-	4, // 1: iam.session.v1.Session.last_seen_time:type_name -> google.protobuf.Timestamp
-	4, // 2: iam.session.v1.Session.idle_expires_time:type_name -> google.protobuf.Timestamp
-	4, // 3: iam.session.v1.Session.absolute_expires_time:type_name -> google.protobuf.Timestamp
-	2, // 4: iam.session.v1.SessionService.Logout:input_type -> iam.session.v1.LogoutRequest
-	3, // 5: iam.session.v1.SessionService.Logout:output_type -> iam.session.v1.LogoutResponse
-	5, // [5:6] is the sub-list for method output_type
-	4, // [4:5] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 0: iam.session.v1.SessionService.Logout:input_type -> iam.session.v1.LogoutRequest
+	2, // 1: iam.session.v1.SessionService.Logout:output_type -> iam.session.v1.LogoutResponse
+	1, // [1:2] is the sub-list for method output_type
+	0, // [0:1] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_iam_session_v1_session_proto_init() }
@@ -299,7 +197,7 @@ func file_iam_session_v1_session_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_iam_session_v1_session_proto_rawDesc), len(file_iam_session_v1_session_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

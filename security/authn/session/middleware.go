@@ -40,15 +40,7 @@ func Server[T any](authenticator *Authenticator[T], opts ...authnruntime.Option)
 			default:
 				return nil, apiError(fmt.Errorf("session authn: unsupported mode %s", rule.GetMode()))
 			}
-			header := serverTransport.RequestHeader()
-			if header == nil {
-				return nil, apiError(fmt.Errorf("session authn: request header is missing"))
-			}
-			credential, err := cookieCredential(header.Get("Cookie"), authenticator.cookieName)
-			if err != nil {
-				return nil, apiError(err)
-			}
-			trusted, err := authenticator.authenticate(ctx, credential)
+			trusted, err := authenticator.authenticate(ctx)
 			if err != nil {
 				return nil, apiError(err)
 			}

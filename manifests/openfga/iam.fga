@@ -2,7 +2,8 @@ module iam
 
 type user
 
-type plateau
+type service
+
+type iam
   relations
-    define admin: [user]
-    define can_manage_users: admin
+    define manage_users: [service]

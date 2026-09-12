@@ -28,6 +28,8 @@ type OAuthClient struct {
 	AllowedResponseTypes []string `json:"allowed_response_types,omitempty"`
 	// AllowedScopes holds the value of the "allowed_scopes" field.
 	AllowedScopes []string `json:"allowed_scopes,omitempty"`
+	// Audiences holds the value of the "audiences" field.
+	Audiences []string `json:"audiences,omitempty"`
 	// Trusted holds the value of the "trusted" field.
 	Trusted bool `json:"trusted,omitempty"`
 	// CreateTime holds the value of the "create_time" field.
@@ -42,7 +44,7 @@ func (*OAuthClient) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case oauthclient.FieldRedirectUris, oauthclient.FieldAllowedGrantTypes, oauthclient.FieldAllowedResponseTypes, oauthclient.FieldAllowedScopes:
+		case oauthclient.FieldRedirectUris, oauthclient.FieldAllowedGrantTypes, oauthclient.FieldAllowedResponseTypes, oauthclient.FieldAllowedScopes, oauthclient.FieldAudiences:
 			values[i] = new([]byte)
 		case oauthclient.FieldTrusted:
 			values[i] = new(sql.NullBool)
@@ -107,6 +109,14 @@ func (_m *OAuthClient) assignValues(columns []string, values []any) error {
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.AllowedScopes); err != nil {
 					return fmt.Errorf("unmarshal field allowed_scopes: %w", err)
+				}
+			}
+		case oauthclient.FieldAudiences:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field audiences", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Audiences); err != nil {
+					return fmt.Errorf("unmarshal field audiences: %w", err)
 				}
 			}
 		case oauthclient.FieldTrusted:
@@ -176,6 +186,9 @@ func (_m *OAuthClient) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("allowed_scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AllowedScopes))
+	builder.WriteString(", ")
+	builder.WriteString("audiences=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Audiences))
 	builder.WriteString(", ")
 	builder.WriteString("trusted=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Trusted))

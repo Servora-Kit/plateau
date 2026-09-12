@@ -50,6 +50,12 @@ func (_c *OAuthClientCreate) SetAllowedScopes(v []string) *OAuthClientCreate {
 	return _c
 }
 
+// SetAudiences sets the "audiences" field.
+func (_c *OAuthClientCreate) SetAudiences(v []string) *OAuthClientCreate {
+	_c.mutation.SetAudiences(v)
+	return _c
+}
+
 // SetTrusted sets the "trusted" field.
 func (_c *OAuthClientCreate) SetTrusted(v bool) *OAuthClientCreate {
 	_c.mutation.SetTrusted(v)
@@ -232,6 +238,10 @@ func (_c *OAuthClientCreate) createSpec() (*OAuthClient, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.AllowedScopes(); ok {
 		_spec.SetField(oauthclient.FieldAllowedScopes, field.TypeJSON, value)
 		_node.AllowedScopes = value
+	}
+	if value, ok := _c.mutation.Audiences(); ok {
+		_spec.SetField(oauthclient.FieldAudiences, field.TypeJSON, value)
+		_node.Audiences = value
 	}
 	if value, ok := _c.mutation.Trusted(); ok {
 		_spec.SetField(oauthclient.FieldTrusted, field.TypeBool, value)

@@ -149,6 +149,16 @@ func TokenSessionIDHasSuffix(v string) predicate.OAuthAccessToken {
 	return predicate.OAuthAccessToken(sql.FieldHasSuffix(FieldTokenSessionID, v))
 }
 
+// TokenSessionIDIsNil applies the IsNil predicate on the "token_session_id" field.
+func TokenSessionIDIsNil() predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldIsNull(FieldTokenSessionID))
+}
+
+// TokenSessionIDNotNil applies the NotNil predicate on the "token_session_id" field.
+func TokenSessionIDNotNil() predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldNotNull(FieldTokenSessionID))
+}
+
 // TokenSessionIDEqualFold applies the EqualFold predicate on the "token_session_id" field.
 func TokenSessionIDEqualFold(v string) predicate.OAuthAccessToken {
 	return predicate.OAuthAccessToken(sql.FieldEqualFold(FieldTokenSessionID, v))
@@ -157,6 +167,36 @@ func TokenSessionIDEqualFold(v string) predicate.OAuthAccessToken {
 // TokenSessionIDContainsFold applies the ContainsFold predicate on the "token_session_id" field.
 func TokenSessionIDContainsFold(v string) predicate.OAuthAccessToken {
 	return predicate.OAuthAccessToken(sql.FieldContainsFold(FieldTokenSessionID, v))
+}
+
+// ActorTypeEQ applies the EQ predicate on the "actor_type" field.
+func ActorTypeEQ(v ActorType) predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldEQ(FieldActorType, v))
+}
+
+// ActorTypeNEQ applies the NEQ predicate on the "actor_type" field.
+func ActorTypeNEQ(v ActorType) predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldNEQ(FieldActorType, v))
+}
+
+// ActorTypeIn applies the In predicate on the "actor_type" field.
+func ActorTypeIn(vs ...ActorType) predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldIn(FieldActorType, vs...))
+}
+
+// ActorTypeNotIn applies the NotIn predicate on the "actor_type" field.
+func ActorTypeNotIn(vs ...ActorType) predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldNotIn(FieldActorType, vs...))
+}
+
+// AudiencesIsNil applies the IsNil predicate on the "audiences" field.
+func AudiencesIsNil() predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldIsNull(FieldAudiences))
+}
+
+// AudiencesNotNil applies the NotNil predicate on the "audiences" field.
+func AudiencesNotNil() predicate.OAuthAccessToken {
+	return predicate.OAuthAccessToken(sql.FieldNotNull(FieldAudiences))
 }
 
 // SubjectEQ applies the EQ predicate on the "subject" field.

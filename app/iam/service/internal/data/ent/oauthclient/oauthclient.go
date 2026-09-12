@@ -23,6 +23,8 @@ const (
 	FieldAllowedResponseTypes = "allowed_response_types"
 	// FieldAllowedScopes holds the string denoting the allowed_scopes field in the database.
 	FieldAllowedScopes = "allowed_scopes"
+	// FieldAudiences holds the string denoting the audiences field in the database.
+	FieldAudiences = "audiences"
 	// FieldTrusted holds the string denoting the trusted field in the database.
 	FieldTrusted = "trusted"
 	// FieldCreateTime holds the string denoting the create_time field in the database.
@@ -41,6 +43,7 @@ var Columns = []string{
 	FieldAllowedGrantTypes,
 	FieldAllowedResponseTypes,
 	FieldAllowedScopes,
+	FieldAudiences,
 	FieldTrusted,
 	FieldCreateTime,
 	FieldUpdateTime,

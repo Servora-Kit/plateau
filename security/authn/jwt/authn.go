@@ -2,15 +2,18 @@ package jwt
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	jwtconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
+	jwtkeypb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1"
 	security "github.com/Servora-Kit/plateau/security"
 	securityjwt "github.com/Servora-Kit/plateau/security/jwt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/zitadel/oidc/v3/pkg/client"
 )
 
 const expectedTokenType = "JWT"
@@ -21,58 +24,68 @@ type Authenticator struct {
 	claimsValidator *jwt.Validator
 }
 
-// New constructs one immutable JWT Authenticator from generated Resource Server config.
-func New(config *jwtconfpb.JwtAuthnConfig) (*Authenticator, error) {
-	if config == nil {
-		return nil, fmt.Errorf("jwt authn: config is nil")
+// Option configures an injected, application-owned verifier.
+type Option func(*options)
+type options struct {
+	verifier *securityjwt.Verifier
+	injected int
+}
+
+// WithVerifier skips discovery and uses the supplied trusted key source.
+func WithVerifier(verifier *securityjwt.Verifier) Option {
+	return func(o *options) { o.verifier = verifier; o.injected++ }
+}
+
+// New discovers or loads a verifier. Cleanup releases owned refresh workers.
+func New(ctx context.Context, config *jwtconfpb.JwtAuthnConfig, opts ...Option) (*Authenticator, func(), error) {
+	if ctx == nil || config == nil {
+		return nil, nil, fmt.Errorf("jwt authn: context and config are required")
 	}
-	issuer := strings.TrimSpace(config.GetIssuer())
-	if issuer == "" || issuer != config.GetIssuer() {
-		return nil, fmt.Errorf("jwt authn: issuer must be non-empty without surrounding whitespace")
+	issuer, audience := config.GetIssuer(), config.GetAudience()
+	if issuer == "" || strings.TrimSpace(issuer) != issuer || audience == "" || strings.TrimSpace(audience) != audience {
+		return nil, nil, fmt.Errorf("jwt authn: issuer and audience must be non-empty without surrounding whitespace")
 	}
-	audience := strings.TrimSpace(config.GetAudience())
-	if audience == "" || audience != config.GetAudience() {
-		return nil, fmt.Errorf("jwt authn: audience must be non-empty without surrounding whitespace")
+	o := options{}
+	for _, option := range opts {
+		if option != nil {
+			option(&o)
+		}
 	}
-	keyConfigs := config.GetVerificationKeys()
-	if len(keyConfigs) == 0 {
-		return nil, fmt.Errorf("jwt authn: verification key set is empty")
+	count := o.injected
+	if len(config.GetVerificationKeys()) != 0 {
+		count++
 	}
-	keys := make(map[string]*rsa.PublicKey, len(keyConfigs))
-	for index, keyConfig := range keyConfigs {
-		if keyConfig == nil {
-			return nil, fmt.Errorf("jwt authn: verification_keys[%d] is nil", index)
-		}
-		kid := strings.TrimSpace(keyConfig.GetKid())
-		if kid == "" || kid != keyConfig.GetKid() {
-			return nil, fmt.Errorf("jwt authn: verification_keys[%d].kid must be non-empty without surrounding whitespace", index)
-		}
-		if _, exists := keys[kid]; exists {
-			return nil, fmt.Errorf("jwt authn: duplicate verification KID %q", kid)
-		}
-		data, err := publicKeyData(keyConfig)
-		if err != nil {
-			return nil, fmt.Errorf("jwt authn: verification_keys[%d] KID %q: %w", index, kid, err)
-		}
-		publicKey, err := parsePublicKey(data)
-		if err != nil {
-			return nil, fmt.Errorf("jwt authn: verification_keys[%d] KID %q: %w", index, kid, err)
-		}
-		keys[kid] = publicKey
+	if config.GetJwks() != nil {
+		count++
 	}
-	verifier, err := securityjwt.New(keys)
+	if count > 1 || o.injected > 0 && o.verifier == nil {
+		return nil, nil, fmt.Errorf("jwt authn: exactly one key source may be selected")
+	}
+	verifier := o.verifier
+	cleanup := func() {}
+	var err error
+	switch {
+	case o.injected > 0:
+	case len(config.GetVerificationKeys()) > 0:
+		verifier, err = securityjwt.NewFromConfig(config.GetVerificationKeys())
+	default:
+		jwks := config.GetJwks()
+		if jwks == nil {
+			metadata, discoveryErr := client.Discover(ctx, issuer, &http.Client{Timeout: 5 * time.Second})
+			if discoveryErr != nil {
+				return nil, nil, fmt.Errorf("jwt authn: discover issuer: %w", discoveryErr)
+			}
+			jwks = &jwtkeypb.JWKS{Uri: metadata.JwksURI}
+		}
+		verifier, cleanup, err = securityjwt.NewJWKS(ctx, jwks)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("jwt authn: verifier config: %w", err)
+		return nil, nil, err
 	}
 	return &Authenticator{
-		verifier: verifier,
-		claimsValidator: jwt.NewValidator(
-			jwt.WithIssuer(issuer),
-			jwt.WithAudience(audience),
-			jwt.WithExpirationRequired(),
-			jwt.WithIssuedAt(),
-		),
-	}, nil
+		verifier:        verifier,
+		claimsValidator: jwt.NewValidator(jwt.WithIssuer(issuer), jwt.WithAudience(audience), jwt.WithExpirationRequired(), jwt.WithIssuedAt()),
+	}, cleanup, nil
 }
 
 // Authenticate validates one Authorization header and maps fresh verified claims to one stable Actor.
@@ -100,7 +113,7 @@ func Authenticate[T jwt.Claims](ctx context.Context, authenticator *Authenticato
 	if err != nil {
 		return security.Actor{}, err
 	}
-	token, err := authenticator.verifier.VerifySignature(tokenString, claims)
+	token, err := authenticator.verifier.VerifySignature(ctx, tokenString, claims)
 	if err != nil {
 		return security.Actor{}, fmt.Errorf("%w: %w", ErrInvalidToken, err)
 	}

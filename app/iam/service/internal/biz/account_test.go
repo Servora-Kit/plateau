@@ -156,8 +156,7 @@ func accountTestRuntime() *bootstrap.Runtime {
 
 func newAccountForTest(t *testing.T, users *fakeAccountUsers, tokens *fakeVerificationTokens, resetTokens *fakePasswordResetTokens, mailer *fakeMailSender) *AccountUsecase {
 	t.Helper()
-	sessions := newSessionForTest(t, users, new(fakeSessions), new(fakeTokenSessions))
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, resetTokens, &fakeCAP{valid: true}, mailer, sessions, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, resetTokens, &fakeCAP{valid: true}, mailer, accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -169,8 +168,7 @@ func TestAccountRegisterConsumesCAPBeforeCreatingPendingUser(t *testing.T) {
 	users := new(fakeAccountUsers)
 	tokens := new(fakeVerificationTokens)
 	mailer := new(fakeMailSender)
-	sessions := newSessionForTest(t, users, new(fakeSessions), new(fakeTokenSessions))
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, new(fakePasswordResetTokens), captcha, mailer, sessions, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, new(fakePasswordResetTokens), captcha, mailer, accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -194,8 +192,7 @@ func TestAccountRegisterConsumesCAPBeforeCreatingPendingUser(t *testing.T) {
 func TestAccountRejectsInvalidCAPWithoutUserSideEffects(t *testing.T) {
 	captcha := &fakeCAP{}
 	users := new(fakeAccountUsers)
-	sessions := newSessionForTest(t, users, new(fakeSessions), new(fakeTokenSessions))
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), new(fakePasswordResetTokens), captcha, new(fakeMailSender), sessions, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), new(fakePasswordResetTokens), captcha, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -230,9 +227,7 @@ func TestAccountPasswordResetUsesCAPAndRevokesSessions(t *testing.T) {
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
 	}}
 	resetTokens := new(fakePasswordResetTokens)
-	sessionRepo, tokenSessions := new(fakeSessions), new(fakeTokenSessions)
-	sessions := newSessionForTest(t, users, sessionRepo, tokenSessions)
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), resetTokens, &fakeCAP{valid: true}, mail, sessions, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), resetTokens, &fakeCAP{valid: true}, mail, accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -249,8 +244,8 @@ func TestAccountPasswordResetUsesCAPAndRevokesSessions(t *testing.T) {
 	if err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "new correct horse battery staple"); err != nil {
 		t.Fatalf("ConfirmPasswordReset() error = %v", err)
 	}
-	if !resetTokens.replaced || !sessionRepo.revokedAll || !tokenSessions.revokedForUser {
-		t.Fatalf("reset side effects replaced=%t sessions=%t tokens=%t", resetTokens.replaced, sessionRepo.revokedAll, tokenSessions.revokedForUser)
+	if !resetTokens.replaced {
+		t.Fatal("atomic reset operation was not invoked")
 	}
 }
 
@@ -262,9 +257,7 @@ func TestAccountChangePasswordPreservesCurrentSessionAndRevokesOthers(t *testing
 	}
 	users := &fakeAccountUsers{user: activeUser()}
 	credentials := &fakeCredentials{credential: &PasswordCredential{UserID: "user-1", AuthenticatorID: "auth-1", PasswordHash: hash}}
-	sessionRepo, tokenSessions := new(fakeSessions), new(fakeTokenSessions)
-	sessions := newSessionForTest(t, users, sessionRepo, tokenSessions)
-	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), &fakeCAP{valid: true}, new(fakeMailSender), sessions, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -272,8 +265,8 @@ func TestAccountChangePasswordPreservesCurrentSessionAndRevokesOthers(t *testing
 		t.Fatalf("ChangePassword() error = %v", err)
 	}
 	match, _, err := password.Compare("new correct horse battery staple", credentials.credential.PasswordHash)
-	if err != nil || !match || !credentials.replaced || !sessionRepo.revokedOthers || sessionRepo.revoked || !tokenSessions.revokedForUser {
-		t.Fatalf("password match=%t error=%v replaced=%t others=%t current=%t tokens=%t", match, err, credentials.replaced, sessionRepo.revokedOthers, sessionRepo.revoked, tokenSessions.revokedForUser)
+	if err != nil || !match || !credentials.replaced || credentials.keepLoginID != "session-1" {
+		t.Fatalf("password operation: %v", err)
 	}
 }
 
@@ -282,10 +275,8 @@ func TestUserDisableRevokesLoginAndOAuthSessions(t *testing.T) {
 		Name: "users/user-1", UserId: "user-1", Email: stringPtr("person@example.com"),
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true, Etag: "etag-1",
 	}}
-	sessionRepo, tokenSessions := new(fakeSessions), new(fakeTokenSessions)
-	sessions := newSessionForTest(t, users, sessionRepo, tokenSessions)
 	account := newAccountForTest(t, users, new(fakeVerificationTokens), new(fakePasswordResetTokens), new(fakeMailSender))
-	usecase, err := NewUserUsecase(account, users, sessions, nil)
+	usecase, err := NewUserUsecase(account, users)
 	if err != nil {
 		t.Fatalf("NewUserUsecase() error = %v", err)
 	}
@@ -294,11 +285,11 @@ func TestUserDisableRevokesLoginAndOAuthSessions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DisableUser() error = %v", err)
 	}
-	if disabled.GetStatus() != userpb.UserStatus_USER_STATUS_DISABLED || !sessionRepo.revokedAll || !tokenSessions.revokedForUser {
-		t.Fatalf("disabled=%s login sessions=%t OAuth sessions=%t", disabled.GetStatus(), sessionRepo.revokedAll, tokenSessions.revokedForUser)
+	if disabled.GetStatus() != userpb.UserStatus_USER_STATUS_DISABLED {
+		t.Fatal("atomic status operation was not invoked")
 	}
 
-	// Repeating disable remains safe and retries revocation rather than restoring any session.
+	// Repeated disable still delegates to the atomic repository operation.
 	if _, err := usecase.DisableUser(t.Context(), userpb.NewUserName("user-1"), ""); err != nil {
 		t.Fatalf("repeated DisableUser() error = %v", err)
 	}

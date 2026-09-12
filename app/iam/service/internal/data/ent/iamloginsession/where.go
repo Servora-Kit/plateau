@@ -69,29 +69,9 @@ func UserID(v string) predicate.IAMLoginSession {
 	return predicate.IAMLoginSession(sql.FieldEQ(FieldUserID, v))
 }
 
-// SecretHash applies equality check predicate on the "secret_hash" field. It's identical to SecretHashEQ.
-func SecretHash(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldSecretHash, v))
-}
-
 // CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
 func CreateTime(v time.Time) predicate.IAMLoginSession {
 	return predicate.IAMLoginSession(sql.FieldEQ(FieldCreateTime, v))
-}
-
-// LastSeenTime applies equality check predicate on the "last_seen_time" field. It's identical to LastSeenTimeEQ.
-func LastSeenTime(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldLastSeenTime, v))
-}
-
-// IdleExpiresTime applies equality check predicate on the "idle_expires_time" field. It's identical to IdleExpiresTimeEQ.
-func IdleExpiresTime(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldIdleExpiresTime, v))
-}
-
-// AbsoluteExpiresTime applies equality check predicate on the "absolute_expires_time" field. It's identical to AbsoluteExpiresTimeEQ.
-func AbsoluteExpiresTime(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldAbsoluteExpiresTime, v))
 }
 
 // RevokedTime applies equality check predicate on the "revoked_time" field. It's identical to RevokedTimeEQ.
@@ -164,71 +144,6 @@ func UserIDContainsFold(v string) predicate.IAMLoginSession {
 	return predicate.IAMLoginSession(sql.FieldContainsFold(FieldUserID, v))
 }
 
-// SecretHashEQ applies the EQ predicate on the "secret_hash" field.
-func SecretHashEQ(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldSecretHash, v))
-}
-
-// SecretHashNEQ applies the NEQ predicate on the "secret_hash" field.
-func SecretHashNEQ(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNEQ(FieldSecretHash, v))
-}
-
-// SecretHashIn applies the In predicate on the "secret_hash" field.
-func SecretHashIn(vs ...string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldIn(FieldSecretHash, vs...))
-}
-
-// SecretHashNotIn applies the NotIn predicate on the "secret_hash" field.
-func SecretHashNotIn(vs ...string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNotIn(FieldSecretHash, vs...))
-}
-
-// SecretHashGT applies the GT predicate on the "secret_hash" field.
-func SecretHashGT(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGT(FieldSecretHash, v))
-}
-
-// SecretHashGTE applies the GTE predicate on the "secret_hash" field.
-func SecretHashGTE(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGTE(FieldSecretHash, v))
-}
-
-// SecretHashLT applies the LT predicate on the "secret_hash" field.
-func SecretHashLT(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLT(FieldSecretHash, v))
-}
-
-// SecretHashLTE applies the LTE predicate on the "secret_hash" field.
-func SecretHashLTE(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLTE(FieldSecretHash, v))
-}
-
-// SecretHashContains applies the Contains predicate on the "secret_hash" field.
-func SecretHashContains(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldContains(FieldSecretHash, v))
-}
-
-// SecretHashHasPrefix applies the HasPrefix predicate on the "secret_hash" field.
-func SecretHashHasPrefix(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldHasPrefix(FieldSecretHash, v))
-}
-
-// SecretHashHasSuffix applies the HasSuffix predicate on the "secret_hash" field.
-func SecretHashHasSuffix(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldHasSuffix(FieldSecretHash, v))
-}
-
-// SecretHashEqualFold applies the EqualFold predicate on the "secret_hash" field.
-func SecretHashEqualFold(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEqualFold(FieldSecretHash, v))
-}
-
-// SecretHashContainsFold applies the ContainsFold predicate on the "secret_hash" field.
-func SecretHashContainsFold(v string) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldContainsFold(FieldSecretHash, v))
-}
-
 // CreateTimeEQ applies the EQ predicate on the "create_time" field.
 func CreateTimeEQ(v time.Time) predicate.IAMLoginSession {
 	return predicate.IAMLoginSession(sql.FieldEQ(FieldCreateTime, v))
@@ -267,126 +182,6 @@ func CreateTimeLT(v time.Time) predicate.IAMLoginSession {
 // CreateTimeLTE applies the LTE predicate on the "create_time" field.
 func CreateTimeLTE(v time.Time) predicate.IAMLoginSession {
 	return predicate.IAMLoginSession(sql.FieldLTE(FieldCreateTime, v))
-}
-
-// LastSeenTimeEQ applies the EQ predicate on the "last_seen_time" field.
-func LastSeenTimeEQ(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldLastSeenTime, v))
-}
-
-// LastSeenTimeNEQ applies the NEQ predicate on the "last_seen_time" field.
-func LastSeenTimeNEQ(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNEQ(FieldLastSeenTime, v))
-}
-
-// LastSeenTimeIn applies the In predicate on the "last_seen_time" field.
-func LastSeenTimeIn(vs ...time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldIn(FieldLastSeenTime, vs...))
-}
-
-// LastSeenTimeNotIn applies the NotIn predicate on the "last_seen_time" field.
-func LastSeenTimeNotIn(vs ...time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNotIn(FieldLastSeenTime, vs...))
-}
-
-// LastSeenTimeGT applies the GT predicate on the "last_seen_time" field.
-func LastSeenTimeGT(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGT(FieldLastSeenTime, v))
-}
-
-// LastSeenTimeGTE applies the GTE predicate on the "last_seen_time" field.
-func LastSeenTimeGTE(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGTE(FieldLastSeenTime, v))
-}
-
-// LastSeenTimeLT applies the LT predicate on the "last_seen_time" field.
-func LastSeenTimeLT(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLT(FieldLastSeenTime, v))
-}
-
-// LastSeenTimeLTE applies the LTE predicate on the "last_seen_time" field.
-func LastSeenTimeLTE(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLTE(FieldLastSeenTime, v))
-}
-
-// IdleExpiresTimeEQ applies the EQ predicate on the "idle_expires_time" field.
-func IdleExpiresTimeEQ(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldIdleExpiresTime, v))
-}
-
-// IdleExpiresTimeNEQ applies the NEQ predicate on the "idle_expires_time" field.
-func IdleExpiresTimeNEQ(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNEQ(FieldIdleExpiresTime, v))
-}
-
-// IdleExpiresTimeIn applies the In predicate on the "idle_expires_time" field.
-func IdleExpiresTimeIn(vs ...time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldIn(FieldIdleExpiresTime, vs...))
-}
-
-// IdleExpiresTimeNotIn applies the NotIn predicate on the "idle_expires_time" field.
-func IdleExpiresTimeNotIn(vs ...time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNotIn(FieldIdleExpiresTime, vs...))
-}
-
-// IdleExpiresTimeGT applies the GT predicate on the "idle_expires_time" field.
-func IdleExpiresTimeGT(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGT(FieldIdleExpiresTime, v))
-}
-
-// IdleExpiresTimeGTE applies the GTE predicate on the "idle_expires_time" field.
-func IdleExpiresTimeGTE(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGTE(FieldIdleExpiresTime, v))
-}
-
-// IdleExpiresTimeLT applies the LT predicate on the "idle_expires_time" field.
-func IdleExpiresTimeLT(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLT(FieldIdleExpiresTime, v))
-}
-
-// IdleExpiresTimeLTE applies the LTE predicate on the "idle_expires_time" field.
-func IdleExpiresTimeLTE(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLTE(FieldIdleExpiresTime, v))
-}
-
-// AbsoluteExpiresTimeEQ applies the EQ predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeEQ(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldEQ(FieldAbsoluteExpiresTime, v))
-}
-
-// AbsoluteExpiresTimeNEQ applies the NEQ predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeNEQ(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNEQ(FieldAbsoluteExpiresTime, v))
-}
-
-// AbsoluteExpiresTimeIn applies the In predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeIn(vs ...time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldIn(FieldAbsoluteExpiresTime, vs...))
-}
-
-// AbsoluteExpiresTimeNotIn applies the NotIn predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeNotIn(vs ...time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldNotIn(FieldAbsoluteExpiresTime, vs...))
-}
-
-// AbsoluteExpiresTimeGT applies the GT predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeGT(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGT(FieldAbsoluteExpiresTime, v))
-}
-
-// AbsoluteExpiresTimeGTE applies the GTE predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeGTE(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldGTE(FieldAbsoluteExpiresTime, v))
-}
-
-// AbsoluteExpiresTimeLT applies the LT predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeLT(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLT(FieldAbsoluteExpiresTime, v))
-}
-
-// AbsoluteExpiresTimeLTE applies the LTE predicate on the "absolute_expires_time" field.
-func AbsoluteExpiresTimeLTE(v time.Time) predicate.IAMLoginSession {
-	return predicate.IAMLoginSession(sql.FieldLTE(FieldAbsoluteExpiresTime, v))
 }
 
 // RevokedTimeEQ applies the EQ predicate on the "revoked_time" field.

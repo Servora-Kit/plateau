@@ -109,7 +109,7 @@ func TestVerifierAcceptsOnlyRS256AndKnownStringKID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(valid, claims()); err != nil {
+	if _, err := verifier.VerifySignature(t.Context(), valid, claims()); err != nil {
 		t.Fatalf("verify RS256: %v", err)
 	}
 
@@ -117,7 +117,7 @@ func TestVerifierAcceptsOnlyRS256AndKnownStringKID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := unknownVerifier.VerifySignature(valid, claims()); err == nil || !strings.Contains(err.Error(), "unknown kid") {
+	if _, err := unknownVerifier.VerifySignature(t.Context(), valid, claims()); err == nil || !strings.Contains(err.Error(), "unknown kid") {
 		t.Fatalf("unknown KID error = %v", err)
 	}
 
@@ -126,7 +126,7 @@ func TestVerifierAcceptsOnlyRS256AndKnownStringKID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(missingToken, claims()); err == nil || !strings.Contains(err.Error(), "missing kid") {
+	if _, err := verifier.VerifySignature(t.Context(), missingToken, claims()); err == nil || !strings.Contains(err.Error(), "missing kid") {
 		t.Fatalf("missing KID error = %v", err)
 	}
 
@@ -136,7 +136,7 @@ func TestVerifierAcceptsOnlyRS256AndKnownStringKID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(nonStringToken, claims()); err == nil || !strings.Contains(err.Error(), "missing kid") {
+	if _, err := verifier.VerifySignature(t.Context(), nonStringToken, claims()); err == nil || !strings.Contains(err.Error(), "missing kid") {
 		t.Fatalf("non-string KID error = %v", err)
 	}
 
@@ -146,7 +146,7 @@ func TestVerifierAcceptsOnlyRS256AndKnownStringKID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(rs512Token, claims()); err == nil {
+	if _, err := verifier.VerifySignature(t.Context(), rs512Token, claims()); err == nil {
 		t.Fatal("RS512 token accepted")
 	}
 
@@ -156,7 +156,7 @@ func TestVerifierAcceptsOnlyRS256AndKnownStringKID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(hs256Token, claims()); err == nil {
+	if _, err := verifier.VerifySignature(t.Context(), hs256Token, claims()); err == nil {
 		t.Fatal("HS256 token accepted")
 	}
 }
@@ -176,7 +176,7 @@ func TestVerifierSnapshotsKeySet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(token, &customClaims{}); err != nil {
+	if _, err := verifier.VerifySignature(t.Context(), token, &customClaims{}); err != nil {
 		t.Fatalf("snapshot verification failed: %v", err)
 	}
 }
@@ -210,7 +210,7 @@ func TestVerifierRejectsInvalidSignature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(token, &customClaims{}); err == nil {
+	if _, err := verifier.VerifySignature(t.Context(), token, &customClaims{}); err == nil {
 		t.Fatal("invalid signature accepted")
 	}
 }
@@ -226,7 +226,7 @@ func TestVerifierDoesNotOwnClaimsPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := verifier.VerifySignature(token, &customClaims{}); err != nil {
+	if _, err := verifier.VerifySignature(t.Context(), token, &customClaims{}); err != nil {
 		t.Fatalf("signature-only verifier rejected claims policy: %v", err)
 	}
 }
@@ -238,7 +238,7 @@ func TestVerifierRejectsTypedNilClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 	var claims *customClaims
-	if _, err := verifier.VerifySignature("token", claims); err == nil {
+	if _, err := verifier.VerifySignature(t.Context(), "token", claims); err == nil {
 		t.Fatal("typed-nil claims accepted")
 	}
 }

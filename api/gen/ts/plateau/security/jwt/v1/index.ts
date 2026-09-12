@@ -39,6 +39,11 @@ function encodeMultiSegmentPath(value: unknown): string {
     .join('/');
 }
 
+// JWKS selects one trusted remote public-key set.
+export type JWKS = {
+  uri?: string;
+};
+
 // VerificationKey describes one public key accepted by a JWT verifier.
 export type VerificationKey = {
   kid?: string;

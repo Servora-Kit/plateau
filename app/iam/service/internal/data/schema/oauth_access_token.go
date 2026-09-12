@@ -16,7 +16,9 @@ type OAuthAccessToken struct{ ent.Schema }
 func (OAuthAccessToken) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("id").Immutable(),
-		field.String("token_session_id").NotEmpty().Immutable(),
+		field.String("token_session_id").Optional().Immutable(),
+		field.Enum("actor_type").Values("human", "service").Default("human").Immutable(),
+		field.JSON("audiences", []string{}).Optional(),
 		field.String("subject").NotEmpty().Immutable(),
 		field.String("client_id").NotEmpty().Immutable(),
 		field.JSON("scopes", []string{}),

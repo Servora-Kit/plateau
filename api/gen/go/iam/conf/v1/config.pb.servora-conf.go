@@ -17,8 +17,8 @@ func (m *IAM) CheckRequired() error {
 	if m == nil {
 		return fmt.Errorf("iam.conf.v1.IAM: nil receiver")
 	}
-	if m.BootstrapAdminEmail == "" {
-		return fmt.Errorf("iam.conf.v1.iam.bootstrap_admin_email is required")
+	if m.BootstrapUserEmail == "" {
+		return fmt.Errorf("iam.conf.v1.iam.bootstrap_user_email is required")
 	}
 	return nil
 }

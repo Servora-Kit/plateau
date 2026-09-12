@@ -26,9 +26,9 @@ const (
 type IAM struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Bootstrap creates this single platform administrator idempotently.
-	BootstrapAdminEmail string `protobuf:"bytes,1,opt,name=bootstrap_admin_email,json=bootstrapAdminEmail,proto3" json:"bootstrap_admin_email,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	BootstrapUserEmail string `protobuf:"bytes,1,opt,name=bootstrap_user_email,json=bootstrapUserEmail,proto3" json:"bootstrap_user_email,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *IAM) Reset() {
@@ -61,9 +61,9 @@ func (*IAM) Descriptor() ([]byte, []int) {
 	return file_iam_conf_v1_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *IAM) GetBootstrapAdminEmail() string {
+func (x *IAM) GetBootstrapUserEmail() string {
 	if x != nil {
-		return x.BootstrapAdminEmail
+		return x.BootstrapUserEmail
 	}
 	return ""
 }
@@ -72,9 +72,9 @@ var File_iam_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_iam_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\x18iam/conf/v1/config.proto\x12\viam.conf.v1\x1a!servora/conf/v1/annotations.proto\"L\n" +
-	"\x03IAM\x12:\n" +
-	"\x15bootstrap_admin_email\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x13bootstrapAdminEmail:\t\x82\xce\x18\x05\n" +
+	"\x18iam/conf/v1/config.proto\x12\viam.conf.v1\x1a!servora/conf/v1/annotations.proto\"J\n" +
+	"\x03IAM\x128\n" +
+	"\x14bootstrap_user_email\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x12bootstrapUserEmail:\t\x82\xce\x18\x05\n" +
 	"\x03iamBAZ?github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1;iamconfv1b\x06proto3"
 
 var (

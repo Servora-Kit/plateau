@@ -43,33 +43,6 @@ function encodeMultiSegmentPath(value: unknown): string {
 export type SessionErrorReason =
   | 'SESSION_ERROR_REASON_REVOKED'
   | 'SESSION_ERROR_REASON_UNSPECIFIED';
-// Session is safe Login Session metadata. The opaque cookie secret is never exposed by Proto.
-export type Session = {
-  //
-  // Behaviors: OUTPUT_ONLY
-  absoluteExpiresTime?: wellKnownTimestamp;
-  //
-  // Behaviors: OUTPUT_ONLY
-  createTime?: wellKnownTimestamp;
-  //
-  // Behaviors: OUTPUT_ONLY
-  idleExpiresTime?: wellKnownTimestamp;
-  //
-  // Behaviors: OUTPUT_ONLY
-  lastSeenTime?: wellKnownTimestamp;
-  //
-  // Behaviors: IDENTIFIER
-  name?: string;
-  //
-  // Behaviors: OUTPUT_ONLY
-  sessionId?: string;
-};
-
-// Encoded using RFC 3339, where generated output will always be Z-normalized
-// and uses 0, 3, 6 or 9 fractional digits.
-// Offsets other than "Z" are also accepted.
-type wellKnownTimestamp = string;
-
 export type LogoutRequest = {
 };
 

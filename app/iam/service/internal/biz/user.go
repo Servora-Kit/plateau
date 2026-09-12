@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"time"
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
@@ -13,9 +12,8 @@ import (
 )
 
 var (
-	ErrSessionRevocation = errors.New("IAM session revocation failed")
-	ErrUserInvalidState  = errors.New("user lifecycle state is invalid")
-	ErrUserEtagMismatch  = errors.New("user etag does not match")
+	ErrUserInvalidState = errors.New("user lifecycle state is invalid")
+	ErrUserEtagMismatch = errors.New("user etag does not match")
 )
 
 // UserRepo is the user persistence port shared by account, authentication and admin CRUD.
@@ -33,23 +31,17 @@ type UserRepo interface {
 
 // UserUsecase owns administrator CRUD semantics over the repository port.
 type UserUsecase struct {
-	account  *AccountUsecase
-	sessions *SessionUsecase
-	users    UserRepo
-	log      *slog.Logger
+	account *AccountUsecase
+	users   UserRepo
 }
 
 // NewUserUsecase wires administrator user management and lifecycle side effects.
-func NewUserUsecase(account *AccountUsecase, users UserRepo, sessions *SessionUsecase, logger *slog.Logger) (*UserUsecase, error) {
-	if account == nil || users == nil || sessions == nil {
+func NewUserUsecase(account *AccountUsecase, users UserRepo) (*UserUsecase, error) {
+	if account == nil || users == nil {
 		return nil, fmt.Errorf("user: usecase dependency is nil")
 	}
-	if logger == nil {
-		logger = slog.Default()
-	}
 	return &UserUsecase{
-		account: account, users: users, sessions: sessions,
-		log: logger.With("scope", "iam/biz/user"),
+		account: account, users: users,
 	}, nil
 }
 
@@ -105,27 +97,11 @@ func (uc *UserUsecase) updateStatus(ctx context.Context, name userpb.UserName, e
 		return nil, ErrUserEtagMismatch
 	}
 
-	now := time.Now()
-	updated := current
-	if status != UserStatusDisabled || current.GetStatus() != userpb.UserStatus_USER_STATUS_DISABLED {
-		updated, err = uc.users.UpdateStatus(ctx, name.User, current.GetEtag(), userStatus(status), now)
-		if errors.Is(err, ErrMutationMiss) {
-			return nil, ErrUserEtagMismatch
-		}
-		if err != nil {
-			return nil, err
-		}
+	updated, err := uc.users.UpdateStatus(ctx, name.User, current.GetEtag(), userStatus(status), time.Now())
+	if errors.Is(err, ErrMutationMiss) {
+		return nil, ErrUserEtagMismatch
 	}
-	if status != UserStatusDisabled {
-		return updated, nil
-	}
-
-	revokeErr := uc.sessions.RevokeAllForUser(ctx, name.User)
-	if revokeErr != nil {
-		uc.log.ErrorContext(ctx, "revoke disabled user sessions failed", "user_id", name.User, "err", revokeErr)
-		return nil, errors.Join(ErrSessionRevocation, revokeErr)
-	}
-	return updated, nil
+	return updated, err
 }
 
 func userStatus(status string) userpb.UserStatus {

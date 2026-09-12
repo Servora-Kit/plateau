@@ -51,14 +51,13 @@ type AccountUsecase struct {
 	resetTokens        PasswordResetTokenRepo
 	cap                CAPVerifier
 	mailer             MailSender
-	sessions           *SessionUsecase
 	verificationOrigin string
 	now                func() time.Time
 }
 
 // NewAccountUsecase wires public account lifecycle, credential changes, recovery and mail delivery.
-func NewAccountUsecase(users UserRepo, credentials CredentialRepo, verificationTokens VerificationTokenRepo, resetTokens PasswordResetTokenRepo, captcha CAPVerifier, mailer MailSender, sessions *SessionUsecase, runtime *bootstrap.Runtime) (*AccountUsecase, error) {
-	if users == nil || credentials == nil || verificationTokens == nil || resetTokens == nil || captcha == nil || mailer == nil || sessions == nil || runtime == nil || runtime.Bootstrap == nil || runtime.Bootstrap.App == nil {
+func NewAccountUsecase(users UserRepo, credentials CredentialRepo, verificationTokens VerificationTokenRepo, resetTokens PasswordResetTokenRepo, captcha CAPVerifier, mailer MailSender, runtime *bootstrap.Runtime) (*AccountUsecase, error) {
+	if users == nil || credentials == nil || verificationTokens == nil || resetTokens == nil || captcha == nil || mailer == nil || runtime == nil || runtime.Bootstrap == nil || runtime.Bootstrap.App == nil {
 		return nil, fmt.Errorf("account: dependency is nil")
 	}
 	verificationOrigin := strings.TrimRight(strings.TrimSpace(runtime.Bootstrap.App.GetExternalUrl()), "/")
@@ -67,7 +66,7 @@ func NewAccountUsecase(users UserRepo, credentials CredentialRepo, verificationT
 	}
 	return &AccountUsecase{
 		users: users, credentials: credentials, verificationTokens: verificationTokens, resetTokens: resetTokens,
-		cap: captcha, mailer: mailer, sessions: sessions,
+		cap: captcha, mailer: mailer,
 		verificationOrigin: verificationOrigin, now: time.Now,
 	}, nil
 }
@@ -227,12 +226,9 @@ func (uc *AccountUsecase) ConfirmPasswordReset(ctx context.Context, token, newPa
 	if err != nil {
 		return ErrInvalidPassword
 	}
-	userID, err := uc.resetTokens.ConsumeAndReplacePassword(ctx, HashOpaqueSecret(token), hash, uc.now())
+	_, err = uc.resetTokens.ConsumeAndReplacePassword(ctx, HashOpaqueSecret(token), hash, uc.now())
 	if err != nil {
 		return accountTokenError(err)
-	}
-	if err := uc.sessions.RevokeAllForUser(ctx, userID); err != nil {
-		return fmt.Errorf("revoke sessions after password reset: %w", err)
 	}
 	return nil
 }
@@ -254,11 +250,8 @@ func (uc *AccountUsecase) ChangePassword(ctx context.Context, userID, currentSes
 	if err != nil {
 		return fmt.Errorf("hash new password: %w", err)
 	}
-	if err := uc.credentials.ReplacePassword(ctx, userID, credential.AuthenticatorID, hash, uc.now()); err != nil {
+	if err := uc.credentials.ReplacePassword(ctx, userID, credential.AuthenticatorID, credential.PasswordHash, hash, currentSessionID, uc.now()); err != nil {
 		return fmt.Errorf("replace password: %w", err)
-	}
-	if err := uc.sessions.RevokeOthersForUser(ctx, userID, currentSessionID); err != nil {
-		return fmt.Errorf("revoke sessions after password change: %w", err)
 	}
 	return nil
 }

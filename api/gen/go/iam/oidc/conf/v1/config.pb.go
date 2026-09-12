@@ -10,6 +10,7 @@ import (
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -31,11 +32,11 @@ type OIDC struct {
 	SigningKeyPath string `protobuf:"bytes,2,opt,name=signing_key_path,json=signingKeyPath,proto3" json:"signing_key_path,omitempty"`
 	// Stable zitadel/oidc provider crypto-key path, distinct from signing and TLS keys.
 	CryptoKeyPath string `protobuf:"bytes,3,opt,name=crypto_key_path,json=cryptoKeyPath,proto3" json:"crypto_key_path,omitempty"`
-	// Static first-party confidential clients. Provider supports only the fixed four scopes:
-	// openid, profile, email and offline_access.
-	Clients       []*OAuthClient `protobuf:"bytes,4,rep,name=clients,proto3" json:"clients,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
+	Clients               []*OAuthClient       `protobuf:"bytes,4,rep,name=clients,proto3" json:"clients,omitempty"`
+	ServiceAccessTokenTtl *durationpb.Duration `protobuf:"bytes,5,opt,name=service_access_token_ttl,json=serviceAccessTokenTtl,proto3" json:"service_access_token_ttl,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *OIDC) Reset() {
@@ -96,7 +97,14 @@ func (x *OIDC) GetClients() []*OAuthClient {
 	return nil
 }
 
-// OAuthClient is a static confidential OAuth client seed.
+func (x *OIDC) GetServiceAccessTokenTtl() *durationpb.Duration {
+	if x != nil {
+		return x.ServiceAccessTokenTtl
+	}
+	return nil
+}
+
+// OAuthClient 配置使用客户端 ID 和密钥认证的应用。
 type OAuthClient struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	ClientId string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
@@ -104,12 +112,14 @@ type OAuthClient struct {
 	ClientSecret string `protobuf:"bytes,2,opt,name=client_secret,json=clientSecret,proto3" json:"client_secret,omitempty"`
 	// Redirect URIs are compared exactly; wildcards are not supported.
 	RedirectUris []string `protobuf:"bytes,3,rep,name=redirect_uris,json=redirectUris,proto3" json:"redirect_uris,omitempty"`
-	// Requested scopes must be in both this list and Provider's fixed scope set.
+	// 请求 scope 必须在允许集合中；用户流程还须符合提供方支持的用户 scope。
 	AllowedScopes []string `protobuf:"bytes,4,rep,name=allowed_scopes,json=allowedScopes,proto3" json:"allowed_scopes,omitempty"`
-	// First version requires trusted=true because consent interaction is not implemented; login and client authentication remain mandatory.
-	Trusted       bool `protobuf:"varint,5,opt,name=trusted,proto3" json:"trusted,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// 用户交互流程须为受信应用，当前未实现同意页面；机器流程不依赖此项。
+	Trusted           bool     `protobuf:"varint,5,opt,name=trusted,proto3" json:"trusted,omitempty"`
+	AllowedGrantTypes []string `protobuf:"bytes,6,rep,name=allowed_grant_types,json=allowedGrantTypes,proto3" json:"allowed_grant_types,omitempty"`
+	Audiences         []string `protobuf:"bytes,7,rep,name=audiences,proto3" json:"audiences,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *OAuthClient) Reset() {
@@ -177,24 +187,42 @@ func (x *OAuthClient) GetTrusted() bool {
 	return false
 }
 
+func (x *OAuthClient) GetAllowedGrantTypes() []string {
+	if x != nil {
+		return x.AllowedGrantTypes
+	}
+	return nil
+}
+
+func (x *OAuthClient) GetAudiences() []string {
+	if x != nil {
+		return x.Audiences
+	}
+	return nil
+}
+
 var File_iam_oidc_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_iam_oidc_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\x1diam/oidc/conf/v1/config.proto\x12\x10iam.oidc.conf.v1\x1a!servora/conf/v1/annotations.proto\"\xcd\x01\n" +
+	"\x1diam/oidc/conf/v1/config.proto\x12\x10iam.oidc.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xab\x02\n" +
 	"\x04OIDC\x12\x1e\n" +
 	"\x06issuer\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x06issuer\x120\n" +
 	"\x10signing_key_path\x18\x02 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x0esigningKeyPath\x12.\n" +
 	"\x0fcrypto_key_path\x18\x03 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\rcryptoKeyPath\x127\n" +
-	"\aclients\x18\x04 \x03(\v2\x1d.iam.oidc.conf.v1.OAuthClientR\aclients:\n" +
+	"\aclients\x18\x04 \x03(\v2\x1d.iam.oidc.conf.v1.OAuthClientR\aclients\x12\\\n" +
+	"\x18service_access_token_ttl\x18\x05 \x01(\v2\x19.google.protobuf.DurationB\b\x8a\xce\x18\x04\n" +
+	"\x025mR\x15serviceAccessTokenTtl:\n" +
 	"\x82\xce\x18\x06\n" +
-	"\x04oidc\"\xc5\x01\n" +
+	"\x04oidc\"\x9b\x02\n" +
 	"\vOAuthClient\x12#\n" +
 	"\tclient_id\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\bclientId\x12+\n" +
 	"\rclient_secret\x18\x02 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\fclientSecret\x12#\n" +
 	"\rredirect_uris\x18\x03 \x03(\tR\fredirectUris\x12%\n" +
 	"\x0eallowed_scopes\x18\x04 \x03(\tR\rallowedScopes\x12\x18\n" +
-	"\atrusted\x18\x05 \x01(\bR\atrustedBGZEgithub.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1;oidcconfv1b\x06proto3"
+	"\atrusted\x18\x05 \x01(\bR\atrusted\x126\n" +
+	"\x13allowed_grant_types\x18\x06 \x03(\tB\x06\x8a\xce\x18\x02\x10\x01R\x11allowedGrantTypes\x12\x1c\n" +
+	"\taudiences\x18\a \x03(\tR\taudiencesBGZEgithub.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1;oidcconfv1b\x06proto3"
 
 var (
 	file_iam_oidc_conf_v1_config_proto_rawDescOnce sync.Once
@@ -210,16 +238,18 @@ func file_iam_oidc_conf_v1_config_proto_rawDescGZIP() []byte {
 
 var file_iam_oidc_conf_v1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_iam_oidc_conf_v1_config_proto_goTypes = []any{
-	(*OIDC)(nil),        // 0: iam.oidc.conf.v1.OIDC
-	(*OAuthClient)(nil), // 1: iam.oidc.conf.v1.OAuthClient
+	(*OIDC)(nil),                // 0: iam.oidc.conf.v1.OIDC
+	(*OAuthClient)(nil),         // 1: iam.oidc.conf.v1.OAuthClient
+	(*durationpb.Duration)(nil), // 2: google.protobuf.Duration
 }
 var file_iam_oidc_conf_v1_config_proto_depIdxs = []int32{
 	1, // 0: iam.oidc.conf.v1.OIDC.clients:type_name -> iam.oidc.conf.v1.OAuthClient
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: iam.oidc.conf.v1.OIDC.service_access_token_ttl:type_name -> google.protobuf.Duration
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_iam_oidc_conf_v1_config_proto_init() }

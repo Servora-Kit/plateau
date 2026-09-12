@@ -8,7 +8,7 @@ import (
 	fgaclient "github.com/openfga/go-sdk/client"
 )
 
-// NewOpenFGAAuthorizer binds IAM human Actors to the IAM user type in Plateau's OpenFGA model.
+// NewOpenFGAAuthorizer binds verified Actors to the shared identity types.
 func NewOpenFGAAuthorizer(client *fgaclient.OpenFgaClient) (*openfgaauthz.Authorizer, error) {
 	if client == nil {
 		return nil, fmt.Errorf("IAM OpenFGA authorizer: client is nil")
@@ -17,8 +17,15 @@ func NewOpenFGAAuthorizer(client *fgaclient.OpenFgaClient) (*openfgaauthz.Author
 }
 
 func subject(actor security.Actor) (string, error) {
-	if actor.Type != security.ActorTypeHuman || actor.ID == "" {
-		return "", fmt.Errorf("IAM OpenFGA subject requires a human Actor")
+	if !actor.Valid() {
+		return "", fmt.Errorf("IAM OpenFGA subject requires a valid Actor")
 	}
-	return "user:" + actor.ID, nil
+	switch actor.Type {
+	case security.ActorTypeHuman:
+		return "user:" + actor.ID, nil
+	case security.ActorTypeService:
+		return "service:" + actor.ID, nil
+	default:
+		return "", fmt.Errorf("IAM OpenFGA subject requires an authenticated Actor")
+	}
 }

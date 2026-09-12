@@ -29,6 +29,7 @@ type JwtAuthnConfig struct {
 	Issuer           string                 `protobuf:"bytes,1,opt,name=issuer,proto3" json:"issuer,omitempty"`
 	Audience         string                 `protobuf:"bytes,2,opt,name=audience,proto3" json:"audience,omitempty"`
 	VerificationKeys []*v1.VerificationKey  `protobuf:"bytes,3,rep,name=verification_keys,json=verificationKeys,proto3" json:"verification_keys,omitempty"`
+	Jwks             *v1.JWKS               `protobuf:"bytes,4,opt,name=jwks,proto3" json:"jwks,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -84,15 +85,23 @@ func (x *JwtAuthnConfig) GetVerificationKeys() []*v1.VerificationKey {
 	return nil
 }
 
+func (x *JwtAuthnConfig) GetJwks() *v1.JWKS {
+	if x != nil {
+		return x.Jwks
+	}
+	return nil
+}
+
 var File_plateau_security_authn_jwt_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_security_authn_jwt_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"*plateau/security/authn/jwt/v1/config.proto\x12\x1dplateau.security.authn.jwt.v1\x1a$plateau/security/jwt/v1/config.proto\x1a!servora/conf/v1/annotations.proto\"\xa8\x01\n" +
+	"*plateau/security/authn/jwt/v1/config.proto\x12\x1dplateau.security.authn.jwt.v1\x1a$plateau/security/jwt/v1/config.proto\x1a!servora/conf/v1/annotations.proto\"\xdb\x01\n" +
 	"\x0eJwtAuthnConfig\x12\x16\n" +
 	"\x06issuer\x18\x01 \x01(\tR\x06issuer\x12\x1a\n" +
 	"\baudience\x18\x02 \x01(\tR\baudience\x12U\n" +
-	"\x11verification_keys\x18\x03 \x03(\v2(.plateau.security.jwt.v1.VerificationKeyR\x10verificationKeys:\v\x82\xce\x18\a\n" +
+	"\x11verification_keys\x18\x03 \x03(\v2(.plateau.security.jwt.v1.VerificationKeyR\x10verificationKeys\x121\n" +
+	"\x04jwks\x18\x04 \x01(\v2\x1d.plateau.security.jwt.v1.JWKSR\x04jwks:\v\x82\xce\x18\a\n" +
 	"\x03jwt\x10\x01BOZMgithub.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1;jwtv1b\x06proto3"
 
 var (
@@ -111,14 +120,16 @@ var file_plateau_security_authn_jwt_v1_config_proto_msgTypes = make([]protoimpl.
 var file_plateau_security_authn_jwt_v1_config_proto_goTypes = []any{
 	(*JwtAuthnConfig)(nil),     // 0: plateau.security.authn.jwt.v1.JwtAuthnConfig
 	(*v1.VerificationKey)(nil), // 1: plateau.security.jwt.v1.VerificationKey
+	(*v1.JWKS)(nil),            // 2: plateau.security.jwt.v1.JWKS
 }
 var file_plateau_security_authn_jwt_v1_config_proto_depIdxs = []int32{
 	1, // 0: plateau.security.authn.jwt.v1.JwtAuthnConfig.verification_keys:type_name -> plateau.security.jwt.v1.VerificationKey
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: plateau.security.authn.jwt.v1.JwtAuthnConfig.jwks:type_name -> plateau.security.jwt.v1.JWKS
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_plateau_security_authn_jwt_v1_config_proto_init() }

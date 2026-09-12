@@ -56,7 +56,7 @@ func (m *IAM) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for BootstrapAdminEmail
+	// no validation rules for BootstrapUserEmail
 
 	if len(errors) > 0 {
 		return IAMMultiError(errors)

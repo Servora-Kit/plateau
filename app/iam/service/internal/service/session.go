@@ -4,68 +4,43 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	sessions "github.com/Servora-Kit/plateau/security/session"
+	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
-	"github.com/go-kratos/kratos/v3/transport"
-	khttp "github.com/go-kratos/kratos/v3/transport/http"
 )
 
-// SessionService exposes IAM Login Session lifecycle commands.
 type SessionService struct {
 	sessionpb.UnimplementedSessionServiceServer
 	sessions *biz.SessionUsecase
+	manager  *scs.SessionManager
 }
 
-func NewSessionService(sessions *biz.SessionUsecase) (*SessionService, error) {
-	if sessions == nil {
-		return nil, fmt.Errorf("session service: usecase is nil")
+func NewSessionService(sessions *biz.SessionUsecase, manager *scs.SessionManager) (*SessionService, error) {
+	if sessions == nil || manager == nil {
+		return nil, fmt.Errorf("session service: dependency is nil")
 	}
-	return &SessionService{sessions: sessions}, nil
+	return &SessionService{sessions: sessions, manager: manager}, nil
 }
 
 func (s *SessionService) Logout(ctx context.Context, _ *sessionpb.LogoutRequest) (*sessionpb.LogoutResponse, error) {
-	_, loginSession, err := iamauthn.From(ctx)
+	if !sessions.Loaded(ctx, s.manager) {
+		return nil, sessionError(fmt.Errorf("HTTP session is not loaded"))
+	}
+	_, login, err := iamauthn.From(ctx)
 	if err != nil {
 		return nil, sessionpb.ErrorSessionErrorReasonRevoked("session is not active")
 	}
-	if err := s.sessions.Logout(ctx, loginSession.GetSessionId()); err != nil {
+	if err := s.sessions.Logout(ctx, login.ID); err != nil {
 		return nil, sessionError(err)
 	}
-	clearSessionCookie(ctx)
+	if err := s.manager.Destroy(ctx); err != nil {
+		return nil, sessionError(err)
+	}
 	return &sessionpb.LogoutResponse{}, nil
-}
-
-func setSessionCookie(ctx context.Context, secret string) {
-	if _, ok := transport.FromServerContext(ctx); !ok || secret == "" {
-		return
-	}
-	khttp.SetCookie(ctx, sessionCookie(secret))
-}
-
-func clearSessionCookie(ctx context.Context) {
-	if _, ok := transport.FromServerContext(ctx); !ok {
-		return
-	}
-	khttp.SetCookie(ctx, expiredSessionCookie())
-}
-
-func sessionCookie(secret string) *http.Cookie {
-	return &http.Cookie{
-		Name: iamauthn.SessionCookieName, Value: secret, Path: "/", HttpOnly: true,
-		Secure: true, SameSite: http.SameSiteLaxMode,
-		MaxAge: int(biz.LoginSessionAbsoluteTTL.Seconds()),
-	}
-}
-
-func expiredSessionCookie() *http.Cookie {
-	return &http.Cookie{
-		Name: iamauthn.SessionCookieName, Value: "", Path: "/", HttpOnly: true,
-		Secure: true, SameSite: http.SameSiteLaxMode, MaxAge: -1,
-	}
 }
 
 func sessionError(err error) error {

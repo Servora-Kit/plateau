@@ -10,6 +10,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/httpsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
@@ -133,6 +134,33 @@ func (f TraverseEmailVerificationToken) Traverse(ctx context.Context, q ent.Quer
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.EmailVerificationTokenQuery", q)
+}
+
+// The HTTPSessionFunc type is an adapter to allow the use of ordinary function as a Querier.
+type HTTPSessionFunc func(context.Context, *ent.HTTPSessionQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f HTTPSessionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.HTTPSessionQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.HTTPSessionQuery", q)
+}
+
+// The TraverseHTTPSession type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseHTTPSession func(context.Context, *ent.HTTPSessionQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseHTTPSession) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseHTTPSession) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.HTTPSessionQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.HTTPSessionQuery", q)
 }
 
 // The IAMLoginSessionFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -466,6 +494,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.AuthenticatorQuery, predicate.Authenticator, authenticator.OrderOption]{typ: ent.TypeAuthenticator, tq: q}, nil
 	case *ent.EmailVerificationTokenQuery:
 		return &query[*ent.EmailVerificationTokenQuery, predicate.EmailVerificationToken, emailverificationtoken.OrderOption]{typ: ent.TypeEmailVerificationToken, tq: q}, nil
+	case *ent.HTTPSessionQuery:
+		return &query[*ent.HTTPSessionQuery, predicate.HTTPSession, httpsession.OrderOption]{typ: ent.TypeHTTPSession, tq: q}, nil
 	case *ent.IAMLoginSessionQuery:
 		return &query[*ent.IAMLoginSessionQuery, predicate.IAMLoginSession, iamloginsession.OrderOption]{typ: ent.TypeIAMLoginSession, tq: q}, nil
 	case *ent.LoginIdentifierQuery:

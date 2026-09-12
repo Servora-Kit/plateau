@@ -20,6 +20,7 @@ func (OAuthClient) Fields() []ent.Field {
 		field.JSON("allowed_grant_types", []string{}),
 		field.JSON("allowed_response_types", []string{}),
 		field.JSON("allowed_scopes", []string{}),
+		field.JSON("audiences", []string{}).Optional(),
 		field.Bool("trusted").Default(false),
 		field.Time("create_time").Default(time.Now).Immutable(),
 		field.Time("update_time").Default(time.Now).UpdateDefault(time.Now),

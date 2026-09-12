@@ -26,6 +26,34 @@ func (_c *OAuthAccessTokenCreate) SetTokenSessionID(v string) *OAuthAccessTokenC
 	return _c
 }
 
+// SetNillableTokenSessionID sets the "token_session_id" field if the given value is not nil.
+func (_c *OAuthAccessTokenCreate) SetNillableTokenSessionID(v *string) *OAuthAccessTokenCreate {
+	if v != nil {
+		_c.SetTokenSessionID(*v)
+	}
+	return _c
+}
+
+// SetActorType sets the "actor_type" field.
+func (_c *OAuthAccessTokenCreate) SetActorType(v oauthaccesstoken.ActorType) *OAuthAccessTokenCreate {
+	_c.mutation.SetActorType(v)
+	return _c
+}
+
+// SetNillableActorType sets the "actor_type" field if the given value is not nil.
+func (_c *OAuthAccessTokenCreate) SetNillableActorType(v *oauthaccesstoken.ActorType) *OAuthAccessTokenCreate {
+	if v != nil {
+		_c.SetActorType(*v)
+	}
+	return _c
+}
+
+// SetAudiences sets the "audiences" field.
+func (_c *OAuthAccessTokenCreate) SetAudiences(v []string) *OAuthAccessTokenCreate {
+	_c.mutation.SetAudiences(v)
+	return _c
+}
+
 // SetSubject sets the "subject" field.
 func (_c *OAuthAccessTokenCreate) SetSubject(v string) *OAuthAccessTokenCreate {
 	_c.mutation.SetSubject(v)
@@ -119,6 +147,10 @@ func (_c *OAuthAccessTokenCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *OAuthAccessTokenCreate) defaults() {
+	if _, ok := _c.mutation.ActorType(); !ok {
+		v := oauthaccesstoken.DefaultActorType
+		_c.mutation.SetActorType(v)
+	}
 	if _, ok := _c.mutation.IssuedTime(); !ok {
 		v := oauthaccesstoken.DefaultIssuedTime()
 		_c.mutation.SetIssuedTime(v)
@@ -127,12 +159,12 @@ func (_c *OAuthAccessTokenCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *OAuthAccessTokenCreate) check() error {
-	if _, ok := _c.mutation.TokenSessionID(); !ok {
-		return &ValidationError{Name: "token_session_id", err: errors.New(`ent: missing required field "OAuthAccessToken.token_session_id"`)}
+	if _, ok := _c.mutation.ActorType(); !ok {
+		return &ValidationError{Name: "actor_type", err: errors.New(`ent: missing required field "OAuthAccessToken.actor_type"`)}
 	}
-	if v, ok := _c.mutation.TokenSessionID(); ok {
-		if err := oauthaccesstoken.TokenSessionIDValidator(v); err != nil {
-			return &ValidationError{Name: "token_session_id", err: fmt.Errorf(`ent: validator failed for field "OAuthAccessToken.token_session_id": %w`, err)}
+	if v, ok := _c.mutation.ActorType(); ok {
+		if err := oauthaccesstoken.ActorTypeValidator(v); err != nil {
+			return &ValidationError{Name: "actor_type", err: fmt.Errorf(`ent: validator failed for field "OAuthAccessToken.actor_type": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Subject(); !ok {
@@ -198,6 +230,14 @@ func (_c *OAuthAccessTokenCreate) createSpec() (*OAuthAccessToken, *sqlgraph.Cre
 	if value, ok := _c.mutation.TokenSessionID(); ok {
 		_spec.SetField(oauthaccesstoken.FieldTokenSessionID, field.TypeString, value)
 		_node.TokenSessionID = value
+	}
+	if value, ok := _c.mutation.ActorType(); ok {
+		_spec.SetField(oauthaccesstoken.FieldActorType, field.TypeEnum, value)
+		_node.ActorType = value
+	}
+	if value, ok := _c.mutation.Audiences(); ok {
+		_spec.SetField(oauthaccesstoken.FieldAudiences, field.TypeJSON, value)
+		_node.Audiences = value
 	}
 	if value, ok := _c.mutation.Subject(); ok {
 		_spec.SetField(oauthaccesstoken.FieldSubject, field.TypeString, value)

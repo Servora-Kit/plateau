@@ -43,6 +43,7 @@ function encodeMultiSegmentPath(value: unknown): string {
 export type JwtAuthnConfig = {
   audience?: string;
   issuer?: string;
+  jwks?: plateausecurityjwtv1_JWKS;
   verificationKeys?: plateausecurityjwtv1_VerificationKey[];
 };
 
@@ -51,6 +52,11 @@ export type plateausecurityjwtv1_VerificationKey = {
   kid?: string;
   publicKeyPath?: string;
   publicKeyPem?: string;
+};
+
+// JWKS selects one trusted remote public-key set.
+export type plateausecurityjwtv1_JWKS = {
+  uri?: string;
 };
 
 

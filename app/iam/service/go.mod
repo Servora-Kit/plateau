@@ -8,9 +8,12 @@ require (
 	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260818130515-05007f733999
 	github.com/Servora-Kit/servora v0.9.1
 	github.com/Servora-Kit/servora/api/gen v0.9.1
+	github.com/alexedwards/scs/postgresstore v0.0.0-20251002162104-209de6e426de
+	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alicebob/miniredis/v2 v2.38.0
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-kratos/kratos/v3 v3.0.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/jackc/pgx/v5 v5.9.2
@@ -20,7 +23,9 @@ require (
 	github.com/wneessen/go-mail v0.7.2
 	github.com/zitadel/oidc/v3 v3.49.2
 	go.uber.org/automaxprocs v1.6.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/text v0.40.0
+	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 )
 
@@ -185,14 +190,12 @@ require (
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
-	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60 // indirect
-	google.golang.org/grpc v1.82.1 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.2 // indirect

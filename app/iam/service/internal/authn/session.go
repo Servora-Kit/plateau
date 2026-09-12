@@ -8,21 +8,22 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/authn/session"
+	"github.com/alexedwards/scs/v2"
 )
 
-const SessionCookieName = "__Host-iam_session"
+const LoginReferenceKey = "iam_login_id"
 
 type SessionAuthenticator = session.Authenticator[*identity]
 
 // NewSessionAuthenticator binds IAM session resolution and identity projection to the shared session backend.
-func NewSessionAuthenticator(usecase *biz.SessionUsecase) (*SessionAuthenticator, error) {
+func NewSessionAuthenticator(usecase *biz.SessionUsecase, manager *scs.SessionManager) (*SessionAuthenticator, error) {
 	if usecase == nil {
 		return nil, fmt.Errorf("IAM session authenticator: usecase is nil")
 	}
 	return session.New(
-		SessionCookieName,
-		func(ctx context.Context, credential string) (*identity, error) {
-			user, loginSession, err := usecase.Resolve(ctx, credential)
+		manager,
+		func(ctx context.Context) (*identity, error) {
+			user, loginSession, err := usecase.Resolve(ctx, manager.GetString(ctx, LoginReferenceKey))
 			if err != nil {
 				return nil, resolutionError(err)
 			}
@@ -46,7 +47,7 @@ func resolutionError(err error) error {
 }
 
 func mapActor(value *identity) (security.Actor, error) {
-	if value == nil || value.user == nil || value.user.GetUserId() == "" || value.session == nil || value.session.GetSessionId() == "" {
+	if value == nil || value.user == nil || value.user.GetUserId() == "" || value.session == nil || value.session.ID == "" {
 		return security.Actor{}, fmt.Errorf("IAM authenticated identity is incomplete")
 	}
 	return security.Actor{Type: security.ActorTypeHuman, ID: value.user.GetUserId()}, nil

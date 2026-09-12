@@ -3,6 +3,7 @@
 package oauthaccesstoken
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -15,6 +16,10 @@ const (
 	FieldID = "id"
 	// FieldTokenSessionID holds the string denoting the token_session_id field in the database.
 	FieldTokenSessionID = "token_session_id"
+	// FieldActorType holds the string denoting the actor_type field in the database.
+	FieldActorType = "actor_type"
+	// FieldAudiences holds the string denoting the audiences field in the database.
+	FieldAudiences = "audiences"
 	// FieldSubject holds the string denoting the subject field in the database.
 	FieldSubject = "subject"
 	// FieldClientID holds the string denoting the client_id field in the database.
@@ -35,6 +40,8 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldTokenSessionID,
+	FieldActorType,
+	FieldAudiences,
 	FieldSubject,
 	FieldClientID,
 	FieldScopes,
@@ -54,8 +61,6 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// TokenSessionIDValidator is a validator for the "token_session_id" field. It is called by the builders before save.
-	TokenSessionIDValidator func(string) error
 	// SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
 	SubjectValidator func(string) error
 	// ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
@@ -63,6 +68,32 @@ var (
 	// DefaultIssuedTime holds the default value on creation for the "issued_time" field.
 	DefaultIssuedTime func() time.Time
 )
+
+// ActorType defines the type for the "actor_type" enum field.
+type ActorType string
+
+// ActorTypeHuman is the default value of the ActorType enum.
+const DefaultActorType = ActorTypeHuman
+
+// ActorType values.
+const (
+	ActorTypeHuman   ActorType = "human"
+	ActorTypeService ActorType = "service"
+)
+
+func (at ActorType) String() string {
+	return string(at)
+}
+
+// ActorTypeValidator is a validator for the "actor_type" field enum values. It is called by the builders before save.
+func ActorTypeValidator(at ActorType) error {
+	switch at {
+	case ActorTypeHuman, ActorTypeService:
+		return nil
+	default:
+		return fmt.Errorf("oauthaccesstoken: invalid enum value for actor_type field: %q", at)
+	}
+}
 
 // OrderOption defines the ordering options for the OAuthAccessToken queries.
 type OrderOption func(*sql.Selector)
@@ -75,6 +106,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByTokenSessionID orders the results by the token_session_id field.
 func ByTokenSessionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTokenSessionID, opts...).ToFunc()
+}
+
+// ByActorType orders the results by the actor_type field.
+func ByActorType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActorType, opts...).ToFunc()
 }
 
 // BySubject orders the results by the subject field.

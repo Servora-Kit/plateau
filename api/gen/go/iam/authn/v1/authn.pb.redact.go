@@ -5,7 +5,6 @@ package authnpb
 
 import (
 	validate "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	authzpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
@@ -16,7 +15,6 @@ import (
 
 var _ annotations.CommonLanguageSettings
 var _ annotations.FieldBehavior
-var _ sessionpb.Session
 var _ userpb.UserProfile
 var _ authnpb.AuthnRule
 var _ authzpb.AuthzRule

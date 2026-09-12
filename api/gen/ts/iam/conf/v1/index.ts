@@ -42,7 +42,7 @@ function encodeMultiSegmentPath(value: unknown): string {
 // IAM contains service-owned identity lifecycle configuration.
 export type IAM = {
   // Bootstrap creates this single platform administrator idempotently.
-  bootstrapAdminEmail?: string;
+  bootstrapUserEmail?: string;
 };
 
 

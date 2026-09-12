@@ -8,4 +8,4 @@ import (
 	"github.com/google/wire"
 )
 
-var ProviderSet = wire.NewSet(registry.NewRegistrar, metrics.New, iamauthn.NewSessionAuthenticator, iamauthz.NewOpenFGAAuthorizer, NewGRPCServer, NewHTTPServer)
+var ProviderSet = wire.NewSet(registry.NewRegistrar, metrics.New, iamauthn.NewSessionAuthenticator, iamauthn.NewServiceAuthenticator, iamauthz.NewOpenFGAAuthorizer, NewGRPCServer, NewHTTPServer)

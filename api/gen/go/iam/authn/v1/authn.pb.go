@@ -8,7 +8,6 @@ package authnpb
 
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	v11 "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
@@ -132,7 +131,6 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	User          *v1.User               `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Session       *v11.Session           `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -174,24 +172,16 @@ func (x *LoginResponse) GetUser() *v1.User {
 	return nil
 }
 
-func (x *LoginResponse) GetSession() *v11.Session {
-	if x != nil {
-		return x.Session
-	}
-	return nil
-}
-
 var File_iam_authn_v1_authn_proto protoreflect.FileDescriptor
 
 const file_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\n" +
-	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1ciam/session/v1/session.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"Z\n" +
+	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"Z\n" +
 	"\fLoginRequest\x12\x19\n" +
 	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12/\n" +
-	"\bpassword\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\"i\n" +
+	"\bpassword\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\"6\n" +
 	"\rLoginResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\x121\n" +
-	"\asession\x18\x02 \x01(\v2\x17.iam.session.v1.SessionR\asession*p\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user*p\n" +
 	"\x10AuthnErrorReason\x12\"\n" +
 	"\x1eAUTHN_ERROR_REASON_UNSPECIFIED\x10\x00\x121\n" +
 	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\x8f\x01\n" +
@@ -217,18 +207,16 @@ var file_iam_authn_v1_authn_proto_goTypes = []any{
 	(*LoginRequest)(nil),  // 1: iam.authn.v1.LoginRequest
 	(*LoginResponse)(nil), // 2: iam.authn.v1.LoginResponse
 	(*v1.User)(nil),       // 3: iam.user.v1.User
-	(*v11.Session)(nil),   // 4: iam.session.v1.Session
 }
 var file_iam_authn_v1_authn_proto_depIdxs = []int32{
 	3, // 0: iam.authn.v1.LoginResponse.user:type_name -> iam.user.v1.User
-	4, // 1: iam.authn.v1.LoginResponse.session:type_name -> iam.session.v1.Session
-	1, // 2: iam.authn.v1.AuthnService.Login:input_type -> iam.authn.v1.LoginRequest
-	2, // 3: iam.authn.v1.AuthnService.Login:output_type -> iam.authn.v1.LoginResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 1: iam.authn.v1.AuthnService.Login:input_type -> iam.authn.v1.LoginRequest
+	2, // 2: iam.authn.v1.AuthnService.Login:output_type -> iam.authn.v1.LoginResponse
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_iam_authn_v1_authn_proto_init() }

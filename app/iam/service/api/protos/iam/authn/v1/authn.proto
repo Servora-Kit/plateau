@@ -5,7 +5,6 @@ package iam.authn.v1;
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
-import "iam/session/v1/session.proto";
 import "iam/user/v1/user.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
@@ -50,6 +49,4 @@ message LoginRequest {
 
 message LoginResponse {
   iam.user.v1.User user = 1;
-  iam.session.v1.Session session = 2;
 }
-

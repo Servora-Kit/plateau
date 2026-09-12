@@ -33,6 +33,18 @@ func (f EmailVerificationTokenFunc) Mutate(ctx context.Context, m ent.Mutation) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EmailVerificationTokenMutation", m)
 }
 
+// The HTTPSessionFunc type is an adapter to allow the use of ordinary
+// function as HTTPSession mutator.
+type HTTPSessionFunc func(context.Context, *ent.HTTPSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f HTTPSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.HTTPSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.HTTPSessionMutation", m)
+}
+
 // The IAMLoginSessionFunc type is an adapter to allow the use of ordinary
 // function as IAMLoginSession mutator.
 type IAMLoginSessionFunc func(context.Context, *ent.IAMLoginSessionMutation) (ent.Value, error)

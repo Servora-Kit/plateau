@@ -10,21 +10,21 @@ import (
 
 // Initializer runs IAM startup tasks in their required order before traffic is served.
 type Initializer struct {
-	admin *biz.AdminInitializer
-	oidc  *oidc.OIDCInitializer
+	user *biz.UserInitializer
+	oidc *oidc.OIDCInitializer
 }
 
 // NewInitializer validates the application startup dependencies.
-func NewInitializer(admin *biz.AdminInitializer, oidcInitializer *oidc.OIDCInitializer) (*Initializer, error) {
-	if admin == nil || oidcInitializer == nil {
+func NewInitializer(user *biz.UserInitializer, oidcInitializer *oidc.OIDCInitializer) (*Initializer, error) {
+	if user == nil || oidcInitializer == nil {
 		return nil, fmt.Errorf("IAM startup initializer: dependency is nil")
 	}
-	return &Initializer{admin: admin, oidc: oidcInitializer}, nil
+	return &Initializer{user: user, oidc: oidcInitializer}, nil
 }
 
-// Initialize creates the initial administrator before reconciling OIDC state.
+// Initialize creates the initial user before reconciling OIDC state.
 func (initializer *Initializer) Initialize(ctx context.Context) error {
-	if err := initializer.admin.Initialize(ctx); err != nil {
+	if err := initializer.user.Initialize(ctx); err != nil {
 		return err
 	}
 	if err := initializer.oidc.Initialize(ctx); err != nil {

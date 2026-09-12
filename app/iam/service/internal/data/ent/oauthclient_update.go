@@ -92,6 +92,24 @@ func (_u *OAuthClientUpdate) AppendAllowedScopes(v []string) *OAuthClientUpdate 
 	return _u
 }
 
+// SetAudiences sets the "audiences" field.
+func (_u *OAuthClientUpdate) SetAudiences(v []string) *OAuthClientUpdate {
+	_u.mutation.SetAudiences(v)
+	return _u
+}
+
+// AppendAudiences appends value to the "audiences" field.
+func (_u *OAuthClientUpdate) AppendAudiences(v []string) *OAuthClientUpdate {
+	_u.mutation.AppendAudiences(v)
+	return _u
+}
+
+// ClearAudiences clears the value of the "audiences" field.
+func (_u *OAuthClientUpdate) ClearAudiences() *OAuthClientUpdate {
+	_u.mutation.ClearAudiences()
+	return _u
+}
+
 // SetTrusted sets the "trusted" field.
 func (_u *OAuthClientUpdate) SetTrusted(v bool) *OAuthClientUpdate {
 	_u.mutation.SetTrusted(v)
@@ -216,6 +234,17 @@ func (_u *OAuthClientUpdate) sqlSave(ctx context.Context) (_node int, err error)
 			sqljson.Append(u, oauthclient.FieldAllowedScopes, value)
 		})
 	}
+	if value, ok := _u.mutation.Audiences(); ok {
+		_spec.SetField(oauthclient.FieldAudiences, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedAudiences(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oauthclient.FieldAudiences, value)
+		})
+	}
+	if _u.mutation.AudiencesCleared() {
+		_spec.ClearField(oauthclient.FieldAudiences, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.Trusted(); ok {
 		_spec.SetField(oauthclient.FieldTrusted, field.TypeBool, value)
 	}
@@ -303,6 +332,24 @@ func (_u *OAuthClientUpdateOne) SetAllowedScopes(v []string) *OAuthClientUpdateO
 // AppendAllowedScopes appends value to the "allowed_scopes" field.
 func (_u *OAuthClientUpdateOne) AppendAllowedScopes(v []string) *OAuthClientUpdateOne {
 	_u.mutation.AppendAllowedScopes(v)
+	return _u
+}
+
+// SetAudiences sets the "audiences" field.
+func (_u *OAuthClientUpdateOne) SetAudiences(v []string) *OAuthClientUpdateOne {
+	_u.mutation.SetAudiences(v)
+	return _u
+}
+
+// AppendAudiences appends value to the "audiences" field.
+func (_u *OAuthClientUpdateOne) AppendAudiences(v []string) *OAuthClientUpdateOne {
+	_u.mutation.AppendAudiences(v)
+	return _u
+}
+
+// ClearAudiences clears the value of the "audiences" field.
+func (_u *OAuthClientUpdateOne) ClearAudiences() *OAuthClientUpdateOne {
+	_u.mutation.ClearAudiences()
 	return _u
 }
 
@@ -459,6 +506,17 @@ func (_u *OAuthClientUpdateOne) sqlSave(ctx context.Context) (_node *OAuthClient
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, oauthclient.FieldAllowedScopes, value)
 		})
+	}
+	if value, ok := _u.mutation.Audiences(); ok {
+		_spec.SetField(oauthclient.FieldAudiences, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedAudiences(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oauthclient.FieldAudiences, value)
+		})
+	}
+	if _u.mutation.AudiencesCleared() {
+		_spec.ClearField(oauthclient.FieldAudiences, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.Trusted(); ok {
 		_spec.SetField(oauthclient.FieldTrusted, field.TypeBool, value)

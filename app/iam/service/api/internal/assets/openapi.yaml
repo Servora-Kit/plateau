@@ -195,157 +195,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/LogoutResponse'
-    /v1/iam/users:
-        get:
-            tags:
-                - UserService
-            description: ListUsers returns a page of globally unique IAM users.
-            operationId: UserService_ListUsers
-            parameters:
-                - name: pageSize
-                  in: query
-                  schema:
-                    type: integer
-                    format: int32
-                - name: pageToken
-                  in: query
-                  schema:
-                    type: string
-                - name: filter
-                  in: query
-                  schema:
-                    type: string
-                - name: orderBy
-                  in: query
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ListUsersResponse'
-        post:
-            tags:
-                - UserService
-            description: CreateUser creates a pending user with an administrator-supplied initial password.
-            operationId: UserService_CreateUser
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/CreateUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/User'
-    /v1/iam/users/users/{user}:
-        get:
-            tags:
-                - UserService
-            description: GetUser returns one global IAM user by resource name.
-            operationId: UserService_GetUser
-            parameters:
-                - name: user
-                  in: path
-                  description: The user id.
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/User'
-        patch:
-            tags:
-                - UserService
-            description: UpdateUser updates administrator-editable profile fields.
-            operationId: UserService_UpdateUser
-            parameters:
-                - name: user
-                  in: path
-                  description: The user id.
-                  required: true
-                  schema:
-                    type: string
-                - name: updateMask
-                  in: query
-                  schema:
-                    type: string
-                    format: field-mask
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/User'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/User'
-    /v1/iam/users/users/{user}:disable:
-        post:
-            tags:
-                - UserService
-            description: DisableUser disables credentials and revokes every active session.
-            operationId: UserService_DisableUser
-            parameters:
-                - name: user
-                  in: path
-                  description: The user id.
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/DisableUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/DisableUserResponse'
-    /v1/iam/users/users/{user}:enable:
-        post:
-            tags:
-                - UserService
-            description: EnableUser enables a disabled user without restoring revoked sessions.
-            operationId: UserService_EnableUser
-            parameters:
-                - name: user
-                  in: path
-                  description: The user id.
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/EnableUserRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/EnableUserResponse'
 components:
     schemas:
         ChangePasswordRequest:
@@ -376,63 +225,11 @@ components:
         ConfirmPasswordResetResponse:
             type: object
             properties: {}
-        CreateUserRequest:
-            required:
-                - user
-                - password
-            type: object
-            properties:
-                user:
-                    $ref: '#/components/schemas/User'
-                userId:
-                    type: string
-                    description: Optional CRUD resource ID; when supplied it must be a canonical UUIDv7.
-                password:
-                    type: string
-        DisableUserRequest:
-            required:
-                - name
-            type: object
-            properties:
-                name:
-                    type: string
-                reason:
-                    type: string
-                etag:
-                    type: string
-        DisableUserResponse:
-            type: object
-            properties:
-                user:
-                    $ref: '#/components/schemas/User'
-        EnableUserRequest:
-            required:
-                - name
-            type: object
-            properties:
-                name:
-                    type: string
-                etag:
-                    type: string
-        EnableUserResponse:
-            type: object
-            properties:
-                user:
-                    $ref: '#/components/schemas/User'
         GetProfileResponse:
             type: object
             properties:
                 user:
                     $ref: '#/components/schemas/User'
-        ListUsersResponse:
-            type: object
-            properties:
-                users:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/User'
-                nextPageToken:
-                    type: string
         LoginRequest:
             required:
                 - email
@@ -449,8 +246,6 @@ components:
             properties:
                 user:
                     $ref: '#/components/schemas/User'
-                session:
-                    $ref: '#/components/schemas/Session'
         LogoutRequest:
             type: object
             properties: {}
@@ -509,31 +304,6 @@ components:
         ResendVerificationEmailResponse:
             type: object
             properties: {}
-        Session:
-            type: object
-            properties:
-                name:
-                    type: string
-                sessionId:
-                    readOnly: true
-                    type: string
-                createTime:
-                    readOnly: true
-                    type: string
-                    format: date-time
-                lastSeenTime:
-                    readOnly: true
-                    type: string
-                    format: date-time
-                idleExpiresTime:
-                    readOnly: true
-                    type: string
-                    format: date-time
-                absoluteExpiresTime:
-                    readOnly: true
-                    type: string
-                    format: date-time
-            description: Session is safe Login Session metadata. The opaque cookie secret is never exposed by Proto.
         UpdateProfileResponse:
             type: object
             properties:
@@ -624,5 +394,3 @@ tags:
       description: AuthnService owns email/password authentication.
     - name: SessionService
       description: SessionService owns IAM Login Session lifecycle commands.
-    - name: UserService
-      description: UserService exposes administrator-facing global user management.

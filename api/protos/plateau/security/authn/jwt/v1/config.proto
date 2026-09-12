@@ -17,4 +17,5 @@ message JwtAuthnConfig {
   string issuer = 1;
   string audience = 2;
   repeated plateau.security.jwt.v1.VerificationKey verification_keys = 3;
+  plateau.security.jwt.v1.JWKS jwks = 4;
 }

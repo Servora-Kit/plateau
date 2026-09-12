@@ -15,16 +15,8 @@ const (
 	FieldID = "id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
-	// FieldSecretHash holds the string denoting the secret_hash field in the database.
-	FieldSecretHash = "secret_hash"
 	// FieldCreateTime holds the string denoting the create_time field in the database.
 	FieldCreateTime = "create_time"
-	// FieldLastSeenTime holds the string denoting the last_seen_time field in the database.
-	FieldLastSeenTime = "last_seen_time"
-	// FieldIdleExpiresTime holds the string denoting the idle_expires_time field in the database.
-	FieldIdleExpiresTime = "idle_expires_time"
-	// FieldAbsoluteExpiresTime holds the string denoting the absolute_expires_time field in the database.
-	FieldAbsoluteExpiresTime = "absolute_expires_time"
 	// FieldRevokedTime holds the string denoting the revoked_time field in the database.
 	FieldRevokedTime = "revoked_time"
 	// Table holds the table name of the iamloginsession in the database.
@@ -35,11 +27,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldUserID,
-	FieldSecretHash,
 	FieldCreateTime,
-	FieldLastSeenTime,
-	FieldIdleExpiresTime,
-	FieldAbsoluteExpiresTime,
 	FieldRevokedTime,
 }
 
@@ -56,12 +44,8 @@ func ValidColumn(column string) bool {
 var (
 	// UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	UserIDValidator func(string) error
-	// SecretHashValidator is a validator for the "secret_hash" field. It is called by the builders before save.
-	SecretHashValidator func(string) error
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
 	DefaultCreateTime func() time.Time
-	// DefaultLastSeenTime holds the default value on creation for the "last_seen_time" field.
-	DefaultLastSeenTime func() time.Time
 )
 
 // OrderOption defines the ordering options for the IAMLoginSession queries.
@@ -77,29 +61,9 @@ func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
 }
 
-// BySecretHash orders the results by the secret_hash field.
-func BySecretHash(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSecretHash, opts...).ToFunc()
-}
-
 // ByCreateTime orders the results by the create_time field.
 func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
-}
-
-// ByLastSeenTime orders the results by the last_seen_time field.
-func ByLastSeenTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLastSeenTime, opts...).ToFunc()
-}
-
-// ByIdleExpiresTime orders the results by the idle_expires_time field.
-func ByIdleExpiresTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIdleExpiresTime, opts...).ToFunc()
-}
-
-// ByAbsoluteExpiresTime orders the results by the absolute_expires_time field.
-func ByAbsoluteExpiresTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAbsoluteExpiresTime, opts...).ToFunc()
 }
 
 // ByRevokedTime orders the results by the revoked_time field.

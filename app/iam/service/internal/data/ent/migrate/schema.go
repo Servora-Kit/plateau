@@ -73,15 +73,30 @@ var (
 			},
 		},
 	}
+	// SessionsColumns holds the columns for the "sessions" table.
+	SessionsColumns = []*schema.Column{
+		{Name: "token", Type: field.TypeString, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "data", Type: field.TypeBytes},
+		{Name: "expiry", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// SessionsTable holds the schema information for the "sessions" table.
+	SessionsTable = &schema.Table{
+		Name:       "sessions",
+		Columns:    SessionsColumns,
+		PrimaryKey: []*schema.Column{SessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "httpsession_expiry",
+				Unique:  false,
+				Columns: []*schema.Column{SessionsColumns[2]},
+			},
+		},
+	}
 	// IamLoginSessionsColumns holds the columns for the "iam_login_sessions" table.
 	IamLoginSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
-		{Name: "secret_hash", Type: field.TypeString, Unique: true},
 		{Name: "create_time", Type: field.TypeTime},
-		{Name: "last_seen_time", Type: field.TypeTime},
-		{Name: "idle_expires_time", Type: field.TypeTime},
-		{Name: "absolute_expires_time", Type: field.TypeTime},
 		{Name: "revoked_time", Type: field.TypeTime, Nullable: true},
 	}
 	// IamLoginSessionsTable holds the schema information for the "iam_login_sessions" table.
@@ -93,17 +108,7 @@ var (
 			{
 				Name:    "iamloginsession_user_id_revoked_time",
 				Unique:  false,
-				Columns: []*schema.Column{IamLoginSessionsColumns[1], IamLoginSessionsColumns[7]},
-			},
-			{
-				Name:    "iamloginsession_idle_expires_time",
-				Unique:  false,
-				Columns: []*schema.Column{IamLoginSessionsColumns[5]},
-			},
-			{
-				Name:    "iamloginsession_absolute_expires_time",
-				Unique:  false,
-				Columns: []*schema.Column{IamLoginSessionsColumns[6]},
+				Columns: []*schema.Column{IamLoginSessionsColumns[1], IamLoginSessionsColumns[3]},
 			},
 		},
 	}
@@ -144,7 +149,9 @@ var (
 	// OauthAccessTokensColumns holds the columns for the "oauth_access_tokens" table.
 	OauthAccessTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "token_session_id", Type: field.TypeString},
+		{Name: "token_session_id", Type: field.TypeString, Nullable: true},
+		{Name: "actor_type", Type: field.TypeEnum, Enums: []string{"human", "service"}, Default: "human"},
+		{Name: "audiences", Type: field.TypeJSON, Nullable: true},
 		{Name: "subject", Type: field.TypeString},
 		{Name: "client_id", Type: field.TypeString},
 		{Name: "scopes", Type: field.TypeJSON},
@@ -161,17 +168,17 @@ var (
 			{
 				Name:    "oauthaccesstoken_token_session_id_revoked_time",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAccessTokensColumns[1], OauthAccessTokensColumns[7]},
+				Columns: []*schema.Column{OauthAccessTokensColumns[1], OauthAccessTokensColumns[9]},
 			},
 			{
 				Name:    "oauthaccesstoken_subject_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAccessTokensColumns[2], OauthAccessTokensColumns[6]},
+				Columns: []*schema.Column{OauthAccessTokensColumns[4], OauthAccessTokensColumns[8]},
 			},
 			{
 				Name:    "oauthaccesstoken_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OauthAccessTokensColumns[6]},
+				Columns: []*schema.Column{OauthAccessTokensColumns[8]},
 			},
 		},
 	}
@@ -222,6 +229,7 @@ var (
 		{Name: "allowed_grant_types", Type: field.TypeJSON},
 		{Name: "allowed_response_types", Type: field.TypeJSON},
 		{Name: "allowed_scopes", Type: field.TypeJSON},
+		{Name: "audiences", Type: field.TypeJSON, Nullable: true},
 		{Name: "trusted", Type: field.TypeBool, Default: false},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
@@ -464,6 +472,7 @@ var (
 	Tables = []*schema.Table{
 		AuthenticatorsTable,
 		EmailVerificationTokensTable,
+		SessionsTable,
 		IamLoginSessionsTable,
 		LoginIdentifiersTable,
 		OauthAccessTokensTable,
@@ -485,6 +494,9 @@ func init() {
 	}
 	EmailVerificationTokensTable.Annotation = &entsql.Annotation{
 		Table: "email_verification_tokens",
+	}
+	SessionsTable.Annotation = &entsql.Annotation{
+		Table: "sessions",
 	}
 	IamLoginSessionsTable.Annotation = &entsql.Annotation{
 		Table: "iam_login_sessions",

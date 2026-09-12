@@ -19,16 +19,8 @@ type IAMLoginSession struct {
 	ID string `json:"id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID string `json:"user_id,omitempty"`
-	// SecretHash holds the value of the "secret_hash" field.
-	SecretHash string `json:"-"`
 	// CreateTime holds the value of the "create_time" field.
 	CreateTime time.Time `json:"create_time,omitempty"`
-	// LastSeenTime holds the value of the "last_seen_time" field.
-	LastSeenTime time.Time `json:"last_seen_time,omitempty"`
-	// IdleExpiresTime holds the value of the "idle_expires_time" field.
-	IdleExpiresTime time.Time `json:"idle_expires_time,omitempty"`
-	// AbsoluteExpiresTime holds the value of the "absolute_expires_time" field.
-	AbsoluteExpiresTime time.Time `json:"absolute_expires_time,omitempty"`
 	// RevokedTime holds the value of the "revoked_time" field.
 	RevokedTime  *time.Time `json:"revoked_time,omitempty"`
 	selectValues sql.SelectValues
@@ -39,9 +31,9 @@ func (*IAMLoginSession) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case iamloginsession.FieldID, iamloginsession.FieldUserID, iamloginsession.FieldSecretHash:
+		case iamloginsession.FieldID, iamloginsession.FieldUserID:
 			values[i] = new(sql.NullString)
-		case iamloginsession.FieldCreateTime, iamloginsession.FieldLastSeenTime, iamloginsession.FieldIdleExpiresTime, iamloginsession.FieldAbsoluteExpiresTime, iamloginsession.FieldRevokedTime:
+		case iamloginsession.FieldCreateTime, iamloginsession.FieldRevokedTime:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -70,35 +62,11 @@ func (_m *IAMLoginSession) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UserID = value.String
 			}
-		case iamloginsession.FieldSecretHash:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field secret_hash", values[i])
-			} else if value.Valid {
-				_m.SecretHash = value.String
-			}
 		case iamloginsession.FieldCreateTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field create_time", values[i])
 			} else if value.Valid {
 				_m.CreateTime = value.Time
-			}
-		case iamloginsession.FieldLastSeenTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field last_seen_time", values[i])
-			} else if value.Valid {
-				_m.LastSeenTime = value.Time
-			}
-		case iamloginsession.FieldIdleExpiresTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field idle_expires_time", values[i])
-			} else if value.Valid {
-				_m.IdleExpiresTime = value.Time
-			}
-		case iamloginsession.FieldAbsoluteExpiresTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field absolute_expires_time", values[i])
-			} else if value.Valid {
-				_m.AbsoluteExpiresTime = value.Time
 			}
 		case iamloginsession.FieldRevokedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -146,19 +114,8 @@ func (_m *IAMLoginSession) String() string {
 	builder.WriteString("user_id=")
 	builder.WriteString(_m.UserID)
 	builder.WriteString(", ")
-	builder.WriteString("secret_hash=<sensitive>")
-	builder.WriteString(", ")
 	builder.WriteString("create_time=")
 	builder.WriteString(_m.CreateTime.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("last_seen_time=")
-	builder.WriteString(_m.LastSeenTime.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("idle_expires_time=")
-	builder.WriteString(_m.IdleExpiresTime.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("absolute_expires_time=")
-	builder.WriteString(_m.AbsoluteExpiresTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	if v := _m.RevokedTime; v != nil {
 		builder.WriteString("revoked_time=")

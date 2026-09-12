@@ -21,6 +21,7 @@
 
 - **IAM**（`app/iam/service/`）：IAM 微服务
   - 为 Plateau 整个平台所有微服务提供中性化认证授权服务
+  - [会话、OIDC、服务 JWT 与 OpenFGA 接入说明](docs/iam-security.md)
 
 - **Example**（`app/example/service/`）：Servora CRUD 生态示例服务
   - 是 servora 的经典用法，也是官方推荐的代码布局

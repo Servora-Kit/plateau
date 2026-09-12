@@ -54,7 +54,6 @@ export type LoginRequest = {
 };
 
 export type LoginResponse = {
-  session?: iamsessionv1_Session;
   user?: iamuserv1_User;
 };
 
@@ -131,28 +130,6 @@ export type iamuserv1_UserStatus =
 // and uses 0, 3, 6 or 9 fractional digits.
 // Offsets other than "Z" are also accepted.
 type wellKnownTimestamp = string;
-
-// Session is safe Login Session metadata. The opaque cookie secret is never exposed by Proto.
-export type iamsessionv1_Session = {
-  //
-  // Behaviors: OUTPUT_ONLY
-  absoluteExpiresTime?: wellKnownTimestamp;
-  //
-  // Behaviors: OUTPUT_ONLY
-  createTime?: wellKnownTimestamp;
-  //
-  // Behaviors: OUTPUT_ONLY
-  idleExpiresTime?: wellKnownTimestamp;
-  //
-  // Behaviors: OUTPUT_ONLY
-  lastSeenTime?: wellKnownTimestamp;
-  //
-  // Behaviors: IDENTIFIER
-  name?: string;
-  //
-  // Behaviors: OUTPUT_ONLY
-  sessionId?: string;
-};
 
 // AuthnService owns email/password authentication.
 export interface AuthnService {

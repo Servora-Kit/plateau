@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"strings"
 	"testing"
@@ -21,7 +20,7 @@ type fakeBootstrapCreator struct {
 	passwordHash string
 }
 
-func (creator *fakeBootstrapCreator) CreateInitialAdmin(_ context.Context, userID, email, _ string, passwordHash string, _ time.Time) error {
+func (creator *fakeBootstrapCreator) CreateInitialUser(_ context.Context, userID, email, _ string, passwordHash string, _ time.Time) error {
 	creator.calls++
 	creator.passwordHash = passwordHash
 	creator.users.user = &userpb.User{
@@ -31,38 +30,25 @@ func (creator *fakeBootstrapCreator) CreateInitialAdmin(_ context.Context, userI
 	return nil
 }
 
-type fakeAdminRelations struct {
-	calls  int
-	userID string
-	err    error
-}
-
-func (relations *fakeAdminRelations) EnsurePlatformAdmin(_ context.Context, userID string) error {
-	relations.calls++
-	relations.userID = userID
-	return relations.err
-}
-
-func TestAdminBootstrapCreatesOnceAndReusesIdentity(t *testing.T) {
+func TestUserBootstrapCreatesOnceAndReusesIdentity(t *testing.T) {
 	users := new(fakeAccountUsers)
 	creator := &fakeBootstrapCreator{users: users}
-	relations := new(fakeAdminRelations)
 	var output bytes.Buffer
 	logger := slog.New(slog.NewJSONHandler(&output, nil))
-	bootstrap, err := NewAdminInitializer(
-		&iamconfpb.IAM{BootstrapAdminEmail: " Admin@Example.com "},
-		users, creator, relations, logger,
+	bootstrap, err := NewUserInitializer(
+		&iamconfpb.IAM{BootstrapUserEmail: " Admin@Example.com "},
+		users, creator, logger,
 	)
 	if err != nil {
-		t.Fatalf("NewAdminInitializer() error = %v", err)
+		t.Fatalf("NewUserInitializer() error = %v", err)
 	}
 	bootstrap.now = func() time.Time { return time.Unix(1_700_000_000, 0) }
 
 	if err := bootstrap.Initialize(t.Context()); err != nil {
 		t.Fatalf("first Initialize() error = %v", err)
 	}
-	if creator.calls != 1 || relations.calls != 1 || relations.userID != users.user.GetUserId() {
-		t.Fatalf("creator calls=%d relation calls=%d user=%q", creator.calls, relations.calls, relations.userID)
+	if creator.calls != 1 {
+		t.Fatalf("creator calls=%d", creator.calls)
 	}
 	var entry map[string]any
 	if err := json.Unmarshal(output.Bytes(), &entry); err != nil {
@@ -77,28 +63,25 @@ func TestAdminBootstrapCreatesOnceAndReusesIdentity(t *testing.T) {
 	if err := bootstrap.Initialize(t.Context()); err != nil {
 		t.Fatalf("second Initialize() error = %v", err)
 	}
-	if creator.calls != 1 || relations.calls != 2 {
-		t.Fatalf("repeated run creator calls=%d relation calls=%d", creator.calls, relations.calls)
+	if creator.calls != 1 {
+		t.Fatalf("repeated creator calls=%d", creator.calls)
 	}
 	if strings.Count(output.String(), "initial_password") != 1 {
 		t.Fatalf("initial password emitted more than once: %s", output.String())
 	}
 }
 
-func TestAdminBootstrapFailsWhenRelationCannotBeEnsured(t *testing.T) {
-	users := &fakeAccountUsers{user: &userpb.User{
-		UserId: "user-1", Email: stringPtr("admin@example.com"),
-		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
-	}}
-	relations := &fakeAdminRelations{err: errors.New("OpenFGA unavailable")}
-	bootstrap, err := NewAdminInitializer(
-		&iamconfpb.IAM{BootstrapAdminEmail: "admin@example.com"},
-		users, &fakeBootstrapCreator{users: users}, relations, nil,
-	)
+func TestUserBootstrapRejectsInactiveExistingUser(t *testing.T) {
+	users := &fakeAccountUsers{user: &userpb.User{UserId: "user-1", Status: userpb.UserStatus_USER_STATUS_DISABLED}}
+	creator := &fakeBootstrapCreator{users: users}
+	bootstrap, err := NewUserInitializer(&iamconfpb.IAM{BootstrapUserEmail: "alice@example.com"}, users, creator, nil)
 	if err != nil {
-		t.Fatalf("NewAdminInitializer() error = %v", err)
+		t.Fatal(err)
 	}
-	if err := bootstrap.Initialize(t.Context()); err == nil || !strings.Contains(err.Error(), "ensure bootstrap admin relation") {
-		t.Fatalf("Initialize() error = %v", err)
+	if err := bootstrap.Initialize(t.Context()); err == nil {
+		t.Fatal("inactive existing user accepted")
+	}
+	if creator.calls != 0 {
+		t.Fatal("existing user was replaced")
 	}
 }

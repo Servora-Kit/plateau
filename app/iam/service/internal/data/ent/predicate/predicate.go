@@ -12,6 +12,9 @@ type Authenticator func(*sql.Selector)
 // EmailVerificationToken is the predicate function for emailverificationtoken builders.
 type EmailVerificationToken func(*sql.Selector)
 
+// HTTPSession is the predicate function for httpsession builders.
+type HTTPSession func(*sql.Selector)
+
 // IAMLoginSession is the predicate function for iamloginsession builders.
 type IAMLoginSession func(*sql.Selector)
 

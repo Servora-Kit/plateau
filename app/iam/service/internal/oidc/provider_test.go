@@ -6,11 +6,9 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -25,12 +23,18 @@ import (
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 	oidcconfv1 "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	sessionconfig "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
+	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	httpsession "github.com/Servora-Kit/plateau/security/session"
+	"github.com/alexedwards/scs/v2"
 	"github.com/alicebob/miniredis/v2"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	fgaclient "github.com/openfga/go-sdk/client"
 	goredis "github.com/redis/go-redis/v9"
 	oidcprotocol "github.com/zitadel/oidc/v3/pkg/oidc"
@@ -51,6 +55,7 @@ type providerFixture struct {
 	config        *oidcconfv1.OIDC
 	sessions      *biz.SessionUsecase
 	sessionSecret string
+	manager       *scs.SessionManager
 	userID        string
 }
 
@@ -77,10 +82,16 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 		t.Fatal("idempotent bootstrap replaced the persisted client-secret hash")
 	}
 	fixture.config.Clients[0].ClientSecret = "different-client-secret-with-at-least-32-bytes"
-	if err := fixture.bootstrap.Initialize(ctx); err == nil {
-		t.Fatal("bootstrap accepted a conflicting persisted client secret")
+	if err := fixture.bootstrap.Initialize(ctx); err != nil {
+		t.Fatalf("rotate client secret: %v", err)
+	}
+	if fixture.client.OAuthClient.GetX(ctx, testClientID).SecretHash == originalHash {
+		t.Fatal("secret rotation was not persisted")
 	}
 	fixture.config.Clients[0].ClientSecret = testClientSecret
+	if err := fixture.bootstrap.Initialize(ctx); err != nil {
+		t.Fatal(err)
+	}
 	keyCount, err := fixture.client.OIDCSigningKey.Query().Count(ctx)
 	if err != nil || keyCount != 1 {
 		t.Fatalf("signing key metadata count = %d, err = %v; want 1", keyCount, err)
@@ -147,9 +158,9 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	}
 
 	callbackRequest := httptest.NewRequest(http.MethodGet, testIssuer+callbackLocation, nil)
-	callbackRequest.AddCookie(&http.Cookie{Name: iamSessionCookieName, Value: fixture.sessionSecret})
+	callbackRequest.AddCookie(&http.Cookie{Name: fixture.manager.Cookie.Name, Value: fixture.sessionSecret})
 	callback := httptest.NewRecorder()
-	fixture.provider.ServeHTTP(callback, callbackRequest)
+	httpsession.LoadAndSave(fixture.manager)(fixture.provider).ServeHTTP(callback, callbackRequest)
 	if callback.Code != http.StatusFound {
 		t.Fatalf("authenticated callback status = %d, body = %s", callback.Code, callback.Body.String())
 	}
@@ -237,7 +248,7 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if metadata.Issuer != testIssuer || !sameStrings(metadata.Scopes, supportedScopes) {
 		t.Fatalf("discovery metadata = %+v", metadata)
 	}
-	if contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeClientCredentials)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeCode)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeRefreshToken)) {
+	if !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeClientCredentials)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeCode)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeRefreshToken)) {
 		t.Fatalf("discovery grant types = %v", metadata.GrantTypes)
 	}
 	if !sameStrings(metadata.CodeChallengeMethods, []string{"S256"}) || !sameStrings(metadata.TokenEndpointAuthenticationMethods, []string{"client_secret_basic"}) {
@@ -326,16 +337,36 @@ func TestValidateAuthorizationRequest(t *testing.T) {
 func newProviderFixture(t *testing.T) *providerFixture {
 	t.Helper()
 	ctx := context.Background()
-	database, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?mode=memory&cache=shared&_fk=1", url.QueryEscape(t.Name())))
+	dsn := os.Getenv("IAM_TEST_POSTGRES_DSN")
+	if dsn == "" {
+		t.Skip("IAM_TEST_POSTGRES_DSN is required for protocol integration tests")
+	}
+	configPG, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		t.Fatalf("open SQLite: %v", err)
+		t.Fatal(err)
 	}
-	driver := entsql.OpenDB(dialect.SQLite, database)
-	client := ent.NewClient(ent.Driver(driver))
-	t.Cleanup(func() { _ = client.Close() })
-	if err := client.Schema.Create(ctx); err != nil {
-		t.Fatalf("create Ent schema: %v", err)
+	adminDB := stdlib.OpenDB(*configPG)
+	schema := "oidc_" + uuid.NewString()[:8]
+	if _, err := adminDB.ExecContext(ctx, "CREATE SCHEMA "+schema); err != nil {
+		adminDB.Close()
+		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		_, err := adminDB.ExecContext(context.Background(), "DROP SCHEMA "+schema+" CASCADE")
+		if err != nil {
+			t.Error(err)
+		}
+		adminDB.Close()
+	})
+	configPG.RuntimeParams["search_path"] = schema
+	database := stdlib.OpenDB(*configPG)
+	driver := entsql.OpenDB(dialect.Postgres, database)
+	client, cleanupDB, err := data.NewDBClient(driver)
+	if err != nil {
+		database.Close()
+		t.Fatal(err)
+	}
+	t.Cleanup(cleanupDB)
 
 	miniRedis := miniredis.RunT(t)
 	redisClient := goredis.NewClient(&goredis.Options{Addr: miniRedis.Addr()})
@@ -352,11 +383,11 @@ func newProviderFixture(t *testing.T) *providerFixture {
 	if err != nil {
 		t.Fatalf("create Session repository: %v", err)
 	}
-	tokenSessionRepo, err := data.NewTokenSessionRepository(dataStore)
+	tokenSessionRepo, err := data.NewOAuthRepository(dataStore)
 	if err != nil {
 		t.Fatalf("create Token Session repository: %v", err)
 	}
-	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo, tokenSessionRepo)
+	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo)
 	if err != nil {
 		t.Fatalf("create Session usecase: %v", err)
 	}
@@ -388,13 +419,27 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed Login Identifier: %v", err)
 	}
-	sessionSecret := "browser-session-secret"
-	if _, err := sessionRepo.Create(ctx, userID, biz.HashOpaqueSecret(sessionSecret), now); err != nil {
-		t.Fatalf("seed IAM Login Session: %v", err)
+	login, err := sessionRepo.Create(ctx, userID, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager, cleanupSession, err := data.NewHTTPSessionManager(&sessionconfig.Session{Cookie: &sessionconfig.Cookie{Name: "__Host-iam_session"}}, database, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(cleanupSession)
+	browserCtx, err := manager.Load(ctx, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager.Put(browserCtx, iamauthn.LoginReferenceKey, login.ID)
+	sessionSecret, _, err := manager.Commit(browserCtx)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	config := testOIDCConfig(t)
-	storage, err := NewOIDCStorage(client, config)
+	storage, err := NewOIDCStorage(client, config, tokenSessionRepo)
 	if err != nil {
 		t.Fatalf("create OIDC storage: %v", err)
 	}
@@ -405,18 +450,18 @@ func newProviderFixture(t *testing.T) *providerFixture {
 	if err := bootstrap.Initialize(ctx); err != nil {
 		t.Fatalf("run OIDC initializer: %v", err)
 	}
-	provider, err := NewIAMProvider(config, storage, sessionUsecase)
+	provider, err := NewIAMProvider(config, storage, sessionUsecase, manager)
 	if err != nil {
 		t.Fatalf("create OIDC provider: %v", err)
 	}
 	return &providerFixture{
 		provider: provider, storage: storage, bootstrap: bootstrap, client: client, config: config,
-		sessions: sessionUsecase, sessionSecret: sessionSecret, userID: userID,
+		sessions: sessionUsecase, manager: manager, sessionSecret: sessionSecret, userID: userID,
 	}
 }
 func (fixture *providerFixture) restartProvider(t *testing.T) {
 	t.Helper()
-	provider, err := NewIAMProvider(fixture.config, fixture.storage, fixture.sessions)
+	provider, err := NewIAMProvider(fixture.config, fixture.storage, fixture.sessions, fixture.manager)
 	if err != nil {
 		t.Fatalf("restart OIDC provider: %v", err)
 	}
@@ -448,11 +493,12 @@ func testOIDCConfig(t *testing.T) *oidcconfv1.OIDC {
 		SigningKeyPath: signingPath,
 		CryptoKeyPath:  cryptoPath,
 		Clients: []*oidcconfv1.OAuthClient{{
-			ClientId:      testClientID,
-			ClientSecret:  testClientSecret,
-			RedirectUris:  []string{testRedirectURI},
-			AllowedScopes: append([]string(nil), supportedScopes...),
-			Trusted:       true,
+			ClientId:          testClientID,
+			ClientSecret:      testClientSecret,
+			RedirectUris:      []string{testRedirectURI},
+			AllowedScopes:     append([]string(nil), supportedScopes...),
+			Trusted:           true,
+			AllowedGrantTypes: []string{"authorization_code", "refresh_token"},
 		}},
 	}
 }
@@ -568,6 +614,12 @@ func performRequest(handler http.Handler, method, target, body string, headers m
 		request.Header.Set(key, value)
 	}
 	response := httptest.NewRecorder()
+	if provider, ok := handler.(*IAMProvider); ok {
+		switch request.URL.Path {
+		case "/authorize", "/authorize/callback", "/end_session":
+			handler = httpsession.LoadAndSave(provider.manager)(handler)
+		}
+	}
 	handler.ServeHTTP(response, request)
 	return response
 }

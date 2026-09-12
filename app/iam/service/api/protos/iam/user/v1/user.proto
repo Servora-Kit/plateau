@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package iam.user.v1;
 
-import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
@@ -21,56 +20,38 @@ service UserService {
   option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
   option (plateau.security.authz.v1.service_default) = {
     mode: AUTHZ_MODE_REQUIRED
-    action: "can_manage_users"
-    resource_type: "plateau"
-    resource_id: "default"
+    action: "manage_users"
+    resource_type: "iam"
+    resource_id: "global"
   };
 
   // CreateUser creates a pending user with an administrator-supplied initial password.
   rpc CreateUser(CreateUserRequest) returns (User) {
-    option (google.api.http) = {
-      post: "/v1/iam/users"
-      body: "*"
-    };
     option (google.api.method_signature) = "user,user_id,password";
   }
 
   // GetUser returns one global IAM user by resource name.
   rpc GetUser(GetUserRequest) returns (User) {
-    option (google.api.http) = {get: "/v1/iam/users/{name=users/*}"};
     option (google.api.method_signature) = "name";
   }
 
   // ListUsers returns a page of globally unique IAM users.
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {get: "/v1/iam/users"};
     option (google.api.method_signature) = "page_size,page_token,filter,order_by";
   }
 
   // UpdateUser updates administrator-editable profile fields.
   rpc UpdateUser(UpdateUserRequest) returns (User) {
-    option (google.api.http) = {
-      patch: "/v1/iam/users/{user.name=users/*}"
-      body: "user"
-    };
     option (google.api.method_signature) = "user,update_mask";
   }
 
   // DisableUser disables credentials and revokes every active session.
   rpc DisableUser(DisableUserRequest) returns (DisableUserResponse) {
-    option (google.api.http) = {
-      post: "/v1/iam/users/{name=users/*}:disable"
-      body: "*"
-    };
     option (google.api.method_signature) = "name";
   }
 
   // EnableUser enables a disabled user without restoring revoked sessions.
   rpc EnableUser(EnableUserRequest) returns (EnableUserResponse) {
-    option (google.api.http) = {
-      post: "/v1/iam/users/{name=users/*}:enable"
-      body: "*"
-    };
     option (google.api.method_signature) = "name";
   }
 }

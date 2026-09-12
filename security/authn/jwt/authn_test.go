@@ -156,7 +156,7 @@ func TestNewRejectsTypedNilKeySource(t *testing.T) {
 			Kid: "key-1", Source: (*jwtkeypb.VerificationKey_PublicKeyPem)(nil),
 		}},
 	}
-	if _, err := New(config); err == nil {
+	if _, _, err := New(t.Context(), config); err == nil {
 		t.Fatal("New accepted typed-nil key source")
 	}
 }
@@ -191,7 +191,7 @@ func newAuthenticator(t *testing.T) (*securityjwt.Signer, *rsa.PrivateKey, *Auth
 	if err != nil {
 		t.Fatal(err)
 	}
-	authenticator, err := New(&jwtconfpb.JwtAuthnConfig{
+	authenticator, cleanup, err := New(t.Context(), &jwtconfpb.JwtAuthnConfig{
 		Issuer: "issuer-a", Audience: "audience-a",
 		VerificationKeys: []*jwtkeypb.VerificationKey{{
 			Kid:    signer.KID(),
@@ -201,6 +201,7 @@ func newAuthenticator(t *testing.T) (*securityjwt.Signer, *rsa.PrivateKey, *Auth
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(cleanup)
 	return signer, key, authenticator
 }
 

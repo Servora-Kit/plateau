@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/httpsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
@@ -39,6 +40,7 @@ const (
 	// Node types.
 	TypeAuthenticator            = "Authenticator"
 	TypeEmailVerificationToken   = "EmailVerificationToken"
+	TypeHTTPSession              = "HTTPSession"
 	TypeIAMLoginSession          = "IAMLoginSession"
 	TypeLoginIdentifier          = "LoginIdentifier"
 	TypeOAuthAccessToken         = "OAuthAccessToken"
@@ -1520,23 +1522,405 @@ func (m *EmailVerificationTokenMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown EmailVerificationToken edge %s", name)
 }
 
+// HTTPSessionMutation represents an operation that mutates the HTTPSession nodes in the graph.
+type HTTPSessionMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *string
+	data          *[]byte
+	expiry        *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*HTTPSession, error)
+	predicates    []predicate.HTTPSession
+}
+
+var _ ent.Mutation = (*HTTPSessionMutation)(nil)
+
+// httpsessionOption allows management of the mutation configuration using functional options.
+type httpsessionOption func(*HTTPSessionMutation)
+
+// newHTTPSessionMutation creates new mutation for the HTTPSession entity.
+func newHTTPSessionMutation(c config, op Op, opts ...httpsessionOption) *HTTPSessionMutation {
+	m := &HTTPSessionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeHTTPSession,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withHTTPSessionID sets the ID field of the mutation.
+func withHTTPSessionID(id string) httpsessionOption {
+	return func(m *HTTPSessionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *HTTPSession
+		)
+		m.oldValue = func(ctx context.Context) (*HTTPSession, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().HTTPSession.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withHTTPSession sets the old HTTPSession of the mutation.
+func withHTTPSession(node *HTTPSession) httpsessionOption {
+	return func(m *HTTPSessionMutation) {
+		m.oldValue = func(context.Context) (*HTTPSession, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m HTTPSessionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m HTTPSessionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of HTTPSession entities.
+func (m *HTTPSessionMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *HTTPSessionMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *HTTPSessionMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().HTTPSession.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetData sets the "data" field.
+func (m *HTTPSessionMutation) SetData(b []byte) {
+	m.data = &b
+}
+
+// Data returns the value of the "data" field in the mutation.
+func (m *HTTPSessionMutation) Data() (r []byte, exists bool) {
+	v := m.data
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldData returns the old "data" field's value of the HTTPSession entity.
+// If the HTTPSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *HTTPSessionMutation) OldData(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldData is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldData requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldData: %w", err)
+	}
+	return oldValue.Data, nil
+}
+
+// ResetData resets all changes to the "data" field.
+func (m *HTTPSessionMutation) ResetData() {
+	m.data = nil
+}
+
+// SetExpiry sets the "expiry" field.
+func (m *HTTPSessionMutation) SetExpiry(t time.Time) {
+	m.expiry = &t
+}
+
+// Expiry returns the value of the "expiry" field in the mutation.
+func (m *HTTPSessionMutation) Expiry() (r time.Time, exists bool) {
+	v := m.expiry
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiry returns the old "expiry" field's value of the HTTPSession entity.
+// If the HTTPSession object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *HTTPSessionMutation) OldExpiry(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiry is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiry requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiry: %w", err)
+	}
+	return oldValue.Expiry, nil
+}
+
+// ResetExpiry resets all changes to the "expiry" field.
+func (m *HTTPSessionMutation) ResetExpiry() {
+	m.expiry = nil
+}
+
+// Where appends a list predicates to the HTTPSessionMutation builder.
+func (m *HTTPSessionMutation) Where(ps ...predicate.HTTPSession) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the HTTPSessionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *HTTPSessionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.HTTPSession, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *HTTPSessionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *HTTPSessionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (HTTPSession).
+func (m *HTTPSessionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *HTTPSessionMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.data != nil {
+		fields = append(fields, httpsession.FieldData)
+	}
+	if m.expiry != nil {
+		fields = append(fields, httpsession.FieldExpiry)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *HTTPSessionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case httpsession.FieldData:
+		return m.Data()
+	case httpsession.FieldExpiry:
+		return m.Expiry()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *HTTPSessionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case httpsession.FieldData:
+		return m.OldData(ctx)
+	case httpsession.FieldExpiry:
+		return m.OldExpiry(ctx)
+	}
+	return nil, fmt.Errorf("unknown HTTPSession field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *HTTPSessionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case httpsession.FieldData:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetData(v)
+		return nil
+	case httpsession.FieldExpiry:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiry(v)
+		return nil
+	}
+	return fmt.Errorf("unknown HTTPSession field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *HTTPSessionMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *HTTPSessionMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *HTTPSessionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown HTTPSession numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *HTTPSessionMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *HTTPSessionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *HTTPSessionMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown HTTPSession nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *HTTPSessionMutation) ResetField(name string) error {
+	switch name {
+	case httpsession.FieldData:
+		m.ResetData()
+		return nil
+	case httpsession.FieldExpiry:
+		m.ResetExpiry()
+		return nil
+	}
+	return fmt.Errorf("unknown HTTPSession field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *HTTPSessionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *HTTPSessionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *HTTPSessionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *HTTPSessionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *HTTPSessionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *HTTPSessionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *HTTPSessionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown HTTPSession unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *HTTPSessionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown HTTPSession edge %s", name)
+}
+
 // IAMLoginSessionMutation represents an operation that mutates the IAMLoginSession nodes in the graph.
 type IAMLoginSessionMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *string
-	user_id               *string
-	secret_hash           *string
-	create_time           *time.Time
-	last_seen_time        *time.Time
-	idle_expires_time     *time.Time
-	absolute_expires_time *time.Time
-	revoked_time          *time.Time
-	clearedFields         map[string]struct{}
-	done                  bool
-	oldValue              func(context.Context) (*IAMLoginSession, error)
-	predicates            []predicate.IAMLoginSession
+	op            Op
+	typ           string
+	id            *string
+	user_id       *string
+	create_time   *time.Time
+	revoked_time  *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*IAMLoginSession, error)
+	predicates    []predicate.IAMLoginSession
 }
 
 var _ ent.Mutation = (*IAMLoginSessionMutation)(nil)
@@ -1679,42 +2063,6 @@ func (m *IAMLoginSessionMutation) ResetUserID() {
 	m.user_id = nil
 }
 
-// SetSecretHash sets the "secret_hash" field.
-func (m *IAMLoginSessionMutation) SetSecretHash(s string) {
-	m.secret_hash = &s
-}
-
-// SecretHash returns the value of the "secret_hash" field in the mutation.
-func (m *IAMLoginSessionMutation) SecretHash() (r string, exists bool) {
-	v := m.secret_hash
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSecretHash returns the old "secret_hash" field's value of the IAMLoginSession entity.
-// If the IAMLoginSession object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IAMLoginSessionMutation) OldSecretHash(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSecretHash is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSecretHash requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSecretHash: %w", err)
-	}
-	return oldValue.SecretHash, nil
-}
-
-// ResetSecretHash resets all changes to the "secret_hash" field.
-func (m *IAMLoginSessionMutation) ResetSecretHash() {
-	m.secret_hash = nil
-}
-
 // SetCreateTime sets the "create_time" field.
 func (m *IAMLoginSessionMutation) SetCreateTime(t time.Time) {
 	m.create_time = &t
@@ -1749,114 +2097,6 @@ func (m *IAMLoginSessionMutation) OldCreateTime(ctx context.Context) (v time.Tim
 // ResetCreateTime resets all changes to the "create_time" field.
 func (m *IAMLoginSessionMutation) ResetCreateTime() {
 	m.create_time = nil
-}
-
-// SetLastSeenTime sets the "last_seen_time" field.
-func (m *IAMLoginSessionMutation) SetLastSeenTime(t time.Time) {
-	m.last_seen_time = &t
-}
-
-// LastSeenTime returns the value of the "last_seen_time" field in the mutation.
-func (m *IAMLoginSessionMutation) LastSeenTime() (r time.Time, exists bool) {
-	v := m.last_seen_time
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLastSeenTime returns the old "last_seen_time" field's value of the IAMLoginSession entity.
-// If the IAMLoginSession object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IAMLoginSessionMutation) OldLastSeenTime(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLastSeenTime is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLastSeenTime requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLastSeenTime: %w", err)
-	}
-	return oldValue.LastSeenTime, nil
-}
-
-// ResetLastSeenTime resets all changes to the "last_seen_time" field.
-func (m *IAMLoginSessionMutation) ResetLastSeenTime() {
-	m.last_seen_time = nil
-}
-
-// SetIdleExpiresTime sets the "idle_expires_time" field.
-func (m *IAMLoginSessionMutation) SetIdleExpiresTime(t time.Time) {
-	m.idle_expires_time = &t
-}
-
-// IdleExpiresTime returns the value of the "idle_expires_time" field in the mutation.
-func (m *IAMLoginSessionMutation) IdleExpiresTime() (r time.Time, exists bool) {
-	v := m.idle_expires_time
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldIdleExpiresTime returns the old "idle_expires_time" field's value of the IAMLoginSession entity.
-// If the IAMLoginSession object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IAMLoginSessionMutation) OldIdleExpiresTime(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdleExpiresTime is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdleExpiresTime requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdleExpiresTime: %w", err)
-	}
-	return oldValue.IdleExpiresTime, nil
-}
-
-// ResetIdleExpiresTime resets all changes to the "idle_expires_time" field.
-func (m *IAMLoginSessionMutation) ResetIdleExpiresTime() {
-	m.idle_expires_time = nil
-}
-
-// SetAbsoluteExpiresTime sets the "absolute_expires_time" field.
-func (m *IAMLoginSessionMutation) SetAbsoluteExpiresTime(t time.Time) {
-	m.absolute_expires_time = &t
-}
-
-// AbsoluteExpiresTime returns the value of the "absolute_expires_time" field in the mutation.
-func (m *IAMLoginSessionMutation) AbsoluteExpiresTime() (r time.Time, exists bool) {
-	v := m.absolute_expires_time
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAbsoluteExpiresTime returns the old "absolute_expires_time" field's value of the IAMLoginSession entity.
-// If the IAMLoginSession object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *IAMLoginSessionMutation) OldAbsoluteExpiresTime(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAbsoluteExpiresTime is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAbsoluteExpiresTime requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAbsoluteExpiresTime: %w", err)
-	}
-	return oldValue.AbsoluteExpiresTime, nil
-}
-
-// ResetAbsoluteExpiresTime resets all changes to the "absolute_expires_time" field.
-func (m *IAMLoginSessionMutation) ResetAbsoluteExpiresTime() {
-	m.absolute_expires_time = nil
 }
 
 // SetRevokedTime sets the "revoked_time" field.
@@ -1942,24 +2182,12 @@ func (m *IAMLoginSessionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *IAMLoginSessionMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 3)
 	if m.user_id != nil {
 		fields = append(fields, iamloginsession.FieldUserID)
 	}
-	if m.secret_hash != nil {
-		fields = append(fields, iamloginsession.FieldSecretHash)
-	}
 	if m.create_time != nil {
 		fields = append(fields, iamloginsession.FieldCreateTime)
-	}
-	if m.last_seen_time != nil {
-		fields = append(fields, iamloginsession.FieldLastSeenTime)
-	}
-	if m.idle_expires_time != nil {
-		fields = append(fields, iamloginsession.FieldIdleExpiresTime)
-	}
-	if m.absolute_expires_time != nil {
-		fields = append(fields, iamloginsession.FieldAbsoluteExpiresTime)
 	}
 	if m.revoked_time != nil {
 		fields = append(fields, iamloginsession.FieldRevokedTime)
@@ -1974,16 +2202,8 @@ func (m *IAMLoginSessionMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case iamloginsession.FieldUserID:
 		return m.UserID()
-	case iamloginsession.FieldSecretHash:
-		return m.SecretHash()
 	case iamloginsession.FieldCreateTime:
 		return m.CreateTime()
-	case iamloginsession.FieldLastSeenTime:
-		return m.LastSeenTime()
-	case iamloginsession.FieldIdleExpiresTime:
-		return m.IdleExpiresTime()
-	case iamloginsession.FieldAbsoluteExpiresTime:
-		return m.AbsoluteExpiresTime()
 	case iamloginsession.FieldRevokedTime:
 		return m.RevokedTime()
 	}
@@ -1997,16 +2217,8 @@ func (m *IAMLoginSessionMutation) OldField(ctx context.Context, name string) (en
 	switch name {
 	case iamloginsession.FieldUserID:
 		return m.OldUserID(ctx)
-	case iamloginsession.FieldSecretHash:
-		return m.OldSecretHash(ctx)
 	case iamloginsession.FieldCreateTime:
 		return m.OldCreateTime(ctx)
-	case iamloginsession.FieldLastSeenTime:
-		return m.OldLastSeenTime(ctx)
-	case iamloginsession.FieldIdleExpiresTime:
-		return m.OldIdleExpiresTime(ctx)
-	case iamloginsession.FieldAbsoluteExpiresTime:
-		return m.OldAbsoluteExpiresTime(ctx)
 	case iamloginsession.FieldRevokedTime:
 		return m.OldRevokedTime(ctx)
 	}
@@ -2025,40 +2237,12 @@ func (m *IAMLoginSessionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUserID(v)
 		return nil
-	case iamloginsession.FieldSecretHash:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSecretHash(v)
-		return nil
 	case iamloginsession.FieldCreateTime:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreateTime(v)
-		return nil
-	case iamloginsession.FieldLastSeenTime:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLastSeenTime(v)
-		return nil
-	case iamloginsession.FieldIdleExpiresTime:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetIdleExpiresTime(v)
-		return nil
-	case iamloginsession.FieldAbsoluteExpiresTime:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAbsoluteExpiresTime(v)
 		return nil
 	case iamloginsession.FieldRevokedTime:
 		v, ok := value.(time.Time)
@@ -2128,20 +2312,8 @@ func (m *IAMLoginSessionMutation) ResetField(name string) error {
 	case iamloginsession.FieldUserID:
 		m.ResetUserID()
 		return nil
-	case iamloginsession.FieldSecretHash:
-		m.ResetSecretHash()
-		return nil
 	case iamloginsession.FieldCreateTime:
 		m.ResetCreateTime()
-		return nil
-	case iamloginsession.FieldLastSeenTime:
-		m.ResetLastSeenTime()
-		return nil
-	case iamloginsession.FieldIdleExpiresTime:
-		m.ResetIdleExpiresTime()
-		return nil
-	case iamloginsession.FieldAbsoluteExpiresTime:
-		m.ResetAbsoluteExpiresTime()
 		return nil
 	case iamloginsession.FieldRevokedTime:
 		m.ResetRevokedTime()
@@ -2883,6 +3055,9 @@ type OAuthAccessTokenMutation struct {
 	typ              string
 	id               *string
 	token_session_id *string
+	actor_type       *oauthaccesstoken.ActorType
+	audiences        *[]string
+	appendaudiences  []string
 	subject          *string
 	client_id        *string
 	scopes           *[]string
@@ -3031,9 +3206,123 @@ func (m *OAuthAccessTokenMutation) OldTokenSessionID(ctx context.Context) (v str
 	return oldValue.TokenSessionID, nil
 }
 
+// ClearTokenSessionID clears the value of the "token_session_id" field.
+func (m *OAuthAccessTokenMutation) ClearTokenSessionID() {
+	m.token_session_id = nil
+	m.clearedFields[oauthaccesstoken.FieldTokenSessionID] = struct{}{}
+}
+
+// TokenSessionIDCleared returns if the "token_session_id" field was cleared in this mutation.
+func (m *OAuthAccessTokenMutation) TokenSessionIDCleared() bool {
+	_, ok := m.clearedFields[oauthaccesstoken.FieldTokenSessionID]
+	return ok
+}
+
 // ResetTokenSessionID resets all changes to the "token_session_id" field.
 func (m *OAuthAccessTokenMutation) ResetTokenSessionID() {
 	m.token_session_id = nil
+	delete(m.clearedFields, oauthaccesstoken.FieldTokenSessionID)
+}
+
+// SetActorType sets the "actor_type" field.
+func (m *OAuthAccessTokenMutation) SetActorType(ot oauthaccesstoken.ActorType) {
+	m.actor_type = &ot
+}
+
+// ActorType returns the value of the "actor_type" field in the mutation.
+func (m *OAuthAccessTokenMutation) ActorType() (r oauthaccesstoken.ActorType, exists bool) {
+	v := m.actor_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActorType returns the old "actor_type" field's value of the OAuthAccessToken entity.
+// If the OAuthAccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OAuthAccessTokenMutation) OldActorType(ctx context.Context) (v oauthaccesstoken.ActorType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActorType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActorType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActorType: %w", err)
+	}
+	return oldValue.ActorType, nil
+}
+
+// ResetActorType resets all changes to the "actor_type" field.
+func (m *OAuthAccessTokenMutation) ResetActorType() {
+	m.actor_type = nil
+}
+
+// SetAudiences sets the "audiences" field.
+func (m *OAuthAccessTokenMutation) SetAudiences(s []string) {
+	m.audiences = &s
+	m.appendaudiences = nil
+}
+
+// Audiences returns the value of the "audiences" field in the mutation.
+func (m *OAuthAccessTokenMutation) Audiences() (r []string, exists bool) {
+	v := m.audiences
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAudiences returns the old "audiences" field's value of the OAuthAccessToken entity.
+// If the OAuthAccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OAuthAccessTokenMutation) OldAudiences(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAudiences is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAudiences requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAudiences: %w", err)
+	}
+	return oldValue.Audiences, nil
+}
+
+// AppendAudiences adds s to the "audiences" field.
+func (m *OAuthAccessTokenMutation) AppendAudiences(s []string) {
+	m.appendaudiences = append(m.appendaudiences, s...)
+}
+
+// AppendedAudiences returns the list of values that were appended to the "audiences" field in this mutation.
+func (m *OAuthAccessTokenMutation) AppendedAudiences() ([]string, bool) {
+	if len(m.appendaudiences) == 0 {
+		return nil, false
+	}
+	return m.appendaudiences, true
+}
+
+// ClearAudiences clears the value of the "audiences" field.
+func (m *OAuthAccessTokenMutation) ClearAudiences() {
+	m.audiences = nil
+	m.appendaudiences = nil
+	m.clearedFields[oauthaccesstoken.FieldAudiences] = struct{}{}
+}
+
+// AudiencesCleared returns if the "audiences" field was cleared in this mutation.
+func (m *OAuthAccessTokenMutation) AudiencesCleared() bool {
+	_, ok := m.clearedFields[oauthaccesstoken.FieldAudiences]
+	return ok
+}
+
+// ResetAudiences resets all changes to the "audiences" field.
+func (m *OAuthAccessTokenMutation) ResetAudiences() {
+	m.audiences = nil
+	m.appendaudiences = nil
+	delete(m.clearedFields, oauthaccesstoken.FieldAudiences)
 }
 
 // SetSubject sets the "subject" field.
@@ -3314,9 +3603,15 @@ func (m *OAuthAccessTokenMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OAuthAccessTokenMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 9)
 	if m.token_session_id != nil {
 		fields = append(fields, oauthaccesstoken.FieldTokenSessionID)
+	}
+	if m.actor_type != nil {
+		fields = append(fields, oauthaccesstoken.FieldActorType)
+	}
+	if m.audiences != nil {
+		fields = append(fields, oauthaccesstoken.FieldAudiences)
 	}
 	if m.subject != nil {
 		fields = append(fields, oauthaccesstoken.FieldSubject)
@@ -3346,6 +3641,10 @@ func (m *OAuthAccessTokenMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case oauthaccesstoken.FieldTokenSessionID:
 		return m.TokenSessionID()
+	case oauthaccesstoken.FieldActorType:
+		return m.ActorType()
+	case oauthaccesstoken.FieldAudiences:
+		return m.Audiences()
 	case oauthaccesstoken.FieldSubject:
 		return m.Subject()
 	case oauthaccesstoken.FieldClientID:
@@ -3369,6 +3668,10 @@ func (m *OAuthAccessTokenMutation) OldField(ctx context.Context, name string) (e
 	switch name {
 	case oauthaccesstoken.FieldTokenSessionID:
 		return m.OldTokenSessionID(ctx)
+	case oauthaccesstoken.FieldActorType:
+		return m.OldActorType(ctx)
+	case oauthaccesstoken.FieldAudiences:
+		return m.OldAudiences(ctx)
 	case oauthaccesstoken.FieldSubject:
 		return m.OldSubject(ctx)
 	case oauthaccesstoken.FieldClientID:
@@ -3396,6 +3699,20 @@ func (m *OAuthAccessTokenMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTokenSessionID(v)
+		return nil
+	case oauthaccesstoken.FieldActorType:
+		v, ok := value.(oauthaccesstoken.ActorType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActorType(v)
+		return nil
+	case oauthaccesstoken.FieldAudiences:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAudiences(v)
 		return nil
 	case oauthaccesstoken.FieldSubject:
 		v, ok := value.(string)
@@ -3469,6 +3786,12 @@ func (m *OAuthAccessTokenMutation) AddField(name string, value ent.Value) error 
 // mutation.
 func (m *OAuthAccessTokenMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(oauthaccesstoken.FieldTokenSessionID) {
+		fields = append(fields, oauthaccesstoken.FieldTokenSessionID)
+	}
+	if m.FieldCleared(oauthaccesstoken.FieldAudiences) {
+		fields = append(fields, oauthaccesstoken.FieldAudiences)
+	}
 	if m.FieldCleared(oauthaccesstoken.FieldRevokedTime) {
 		fields = append(fields, oauthaccesstoken.FieldRevokedTime)
 	}
@@ -3486,6 +3809,12 @@ func (m *OAuthAccessTokenMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *OAuthAccessTokenMutation) ClearField(name string) error {
 	switch name {
+	case oauthaccesstoken.FieldTokenSessionID:
+		m.ClearTokenSessionID()
+		return nil
+	case oauthaccesstoken.FieldAudiences:
+		m.ClearAudiences()
+		return nil
 	case oauthaccesstoken.FieldRevokedTime:
 		m.ClearRevokedTime()
 		return nil
@@ -3499,6 +3828,12 @@ func (m *OAuthAccessTokenMutation) ResetField(name string) error {
 	switch name {
 	case oauthaccesstoken.FieldTokenSessionID:
 		m.ResetTokenSessionID()
+		return nil
+	case oauthaccesstoken.FieldActorType:
+		m.ResetActorType()
+		return nil
+	case oauthaccesstoken.FieldAudiences:
+		m.ResetAudiences()
 		return nil
 	case oauthaccesstoken.FieldSubject:
 		m.ResetSubject()
@@ -4568,6 +4903,8 @@ type OAuthClientMutation struct {
 	appendallowed_response_types []string
 	allowed_scopes               *[]string
 	appendallowed_scopes         []string
+	audiences                    *[]string
+	appendaudiences              []string
 	trusted                      *bool
 	create_time                  *time.Time
 	update_time                  *time.Time
@@ -4921,6 +5258,71 @@ func (m *OAuthClientMutation) ResetAllowedScopes() {
 	m.appendallowed_scopes = nil
 }
 
+// SetAudiences sets the "audiences" field.
+func (m *OAuthClientMutation) SetAudiences(s []string) {
+	m.audiences = &s
+	m.appendaudiences = nil
+}
+
+// Audiences returns the value of the "audiences" field in the mutation.
+func (m *OAuthClientMutation) Audiences() (r []string, exists bool) {
+	v := m.audiences
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAudiences returns the old "audiences" field's value of the OAuthClient entity.
+// If the OAuthClient object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OAuthClientMutation) OldAudiences(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAudiences is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAudiences requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAudiences: %w", err)
+	}
+	return oldValue.Audiences, nil
+}
+
+// AppendAudiences adds s to the "audiences" field.
+func (m *OAuthClientMutation) AppendAudiences(s []string) {
+	m.appendaudiences = append(m.appendaudiences, s...)
+}
+
+// AppendedAudiences returns the list of values that were appended to the "audiences" field in this mutation.
+func (m *OAuthClientMutation) AppendedAudiences() ([]string, bool) {
+	if len(m.appendaudiences) == 0 {
+		return nil, false
+	}
+	return m.appendaudiences, true
+}
+
+// ClearAudiences clears the value of the "audiences" field.
+func (m *OAuthClientMutation) ClearAudiences() {
+	m.audiences = nil
+	m.appendaudiences = nil
+	m.clearedFields[oauthclient.FieldAudiences] = struct{}{}
+}
+
+// AudiencesCleared returns if the "audiences" field was cleared in this mutation.
+func (m *OAuthClientMutation) AudiencesCleared() bool {
+	_, ok := m.clearedFields[oauthclient.FieldAudiences]
+	return ok
+}
+
+// ResetAudiences resets all changes to the "audiences" field.
+func (m *OAuthClientMutation) ResetAudiences() {
+	m.audiences = nil
+	m.appendaudiences = nil
+	delete(m.clearedFields, oauthclient.FieldAudiences)
+}
+
 // SetTrusted sets the "trusted" field.
 func (m *OAuthClientMutation) SetTrusted(b bool) {
 	m.trusted = &b
@@ -5063,7 +5465,7 @@ func (m *OAuthClientMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OAuthClientMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.secret_hash != nil {
 		fields = append(fields, oauthclient.FieldSecretHash)
 	}
@@ -5078,6 +5480,9 @@ func (m *OAuthClientMutation) Fields() []string {
 	}
 	if m.allowed_scopes != nil {
 		fields = append(fields, oauthclient.FieldAllowedScopes)
+	}
+	if m.audiences != nil {
+		fields = append(fields, oauthclient.FieldAudiences)
 	}
 	if m.trusted != nil {
 		fields = append(fields, oauthclient.FieldTrusted)
@@ -5106,6 +5511,8 @@ func (m *OAuthClientMutation) Field(name string) (ent.Value, bool) {
 		return m.AllowedResponseTypes()
 	case oauthclient.FieldAllowedScopes:
 		return m.AllowedScopes()
+	case oauthclient.FieldAudiences:
+		return m.Audiences()
 	case oauthclient.FieldTrusted:
 		return m.Trusted()
 	case oauthclient.FieldCreateTime:
@@ -5131,6 +5538,8 @@ func (m *OAuthClientMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldAllowedResponseTypes(ctx)
 	case oauthclient.FieldAllowedScopes:
 		return m.OldAllowedScopes(ctx)
+	case oauthclient.FieldAudiences:
+		return m.OldAudiences(ctx)
 	case oauthclient.FieldTrusted:
 		return m.OldTrusted(ctx)
 	case oauthclient.FieldCreateTime:
@@ -5180,6 +5589,13 @@ func (m *OAuthClientMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAllowedScopes(v)
+		return nil
+	case oauthclient.FieldAudiences:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAudiences(v)
 		return nil
 	case oauthclient.FieldTrusted:
 		v, ok := value.(bool)
@@ -5231,7 +5647,11 @@ func (m *OAuthClientMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *OAuthClientMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(oauthclient.FieldAudiences) {
+		fields = append(fields, oauthclient.FieldAudiences)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -5244,6 +5664,11 @@ func (m *OAuthClientMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *OAuthClientMutation) ClearField(name string) error {
+	switch name {
+	case oauthclient.FieldAudiences:
+		m.ClearAudiences()
+		return nil
+	}
 	return fmt.Errorf("unknown OAuthClient nullable field %s", name)
 }
 
@@ -5265,6 +5690,9 @@ func (m *OAuthClientMutation) ResetField(name string) error {
 		return nil
 	case oauthclient.FieldAllowedScopes:
 		m.ResetAllowedScopes()
+		return nil
+	case oauthclient.FieldAudiences:
+		m.ResetAudiences()
 		return nil
 	case oauthclient.FieldTrusted:
 		m.ResetTrusted()

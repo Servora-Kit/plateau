@@ -12,6 +12,7 @@ import (
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
@@ -35,7 +36,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oidcconfv1.OIDC, capv1CAP *capv1.CAP, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oidcconfv1.OIDC, capv1CAP *capv1.CAP, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA, session *sessionv1.Session) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -48,24 +49,33 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		return nil, nil, err
 	}
 	corev1Data := corev1Bootstrap.Data
-	driver, err := data.NewEntDriver(corev1Data)
+	db, cleanup2, err := data.NewSQLDB(corev1Data)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	client, cleanup2, err := data.NewDBClient(driver)
+	driver, err := data.NewEntDriver(corev1Data, db)
 	if err != nil {
+		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	redisClient, cleanup3, err := data.NewRedisClient(redis)
+	client, cleanup3, err := data.NewDBClient(driver)
 	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	redisClient, cleanup4, err := data.NewRedisClient(redis)
+	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	openFgaClient, err := data.NewFGAClient(openFGA)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -73,41 +83,39 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	dataData, err := data.NewData(client, redisClient, openFgaClient, logger)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	userRepo, err := data.NewUserRepository(dataData)
+	oAuthRepo, err := data.NewOAuthRepository(dataData)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	sessionRepo, err := data.NewSessionRepository(dataData)
+	oidcStorage, err := oidc.NewOIDCStorage(client, oidcconfv1OIDC, oAuthRepo)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	tokenSessionRepo, err := data.NewTokenSessionRepository(dataData)
+	verifier, err := oidc.NewJWTVerifier(oidcStorage)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo, tokenSessionRepo)
+	authenticator, cleanup5, err := authn.NewServiceAuthenticator(oidcconfv1OIDC, verifier)
 	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	v, err := authn.NewSessionAuthenticator(sessionUsecase)
-	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -115,6 +123,17 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	authorizer, err := authz.NewOpenFGAAuthorizer(openFgaClient)
 	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userRepo, err := data.NewUserRepository(dataData)
+	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -122,27 +141,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	credentialRepo, err := data.NewCredentialRepository(dataData)
 	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	authenticationUsecase, err := biz.NewAuthenticationUsecase(userRepo, credentialRepo, sessionUsecase)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	authnService, err := service.NewAuthnService(authenticationUsecase)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	sessionService, err := service.NewSessionService(sessionUsecase)
-	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -150,6 +150,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	verificationTokenRepo, err := data.NewVerificationTokenRepo(dataData)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -157,6 +159,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	passwordResetTokenRepo, err := data.NewPasswordResetTokenRepository(dataData)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -164,6 +168,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	capCap, err := cap2.New(capv1CAP, redisClient)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -172,6 +178,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	capVerifier := data.NewCAPVerifier(capCap)
 	sender, err := mail.NewSender(mailpbMail)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -179,6 +187,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	from, err := mail.NewFrom(mailpbMail)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -186,6 +196,8 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	templates, err := mail.NewTemplates()
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -193,28 +205,27 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	mailer, err := mail.NewMailer(sender, from, templates)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	mailSender := mail.NewMailSender(mailer)
-	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, sessionUsecase, runtime)
+	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, runtime)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	accountService, err := service.NewAccountService(accountUsecase)
+	userUsecase, err := biz.NewUserUsecase(accountUsecase, userRepo)
 	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	userUsecase, err := biz.NewUserUsecase(accountUsecase, userRepo, sessionUsecase, logger)
-	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -222,43 +233,117 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	userService, err := service.NewUserService(userUsecase)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, v, authorizer, authnService, sessionService, accountService, userService, logger)
-	oidcStorage, err := oidc.NewOIDCStorage(client, oidcconfv1OIDC)
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, authorizer, userService, logger)
+	sessionRepo, err := data.NewSessionRepository(dataData)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	iamProvider, err := oidc.NewIAMProvider(oidcconfv1OIDC, oidcStorage, sessionUsecase)
+	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, capCap, iamProvider, v, authorizer, authnService, sessionService, accountService, userService, logger)
-	initialAdminCreator, err := data.NewInitialAdminCreator(dataData)
+	sessionManager, cleanup6, err := data.NewHTTPSessionManager(session, db, client)
 	if err != nil {
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	adminRelationWriter, err := data.NewAdminRelationWriter(dataData)
+	iamProvider, err := oidc.NewIAMProvider(oidcconfv1OIDC, oidcStorage, sessionUsecase, sessionManager)
 	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	adminInitializer, err := biz.NewAdminInitializer(iam, userRepo, initialAdminCreator, adminRelationWriter, logger)
+	v, err := authn.NewSessionAuthenticator(sessionUsecase, sessionManager)
 	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authenticationUsecase, err := biz.NewAuthenticationUsecase(userRepo, credentialRepo, sessionUsecase)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authnService, err := service.NewAuthnService(authenticationUsecase, sessionManager)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	sessionService, err := service.NewSessionService(sessionUsecase, sessionManager)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	accountService, err := service.NewAccountService(accountUsecase, sessionManager)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, capCap, iamProvider, sessionManager, v, authorizer, authnService, sessionService, accountService, logger)
+	initialUserCreator, err := data.NewInitialUserCreator(dataData)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userInitializer, err := biz.NewUserInitializer(iam, userRepo, initialUserCreator, logger)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -266,13 +351,19 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	oidcInitializer, err := oidc.NewOIDCInitializer(oidcconfv1OIDC, oidcStorage)
 	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	initializer, err := startup.NewInitializer(adminInitializer, oidcInitializer)
+	initializer, err := startup.NewInitializer(userInitializer, oidcInitializer)
 	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -280,6 +371,9 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, initializer, dataData)
 	return kratosApp, func() {
+		cleanup6()
+		cleanup5()
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

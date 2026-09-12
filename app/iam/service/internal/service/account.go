@@ -9,6 +9,7 @@ import (
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
@@ -17,13 +18,14 @@ import (
 type AccountService struct {
 	accountpb.UnimplementedAccountServiceServer
 	account *biz.AccountUsecase
+	manager *scs.SessionManager
 }
 
-func NewAccountService(account *biz.AccountUsecase) (*AccountService, error) {
-	if account == nil {
+func NewAccountService(account *biz.AccountUsecase, manager *scs.SessionManager) (*AccountService, error) {
+	if account == nil || manager == nil {
 		return nil, fmt.Errorf("account service: usecase is nil")
 	}
-	return &AccountService{account: account}, nil
+	return &AccountService{account: account, manager: manager}, nil
 }
 
 func (s *AccountService) Register(ctx context.Context, request *accountpb.RegisterRequest) (*accountpb.RegisterResponse, error) {
@@ -113,9 +115,14 @@ func (s *AccountService) ChangePassword(ctx context.Context, request *accountpb.
 	if err != nil {
 		return nil, accountError(err)
 	}
-	if err := s.account.ChangePassword(ctx, user.GetUserId(), loginSession.GetSessionId(), request.GetCurrentPassword(), request.GetNewPassword()); err != nil {
+	if err := s.account.ChangePassword(ctx, user.GetUserId(), loginSession.ID, request.GetCurrentPassword(), request.GetNewPassword()); err != nil {
 		return nil, accountError(err)
 	}
+	deadline := s.manager.Deadline(ctx)
+	if err := s.manager.RenewToken(ctx); err != nil {
+		return nil, accountError(err)
+	}
+	s.manager.SetDeadline(ctx, deadline)
 	return &accountpb.ChangePasswordResponse{}, nil
 }
 

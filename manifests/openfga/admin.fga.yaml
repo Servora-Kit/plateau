@@ -1,0 +1,36 @@
+name: Admin user authorization
+model_file: fga.mod
+tuples:
+  - user: user:alice
+    relation: admin
+    object: admin:global
+  - user: service:admin
+    relation: manage_users
+    object: iam:global
+tests:
+  - name: administrator relation implies management
+    check:
+      - user: user:alice
+        object: admin:global
+        assertions:
+          admin: true
+          manage_users: true
+      - user: user:bob
+        object: admin:global
+        assertions:
+          admin: false
+          manage_users: false
+      - user: user:alice
+        object: admin:other
+        assertions:
+          manage_users: false
+  - name: IAM service permission does not grant Admin user permission
+    check:
+      - user: service:admin
+        object: admin:global
+        assertions:
+          manage_users: false
+      - user: service:alice
+        object: admin:global
+        assertions:
+          manage_users: false

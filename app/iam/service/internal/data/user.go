@@ -19,14 +19,14 @@ import (
 )
 
 type userRepository struct {
-	data       *Data
+	ent        *entmodel.Client
 	listFields *entcrud.ListFields[*entmodel.User]
 	mapper     *crudmapper.ResourceMapper[*userpb.User, entmodel.User]
 	clear      *entcrud.ClearHelper[*entmodel.UserMutation]
 }
 
 func NewUserRepository(data *Data) (biz.UserRepo, error) {
-	if data == nil {
+	if data == nil || data.ent == nil {
 		return nil, fmt.Errorf("user repository: data is nil")
 	}
 	listFields, err := entcrud.NewListFields[*entmodel.User](
@@ -96,7 +96,7 @@ func NewUserRepository(data *Data) (biz.UserRepo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build IAM User Clear helper: %w", err)
 	}
-	return &userRepository{data: data, listFields: listFields, mapper: resourceMapper, clear: clear}, nil
+	return &userRepository{ent: data.ent, listFields: listFields, mapper: resourceMapper, clear: clear}, nil
 }
 
 func (repo *userRepository) Create(ctx context.Context, resource *userpb.User, passwordHash, canonical string) (*userpb.User, error) {
@@ -107,13 +107,13 @@ func (repo *userRepository) Create(ctx context.Context, resource *userpb.User, p
 	if resource.GetCreateTime() != nil {
 		now = resource.GetCreateTime().AsTime()
 	}
-	if err := createUserAggregate(ctx, repo.data, resource, passwordHash, canonical, biz.UserStatusPendingVerification, nil, now); err != nil {
+	if err := createUserAggregate(ctx, repo.ent, resource, passwordHash, canonical, biz.UserStatusPendingVerification, nil, now); err != nil {
 		return nil, err
 	}
 	return repo.Get(ctx, resource.GetUserId())
 }
 
-func createUserAggregate(ctx context.Context, data *Data, resource *userpb.User, passwordHash, canonical, status string, verifiedTime *time.Time, now time.Time) error {
+func createUserAggregate(ctx context.Context, client *entmodel.Client, resource *userpb.User, passwordHash, canonical, status string, verifiedTime *time.Time, now time.Time) error {
 	identifierID, err := biz.NewUserID()
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func createUserAggregate(ctx context.Context, data *Data, resource *userpb.User,
 	if err != nil {
 		return err
 	}
-	return data.InTx(ctx, func(tx *entmodel.Tx) error {
+	return inTx(ctx, client, func(tx *entmodel.Tx) error {
 		builder := tx.User.Create().SetID(resource.GetUserId()).SetStatus(status).SetEtag(etag)
 		if profile := resource.GetProfile(); profile != nil {
 			builder.SetNillableName(profile.Name).SetNillableGivenName(profile.GivenName).SetNillableFamilyName(profile.FamilyName).SetNillableNickname(profile.Nickname).SetNillablePreferredUsername(profile.PreferredUsername).SetNillablePicture(profile.Picture).SetNillableLocale(profile.Locale)
@@ -157,7 +157,7 @@ func createUserAggregate(ctx context.Context, data *Data, resource *userpb.User,
 }
 
 func (repo *userRepository) FindByEmail(ctx context.Context, canonical string) (*userpb.User, error) {
-	identifier, err := repo.data.ent.LoginIdentifier.Query().Where(loginidentifier.TypeEQ(biz.LoginIdentifierEmail), loginidentifier.CanonicalValueEQ(canonical)).Only(ctx)
+	identifier, err := repo.ent.LoginIdentifier.Query().Where(loginidentifier.TypeEQ(biz.LoginIdentifierEmail), loginidentifier.CanonicalValueEQ(canonical)).Only(ctx)
 	if err != nil {
 		return nil, translateEntError(err)
 	}
@@ -165,7 +165,7 @@ func (repo *userRepository) FindByEmail(ctx context.Context, canonical string) (
 }
 
 func (repo *userRepository) Get(ctx context.Context, id string) (*userpb.User, error) {
-	entity, err := repo.data.ent.User.Get(ctx, id)
+	entity, err := repo.ent.User.Get(ctx, id)
 	if err != nil {
 		return nil, translateEntError(err)
 	}
@@ -181,7 +181,7 @@ func (repo *userRepository) GetUser(ctx context.Context, name userpb.UserName) (
 }
 
 func (repo *userRepository) ListUsers(ctx context.Context, query corecrud.ListQuery) (corecrud.ListResult[*userpb.User], error) {
-	result, err := entcrud.List(ctx, repo.data.ent.User.Query(), query, repo.listFields, nil)
+	result, err := entcrud.List(ctx, repo.ent.User.Query(), query, repo.listFields, nil)
 	if err != nil {
 		return corecrud.ListResult[*userpb.User]{}, translateEntError(err)
 	}
@@ -218,7 +218,10 @@ func (repo *userRepository) UpdateStatus(ctx context.Context, userID, expectedEt
 	if now.IsZero() {
 		now = time.Now()
 	}
-	err = repo.data.InTx(ctx, func(tx *entmodel.Tx) error {
+	err = inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
+		if _, err := lockUser(ctx, tx, userID); err != nil {
+			return err
+		}
 		if _, err := tx.User.UpdateOneID(userID).Where(user.EtagEQ(expectedEtag)).SetStatus(storageStatus).SetEtag(etag).SetUpdateTime(now).Save(ctx); err != nil {
 			if entmodel.IsNotFound(err) {
 				return biz.ErrMutationMiss
@@ -232,7 +235,13 @@ func (repo *userRepository) UpdateStatus(ctx context.Context, userID, expectedEt
 			mutation.SetState(biz.AuthenticatorActive).ClearRevokedTime()
 		}
 		_, err := mutation.Save(ctx)
-		return translateEntError(err)
+		if err != nil {
+			return translateEntError(err)
+		}
+		if status == userpb.UserStatus_USER_STATUS_DISABLED {
+			return revokeUserSessions(ctx, tx, userID, "", now)
+		}
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -252,7 +261,7 @@ func (repo *userRepository) updateProfileFields(ctx context.Context, userID, exp
 	if err != nil {
 		return nil, err
 	}
-	builder := repo.data.ent.User.UpdateOneID(userID).Where(user.EtagEQ(expectedEtag))
+	builder := repo.ent.User.UpdateOneID(userID).Where(user.EtagEQ(expectedEtag))
 	if err := repo.clear.Apply(resource, mask, builder.Mutation()); err != nil {
 		return nil, fmt.Errorf("apply IAM User Clear intents: %w", err)
 	}
@@ -319,11 +328,11 @@ func (repo *userRepository) ActivateEmail(ctx context.Context, userID string, no
 	if err != nil {
 		return err
 	}
-	identifier, err := repo.data.ent.LoginIdentifier.Query().Where(loginidentifier.UserIDEQ(userID), loginidentifier.TypeEQ(biz.LoginIdentifierEmail)).Only(ctx)
+	identifier, err := repo.ent.LoginIdentifier.Query().Where(loginidentifier.UserIDEQ(userID), loginidentifier.TypeEQ(biz.LoginIdentifierEmail)).Only(ctx)
 	if err != nil {
 		return translateEntError(err)
 	}
-	return repo.data.InTx(ctx, func(tx *entmodel.Tx) error {
+	return inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
 		if _, err := tx.User.UpdateOneID(userID).Where(user.StatusEQ(biz.UserStatusPendingVerification)).SetStatus(biz.UserStatusActive).SetEtag(etag).SetUpdateTime(now).Save(ctx); err != nil {
 			return translateEntError(err)
 		}
@@ -340,7 +349,7 @@ func (repo *userRepository) toResources(ctx context.Context, entities []*entmode
 	for index, entity := range entities {
 		userIDs[index] = entity.ID
 	}
-	identifiers, err := repo.data.ent.LoginIdentifier.Query().Where(
+	identifiers, err := repo.ent.LoginIdentifier.Query().Where(
 		loginidentifier.UserIDIn(userIDs...),
 		loginidentifier.TypeEQ(biz.LoginIdentifierEmail),
 	).All(ctx)
