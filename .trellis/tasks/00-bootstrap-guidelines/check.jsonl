@@ -1,0 +1,6 @@
+{"file":".trellis/tasks/00-bootstrap-guidelines/research/planning-context.md","reason":"核对共享与业务归属、确认约定、历史核对顺序及范围保护，区分规划、当前实现和实际验证证据"}
+{"file":".agents/skills/trellis-spec-bootstrap/references/spec-writing.md","reason":"审查主题是否有适用范围、真实来源、推荐写法与检查方法，检查索引一致性和模板残留；具体任务验收由 PRD 与实施清单提供"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"检查注解、生成、运行时、业务与前端之间的实际契约及证据边界"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"保持平台、母框架、共享消费和业务职责的一处权威定义"}
+{"file":".trellis/spec/api/proto/annotations.md","reason":"核对安全规则的整体覆盖、目标字段与生成运行时一致性"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"核对用户指定的完整 CRUD 使用方式与各层组件协作"}

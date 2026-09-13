@@ -21,6 +21,8 @@
 
 ## 服务结构
 
+共通规范见 [service/backend](../.trellis/spec/service/backend/index.md)：[layout](../.trellis/spec/service/backend/layout.md)、[layers](../.trellis/spec/service/backend/layers.md)、[各层编码](../.trellis/spec/service/backend/coding.md) 与 [Servora CRUD 使用](../.trellis/spec/service/backend/crud.md)。业务特有约定从 [规范总索引](../.trellis/spec/index.md) 进入对应 `<应用>-service`／`<应用>-web`。
+
 后端布局为 `app/{ServiceName}/service/`，标准结构与职责如下：
 
 ```text
@@ -89,8 +91,3 @@ just lint                      # 全项目只读质量检查
   - 当通过 `docker-compose.apps.yaml` 启动容器时，服务读取此目录。
 
 在 `configs/` 中定义的 `.yaml` 在代码中通过 `conf.Bootstrap` 结构体映射，使用 Protobuf 结构定义在各自的 `api/` 目录下。
-
-## 维护提示
-
-- 部署清单以根 `manifests/` 为主；各服务可带 `manifests/` 补充资源
-- 新增平台级微服务优先参考 `app/example/service/` 的最小结构，再按需要补齐 `api/`、`justfile` 与 `internal/`

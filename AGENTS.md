@@ -1,13 +1,24 @@
-# plateau
+<!-- TRELLIS:START -->
+# Trellis Instructions
 
-Servora 平台服务、主要参考应用与产品安全生态；当前包含安全 runtime/codegen、Audit 服务和 Example CRUD 服务。
+These instructions are for AI assistants working in this project.
 
-## 约定
+This project is managed by Trellis. The working knowledge you need lives under `.trellis/`:
 
-- 根 `go.work` 连接生成模块与各微服务；基础设施 provider 的业务日志由 data/bootstrap 边界决定
-- Proto 统一由根 `just gen` 刷新 Go、TypeScript、OpenAPI、Wire 与 Ent
-- 修改 OpenFGA model 后运行 `just openfga-model-apply`
-- AuthN/AuthZ 代码生成插件从当前 checkout 的 `cmd/` 本地安装
+- `.trellis/workflow.md` — development phases, when to create tasks, skill routing
+- `.trellis/spec/` — package- and layer-scoped coding guidelines (read before writing code in a given layer)
+- `.trellis/workspace/` — per-developer journals and session traces
+- `.trellis/tasks/` — active and archived tasks (PRDs, research, jsonl context)
+
+If a Trellis command is available on your platform (e.g. `/trellis:finish-work`, `/trellis:continue`), prefer it over manual steps. Not every platform exposes every command.
+
+If you're using Codex or another agent-capable tool, additional project-scoped helpers may live in:
+- `.agents/skills/` — reusable Trellis skills
+- `.codex/agents/` — optional custom subagents
+
+Managed by Trellis. Edits outside this block are preserved; edits inside may be overwritten by a future `trellis update`.
+
+<!-- TRELLIS:END -->
 
 ## 本地端口
 
@@ -35,13 +46,14 @@ Servora 平台服务、主要参考应用与产品安全生态；当前包含安
 - `cmd/` 平台级命令工具
   - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/` AuthN/AuthZ 代码生成插件；插件从当前 checkout 的 `cmd/` 本地安装
 - `internal/codegen/` 共享代码生成实现
-- `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`cap/`、`password/`、`jwt/`、`errors/`
-- `infra/` 共享基础设施：`openfga/`、`entgo/`、`clickhouse/`、`errors/`
+- `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
+- `infra/` 共享基础设施：`openfga/`、`clickhouse/`；Ent 适配归 Servora 的 `contrib/db/entgo/`
+- `web/packages/client/` 平台共享前端通信能力（见 [web/client 规范](.trellis/spec/web/client/index.md)）
 - `just/` 平台共享 Just settings、registry 与 service 实现
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）
 - `docs/adr/` 架构决策记录
 - `justfile` 项目级 Just 命令入口
-- `pnpm-workspace.yaml` 统一纳管 `api/gen` 与 `app/*/web`
+- `pnpm-workspace.yaml` 统一纳管 `api/gen`、`app/*/web` 与 `web/packages/*`
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
 - `buf.yaml` buf 总配置，依赖以及 lint 规则
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
@@ -69,4 +81,4 @@ just web::iam::typecheck
 just web::iam::lint
 ```
 
-`api/gen` 与 `app/*/web` 共用根 pnpm workspace 和 lockfile。新增平台服务参考 `app/example`。
+`api/gen`、`app/*/web` 与 `web/packages/*` 共用根 pnpm workspace 和 lockfile。新增平台服务参考 `app/example`。

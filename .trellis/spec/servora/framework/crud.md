@@ -1,0 +1,19 @@
+# CRUD 框架内部契约
+
+适用于 `core/crud`、`core/crud/mapper` 和 `contrib/db/entgo/crud` 的维护。这里定义框架能力，不规定业务服务的 `service`、`biz`、`data` 组合方式；消费方流程唯一权威位置是 [`service/backend/crud.md`](../../service/backend/crud.md)。
+
+`ResourcePlan` 是一个 AIP 资源的不可变运行时描述；[`plan.go`](../../../../../servora/core/crud/plan.go) 和 [`response.go`](../../../../../servora/core/crud/response.go) 表明它负责 canonical name 校验、生命周期分区和 `ToResponse` 的 clone/INPUT_ONLY 清理。`ListPreparer` 在 [`list.go`](../../../../../servora/core/crud/list.go) 中预先校验配置并把列表输入解析为 `ListQuery`；`ResourceNameMatcher` 在 [`name.go`](../../../../../servora/core/crud/name.go) 中只处理 canonical、未转义的相对资源名。不要把 URL 编码或 repository 查询编排塞进这两个 core 契约。
+
+`MustBuildResourcePlan` 只接受与泛型资源类型一致、带 `google.api.resource`、具有非空 type 和至少一个 pattern 的 descriptor；资源必须恰有一个 singular string `IDENTIFIER`。它保留全部声明 pattern，调用方应经 matcher 判别，不能自行选择 multi-pattern 中的第一个。framework 只用 [`errors.go`](../../../../../servora/core/crud/errors.go) 中的 CRUD reason 表达资源名、page token、filter、order、mask、字段值和内部不变量错误；存储事实与业务语义仍由应用错误负责。
+
+`NormalizeWriteMask` 的显式 mask 只接受已声明路径，去重并按 canonical path 排序，拒绝 `*` 与其他路径并存以及祖先/子路径重叠；省略 mask 时，[`mask.go`](../../../../../servora/core/crud/mask.go) 依据 Proto presence 生成顶层选择：list/map 必须非空，具有 presence 的字段使用 `Has`，无 presence 的 scalar 只在非零值时选入。因此不能把省略 mask 当作 scalar 的 clear 表示；`PrepareUpdate` 再把 system 字段排除、mutable leaf 写入 mask、immutable 字段转为比较意图，见 [`lifecycle.go`](../../../../../servora/core/crud/lifecycle.go)。
+
+`ListQuery` 保存已解析的 collection、page size/token、skip、filter、order 和 include-total。`PrepareList` 处理页大小/skip 边界、token 解码及 filter/order 的语法与资源限制，但不替业务确定查询 scope 或最终排序。adapter 在数据库访问前以 resource type、collection、filter、`FinalOrder` 和调用方提供的 opaque scope fingerprint 构造 context fingerprint，再由 [`ValidatePageTokenPayload`](../../../../../servora/core/crud/page_token_validation.go) 校验 token version、query fingerprint、cursor 数量和类型；token 不能跨查询、排序或 scope 复用。
+
+`core/crud/mapper` 是 ORM 无关的 PO→资源 PB 单向读投影；其 `NewResourceMapper` 在 [`mapper.go`](../../../../../servora/core/crud/mapper/mapper.go) 验证并冻结同名/显式字段映射、converter、canonical name formatter 和 post hook。`TryToDTO` 返回映射错误，`ToDTO`/`ToDTOs` 是会在映射错误时 panic 的便捷入口；它不是写入 mapper。Create/Update 的 setter、mutation、clear 与业务校验仍由具体 repository 负责。
+
+Ent adapter 把已解析的 `ListQuery` 绑定到调用方已建立的 Ent builder：[`contrib/db/entgo/crud/AGENTS.md`](../../../../../servora/contrib/db/entgo/crud/AGENTS.md) 要求 `ListFields` 只开放 repository 显式声明的字段，不能扫描 schema 自动暴露字段；adapter 不开启、提交或传播事务，也不计算授权或 scope。`ClearHelper.Apply` 在 Ent `Save` 前消费已规范化的 mutable leaf mask：仅当字段是 singular、`HasPresence()==true` 且当前 `Has(field)==false` 时，才执行同名 `ClearField` 或显式 override；无 presence 字段直接报错。nested clear 必须显式配置，present 值和 list/map 的 empty replacement 留给 repository setter，依据 [`clear.go`](../../../../../servora/contrib/db/entgo/crud/clear.go) 及 [`clear_test.go`](../../../../../servora/contrib/db/entgo/crud/clear_test.go)。
+
+`NewListFields` 和 `NewClearHelper` 在 [`list_fields.go`](../../../../../servora/contrib/db/entgo/crud/list_fields.go) 与 [`clear.go`](../../../../../servora/contrib/db/entgo/crud/clear.go) 启动期验证并冻结配置。SQL 必须经 Ent selector/dialect builder 生成，不拼接客户端 filter/order 文本。修改 core 或 Ent CRUD 时运行相应 `go test ./core/crud/...`、`go test ./contrib/db/entgo/crud/...`；需要真实数据库契约时再按 [`contrib/db/entgo/AGENTS.md`](../../../../../servora/contrib/db/entgo/AGENTS.md) 配置专用测试环境。
+
+跨 Go/TS 的同义行为以共享 [string_matches.json](../../../../../servora/conformance/crud/string_matches.json) 和 [resource_names.json](../../../../../servora/conformance/crud/resource_names.json) 为一致性向量。前者由 [Go string match 测试](../../../../../servora/core/crud/string_match_test.go) 消费，后者由 [Go 资源名生成测试](../../../../../servora/cmd/protoc-gen-servora-crud/resource_name_conformance_test.go) 消费；两者都由 [TS CRUD 测试](../../../../../servora/web/packages/proto-utils/test/crud.test.mjs) 读取。变更这些语义或向量时同时验证对应 Go 与 TS 消费者，不能只更新一侧预期。

@@ -2,6 +2,8 @@
 
 ## Scope
 
+当前应用规范见 [example-web](../../../.trellis/spec/example-web/index.md)，其中 [architecture](../../../.trellis/spec/example-web/architecture.md)、[requests](../../../.trellis/spec/example-web/requests.md) 和 [forms](../../../.trellis/spec/example-web/forms.md) 分别维护应用组织、请求合同与交互要求。
+
 Vue reference client for `example.service.v1.User`. It must exercise the public HTTP facade through generated TypeScript code and `@servora/proto-utils`; it is not a second source of API contracts.
 
 ## Rules

@@ -1,0 +1,6 @@
+{"file":".trellis/tasks/00-bootstrap-guidelines/research/planning-context.md","reason":"加载开发者确认的规范边界、权威来源、CRUD 重点与分组调查入口；新 spec 尚未建设，不能将模板当作项目规则"}
+{"file":".agents/skills/trellis-spec-bootstrap/references/spec-writing.md","reason":"按项目证据编写规范，组织实际主题与索引，避免空模板、无依据泛化和重复规则；用户明确约定同时作为规范依据"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"检查注解、生成、运行时、业务与前端之间的实际契约及证据边界"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"保持平台、母框架、共享消费和业务职责的一处权威定义"}
+{"file":".trellis/spec/api/proto/annotations.md","reason":"核对安全规则的整体覆盖、目标字段与生成运行时一致性"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"核对用户指定的完整 CRUD 使用方式与各层组件协作"}
