@@ -24,5 +24,3 @@ IAM 自建领域模型，复用 OIDC 协议库；使用协议库不意味着把 
 当前内部 Example 是有效参考；Audit 明确停止维护、等待重构。新增服务优先按共通规范和 Example，不能把 Audit 的现状推广为推荐架构。独立 servora-example/servora-transport 的扩展不随平台规范任务自动纳入。
 
 检查：新规则是否有一处权威来源；当前实现是否与既定边界不同；差异是否被显式记录。不要通过规范整理悄悄修改产品范围。
-
-来源：[README](../../../../README.md)、[全局身份池 ADR](../../../../docs/adr/0001-plateau-iam-global-identity-pool.md)、[自建 IAM ADR](../../../../docs/adr/0002-plateau-build-iam-not-adopt-zitadel.md)、[生成与传输分离 ADR](../../../../docs/adr/0003-separate-generated-api-from-web-transport.md)。
