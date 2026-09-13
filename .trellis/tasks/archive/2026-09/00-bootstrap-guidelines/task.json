@@ -3,7 +3,7 @@
   "name": "00-bootstrap-guidelines",
   "title": "从 OpenSpec 切换到 Trellis 的项目规范建设",
   "description": "在现有 0 号任务中整理 Plateau、Servora 和业务端开发规范，落实开发者确认的结构与编码约定，核对历史 OpenSpec 并验证规范发现与上下文加载。",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": "docs",
   "scope": null,
   "package": "plateau",
@@ -11,18 +11,18 @@
   "creator": "HoronLee",
   "assignee": "HoronLee",
   "createdAt": "2026-09-13",
-  "completedAt": null,
+  "completedAt": "2026-09-13",
   "branch": "main",
   "base_branch": null,
   "worktree_path": null,
-  "commit": null,
+  "commit": "e5161916894940cae9d213f0d3f76f01d9a4d115",
   "pr_url": null,
   "subtasks": [],
   "children": [],
   "parent": null,
   "relatedFiles": [
     ".trellis/config.yaml",
-    ".trellis/tasks/00-bootstrap-guidelines/",
+    ".trellis/tasks/archive/2026-09/00-bootstrap-guidelines/",
     ".trellis/spec/index.md",
     ".trellis/spec/plateau/",
     ".trellis/spec/api/",
@@ -44,6 +44,6 @@
     ".trellis/scripts/tests/test_packages_context.py",
     ".gitattributes"
   ],
-  "notes": "规范正文、模板迁移、历史对照及文档验收完成。提交前按开发者要求将六个业务包的 21 份规范移到包根，更新全部引用并补充本地包根索引发现与回归检查。用户已授权提交及 Trellis 收尾；工作提交后归档并记录 journal。无关暂存改动保留，业务源码、生成物、联调配置及历史 OpenSpec 未由本任务修改。",
+  "notes": "规范建设、六个业务包目录扁平化和全部引用更新已完成并通过检查。工作提交 e5161916894940cae9d213f0d3f76f01d9a4d115；已通过原生 task.py archive 归档并解除当前会话绑定。归档相对链接与上下文清单已迁移，随后记录 journal。无关暂存改动保留，未推送。",
   "meta": {}
 }

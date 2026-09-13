@@ -15,15 +15,15 @@
 | R5 | 当前源码基线、历史逐条对照、现行规则补充和差异处置分别记录；历史覆盖最终检查见下文 |
 | R6 | 中文 PRD/design/implement、任务元数据和 implement/check JSONL 同步；六条显式正文加三份任务文档接受读取检查。源码按主题只读调查，未全量塞入注入清单 |
 
-入口：[规范索引](../../../spec/index.md)、[CRUD 使用](../../../spec/service/backend/crud.md)、[迁移映射](migration-map.md)、[差异与处置](gaps.md)。
+入口：[规范索引](../../../../../spec/index.md)、[CRUD 使用](../../../../../spec/service/backend/crud.md)、[迁移映射](migration-map.md)、[差异与处置](gaps.md)。
 
 ## 已运行检查
 
 | 检查 | 结果与边界 |
 | --- | --- |
-| `rtk proxy python3 -B .trellis/scripts/task.py start .trellis/tasks/00-bootstrap-guidelines` 和 `task.py current` | 真实宿主会话成功绑定并返回当前任务；没有伪造 session ID 或触发模拟 hook |
+| `rtk proxy python3 -B .trellis/scripts/task.py start .trellis/tasks/archive/2026-09/00-bootstrap-guidelines` 和 `task.py current` | 真实宿主会话成功绑定并返回当前任务；没有伪造 session ID 或触发模拟 hook |
 | `rtk proxy python3 -B .trellis/scripts/get_context.py --mode packages --json` | 11 个 package、11 个真实 layer；六个业务包的 `specIndex` 指向包根 index，`specLayers` 为空。默认和任务 package 均为 plateau，Servora `isGitRepo: true`，`specScope: null` |
-| `rtk proxy python3 -B .trellis/scripts/task.py validate .trellis/tasks/00-bootstrap-guidelines` | implement/check 均为六条，全部路径有效 |
+| `rtk proxy python3 -B .trellis/scripts/task.py validate .trellis/tasks/archive/2026-09/00-bootstrap-guidelines` | implement/check 均为六条，全部路径有效 |
 | Markdown 与索引扫描 | 覆盖全部 100 份任务／规范／授权导航 Markdown（含未跟踪文件），全部本地链接有效，其中规范链接 513 个；无缺末尾换行、尾随空白、未闭合围栏或未索引主题 |
 | 模板扫描 | 当前 spec 无 `To be filled`、`TODO: fill`、`placeholder` 等初始化占位；guides 已去掉不适用的上游模板同步规则 |
 | `rtk proxy go test ./security/... ./infra/... ./cmd/...` | 全部通过；security/infra 为已有缓存结果，两个平台安全插件测试约 1.1 秒。没有改变 Go 源码；本地测试不代表真实中间件或业务端到端验收 |
@@ -61,4 +61,8 @@ F1–F7 与 D1/D2 全部经独立关闭复核；后续有效历史遗漏已完�
 
 未运行完整产品 lint、Servora／业务服务测试、前端 typecheck/build/test、真实 OIDC/CAP/邮件或中间件集成、浏览器端到端、Proto breaking 比较、生成、模型 apply、部署或发布。文档准确性检查不将这些未运行项写成已通过。
 
-开发者已授权提交和 Trellis 收尾；先完成工作提交，再通过原生任务命令归档并记录 journal。归档时更新任务资料相对链接，检查通过后形成归档提交。未请求推送。
+开发者已授权提交和 Trellis 收尾。工作已提交为 `e516191`，随后通过 `task.py archive --no-commit` 完成归档与会话解绑；更新归档相对链接、JSONL 自引用和 task 元数据，检查通过后形成独立归档提交，再记录 journal。未请求推送。
+
+## 提交前最终检查
+
+包根与实际子层索引完整，旧业务层路径无残留；100 份 Markdown 的 5077 个本地链接全部有效。实现／检查角色均完整读到九份文档（各 82226 bytes），无缺失、截断或 stderr；8 项 Python 回归测试、语法检查、Just 格式检查、工作区和暂存区 whitespace 检查通过。归档后重新检查 5077 个链接和六条 JSONL，全数通过；两种角色完整读取各 82416 bytes，当前会话不再绑定该任务。

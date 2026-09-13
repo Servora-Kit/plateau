@@ -8,7 +8,7 @@
 
 Plateau 是主要业务开发方向；Servora 是持续渐进迭代的独立母框架。此次工作将初始化生成的 `.trellis/` 整理为按项目职责组织的规范体系，包含规范建设和历史 OpenSpec 核对。package 配置在规划阶段已同步，实施阶段沿用该配置。
 
-任务沿用 `.trellis/tasks/00-bootstrap-guidelines/`。开发者发出“开始执行”后，已通过原生任务命令激活真实会话并进入实施。完成情况以本文验收清单及 `research/verification.md` 的证据为准；任务状态本身不能替代验收结果。
+任务沿用 `.trellis/tasks/archive/2026-09/00-bootstrap-guidelines/`。开发者发出“开始执行”后，已通过原生任务命令激活真实会话并进入实施。完成情况以本文验收清单及 `research/verification.md` 的证据为准；任务状态本身不能替代验收结果。
 
 ## 范围
 

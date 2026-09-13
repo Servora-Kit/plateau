@@ -6,13 +6,13 @@
 
 | 项目 | 依据与现状 | 本轮处置与后续边界 |
 | --- | --- | --- |
-| data Repo 命名 | 开发者确认私有 `xxxRepo`／`NewXxxRepo`；[Example](../../../../app/example/service/internal/data/user.go) 符合，[IAM](../../../../app/iam/service/internal/data/user.go) 当前为 `userRepository`／`NewUserRepository` | [data 规范](../../../spec/service/backend/data.md) 保留确认的推荐命名；IAM 代码未重命名，后续修改相关模块时单独整理 |
-| 目录与 TS 输出描述过时 | 根 AGENTS 残留不存在的目录并遗漏 session／web/packages；api AGENTS 将 [noEmit 配置](../../../../api/gen/tsconfig.json) 描述为生成 dist | 已在四份授权 AGENTS 的导航及直接相关事实范围内修正；共享 TS 为源文件 exports，Example leaf TS 为独立生成输出，见 [生成规范](../../../spec/api/proto/generation.md) |
-| 安全下级 AGENTS 的旧概括 | [security/AGENTS](../../../../security/AGENTS.md) 的 errors 目录描述与现有生成错误归属不符；[CAP AGENTS](../../../../security/cap/AGENTS.md) 的 Redis challenge 概括没有区分签名 challenge 与 nonce/token | 两份文件不在本次导航编辑范围；新 [结构规范](../../../spec/plateau/project/structure.md) 和 [CAP 规范](../../../spec/plateau/security/capabilities.md) 已明确当前契约。后续维护这些来源文档时同步，不按旧描述改代码 |
+| data Repo 命名 | 开发者确认私有 `xxxRepo`／`NewXxxRepo`；[Example](../../../../../../app/example/service/internal/data/user.go) 符合，[IAM](../../../../../../app/iam/service/internal/data/user.go) 当前为 `userRepository`／`NewUserRepository` | [data 规范](../../../../../spec/service/backend/data.md) 保留确认的推荐命名；IAM 代码未重命名，后续修改相关模块时单独整理 |
+| 目录与 TS 输出描述过时 | 根 AGENTS 残留不存在的目录并遗漏 session／web/packages；api AGENTS 将 [noEmit 配置](../../../../../../api/gen/tsconfig.json) 描述为生成 dist | 已在四份授权 AGENTS 的导航及直接相关事实范围内修正；共享 TS 为源文件 exports，Example leaf TS 为独立生成输出，见 [生成规范](../../../../../spec/api/proto/generation.md) |
+| 安全下级 AGENTS 的旧概括 | [security/AGENTS](../../../../../../security/AGENTS.md) 的 errors 目录描述与现有生成错误归属不符；[CAP AGENTS](../../../../../../security/cap/AGENTS.md) 的 Redis challenge 概括没有区分签名 challenge 与 nonce/token | 两份文件不在本次导航编辑范围；新 [结构规范](../../../../../spec/plateau/project/structure.md) 和 [CAP 规范](../../../../../spec/plateau/security/capabilities.md) 已明确当前契约。后续维护这些来源文档时同步，不按旧描述改代码 |
 | 应用请求实现尚未统一 | IAM 使用共享 client；Example 使用自己的 fetch adapter；Test 仅导入生成 API 标识，见 [前端基线](frontend-baseline.md) | 各应用规范分别记录真实消费方式；没有把共享 client 设计方向写成所有应用已接入，也未进行前端重构 |
-| 流接口存在但应用使用未确认 | [共享 client](../../../../web/packages/client/src) 有 SSE／WebSocket；本轮搜索未发现业务应用消费或完整流交互验收 | 保留组件契约和验证要求；不声明应用端已支持或已验收 |
-| Audit 维护状态 | [app/AGENTS](../../../../app/AGENTS.md) 将 Audit 标为不再更新和参考、等待重构 | [audit-service](../../../spec/audit-service/status.md) 明确保留维护限制；框架 [audit](../../../spec/servora/framework/audit.md) 独立维护，不用旧业务服务写法限制框架能力 |
-| Audit 的无 ClickHouse 路径 | 当前 [BatchWriter](../../../../app/audit/service/internal/data/batch_writer.go) 在 ClickHouse 为 nil 时跳过存储并提交 batch | [摄取规范](../../../spec/audit-service/ingestion.md) 如实记录该维护限制；不能当作审计已持久化，也不作为新增服务推荐。未在本轮改为其他投递策略 |
+| 流接口存在但应用使用未确认 | [共享 client](../../../../../../web/packages/client/src) 有 SSE／WebSocket；本轮搜索未发现业务应用消费或完整流交互验收 | 保留组件契约和验证要求；不声明应用端已支持或已验收 |
+| Audit 维护状态 | [app/AGENTS](../../../../../../app/AGENTS.md) 将 Audit 标为不再更新和参考、等待重构 | [audit-service](../../../../../spec/audit-service/status.md) 明确保留维护限制；框架 [audit](../../../../../spec/servora/framework/audit.md) 独立维护，不用旧业务服务写法限制框架能力 |
+| Audit 的无 ClickHouse 路径 | 当前 [BatchWriter](../../../../../../app/audit/service/internal/data/batch_writer.go) 在 ClickHouse 为 nil 时跳过存储并提交 batch | [摄取规范](../../../../../spec/audit-service/ingestion.md) 如实记录该维护限制；不能当作审计已持久化，也不作为新增服务推荐。未在本轮改为其他投递策略 |
 | 生成器版本与本地源码联调 | 当前 checkout 安装 Plateau 插件，Servora 插件由 Just 安装配置版本；go.work 只决定源码模块解析 | 规范要求变更生成器时核对实际二进制来源；本轮未重装工具、重建产物或调整联调配置 |
 | 运行验收尚未进行 | IAM 公开入口、真实 OIDC/邮件/CAP、OpenFGA 模型与 tuples、Kafka／ClickHouse 及业务 Web 端到端链路未在本轮运行 | 源码／配置存在与运行验收分开记录；已运行的 Go 定向测试只覆盖其包和测试边界，不抵销这些未运行项目 |
 

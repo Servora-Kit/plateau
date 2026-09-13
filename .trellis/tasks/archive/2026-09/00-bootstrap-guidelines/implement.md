@@ -1,6 +1,6 @@
 # 0 号任务实施清单：项目规范建设与 OpenSpec 核对
 
-状态：规范正文、目录迁移、审查修订、历史对照和文档验收已完成。证据见 [实施验收](research/verification.md)；未提交、推送或归档。
+状态：规范正文、目录迁移、审查修订、历史对照和文档验收已完成。证据见 [实施验收](research/verification.md)；工作已提交，任务已归档，未推送。
 
 需求以 [prd.md](prd.md) 的 R1–R6 为准，结构与归属以 [design.md](design.md) 为准。本任务沿用 `00-bootstrap-guidelines`，由一个负责人完成集成与验收，不要求拆分子任务。代码阅读已按主题完成并记录各组基线。
 
@@ -15,8 +15,8 @@
 
 ```bash
 rtk proxy python3 -B .trellis/scripts/get_context.py
-rtk proxy python3 -B .trellis/scripts/task.py validate .trellis/tasks/00-bootstrap-guidelines
-rtk proxy python3 -B .trellis/scripts/task.py start .trellis/tasks/00-bootstrap-guidelines
+rtk proxy python3 -B .trellis/scripts/task.py validate .trellis/tasks/archive/2026-09/00-bootstrap-guidelines
+rtk proxy python3 -B .trellis/scripts/task.py start .trellis/tasks/archive/2026-09/00-bootstrap-guidelines
 rtk proxy python3 -B .trellis/scripts/task.py current
 rtk proxy git status --short
 rtk proxy git diff --cached --name-status
@@ -83,8 +83,8 @@ rtk proxy git -C ../servora status --short
 
 ```bash
 rtk proxy python3 -B .trellis/scripts/get_context.py --mode packages --json
-rtk proxy python3 -B .trellis/scripts/task.py validate .trellis/tasks/00-bootstrap-guidelines
-rtk proxy python3 -B .trellis/scripts/task.py list-context .trellis/tasks/00-bootstrap-guidelines
+rtk proxy python3 -B .trellis/scripts/task.py validate .trellis/tasks/archive/2026-09/00-bootstrap-guidelines
+rtk proxy python3 -B .trellis/scripts/task.py list-context .trellis/tasks/archive/2026-09/00-bootstrap-guidelines
 rtk proxy rg --files --hidden .trellis/spec
 rtk proxy rg -n 'To be filled|TODO: fill|placeholder' .trellis/spec
 rtk proxy git diff --check
@@ -106,7 +106,7 @@ root = Path.cwd()
 spec = importlib.util.spec_from_file_location('task00_context', root / '.codex/hooks/inject-subagent-context.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-task = '.trellis/tasks/00-bootstrap-guidelines'
+task = '.trellis/tasks/archive/2026-09/00-bootstrap-guidelines'
 for role in ('implement', 'check'):
     context = getattr(module, f'get_{role}_context')(str(root), task)
     print(f'{role}: {len(context.encode())} bytes')

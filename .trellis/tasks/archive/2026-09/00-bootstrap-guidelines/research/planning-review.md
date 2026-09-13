@@ -24,7 +24,7 @@
 | --- | --- |
 | `get_context.py` 与 Phase 1.1／1.3／1.4／1.5 指引 | 已读取当前工作流；当前会话无绑定任务，00 号任务仍为初始化的 `in_progress` |
 | `get_context.py --mode packages --json` | 11 个 package 与预期一致，默认 `plateau`；所有源码路径存在；现有 spec 仍是待整理的初始化分组 |
-| `task.py validate .trellis/tasks/00-bootstrap-guidelines` | 通过；implement／check 各 2 条有效记录，无占位行 |
+| `task.py validate .trellis/tasks/archive/2026-09/00-bootstrap-guidelines` | 通过；implement／check 各 2 条有效记录，无占位行 |
 | 现有 `get_implement_context`／`get_check_context` 的只读预览 | 两种角色各完整加载清单的 2 份正文和 3 份规划，共 5 份文档；逐份全文核对，无遗漏、截断或读取警告 |
 | 任务元数据检查 | ID、name、status、scope、meta、Git 相关状态及其他无关字段保留；relatedFiles 无重复并覆盖全部 package |
 | 调查入口检查 | planning-context 中列明的来源路径真实存在；仅核对路径，不据此推断 API 行为 |

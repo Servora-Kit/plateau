@@ -2,7 +2,7 @@
 
 状态：结构与职责设计已落实，规范正文、历史核对和文档验收已完成；结果见 `research/verification.md`。
 
-本文承接 `prd.md` 的 R1–R6，确定规范归属、目录组织、任务上下文及历史核对方式。首批规范已按下述结构建设，实际入口见 [规范总索引](../../spec/index.md)。执行顺序与验证命令另写入 `implement.md`，实施证据保存在 `research/`。
+本文承接 `prd.md` 的 R1–R6，确定规范归属、目录组织、任务上下文及历史核对方式。首批规范已按下述结构建设，实际入口见 [规范总索引](../../../../spec/index.md)。执行顺序与验证命令另写入 `implement.md`，实施证据保存在 `research/`。
 
 本任务同时承担项目开发规范的重新梳理与确立。开发者明确的约定作为规范依据，当前源码用于提供实例和核对执行现状；两者有偏差时记录差异，不把旧写法自动当作推荐标准。代码整改仍按 PRD 的范围边界另行处理。
 
@@ -175,7 +175,7 @@ clear      *entcrud.ClearHelper[*entmodel.UserMutation]
 
 实施时围绕这些入口梳理声明、构造、配置与方法调用之间的完整关系，说明请求准备、资源名处理、Usecase／Repo 协作、字段处理、数据映射和响应输出分别如何编写。具体调用顺序、参数、字段绑定符号、适用条件、错误处理及检查要求，届时结合 Example 源码与必要的框架契约核对；不能把示例中的业务选择一律推广为框架要求。
 
-实施已沿 Example 的 service/biz/data 与 Servora 组件完成定向核对，声明、构造、字段绑定、错误处理和调用示例见 [CRUD 使用规范](../../spec/service/backend/crud.md)，来源与差异见 [服务基线](research/services-baseline.md)。本文中的字段片段是设计重点，完整使用关系由正文说明。
+实施已沿 Example 的 service/biz/data 与 Servora 组件完成定向核对，声明、构造、字段绑定、错误处理和调用示例见 [CRUD 使用规范](../../../../spec/service/backend/crud.md)，来源与差异见 [服务基线](research/services-baseline.md)。本文中的字段片段是设计重点，完整使用关系由正文说明。
 
 ### 3.5 基础工程规范的覆盖
 
