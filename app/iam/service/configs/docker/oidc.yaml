@@ -3,18 +3,18 @@ oidc:
   signing_key_path: "${IAM_OIDC_SIGNING_KEY_PATH:/run/secrets/oidc-signing.pem}"
   crypto_key_path: "${IAM_OIDC_CRYPTO_KEY_PATH:/run/secrets/oidc-crypto.key}"
   clients:
-    - client_id: test-web
-      client_secret: "${IAM_TEST_WEB_CLIENT_SECRET}"
-      redirect_uris:
-        - "${IAM_TEST_WEB_REDIRECT_URI:http://localhost:10042/callback}"
-      allowed_scopes:
-        - openid
-        - profile
-        - email
-        - offline_access
-      trusted: true
-      allowed_grant_types: [authorization_code, refresh_token]
-    - client_id: admin
-      client_secret: "${IAM_ADMIN_CLIENT_SECRET}"
-      allowed_grant_types: [client_credentials]
-      audiences: [iam]
+    # - client_id: test-web
+    #   client_secret: "${IAM_TEST_WEB_CLIENT_SECRET}"
+    #   redirect_uris:
+    #     - "${IAM_TEST_WEB_REDIRECT_URI:http://localhost:10042/callback}"
+    #   allowed_scopes:
+    #     - openid
+    #     - profile
+    #     - email
+    #     - offline_access
+    #   trusted: true
+    #   allowed_grant_types: [authorization_code, refresh_token]
+    # - client_id: admin
+    #   client_secret: "${IAM_ADMIN_CLIENT_SECRET}"
+    #   allowed_grant_types: [client_credentials]
+    #   audiences: [iam]
