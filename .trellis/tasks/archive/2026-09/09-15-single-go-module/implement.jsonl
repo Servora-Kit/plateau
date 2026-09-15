@@ -1,0 +1,6 @@
+{"file": ".trellis/tasks/09-15-single-go-module/research/module-history.md", "reason": "两仓 module 历史、CI、发布与基线证据"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "Plateau 根目录、workspace 与依赖文件权威结构"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "Plateau 根命令和本地开发门禁"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "Go 生成 package、Buf 与生成流程边界"}
+{"file": ".trellis/spec/service/backend/layout.md", "reason": "服务目录、构建和部署边界"}
+{"file": ".trellis/spec/plateau/project/boundaries.md", "reason": "Servora 框架与 Plateau 平台跨仓职责"}
