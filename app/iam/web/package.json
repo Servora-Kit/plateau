@@ -18,7 +18,7 @@
     "@cap.js/wasm": "0.0.7",
     "@plateau/api": "workspace:*",
     "@plateau/client": "workspace:*",
-    "@servora/proto-utils": "^0.1.9",
+    "@servora/proto-utils": "^0.1.10",
     "cap-widget": "0.1.57",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

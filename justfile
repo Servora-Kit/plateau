@@ -130,7 +130,7 @@ lint: api-ts-check lint-proto (service::lint LINT_GOWORK)
 lint-proto:
     @buf lint
 
-clean: _clean-api-dist-files service::clean web::clean
+clean: _clean-api-dist-files service::clean
 
 compose-build: (_compose-build-image "example") (_compose-build-image "audit")
 

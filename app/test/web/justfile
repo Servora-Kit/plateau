@@ -3,12 +3,6 @@ import "../../../just/settings.just"
 COMPONENT_DIR := module_directory()
 PNPM := env("PNPM", "pnpm")
 
-env:
-    @echo "COMPONENT_DIR: {{ COMPONENT_DIR }}"
-    @echo "PNPM: {{ PNPM }}"
-
-run: dev
-
 [unix]
 [working-directory(COMPONENT_DIR)]
 dev:
@@ -31,16 +25,6 @@ build:
 
 [unix]
 [working-directory(COMPONENT_DIR)]
-start:
-    @"{{ PNPM }}" run start
-
-[windows]
-[working-directory(COMPONENT_DIR)]
-start:
-    @& "{{ PNPM }}" run start
-
-[unix]
-[working-directory(COMPONENT_DIR)]
 lint:
     @"{{ PNPM }}" run lint
 
@@ -48,13 +32,3 @@ lint:
 [working-directory(COMPONENT_DIR)]
 lint:
     @& "{{ PNPM }}" run lint
-
-[unix]
-_clean-files:
-    rm -rf -- "{{ join(COMPONENT_DIR, ".next") }}"
-
-[windows]
-_clean-files:
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "{{ join(COMPONENT_DIR, ".next") }}"
-
-clean: _clean-files

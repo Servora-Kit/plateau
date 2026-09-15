@@ -17,7 +17,7 @@ Web 默认入口为 `http://localhost:10002`，Go HTTP/gRPC 使用 `10000/10001`
 
 ```bash
 just web::iam::build
-just web::iam::preview
+pnpm --filter @plateau/iam-web run preview
 ```
 
 `dev` 使用 `next dev` 热重载，`preview` 和 `start` 使用 `next start`；默认共用 `10002`，不要同时启动。
