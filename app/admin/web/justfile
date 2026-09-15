@@ -1,0 +1,34 @@
+import "../../../just/settings.just"
+
+COMPONENT_DIR := module_directory()
+PNPM := env("PNPM", "pnpm")
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+dev *args:
+    @"{{ PNPM }}" run dev:antd {{ args }}
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+dev *args:
+    @& "{{ PNPM }}" run dev:antd {{ args }}
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+build:
+    @"{{ PNPM }}" run build:antd
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+build:
+    @& "{{ PNPM }}" run build:antd
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+lint:
+    @"{{ PNPM }}" run lint
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+lint:
+    @& "{{ PNPM }}" run lint
