@@ -4,6 +4,7 @@ packages:
   - "api/gen"
   - "app/*/web"
   - "web/packages/*"
+  - "!app/admin/web"
 
 minimumReleaseAgeExclude:
   - "@servora/proto-utils"
