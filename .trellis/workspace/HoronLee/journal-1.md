@@ -47,3 +47,37 @@
 ### Next Steps
 
 - 后续 Trellis 更新时复核 packages_context.py 的包根索引兼容；新增业务规范延续包根 index.md 与实际主题布局。
+
+
+## Session 2: Servora 与 Plateau 统一为单 Go module
+<!-- trellis-session: v=2 fp=d318a9c47417d10e -->
+
+**Date**: 2026-09-15
+**Task**: Servora 与 Plateau 统一为单 Go module
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动维护 BSR labels；Plateau 合并 API 与三个服务到根 module，移除仓库 go.work，修正 Just/Go tools/集成测试入口并同步可执行规范。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1d331c0d` | refactor(go)!: 合并生成代码到根模块 |
+| `d1aab7dc` | docs(api): clarify automatic BSR publishing |
+| `1f907e0a` | refactor(go)!: 合并平台后端到根模块 |
+
+### Testing
+
+- [OK] 两仓固定 Go 1.27.0 且 GOWORK=off 的 tidy/list/build/lint/generation 门禁通过。
+- [OK] Plateau 排除既有 IAM 配置基线项后的全仓短测试、三个 leaf build/lint 与 Example SQLite 集成测试通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 保留 Admin 初始化与 spec 重组的并行工作区改动，另行完成对应任务。
