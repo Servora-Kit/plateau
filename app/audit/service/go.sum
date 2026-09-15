@@ -19,10 +19,10 @@ github.com/Servora-Kit/plateau v0.0.0-20260822032517-8ccdc32143cb h1:gYkX1nOOYTQ
 github.com/Servora-Kit/plateau v0.0.0-20260822032517-8ccdc32143cb/go.mod h1:LHlun/f0dDQ4NMnSCz7gH9dV2vqkT9mZ0VaXKIXwbak=
 github.com/Servora-Kit/plateau/api/gen v0.0.0-20260822032517-8ccdc32143cb h1:TMATUC1/WdleXYder+BfYGZ49xlpkif6GFFa4zs7B5M=
 github.com/Servora-Kit/plateau/api/gen v0.0.0-20260822032517-8ccdc32143cb/go.mod h1:ZzZY6gnmD374eGXbOXLLGxzwNVs1Nx8mARjzn9c7lx8=
-github.com/Servora-Kit/servora v0.9.1 h1:w51chC6MxO3HVP1OYHDBSZMa0RGHVnFRI3AYc+DqFaQ=
-github.com/Servora-Kit/servora v0.9.1/go.mod h1:9Hbhlzj140ruvKsp8cMYKqSD7pFUc1409FWYVEAa33M=
-github.com/Servora-Kit/servora/api/gen v0.9.1 h1:JXQ3cj96aRTgXxaQB9M8kVMiQcEqyr6uE/uekU61Keg=
-github.com/Servora-Kit/servora/api/gen v0.9.1/go.mod h1:JrqmoFUt874HoXcIeN5KZ9ryPc1vdFekrYLE9C1Wu/c=
+github.com/Servora-Kit/servora v0.9.6 h1:9oIBTlBxktYg7dQtdS0ecOwr9lcNFGZza3hQFD5uT1I=
+github.com/Servora-Kit/servora v0.9.6/go.mod h1:2pD9LPnPRY0UAv6T84zU6f0i+N6U6sRdIZvkOo+aIfA=
+github.com/Servora-Kit/servora/api/gen v0.9.5 h1:XCiuRcftQ8UM6zxL1HP3MdoddUHR4R9zAKjKEMhr+ec=
+github.com/Servora-Kit/servora/api/gen v0.9.5/go.mod h1:CB2iohAErhiTztFnL0Y587Uw6O2SpMazafLJfNZRTzY=
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=

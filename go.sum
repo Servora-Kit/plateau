@@ -8,10 +8,10 @@ github.com/MicahParks/keyfunc/v3 v3.8.2 h1:eydEwk/pBAVrDIpmFfB/gkCcrp++xQ7YYXirr
 github.com/MicahParks/keyfunc/v3 v3.8.2/go.mod h1:T4snFPe26GwMg45bBAdM5P6qWQyLxZHLwBhxR/9PnCs=
 github.com/Servora-Kit/plateau/api/gen v0.0.0-20260818130515-05007f733999 h1:GbBRdY1fCZJJOS/dGlvpbWxTdGvgLft0Kk3qcBO+ueE=
 github.com/Servora-Kit/plateau/api/gen v0.0.0-20260818130515-05007f733999/go.mod h1:90rrT5Tv9JXkXegAFXEFLWtoI9r0VdJf2fcM23AonYw=
-github.com/Servora-Kit/servora v0.9.1 h1:w51chC6MxO3HVP1OYHDBSZMa0RGHVnFRI3AYc+DqFaQ=
-github.com/Servora-Kit/servora v0.9.1/go.mod h1:9Hbhlzj140ruvKsp8cMYKqSD7pFUc1409FWYVEAa33M=
-github.com/Servora-Kit/servora/api/gen v0.9.1 h1:JXQ3cj96aRTgXxaQB9M8kVMiQcEqyr6uE/uekU61Keg=
-github.com/Servora-Kit/servora/api/gen v0.9.1/go.mod h1:JrqmoFUt874HoXcIeN5KZ9ryPc1vdFekrYLE9C1Wu/c=
+github.com/Servora-Kit/servora v0.9.6 h1:9oIBTlBxktYg7dQtdS0ecOwr9lcNFGZza3hQFD5uT1I=
+github.com/Servora-Kit/servora v0.9.6/go.mod h1:2pD9LPnPRY0UAv6T84zU6f0i+N6U6sRdIZvkOo+aIfA=
+github.com/Servora-Kit/servora/api/gen v0.9.5 h1:XCiuRcftQ8UM6zxL1HP3MdoddUHR4R9zAKjKEMhr+ec=
+github.com/Servora-Kit/servora/api/gen v0.9.5/go.mod h1:CB2iohAErhiTztFnL0Y587Uw6O2SpMazafLJfNZRTzY=
 github.com/alexedwards/argon2id v1.0.0 h1:wJzDx66hqWX7siL/SRUmgz3F8YMrd/nfX/xHHcQQP0w=
 github.com/alexedwards/argon2id v1.0.0/go.mod h1:tYKkqIjzXvZdzPvADMWOEZ+l6+BD6CtBXMj5fnJppiw=
 github.com/alexedwards/scs/postgresstore v0.0.0-20251002162104-209de6e426de h1:LDrMkjj4OCCQsq9SvIPQV1l3leMxqXZTCTxDFwMrqTE=

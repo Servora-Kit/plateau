@@ -7,8 +7,8 @@ require (
 	github.com/MicahParks/jwkset v0.11.3
 	github.com/MicahParks/keyfunc/v3 v3.8.2
 	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260818130515-05007f733999
-	github.com/Servora-Kit/servora v0.9.1
-	github.com/Servora-Kit/servora/api/gen v0.9.1
+	github.com/Servora-Kit/servora v0.9.6
+	github.com/Servora-Kit/servora/api/gen v0.9.5
 	github.com/alexedwards/argon2id v1.0.0
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alicebob/miniredis/v2 v2.38.0

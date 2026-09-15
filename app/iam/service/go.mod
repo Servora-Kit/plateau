@@ -6,8 +6,8 @@ require (
 	entgo.io/ent v0.14.5
 	github.com/Servora-Kit/plateau v0.0.0-20260822032517-8ccdc32143cb
 	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260818130515-05007f733999
-	github.com/Servora-Kit/servora v0.9.1
-	github.com/Servora-Kit/servora/api/gen v0.9.1
+	github.com/Servora-Kit/servora v0.9.6
+	github.com/Servora-Kit/servora/api/gen v0.9.5
 	github.com/alexedwards/scs/postgresstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alicebob/miniredis/v2 v2.38.0

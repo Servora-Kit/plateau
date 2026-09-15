@@ -6,8 +6,8 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
 	github.com/Servora-Kit/plateau v0.0.0-20260822032517-8ccdc32143cb
 	github.com/Servora-Kit/plateau/api/gen v0.0.0-20260822032517-8ccdc32143cb
-	github.com/Servora-Kit/servora v0.9.1
-	github.com/Servora-Kit/servora/api/gen v0.9.1
+	github.com/Servora-Kit/servora v0.9.6
+	github.com/Servora-Kit/servora/api/gen v0.9.5
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/go-kratos/kratos/v3 v3.0.0
 	github.com/google/wire v0.7.0

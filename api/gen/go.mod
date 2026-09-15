@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1
-	github.com/Servora-Kit/servora/api/gen v0.9.1
+	github.com/Servora-Kit/servora/api/gen v0.9.5
 	github.com/go-kratos/kratos/v3 v3.0.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60
 	google.golang.org/grpc v1.82.1
