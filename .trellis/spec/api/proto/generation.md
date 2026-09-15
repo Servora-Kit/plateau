@@ -18,9 +18,9 @@ Go、TS 根模板及 Example leaf TS 模板均为 `clean: true`，只清理各�
 
 ## 包和工具边界
 
-`api/gen/go.mod` 的模块为 `github.com/Servora-Kit/plateau/api/gen`。TS `@plateau/api` 直接通过 wildcard exports 暴露 ts 源：service index、`*.errors`、`*.crud`；当前 tsconfig 是 `noEmit: true`，并不构建 dist。依赖和锁文件由根 pnpm workspace 维护。
+`api/gen/go` 属于仓库根 Go module，import path 继续以 `github.com/Servora-Kit/plateau/api/gen/go` 开头。TS `@plateau/api` 直接通过 wildcard exports 暴露 ts 源：service index、`*.errors`、`*.crud`；当前 tsconfig 是 `noEmit: true`，并不构建 dist。依赖和锁文件由根 pnpm workspace 维护。
 
-Plateau AuthN/AuthZ 插件从当前 checkout 本地安装；Servora 插件由 Just 配置安装对应版本。go.work 的源码联调不能证明本机生成器二进制来自同一版本；变更框架生成器时明确实际调用来源，并同时检查生成契约。
+Plateau AuthN/AuthZ 插件从当前 checkout 本地安装；Servora 插件由 Just 配置安装对应版本。父级 `go.work` 的源码联调不能证明本机生成器二进制来自同一版本；变更框架生成器时明确实际调用来源，并同时检查生成契约。
 
 `@plateau/api` 消费 `@servora/proto-utils`，手写 transport 属于 [web/client](../../web/client/index.md)。Go/TS 生成目录不设独立 spec package。
 

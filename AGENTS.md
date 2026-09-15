@@ -59,8 +59,8 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
 - `buf.typescript.gen.yaml` 项目级统一 TypeScript HTTP、error reason 与 CRUD helper 生成配置
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
-- `go.work` 统一管理各个微服务与 `./api/gen` 的依赖
-- `go.mod`、`go.sum` 总依赖管理
+- `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与三个 Go 后端的依赖
+- 本机父级 `/servora-kit/go.work` 仅用于可选的跨仓源码联调；仓库自身不跟踪 `go.work`
 - `docker-compose.yaml` 本地基础设施编排；`docker-compose.apps.yaml` 应用容器编排
 
 ## 命令

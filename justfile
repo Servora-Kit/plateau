@@ -8,9 +8,8 @@ BUF_GO_GEN_TEMPLATE := env("BUF_GO_GEN_TEMPLATE", "buf.go.gen.yaml")
 BUF_TS_GEN_TEMPLATE := env("BUF_TS_GEN_TEMPLATE", "buf.typescript.gen.yaml")
 API_TS_PACKAGE := env("API_TS_PACKAGE", "@plateau/api")
 SERVORA_PKG := env("SERVORA_PKG", "github.com/Servora-Kit/servora")
-SERVORA_VERSION := env("SERVORA_VERSION", "v0.9.0")
+SERVORA_VERSION := env("SERVORA_VERSION", "v0.9.7")
 PNPM := env("PNPM", "pnpm")
-LINT_GOWORK := env("LINT_GOWORK", "auto")
 COMPOSE := env("COMPOSE", "docker compose")
 COMPOSE_FILES := env("COMPOSE_FILES", "-f docker-compose.yaml")
 COMPOSE_SERVICES := env("COMPOSE_SERVICES", "")
@@ -34,7 +33,6 @@ env:
     @echo "VERSION: {{ VERSION }}"
     @echo "GOVERSION: {{ GOVERSION }}"
     @echo "ENV_FILE: {{ ENV_FILE }}"
-    @echo "LINT_GOWORK: {{ LINT_GOWORK }}"
     @echo "COMPOSE_FILES: {{ COMPOSE_FILES }}"
 
 [unix]
@@ -124,7 +122,11 @@ _clean-api-dist-files:
 
 build: gen service::_build web::build
 
-lint: api-ts-check lint-proto (service::lint LINT_GOWORK)
+lint: api-ts-check lint-proto lint-go
+
+[working-directory(ROOT_DIR)]
+lint-go:
+    @golangci-lint run ./...
 
 [working-directory(ROOT_DIR)]
 lint-proto:

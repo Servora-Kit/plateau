@@ -1,13 +1,13 @@
 # 后端布局
 
-每个服务是根 `go.work` 纳管的独立 Go module，位于 `app/{ServiceName}/service/`。完整目录职责来自 [app 服务结构](../../../../app/AGENTS.md)：
+每个服务位于 `app/{ServiceName}/service/`，属于 Plateau 根 Go module，但仍是独立二进制与部署单元。完整目录职责来自 [app 服务结构](../../../../app/AGENTS.md)：
 
 - `api/protos/` 同时放服务领域 Proto 和私有配置，均按所属领域组织；IAM 现有配置源为 [`iam/conf/v1/config.proto`](../../../../app/iam/service/api/protos/iam/conf/v1/config.proto) 与 [`iam/oidc/conf/v1/config.proto`](../../../../app/iam/service/api/protos/iam/oidc/conf/v1/config.proto)。`api/buf.openapi.gen.yaml` 是服务 OpenAPI 配置。
 - `cmd/server/` 是启动入口；`configs/local/` 与 `configs/docker/` 分别承载本地和容器配置。
 - `internal/assets/` 放 OpenAPI 等内嵌产物；`internal/server`、`service`、`biz`、`data` 承担通用四层。
-- Ent 的 schema 与生成目录在 `internal/data/schema`、`internal/data/ent`；`generate.go` 是生成入口，不能手改 `ent/`。
+- Ent 的 schema 与生成目录在 `internal/data/schema`、`internal/data/ent`；`generate.go` 通过根 `go.mod` 声明的 `go tool ent` 生成，不能手改 `ent/`。Wire 同样由根 module 的 `go tool wire` 固定版本。
 
-新增应用以 [Example 服务](../../../../app/example/service/) 为起点，保留服务自己的 `go.mod`、`justfile`、配置和 API。根生成流程与 Go、TypeScript、OpenAPI、Wire、Ent 产物所有权遵循 [API 生成规范](../../api/proto/generation.md)；服务 leaf 的生成细节以自身 `justfile` 为准。
+新增应用以 [Example 服务](../../../../app/example/service/) 为起点，保留服务自己的 `justfile`、配置和 API，并由仓库根 `go.mod` 统一管理依赖。根生成流程与 Go、TypeScript、OpenAPI、Wire、Ent 产物所有权遵循 [API 生成规范](../../api/proto/generation.md)；服务 leaf 的生成细节以自身 `justfile` 为准。
 
 ## 应用专有模块
 

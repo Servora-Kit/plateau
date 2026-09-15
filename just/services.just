@@ -23,7 +23,7 @@ _root-api:
 
 build: gen _build
 
-lint gowork="auto": (audit::lint-go gowork) (example::lint-go gowork) (iam::lint-go gowork)
+lint: audit::lint-go example::lint-go iam::lint-go
 
 clean: audit::clean example::clean iam::clean
 

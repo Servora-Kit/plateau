@@ -55,7 +55,7 @@ openapi:
 
 [working-directory(COMPONENT_DIR)]
 wire:
-    @{{ if path_exists(SERVER_DIR) { "go run github.com/google/wire/cmd/wire ./cmd/server" } else { "echo No cmd/server directory found for " + SERVICE_NAME + ", skipping wire" } }}
+    @{{ if path_exists(SERVER_DIR) { "go tool wire ./cmd/server" } else { "echo No cmd/server directory found for " + SERVICE_NAME + ", skipping wire" } }}
 
 [working-directory(COMPONENT_DIR)]
 gen-ent:
@@ -99,10 +99,10 @@ clean: _clean-files
 
 [unix]
 [working-directory(COMPONENT_DIR)]
-lint-go gowork="auto":
-    @GOWORK="{{ gowork }}" golangci-lint run
+lint-go:
+    @golangci-lint run ./...
 
 [windows]
 [working-directory(COMPONENT_DIR)]
-lint-go gowork="auto":
-    $env:GOWORK = "{{ gowork }}"; golangci-lint run
+lint-go:
+    golangci-lint run ./...

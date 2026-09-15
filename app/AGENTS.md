@@ -5,7 +5,7 @@
 
 ## 目录概览
 
-`app/` 存放可运行服务，每个服务目录都是独立 Go module，并通过根 `go.work` 纳管。当前包含：
+`app/` 存放可运行服务，所有 Go 后端都属于仓库根 module；服务目录仍分别承载独立二进制与部署单元。当前包含：
 
 - `app/iam/service/` + `app/iam/web/`：主要业务实践（账号/会话/OIDC/AuthZ）
 - `app/example/service/` + `app/example/web/`：最小 CRUD 参考模板（`example.servora.dev/User`），新增平台级微服务的推荐起点
@@ -26,7 +26,7 @@
 后端布局为 `app/{ServiceName}/service/`，标准结构与职责如下：
 
 ```text
-{ServiceName}/service/         后端（独立 Go module）
+{ServiceName}/service/         后端（根 Go module 内的独立服务）
 ├── api/                       本微服务 proto 接口定义和私有配置文件 proto 定义
 │   ├── protos/{DomainName}/service/   该微服务各个领域的 Proto API 定义
 │   ├── protos/{ConfigName}/conf.proto 该微服务自己的业务配置 proto
@@ -58,7 +58,6 @@
 │       ├── xxx.go             实现 biz 层定义的 XxxRepo 接口，实现具体的数据访问逻辑
 │       ├── schema/ + ent/     如用了 Ent ORM：schema 定义表结构，ent 为生成代码
 │       └── generate.go        如用了 Ent ORM 框架，生成代码的入口
-├── go.mod|go.sum              独立模块
 └── justfile                   服务级 Just 命令入口
 ```
 
@@ -70,6 +69,7 @@
 - 服务 leaf 的 `just api` 会回到仓库根目录生成统一 Go API；若存在 `api/buf.typescript.gen.yaml`，再生成当前服务的 TypeScript API
 - 服务 leaf 的 `just openapi` 读取本目录 `api/buf.openapi.gen.yaml`
 - root `just build` 使用隐藏 build helper，避免生成完成后重复生成
+- Wire 与 Ent CLI 由根 `go.mod` 的 `tool` 声明固定版本，服务生成入口通过 `go tool wire`／`go tool ent` 调用
 
 ## 常用命令
 
