@@ -24,7 +24,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@servora/proto-utils": "^0.1.6"
+    "@servora/proto-utils": "^0.1.10"
   },
   "devDependencies": {
     "@typescript/native": "npm:typescript@^7.0.2",
