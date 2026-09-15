@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
-    "@servora/proto-utils": "^0.1.9",
+    "@servora/proto-utils": "^0.1.10",
     "ofetch": "^1.5.1"
   },
   "devDependencies": {
