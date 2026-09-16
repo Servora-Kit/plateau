@@ -22,7 +22,7 @@
 
 ## 应用职责
 
-接收请求的服务入口／中间件承担 PEP（执行权限检查），OpenFGA 承担 PDP（计算允许或拒绝）；拥有权限管理流程的应用承担 PAP（维护模型或关系）。IAM 的身份认证、服务 token 与 subject 映射不能替代接收业务服务的资源权限检查。业务代码可以发起并执行检查，不因此拥有策略计算引擎；模型与 tuple 的归属见 [模型运行边界](../infra/openfga.md)，IAM 的具体应用职责见 [IAM 授权规范](../../iam-service/authorization.md)。
+接收请求的服务入口／中间件承担 PEP（执行权限检查），OpenFGA 承担 PDP（计算允许或拒绝）；拥有权限管理流程的应用承担 PAP（维护模型或关系）。IAM 的身份认证、服务 token 与 subject 映射不能替代接收业务服务的资源权限检查。业务代码可以发起并执行检查，不因此拥有策略计算引擎；模型与 tuple 的归属见 [模型运行边界](../infra/openfga.md)，IAM 的具体应用职责见 [IAM 授权规范](../../iam/authorization.md)。
 
 ## 检查
 

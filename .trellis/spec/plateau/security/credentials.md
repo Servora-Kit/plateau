@@ -18,6 +18,6 @@
 
 [session.New](../../../../security/session/session.go) 接收显式配置和应用注入的 SCS Store，返回独立 manager；Store 命名空间与关闭由应用负责。配置克隆后校验 lifetime、idle timeout、cookie path、SameSite 及 cookie 前缀约束，默认启用 token hash 存储。
 
-`LoadAndSave` 调用 SCS 生命周期并记录 manager 专属装载标记；保存失败中断成功响应正文。应用不能绕过装载检查把缺少接线当作普通未登录。IAM 的 OP/RP 会话职责由 [IAM sessions](../../iam-service/sessions.md) 定义。
+`LoadAndSave` 调用 SCS 生命周期并记录 manager 专属装载标记；保存失败中断成功响应正文。应用不能绕过装载检查把缺少接线当作普通未登录。IAM 的 OP/RP 会话职责由 [IAM sessions](../../iam/sessions.md) 定义。
 
 检查入口：`go test ./security/password ./security/jwt ./security/session`。依据：[JWT tests](../../../../security/jwt/jwt_test.go)、[JWKS tests](../../../../security/jwt/jwks_test.go)、[Session tests](../../../../security/session/session_test.go)。

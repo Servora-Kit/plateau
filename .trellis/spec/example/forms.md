@@ -9,4 +9,4 @@
 - 创建成功后仅清空一次性临时密码并更新默认 ID/email；编辑值随着选中资源变化同步。删除与恢复是明确按钮，并向用户解释 tombstone 语义。
 - 表单控件保留连接的 label、适合的 `autocomplete` 和 `required`；破坏性操作保持显式文字和可理解的结果状态。
 
-现有单元测试覆盖 transport 和错误 reason 映射，不覆盖完整 DOM 表单交互。涉及真实 CRUD 交互时仍需按索引中的浏览器步骤验收。
+现有单元测试覆盖 transport 和错误 reason 映射，不覆盖完整 DOM 表单交互。涉及真实 CRUD 交互时仍需按 [前端规范](frontend.md) 中的浏览器步骤验收。

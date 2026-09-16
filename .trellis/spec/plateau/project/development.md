@@ -26,7 +26,7 @@
 | `just wire` | 各服务 Wire 装配刷新 |
 | `just lint` | API TS typecheck、Buf lint、从根 module 执行的全仓 Go lint；不等于全仓 Go 测试 |
 | `just api-ts-check` | 共享生成 TS 契约检查 |
-| `just web::iam::typecheck`／`lint` | IAM 前端检查；dev/build/preview 使用同一注册入口 |
+| `just web::<应用>::dev`／`build`／`lint` | Example、IAM、Test、Admin 统一的 Web 开发、构建与 lint 入口；其他工具按所属 package 的 pnpm script 执行 |
 | `just openfga-model-validate`／`test` | 本地 model 与场景检查 |
 | `just openfga-model-apply` | 修改 model 后的应用步骤，会写外部 model／环境配置，需在明确目标环境执行 |
 

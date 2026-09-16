@@ -11,7 +11,7 @@
 ## 质量检查
 
 - 修改 HTTP 行为时运行 `pnpm --filter @plateau/client test` 与 `pnpm --filter @plateau/client typecheck`。
-- 修改已接入的 IAM 请求时，再运行 `just web::iam::typecheck` 与 `just web::iam::lint`。
+- 修改已接入的 IAM 请求时，再运行 `just web::iam::lint` 与 `pnpm --filter @plateau/iam-web run typecheck`。
 - 流式协议当前只有实现证据；接入某个应用后，应按真实服务端点补充可重复的浏览器或集成验证，不能把包内 HTTP 测试表述为流式端到端验收。
 
 ## 主题索引

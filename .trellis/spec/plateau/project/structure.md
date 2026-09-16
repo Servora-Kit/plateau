@@ -18,11 +18,11 @@
 - `just/`：共享 Just settings、应用注册和 service/web 命令实现；根 `justfile` 是项目入口。
 - `manifests/`：scripts、openfga、grafana、prometheus、otel、traefik、loki 等部署资源。
 - `docs/adr/`：架构决策；任务研究、迁移差异留在 `.trellis/tasks/`。
-- `pnpm-workspace.yaml`、`pnpm-lock.yaml`：纳管 `api/gen`、`app/*/web`、`web/packages/*` 的根依赖 workspace 和共享锁文件。
+- `pnpm-workspace.yaml`、`pnpm-lock.yaml`：纳管 `api/gen`、平台原生 Web、`web/packages/*` 的根依赖 workspace 和共享锁文件；`app/admin/web` 保留 Vben 自己的 workspace 和 lockfile。
 - `buf.yaml`：模块、依赖、lint 和 breaking 配置；`buf.go.gen.yaml`、`buf.typescript.gen.yaml`：统一生成模板。`buf.es.gen.yaml` 当前停用，只作参考。
 - `go.mod`、`go.sum`：统一管理平台根代码、`api/gen/go` 与三个服务后端。仓库不跟踪 `go.work`；本机父级 `/servora-kit/go.work` 只作为 Plateau、Servora 与其他相邻仓库的可选源码联调层。
 - `docker-compose.yaml`：本地基础设施；`docker-compose.apps.yaml`：应用容器编排。
-- `.trellis/`：规范、任务和工作记录；spec package 是职责划分，不要求等同 Go/Node 包。
+- `.trellis/`：规范、任务和工作记录；应用 spec 按 `spec/<应用>/{index,architecture,frontend,backend}.md` 及实际专题组织，文件按需建立，规则见 [规范索引](../../index.md)。一个应用 package 可以同时包含 Go 与前端源码，不要求等同单个 Go/Node 包。
 
 ## 新增目录时检查
 

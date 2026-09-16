@@ -1,4 +1,4 @@
-# IAM 授权边界
+# IAM 服务授权边界
 
 IAM 将已验证的 `security.Actor` 映射为 OpenFGA subject：human 为 `user:{id}`，service 为 `service:{id}`，见 [NewOpenFGAAuthorizer](../../../app/iam/service/internal/authz/openfga.go)。无效 Actor 或未知类型在映射处失败。
 

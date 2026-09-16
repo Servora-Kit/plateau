@@ -1,4 +1,4 @@
-# IAM 启动边界
+# IAM 服务启动边界
 
 `internal/startup` 承担 IAM 特有启动逻辑，不应移入通用 `data` 或 `server`。`Initializer` 与 provider 组合定义于 [providers.go](../../../app/iam/service/internal/startup/providers.go)，具体初始化顺序见 [initializer.go](../../../app/iam/service/internal/startup/initializer.go)。OIDC 静态 client/密钥协调归 `internal/oidc` 的 initializer。
 

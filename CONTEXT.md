@@ -10,6 +10,10 @@ Servora 的平台微服务集合。每个服务既是可运行的业务系统，
 身份与访问管理领域，涵盖身份认证、凭据、会话、协议客户端、Actor 生命周期及 IAM 自己的访问策略。
 _Avoid_：仅指登录页面、仅指用户表、业务 Tenant 管理。
 
+**Admin**：
+Plateau 面向平台管理与运维人员的统一管理应用，管理和查询 IAM、未来 Audit 等基础共享服务；涉及业务微服务时，仅管理其平台基础共享能力与运维事项，不承载具体业务流程。被管理领域的事实与规则仍由所属服务拥有。
+_Avoid_：业务运营后台、业务租户管理入口、个人账号中心、所有业务数据的所有者。
+
 **Authentication / AuthN**：
 确认调用者提供的凭据是否有效，并据此确定当前执行 Actor 的过程。Authentication attempt 与短期 Authentication Challenge 不是 IAM Login Session；只有认证成功才能创建 Session。
 _Avoid_：Authorization、登录页面、业务角色加载、把未完成认证状态称为 Session。

@@ -1,4 +1,4 @@
-# OIDC 与服务令牌
+# IAM OIDC 与服务令牌
 
 `internal/oidc` 是 IAM 的协议专有模块。`IAMProvider` 只注册 discovery、authorize、token、userinfo、revoke、end-session 和 JWKS 路由；其构造校验 issuer、密钥和 provider 配置，见 [provider.go](../../../app/iam/service/internal/oidc/provider.go)。当前 authorization request 只接受 authorization-code、query response mode、PKCE S256 和 `openid` scope；这些是当前实现约束，修改前必须同步评估 discovery 元数据、存储和 provider 测试。
 

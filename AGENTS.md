@@ -53,7 +53,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）
 - `docs/adr/` 架构决策记录
 - `justfile` 项目级 Just 命令入口
-- `pnpm-workspace.yaml` 统一纳管 `api/gen`、`app/*/web` 与 `web/packages/*`
+- `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 自己的 workspace 和 lockfile
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
 - `buf.yaml` buf 总配置，依赖以及 lint 规则
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
@@ -74,11 +74,12 @@ just api-ts-check
 just openfga-model-validate
 just openfga-model-test
 just openfga-model-apply
+just web::example::dev
 just web::iam::dev
-just web::iam::build
-just web::iam::preview
-just web::iam::typecheck
-just web::iam::lint
+just web::test::dev
+just web::admin::dev
+just web::build
+just web::lint
 ```
 
-`api/gen`、`app/*/web` 与 `web/packages/*` 共用根 pnpm workspace 和 lockfile。新增平台服务参考 `app/example`。
+`api/gen`、平台原生 Web 与 `web/packages/*` 共用根 pnpm workspace 和 lockfile；Vben Admin 在 `app/admin/web` 中独立安装依赖。新增平台服务参考 `app/example`。

@@ -1,4 +1,26 @@
-# 现有摄取链
+# Audit 后端规范
+
+适用于 `app/audit/service` 的现有实现。该服务在 [app 目录说明](../../../app/AGENTS.md) 中标记为“停止更新和做参考，等待后期重构”；因此它用于理解现有审计消费和查询行为，不作为新增微服务或新 Kafka/ClickHouse 集成的推荐模板。通用分层规则仍见 [共享微服务规范](../service/backend/index.md)。
+
+## 开发前检查
+
+- 先确认需求是维护既有 Audit 行为还是重构设计；后者应另有任务与验收。
+- Kafka 记录消费、CloudEvent 校验、批处理与提交遵循本文件的摄取链；改动 API 查询还须阅读 `internal/service/audit.go`、`internal/biz/audit.go` 与 `internal/data/audit.go` 的实际契约。
+
+## 质量检查
+
+- 当前可见测试入口包括 [consumer_test.go](../../../app/audit/service/internal/data/consumer_test.go) 与 [batch_writer_test.go](../../../app/audit/service/internal/data/batch_writer_test.go)。
+- Kafka、ClickHouse、服务端注册和关闭顺序的真实验收依赖运行基础设施；静态代码或单测不能替代该验收。
+
+## 维护状态与适用范围
+
+Audit 是 Kafka 消费审计 CloudEvent、存入 ClickHouse 并提供查询 API 的现有服务。README 将它称为“停止维护，待后期重构”，[app 目录说明](../../../app/AGENTS.md) 进一步规定“不再更新和做参考”。本规范记录当前基线，不把它提升为新服务样板。
+
+当前 Wire 图在 [cmd/server/wire.go](../../../app/audit/service/cmd/server/wire.go)：bootstrap、可选 Kafka client、data、biz、service、server 共同装配。`newKafkaClient` 用 `NewClientOptional` 取得 client；[Consumer.Start](../../../app/audit/service/internal/data/consumer.go) 在 client 为 nil 时只记录 consumer disabled 并结束，这说明代码具备可选配置路径，不说明 Kafka/ClickHouse 已在某环境验收。
+
+重构前，修复必须保留该服务的维护限制、明确依赖的 CloudEvent/Kafka/ClickHouse 版本契约，并独立验证消费提交、批量失败、关闭 flush 和查询分页。不要从该服务复制命名、data 结构或后台 goroutine 管理到新增业务服务。
+
+## 现有摄取链
 
 当前链为 `Kafka record -> DecodeRecord -> CloudEvent 校验 -> BatchWriter -> ClickHouse -> CommitRecords`。入口是 [Consumer](../../../app/audit/service/internal/data/consumer.go)：解码失败或缺少 id/type/source/time 的记录会记录 warning 并提交该条记录；通过校验的记录按事件类型路由，当前已知 RPC 类型和未知类型都会进入通用 writer。
 

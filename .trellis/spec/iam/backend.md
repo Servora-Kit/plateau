@@ -1,4 +1,4 @@
-# IAM 后端规范
+# IAM 后端
 
 适用于 `app/iam/service`。改动同时组合 [共享微服务规范](../service/backend/index.md) 与本层主题；IAM 是主要业务实践，但其专有组织不自动成为所有新服务的模板。
 

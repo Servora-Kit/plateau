@@ -172,19 +172,17 @@ packages:
     path: ../servora
     git: true
 
-  # 业务应用按 <应用>-service / <应用>-web 命名。
-  # 规范直接放在 spec/<package>/index.md 和主题文件中，不再重复 backend/frontend。
-  # path 仍指向源码；包根索引由本地 packages_context.py 发现，无需额外配置键。
-  iam-service:
-    path: app/iam/service
-  iam-web:
-    path: app/iam/web
-  example-service:
-    path: app/example/service
-  example-web:
-    path: app/example/web
-  audit-service:
-    path: app/audit/service
-  test-web:
-    path: app/test/web
+  # 应用按领域统一命名；index.md 导航，architecture.md 描述共同设计，
+  # frontend.md / backend.md 分别维护两端入口，专题按需要独立成文。
+  iam:
+    path: app/iam
+  example:
+    path: app/example
+  audit:
+    path: app/audit
+  test:
+    path: app/test
+  # Admin 目前只有设计规范；登记不代表源码和运行能力已实现。
+  admin:
+    path: app/admin
 default_package: plateau

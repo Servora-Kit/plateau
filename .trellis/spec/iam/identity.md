@@ -1,4 +1,4 @@
-# 身份与账号
+# IAM 身份与账号
 
 IAM 拥有用户和服务身份的目录事实及认证流程，不替业务服务计算其资源权限。`biz.NormalizeEmail` 会 trim、NFC 规范化并大小写折叠比较值；`NewUserID` 生成不可由调用方复用的 UUIDv7，见 [identity.go](../../../app/iam/service/internal/biz/identity.go)。新增身份字段或唯一性规则应先在 biz/data/API 三处核对，不在 transport 层做持久化决定。
 
