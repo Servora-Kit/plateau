@@ -1,0 +1,38 @@
+{"file":".trellis/spec/admin/architecture.md","reason":"Admin 定位、范围、领域所有权与服务接入边界"}
+{"file":".trellis/spec/admin/frontend.md","reason":"Vben Ant Design Vue 选型及前端职责"}
+{"file":".trellis/spec/admin/backend.md","reason":"IAM 接入及人类与服务身份的授权边界"}
+{"file":".trellis/spec/service/backend/index.md","reason":"共享微服务结构及规范导航"}
+{"file":".trellis/spec/service/backend/layout.md","reason":"用户已删除 Admin 后端，按共享布局建立独立服务、专有模块与生成入口"}
+{"file":".trellis/spec/service/backend/layers.md","reason":"新建 Admin 的 server/service/biz/data 职责及依赖方向"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"依赖注入、请求 context、错误归属和日志的编码要求"}
+{"file":".trellis/spec/example/backend.md","reason":"以 Example 通用工程和分层为参考，不引入其示例租户/认证模型"}
+{"file":".trellis/spec/iam/backend.md","reason":"参考 IAM 认证、会话及启动接线，按 Admin 职责选择能力而非复制整个 Provider"}
+{"file":".trellis/spec/web/client/index.md","reason":"平台前端通信及生成 API 消费规则"}
+{"file":".trellis/spec/iam/authorization.md","reason":"IAM 主体映射与接收方授权条件"}
+{"file":".trellis/spec/iam/oidc.md","reason":"IAM 登录协议与服务令牌约束"}
+{"file":".trellis/spec/plateau/infra/openfga.md","reason":"Admin 与 IAM 模型关系及运行环境边界"}
+{"file":".trellis/tasks/09-15-admin-initial/research/current-state.md","reason":"规划源码事实与参考项目对照"}
+{"file":".trellis/spec/iam/identity.md","reason":"IAM 凭据与账号生命周期及自助流程边界"}
+{"file":".trellis/spec/iam/sessions.md","reason":"IAM 现有会话解析与撤销实现边界；本次新增需求以任务 PRD 为准"}
+{"file":".trellis/tasks/09-15-admin-initial/research/management-capabilities.md","reason":"新增强制设密、删除、强制登出的管理接口缺口与源码证据"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"IAM 软删除复用 Servora CRUD 的消费方式，领域删除事务由应用负责"}
+{"file":".trellis/spec/servora/framework/crud.md","reason":"CRUD 框架选项、适配层与业务生命周期的边界"}
+{"file":".trellis/spec/iam/startup.md","reason":"IAM 恢复期与清理参数的配置扫描、启动和生命周期归属"}
+{"file":".trellis/spec/iam/frontend.md","reason":"新增 IAM 账号自助删除入口的现有页面、组件和检查规范"}
+{"file":".trellis/spec/iam/auth-flows.md","reason":"现有 IAM Web 认证页面的请求、错误与加载处理约定"}
+{"file":".trellis/tasks/09-15-admin-initial/research/bootstrap-initialization.md","reason":"首位管理员初始化的源码事实、候选方案及稳定身份绑定问题；以最终确认的 PRD/design 为准"}
+{"file":".trellis/tasks/09-15-admin-initial/research/email-lookup-api.md","reason":"邮箱查询的 AIP 官方依据、ListUsers.filter 推荐及规范化/唯一性/授权边界"}
+{"file":".trellis/tasks/09-15-admin-initial/research/go-wind-admin-access-management.md","reason":"go-wind-admin 用户角色权限管理借鉴及 IAM 身份与 Admin 访问管理的边界；按最终 PRD 采用候选"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"新增 IAM/Admin RPC、HTTP、字段 presence、资源名与领域错误约定"}
+{"file":".trellis/spec/api/proto/generation.md","reason":"根 Go module 与共享 TS 生成输出、消费者和独立 Vben workspace 接线"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"领域、真实数据库、transport 和跨层测试归属"}
+{"file":".trellis/spec/plateau/security/authN.md","reason":"Admin OIDC 会话到可信 Actor、IAM 服务 token 验证边界"}
+{"file":".trellis/tasks/09-15-admin-initial/research/lifecycle-design-evidence.md","reason":"删除恢复清理的数据集合、软删除过滤、邮箱唯一约束与并发证据；最终合同以 design 为准"}
+{"file":".trellis/tasks/09-15-admin-initial/research/first-login-bootstrap-design.md","reason":"首次改密受限凭证及 bootstrap 稳定绑定、迁移证据；技术候选由 design 裁定"}
+{"file":".trellis/tasks/09-15-admin-initial/research/admin-integration-design.md","reason":"BFF、CSRF、服务身份、OpenFGA 与 Vben 接入证据；路由与最终选择以 design 为准"}
+{"file":".trellis/tasks/09-15-admin-initial/research/port-layout-migration.md","reason":"附带端口配置修改的实际文件与 Audit 冲突；保持 AGENTS 和前后端配置范围，不另建迁移流程"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"R21 跨仓协同迭代：证实框架职责后在 Servora 修正，保留 Plateau 身份和授权边界"}
+{"file":".trellis/spec/servora/framework/transport.md","reason":"Servora gRPC client、endpoint 与 middleware 装配的现有合同及回归入口"}
+{"file":".trellis/tasks/09-15-admin-initial/research/design-gap-review.md","reason":"IAM adapter 与错误归因、服务 JWT 离线语义、tombstone 查询隔离及已确认邮件行为；G5 复制树证据已过时，按新建 Admin 方案实施"}
+{"file":".trellis/tasks/09-15-admin-initial/research/ent-mixin-ownership.md","reason":"R22 的生产/fixture/Example 依赖、迁移范围与本轮基线验证；旧 spec 归属以最新任务设计调整为准"}
+{"file":".trellis/tasks/09-15-admin-initial/research/grpc-error-logging.md","reason":"已核实 Kratos 错误过网边界、日志与脱敏现状，按 R6/AC5 接入并验证"}

@@ -1,0 +1,34 @@
+{"file":".trellis/spec/admin/architecture.md","reason":"检查平台管理范围与领域所有权"}
+{"file":".trellis/spec/admin/frontend.md","reason":"检查前端选型、权限反馈及联调证据"}
+{"file":".trellis/spec/admin/backend.md","reason":"检查用户管理委托与两层授权"}
+{"file":".trellis/spec/service/backend/layout.md","reason":"检查重新搭建的 Admin 服务布局与生成所有权"}
+{"file":".trellis/spec/service/backend/layers.md","reason":"检查接口适配、用例、数据访问及依赖方向"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"检查注入、context、错误与日志没有违反共享编码要求"}
+{"file":".trellis/spec/example/backend.md","reason":"检查复用通用工程时未带入示例租户或未经认证的身份来源"}
+{"file":".trellis/spec/iam/backend.md","reason":"检查 IAM 实践按职责借鉴，Admin 未复制发行方、身份库或 seed"}
+{"file":".trellis/spec/iam/authorization.md","reason":"检查管理员与服务权限的区分"}
+{"file":".trellis/spec/iam/sessions.md","reason":"避免误报跨应用注销能力"}
+{"file":".trellis/spec/plateau/infra/openfga.md","reason":"区分模型、夹具、部署与真实授权"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"检查前端、Admin、IAM 跨层契约"}
+{"file":".trellis/tasks/09-15-admin-initial/research/current-state.md","reason":"以调研证据区分现状、设计与验收"}
+{"file":".trellis/spec/iam/identity.md","reason":"检查 IAM 现有身份与凭据边界；新增行为按任务 PRD 和设计验收"}
+{"file":".trellis/tasks/09-15-admin-initial/research/management-capabilities.md","reason":"检查新增需求没有误用现有自助入口或把领域缺口当作已实现"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"检查软删除消费没有遗漏作用域、并发控制与领域关联行为"}
+{"file":".trellis/spec/iam/startup.md","reason":"检查配置参数校验与实际生效方式，不误报热更新能力"}
+{"file":".trellis/spec/iam/frontend.md","reason":"检查 IAM 自助删除页面的交互及实际浏览器联调"}
+{"file":".trellis/spec/iam/auth-flows.md","reason":"检查 IAM Web 既有请求、错误与加载约定；自助删除要求以任务 PRD 为准"}
+{"file":".trellis/tasks/09-15-admin-initial/research/bootstrap-initialization.md","reason":"核对初始化与邮箱复用、撤权、重启的交互；候选不视为已确认要求"}
+{"file":".trellis/tasks/09-15-admin-initial/research/email-lookup-api.md","reason":"核对推荐邮箱查询没有被误报为现有能力，标准Get与List语义、匹配及错误行为明确"}
+{"file":".trellis/tasks/09-15-admin-initial/research/go-wind-admin-access-management.md","reason":"核对没有复制 IAM 身份、混淆后台资格撤销与身份封禁，或把参考项目全部功能视为批准范围"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核对新增合同、HTTP/RPC 一致性、错误和兼容性"}
+{"file":".trellis/spec/api/proto/generation.md","reason":"核对 Go/TS/OpenAPI/Ent/Wire 生成以及两个前端消费者检查"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"核对真实 PostgreSQL 并发测试未被缺少 DSN 的跳过误报通过"}
+{"file":".trellis/tasks/09-15-admin-initial/research/lifecycle-design-evidence.md","reason":"核对软删除事务、关联清理、恢复边界及邮箱释放时机"}
+{"file":".trellis/tasks/09-15-admin-initial/research/first-login-bootstrap-design.md","reason":"核对未完成改密无法获得普通会话、bootstrap 不误绑或重授；最终设计优先"}
+{"file":".trellis/tasks/09-15-admin-initial/research/admin-integration-design.md","reason":"核对 Admin 两层授权、cookie/CSRF、本地退出、已有会话撤权与真实协议接线"}
+{"file":".trellis/tasks/09-15-admin-initial/research/port-layout-migration.md","reason":"检查应用端口/代理/宿主映射同步，容器内部与中间件端口未被错误替换"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"检查 R21 框架责任证据、无静默绕过、上游回归与 Plateau 实际消费均有验证"}
+{"file":".trellis/spec/servora/framework/transport.md","reason":"检查客户端装配、middleware 顺序和上下文传播未被应用侧重复实现"}
+{"file":".trellis/tasks/09-15-admin-initial/research/design-gap-review.md","reason":"核对设计复核问题已关闭或明确待确认，不把未实现能力和未经确认的部分完成行为当作已验收"}
+{"file":".trellis/tasks/09-15-admin-initial/research/ent-mixin-ownership.md","reason":"核对 R22 未漏 Example/fixture/生成依赖、未让 Servora 依赖 Plateau、基线测试未被冒充迁移验收"}
+{"file":".trellis/tasks/09-15-admin-initial/research/grpc-error-logging.md","reason":"核对 code/reason 来源映射、cause 仅本地、日志关联与敏感字段未泄露"}
