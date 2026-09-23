@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 
@@ -61,7 +63,7 @@ func run() (err error) {
 	mailCfg := &mailpb.Mail{}
 	openFGACfg := &openfgapb.OpenFGA{}
 	if err := bootstrap.Scan(rt, iamCfg, oidcCfg, capCfg, redisCfg, mailCfg, openFGACfg, sessionCfg); err != nil {
-		return fmt.Errorf("scan IAM configs: %w", err)
+		return errors.Join(fmt.Errorf("scan IAM configs: %w", err), rt.Close(context.Background()))
 	}
 
 	return rt.Run(func() (*kratos.App, func(), error) {

@@ -214,8 +214,6 @@ func (m *SMTP) validate(all bool) error {
 
 	// no validation rules for Host
 
-	// no validation rules for Port
-
 	// no validation rules for Username
 
 	// no validation rules for Password
@@ -251,6 +249,10 @@ func (m *SMTP) validate(all bool) error {
 				cause:  err,
 			}
 		}
+	}
+
+	if m.Port != nil {
+		// no validation rules for Port
 	}
 
 	if len(errors) > 0 {

@@ -7,6 +7,7 @@
 package capv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -28,13 +29,13 @@ const (
 type CAP struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Stable high-entropy HS256 key shared by every instance.
-	SigningSecret       string               `protobuf:"bytes,1,opt,name=signing_secret,json=signingSecret,proto3" json:"signing_secret,omitempty"`
-	RedisKeyPrefix      string               `protobuf:"bytes,2,opt,name=redis_key_prefix,json=redisKeyPrefix,proto3" json:"redis_key_prefix,omitempty"`
+	SigningSecret       *string              `protobuf:"bytes,1,opt,name=signing_secret,json=signingSecret,proto3,oneof" json:"signing_secret,omitempty"`
+	RedisKeyPrefix      *string              `protobuf:"bytes,2,opt,name=redis_key_prefix,json=redisKeyPrefix,proto3,oneof" json:"redis_key_prefix,omitempty"`
 	ChallengeTtl        *durationpb.Duration `protobuf:"bytes,3,opt,name=challenge_ttl,json=challengeTtl,proto3" json:"challenge_ttl,omitempty"`
 	TokenTtl            *durationpb.Duration `protobuf:"bytes,4,opt,name=token_ttl,json=tokenTtl,proto3" json:"token_ttl,omitempty"`
-	ChallengeCount      int32                `protobuf:"varint,5,opt,name=challenge_count,json=challengeCount,proto3" json:"challenge_count,omitempty"`
-	ChallengeSize       int32                `protobuf:"varint,6,opt,name=challenge_size,json=challengeSize,proto3" json:"challenge_size,omitempty"`
-	ChallengeDifficulty int32                `protobuf:"varint,7,opt,name=challenge_difficulty,json=challengeDifficulty,proto3" json:"challenge_difficulty,omitempty"`
+	ChallengeCount      *int32               `protobuf:"varint,5,opt,name=challenge_count,json=challengeCount,proto3,oneof" json:"challenge_count,omitempty"`
+	ChallengeSize       *int32               `protobuf:"varint,6,opt,name=challenge_size,json=challengeSize,proto3,oneof" json:"challenge_size,omitempty"`
+	ChallengeDifficulty *int32               `protobuf:"varint,7,opt,name=challenge_difficulty,json=challengeDifficulty,proto3,oneof" json:"challenge_difficulty,omitempty"`
 	// Optional fixed scope controlled by the server mounting the CAP handler.
 	DefaultScope  string `protobuf:"bytes,8,opt,name=default_scope,json=defaultScope,proto3" json:"default_scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -72,15 +73,15 @@ func (*CAP) Descriptor() ([]byte, []int) {
 }
 
 func (x *CAP) GetSigningSecret() string {
-	if x != nil {
-		return x.SigningSecret
+	if x != nil && x.SigningSecret != nil {
+		return *x.SigningSecret
 	}
 	return ""
 }
 
 func (x *CAP) GetRedisKeyPrefix() string {
-	if x != nil {
-		return x.RedisKeyPrefix
+	if x != nil && x.RedisKeyPrefix != nil {
+		return *x.RedisKeyPrefix
 	}
 	return ""
 }
@@ -100,22 +101,22 @@ func (x *CAP) GetTokenTtl() *durationpb.Duration {
 }
 
 func (x *CAP) GetChallengeCount() int32 {
-	if x != nil {
-		return x.ChallengeCount
+	if x != nil && x.ChallengeCount != nil {
+		return *x.ChallengeCount
 	}
 	return 0
 }
 
 func (x *CAP) GetChallengeSize() int32 {
-	if x != nil {
-		return x.ChallengeSize
+	if x != nil && x.ChallengeSize != nil {
+		return *x.ChallengeSize
 	}
 	return 0
 }
 
 func (x *CAP) GetChallengeDifficulty() int32 {
-	if x != nil {
-		return x.ChallengeDifficulty
+	if x != nil && x.ChallengeDifficulty != nil {
+		return *x.ChallengeDifficulty
 	}
 	return 0
 }
@@ -131,23 +132,27 @@ var File_plateau_security_cap_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_security_cap_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"$plateau/security/cap/v1/config.proto\x12\x17plateau.security.cap.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\"\xd1\x03\n" +
-	"\x03CAP\x123\n" +
-	"\x0esigning_secret\x18\x01 \x01(\tB\f\x8a\xce\x18\x02\x10\x01ڶ\x1a\x02z\x00R\rsigningSecret\x127\n" +
+	"$plateau/security/cap/v1/config.proto\x12\x17plateau.security.cap.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\"\xd4\x04\n" +
+	"\x03CAP\x12?\n" +
+	"\x0esigning_secret\x18\x01 \x01(\tB\x13\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01ڶ\x1a\x02z\x00H\x00R\rsigningSecret\x88\x01\x01\x12<\n" +
 	"\x10redis_key_prefix\x18\x02 \x01(\tB\r\x8a\xce\x18\t\n" +
-	"\acap:v2:R\x0eredisKeyPrefix\x12I\n" +
+	"\acap:v2:H\x01R\x0eredisKeyPrefix\x88\x01\x01\x12I\n" +
 	"\rchallenge_ttl\x18\x03 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
 	"\x0310mR\fchallengeTtl\x12A\n" +
 	"\ttoken_ttl\x18\x04 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
-	"\x0320mR\btokenTtl\x121\n" +
+	"\x0320mR\btokenTtl\x126\n" +
 	"\x0fchallenge_count\x18\x05 \x01(\x05B\b\x8a\xce\x18\x04\n" +
-	"\x0250R\x0echallengeCount\x12/\n" +
+	"\x0250H\x02R\x0echallengeCount\x88\x01\x01\x124\n" +
 	"\x0echallenge_size\x18\x06 \x01(\x05B\b\x8a\xce\x18\x04\n" +
-	"\x0232R\rchallengeSize\x12:\n" +
+	"\x0232H\x03R\rchallengeSize\x88\x01\x01\x12?\n" +
 	"\x14challenge_difficulty\x18\a \x01(\x05B\a\x8a\xce\x18\x03\n" +
-	"\x014R\x13challengeDifficulty\x12#\n" +
-	"\rdefault_scope\x18\b \x01(\tR\fdefaultScope:\t\x82\xce\x18\x05\n" +
-	"\x03capBIZGgithub.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1;capv1b\x06proto3"
+	"\x014H\x04R\x13challengeDifficulty\x88\x01\x01\x12#\n" +
+	"\rdefault_scope\x18\b \x01(\tR\fdefaultScope:\x04\x80\xce\x18\x01B\x11\n" +
+	"\x0f_signing_secretB\x13\n" +
+	"\x11_redis_key_prefixB\x12\n" +
+	"\x10_challenge_countB\x11\n" +
+	"\x0f_challenge_sizeB\x17\n" +
+	"\x15_challenge_difficultyBIZGgithub.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1;capv1b\x06proto3"
 
 var (
 	file_plateau_security_cap_v1_config_proto_rawDescOnce sync.Once
@@ -181,6 +186,7 @@ func file_plateau_security_cap_v1_config_proto_init() {
 	if File_plateau_security_cap_v1_config_proto != nil {
 		return
 	}
+	file_plateau_security_cap_v1_config_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

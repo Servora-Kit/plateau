@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 
 	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
-	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
+	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
 	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
 	auditconfpb "github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
@@ -60,7 +61,7 @@ func run() (err error) {
 	auditCfg := &auditconfpb.AuditContract{}
 	consumerCfg := &auditconfv1.AuditConsumerConfig{}
 	if err := bootstrap.Scan(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg); err != nil {
-		return fmt.Errorf("scan bootstrap configs: %w", err)
+		return errors.Join(fmt.Errorf("scan bootstrap configs: %w", err), rt.Close(context.Background()))
 	}
 
 	return rt.Run(func() (*kratos.App, func(), error) {

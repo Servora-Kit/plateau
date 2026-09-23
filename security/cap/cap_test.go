@@ -10,6 +10,7 @@ import (
 
 	capv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	goredis "github.com/redis/go-redis/v9"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -17,10 +18,10 @@ const testSigningSecret = "0123456789abcdef0123456789abcdef"
 
 func testCAPConfig() *capv1.CAP {
 	return &capv1.CAP{
-		SigningSecret:       testSigningSecret,
-		ChallengeCount:      2,
-		ChallengeSize:       8,
-		ChallengeDifficulty: 1,
+		SigningSecret:       proto.String(testSigningSecret),
+		ChallengeCount:      proto.Int32(2),
+		ChallengeSize:       proto.Int32(8),
+		ChallengeDifficulty: proto.Int32(1),
 	}
 }
 
@@ -37,26 +38,26 @@ func TestNewAppliesDefaultsAndValidatesConfiguration(t *testing.T) {
 	if _, err := New(nil, client); err == nil {
 		t.Fatal("New(nil, client) error = nil")
 	}
-	if _, err := New(&capv1.CAP{SigningSecret: testSigningSecret}, nil); err == nil {
+	if _, err := New(&capv1.CAP{SigningSecret: proto.String(testSigningSecret)}, nil); err == nil {
 		t.Fatal("New(config, nil) error = nil")
 	}
-	if _, err := New(&capv1.CAP{SigningSecret: "too-short"}, client); err == nil {
+	if _, err := New(&capv1.CAP{SigningSecret: proto.String("too-short")}, client); err == nil {
 		t.Fatal("New(short secret, client) error = nil")
 	}
 	if _, err := New(&capv1.CAP{
-		SigningSecret:  testSigningSecret,
-		ChallengeCount: maxChallengeCount + 1,
+		SigningSecret:  proto.String(testSigningSecret),
+		ChallengeCount: proto.Int32(maxChallengeCount + 1),
 	}, client); err == nil {
 		t.Fatal("New(out-of-range count, client) error = nil")
 	}
 	if _, err := New(&capv1.CAP{
-		SigningSecret: testSigningSecret,
+		SigningSecret: proto.String(testSigningSecret),
 		ChallengeTtl:  durationpb.New(-time.Second),
 	}, client); err == nil {
 		t.Fatal("New(negative TTL, client) error = nil")
 	}
 
-	config := &capv1.CAP{SigningSecret: testSigningSecret}
+	config := &capv1.CAP{SigningSecret: proto.String(testSigningSecret)}
 	captcha, err := New(config, client)
 	if err != nil {
 		t.Fatalf("New(default config) error = %v", err)
@@ -140,10 +141,10 @@ func TestChallengeJWTRejectsTamperingAndUnsupportedClaims(t *testing.T) {
 		t.Fatal("tampered token accepted")
 	}
 	other, err := New(&capv1.CAP{
-		SigningSecret:       "fedcba9876543210fedcba9876543210",
-		ChallengeCount:      2,
-		ChallengeSize:       8,
-		ChallengeDifficulty: 1,
+		SigningSecret:       proto.String("fedcba9876543210fedcba9876543210"),
+		ChallengeCount:      proto.Int32(2),
+		ChallengeSize:       proto.Int32(8),
+		ChallengeDifficulty: proto.Int32(1),
 	}, disconnectedRedis(t))
 	if err != nil {
 		t.Fatalf("New(other) error = %v", err)

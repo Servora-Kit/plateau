@@ -7,4 +7,4 @@
 | [命令与输出](cmd.md) | 插件入口、校验、安装、生成文件 |
 | [共享规划](ruleplan.md) | 合并、分组、确定性与测试设施 |
 
-开发前确认当前使用的插件二进制来源与生成路径。质量检查覆盖显式声明校验、整体覆盖、Proto presence/oneof、确定性排序、克隆和编译。入口：`go test ./cmd/protoc-gen-plateau-authn ./cmd/protoc-gen-plateau-authz`。改生成器后审阅其真实输出，不手改 gen 文件。
+开发前确认当前使用的插件二进制来源与生成路径。质量检查覆盖显式声明校验、整体覆盖、Proto 记录的字段设置状态/oneof、确定性排序、克隆和编译。入口：`go test ./cmd/protoc-gen-plateau-authn ./cmd/protoc-gen-plateau-authz`。改生成器后审阅其真实输出，不手改 gen 文件。

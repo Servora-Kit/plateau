@@ -9,10 +9,7 @@ option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/
 
 // JwtAuthnConfig configures one Resource Server JWT verifier profile.
 message JwtAuthnConfig {
-  option (servora.conf.v1.section) = {
-    key: "jwt"
-    optional: true
-  };
+  option (servora.conf.v1.section) = true;
 
   string issuer = 1;
   string audience = 2;

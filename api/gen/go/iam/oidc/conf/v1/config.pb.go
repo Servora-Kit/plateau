@@ -7,6 +7,7 @@
 package oidcconfv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -27,11 +28,11 @@ const (
 type OIDC struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The single public origin used as issuer, IAM Web origin and mail-link base.
-	Issuer string `protobuf:"bytes,1,opt,name=issuer,proto3" json:"issuer,omitempty"`
+	Issuer *string `protobuf:"bytes,1,opt,name=issuer,proto3,oneof" json:"issuer,omitempty"`
 	// Stable RS256 private-key path; this key is distinct from TLS and crypto keys.
-	SigningKeyPath string `protobuf:"bytes,2,opt,name=signing_key_path,json=signingKeyPath,proto3" json:"signing_key_path,omitempty"`
+	SigningKeyPath *string `protobuf:"bytes,2,opt,name=signing_key_path,json=signingKeyPath,proto3,oneof" json:"signing_key_path,omitempty"`
 	// Stable zitadel/oidc provider crypto-key path, distinct from signing and TLS keys.
-	CryptoKeyPath string `protobuf:"bytes,3,opt,name=crypto_key_path,json=cryptoKeyPath,proto3" json:"crypto_key_path,omitempty"`
+	CryptoKeyPath *string `protobuf:"bytes,3,opt,name=crypto_key_path,json=cryptoKeyPath,proto3,oneof" json:"crypto_key_path,omitempty"`
 	// 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
 	Clients               []*OAuthClient       `protobuf:"bytes,4,rep,name=clients,proto3" json:"clients,omitempty"`
 	ServiceAccessTokenTtl *durationpb.Duration `protobuf:"bytes,5,opt,name=service_access_token_ttl,json=serviceAccessTokenTtl,proto3" json:"service_access_token_ttl,omitempty"`
@@ -70,22 +71,22 @@ func (*OIDC) Descriptor() ([]byte, []int) {
 }
 
 func (x *OIDC) GetIssuer() string {
-	if x != nil {
-		return x.Issuer
+	if x != nil && x.Issuer != nil {
+		return *x.Issuer
 	}
 	return ""
 }
 
 func (x *OIDC) GetSigningKeyPath() string {
-	if x != nil {
-		return x.SigningKeyPath
+	if x != nil && x.SigningKeyPath != nil {
+		return *x.SigningKeyPath
 	}
 	return ""
 }
 
 func (x *OIDC) GetCryptoKeyPath() string {
-	if x != nil {
-		return x.CryptoKeyPath
+	if x != nil && x.CryptoKeyPath != nil {
+		return *x.CryptoKeyPath
 	}
 	return ""
 }
@@ -107,9 +108,9 @@ func (x *OIDC) GetServiceAccessTokenTtl() *durationpb.Duration {
 // OAuthClient 配置使用客户端 ID 和密钥认证的应用。
 type OAuthClient struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
-	ClientId string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientId *string                `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3,oneof" json:"client_id,omitempty"`
 	// Raw secret is configuration input only; IAM persists only its hash.
-	ClientSecret string `protobuf:"bytes,2,opt,name=client_secret,json=clientSecret,proto3" json:"client_secret,omitempty"`
+	ClientSecret *string `protobuf:"bytes,2,opt,name=client_secret,json=clientSecret,proto3,oneof" json:"client_secret,omitempty"`
 	// Redirect URIs are compared exactly; wildcards are not supported.
 	RedirectUris []string `protobuf:"bytes,3,rep,name=redirect_uris,json=redirectUris,proto3" json:"redirect_uris,omitempty"`
 	// 请求 scope 必须在允许集合中；用户流程还须符合提供方支持的用户 scope。
@@ -153,15 +154,15 @@ func (*OAuthClient) Descriptor() ([]byte, []int) {
 }
 
 func (x *OAuthClient) GetClientId() string {
-	if x != nil {
-		return x.ClientId
+	if x != nil && x.ClientId != nil {
+		return *x.ClientId
 	}
 	return ""
 }
 
 func (x *OAuthClient) GetClientSecret() string {
-	if x != nil {
-		return x.ClientSecret
+	if x != nil && x.ClientSecret != nil {
+		return *x.ClientSecret
 	}
 	return ""
 }
@@ -205,24 +206,28 @@ var File_iam_oidc_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_iam_oidc_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\x1diam/oidc/conf/v1/config.proto\x12\x10iam.oidc.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xab\x02\n" +
-	"\x04OIDC\x12\x1e\n" +
-	"\x06issuer\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x06issuer\x120\n" +
-	"\x10signing_key_path\x18\x02 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x0esigningKeyPath\x12.\n" +
-	"\x0fcrypto_key_path\x18\x03 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\rcryptoKeyPath\x127\n" +
+	"\x1diam/oidc/conf/v1/config.proto\x12\x10iam.oidc.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xfd\x02\n" +
+	"\x04OIDC\x12*\n" +
+	"\x06issuer\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x06issuer\x88\x01\x01\x12<\n" +
+	"\x10signing_key_path\x18\x02 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x01R\x0esigningKeyPath\x88\x01\x01\x12:\n" +
+	"\x0fcrypto_key_path\x18\x03 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x02R\rcryptoKeyPath\x88\x01\x01\x127\n" +
 	"\aclients\x18\x04 \x03(\v2\x1d.iam.oidc.conf.v1.OAuthClientR\aclients\x12\\\n" +
 	"\x18service_access_token_ttl\x18\x05 \x01(\v2\x19.google.protobuf.DurationB\b\x8a\xce\x18\x04\n" +
-	"\x025mR\x15serviceAccessTokenTtl:\n" +
-	"\x82\xce\x18\x06\n" +
-	"\x04oidc\"\x9b\x02\n" +
-	"\vOAuthClient\x12#\n" +
-	"\tclient_id\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\bclientId\x12+\n" +
-	"\rclient_secret\x18\x02 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\fclientSecret\x12#\n" +
+	"\x025mR\x15serviceAccessTokenTtl:\x04\x80\xce\x18\x01B\t\n" +
+	"\a_issuerB\x13\n" +
+	"\x11_signing_key_pathB\x12\n" +
+	"\x10_crypto_key_path\"\xd5\x02\n" +
+	"\vOAuthClient\x12/\n" +
+	"\tclient_id\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\bclientId\x88\x01\x01\x127\n" +
+	"\rclient_secret\x18\x02 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x01R\fclientSecret\x88\x01\x01\x12#\n" +
 	"\rredirect_uris\x18\x03 \x03(\tR\fredirectUris\x12%\n" +
 	"\x0eallowed_scopes\x18\x04 \x03(\tR\rallowedScopes\x12\x18\n" +
-	"\atrusted\x18\x05 \x01(\bR\atrusted\x126\n" +
-	"\x13allowed_grant_types\x18\x06 \x03(\tB\x06\x8a\xce\x18\x02\x10\x01R\x11allowedGrantTypes\x12\x1c\n" +
-	"\taudiences\x18\a \x03(\tR\taudiencesBGZEgithub.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1;oidcconfv1b\x06proto3"
+	"\atrusted\x18\x05 \x01(\bR\atrusted\x128\n" +
+	"\x13allowed_grant_types\x18\x06 \x03(\tB\b\xbaH\x05\x92\x01\x02\b\x01R\x11allowedGrantTypes\x12\x1c\n" +
+	"\taudiences\x18\a \x03(\tR\taudiencesB\f\n" +
+	"\n" +
+	"_client_idB\x10\n" +
+	"\x0e_client_secretBGZEgithub.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1;oidcconfv1b\x06proto3"
 
 var (
 	file_iam_oidc_conf_v1_config_proto_rawDescOnce sync.Once
@@ -257,6 +262,8 @@ func file_iam_oidc_conf_v1_config_proto_init() {
 	if File_iam_oidc_conf_v1_config_proto != nil {
 		return
 	}
+	file_iam_oidc_conf_v1_config_proto_msgTypes[0].OneofWrappers = []any{}
+	file_iam_oidc_conf_v1_config_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

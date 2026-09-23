@@ -42,7 +42,7 @@ func TestServiceOAuthHTTPAndGRPC(t *testing.T) {
 	}
 
 	// A business receiver obtains its public keys from IAM Discovery/JWKS.
-	verifier, closeVerifier, err := jwtsecurity.New(ctx, &jwtpb.JwtAuthnConfig{Issuer: f.config.Issuer, Audience: "iam"})
+	verifier, closeVerifier, err := jwtsecurity.New(ctx, &jwtpb.JwtAuthnConfig{Issuer: f.config.GetIssuer(), Audience: "iam"})
 	check(t, err)
 	t.Cleanup(closeVerifier)
 	var httpCalls atomic.Int32
@@ -131,7 +131,7 @@ func TestServiceOAuthHTTPAndGRPC(t *testing.T) {
 	for _, use := range []string{"access", "id"} {
 		t.Run("reject_user_"+use+"_token", func(t *testing.T) {
 			claims := jwtlib.MapClaims{
-				"iss": f.config.Issuer, "sub": f.user.GetUserId(), "client_id": "admin", "aud": "iam",
+				"iss": f.config.GetIssuer(), "sub": f.user.GetUserId(), "client_id": "admin", "aud": "iam",
 				"iat": time.Now().Unix(), "exp": time.Now().Add(5 * time.Minute).Unix(), "jti": "user-token",
 				"token_use": use, "actor_type": "human",
 			}

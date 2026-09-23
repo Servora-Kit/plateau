@@ -38,6 +38,7 @@ import (
 	"github.com/google/uuid"
 	fgaclient "github.com/openfga/go-sdk/client"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -125,10 +126,10 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	authentication, err := biz.NewAuthenticationUsecase(users, passwords, sessions)
 	check(t, err)
-	manager, closeSession, err := data.NewHTTPSessionManager(&sessionpb.Session{Lifetime: durationpb.New(24 * time.Hour), IdleTimeout: durationpb.New(time.Hour), Cookie: &sessionpb.Cookie{Name: "__Host-iam_session"}}, db, client)
+	manager, closeSession, err := data.NewHTTPSessionManager(&sessionpb.Session{Lifetime: durationpb.New(24 * time.Hour), IdleTimeout: durationpb.New(time.Hour), Cookie: &sessionpb.Cookie{Name: proto.String("__Host-iam_session")}}, db, client)
 	check(t, err)
 	t.Cleanup(closeSession)
-	captcha, err := cap.New(&cappb.CAP{SigningSecret: "test-cap-signing-secret-at-least-32-bytes", RedisKeyPrefix: schema + ":"}, rdb)
+	captcha, err := cap.New(&cappb.CAP{SigningSecret: proto.String("test-cap-signing-secret-at-least-32-bytes"), RedisKeyPrefix: proto.String(schema + ":")}, rdb)
 	check(t, err)
 	runtime := &bootstrap.Runtime{Bootstrap: &corepb.Bootstrap{App: &corepb.App{ExternalUrl: "http://localhost:10002"}}}
 	mailer := &testMailer{}
@@ -191,7 +192,7 @@ func newProtocolConfig(t *testing.T, issuer string) *oidcpb.OIDC {
 	_, err = rand.Read(value)
 	check(t, err)
 	check(t, os.WriteFile(crypto, value, 0600))
-	return &oidcpb.OIDC{Issuer: issuer, SigningKeyPath: signing, CryptoKeyPath: crypto, Clients: []*oidcpb.OAuthClient{{ClientId: "admin", ClientSecret: serviceSecret, AllowedGrantTypes: []string{"client_credentials"}, Audiences: []string{"iam"}}}}
+	return &oidcpb.OIDC{Issuer: proto.String(issuer), SigningKeyPath: proto.String(signing), CryptoKeyPath: proto.String(crypto), Clients: []*oidcpb.OAuthClient{{ClientId: proto.String("admin"), ClientSecret: proto.String(serviceSecret), AllowedGrantTypes: []string{"client_credentials"}, Audiences: []string{"iam"}}}}
 }
 
 type testMailer struct{ verification, reset []string }

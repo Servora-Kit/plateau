@@ -2,17 +2,18 @@ syntax = "proto3";
 
 package iam.conf.v1;
 
+import "buf/validate/validate.proto";
 import "servora/conf/v1/annotations.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1;iamconfv1";
 
 // IAM contains service-owned identity lifecycle configuration.
 message IAM {
-  option (servora.conf.v1.section) = {
-    key: "iam"
-    optional: false
-  };
+  option (servora.conf.v1.section) = true;
 
   // Bootstrap creates this single platform administrator idempotently.
-  string bootstrap_user_email = 1 [(servora.conf.v1.field) = {required: true}];
+  optional string bootstrap_user_email = 1 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1
+  ];
 }

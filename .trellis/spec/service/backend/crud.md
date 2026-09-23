@@ -2,7 +2,7 @@
 
 适用于使用生成 CRUD descriptor 的业务服务。公共框架内部契约归 [Servora CRUD 框架规范](../../servora/framework/crud.md)，其源码证据见 [core/crud](../../../../../servora/core/crud/)；这里记录 Plateau 消费方式。Example 的 [UserService](../../../../app/example/service/internal/service/user.go)、[UserUsecase](../../../../app/example/service/internal/biz/user.go)、[userRepo](../../../../app/example/service/internal/data/user.go) 是完整、可追溯的参考。
 
-资源 descriptor 的启用条件、多 pattern 资源名判别、`field_behavior`/presence、REQUIRED/IMMUTABLE、FieldMask 生命周期、标准 CRUD error reason、filter/order/page token/wildcard/cursor 契约由 [Servora CRUD 框架规范](../../servora/framework/crud.md) 权威定义。业务服务按这些已验证契约消费 `ResourcePlan`/`ListPreparer`，不在本正文复制框架内部规则，也不把 Example 的 tenant、etag、软删除和密码选择推广为通用要求。
+资源 descriptor 的启用条件、多 pattern 资源名判别、`field_behavior`/字段设置状态、REQUIRED/IMMUTABLE、FieldMask 生命周期、标准 CRUD error reason、filter/order/page token/wildcard/cursor 契约由 [Servora CRUD 框架规范](../../servora/framework/crud.md) 权威定义。业务服务按这些已验证契约消费 `ResourcePlan`/`ListPreparer`，不在本正文复制框架内部规则，也不把 Example 的 tenant、etag、软删除和密码选择推广为通用要求。
 
 ## 一次构造，逐请求使用
 

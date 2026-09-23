@@ -56,10 +56,6 @@ func (m *CAP) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for SigningSecret
-
-	// no validation rules for RedisKeyPrefix
-
 	if all {
 		switch v := interface{}(m.GetChallengeTtl()).(type) {
 		case interface{ ValidateAll() error }:
@@ -118,13 +114,27 @@ func (m *CAP) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for ChallengeCount
-
-	// no validation rules for ChallengeSize
-
-	// no validation rules for ChallengeDifficulty
-
 	// no validation rules for DefaultScope
+
+	if m.SigningSecret != nil {
+		// no validation rules for SigningSecret
+	}
+
+	if m.RedisKeyPrefix != nil {
+		// no validation rules for RedisKeyPrefix
+	}
+
+	if m.ChallengeCount != nil {
+		// no validation rules for ChallengeCount
+	}
+
+	if m.ChallengeSize != nil {
+		// no validation rules for ChallengeSize
+	}
+
+	if m.ChallengeDifficulty != nil {
+		// no validation rules for ChallengeDifficulty
+	}
 
 	if len(errors) > 0 {
 		return CAPMultiError(errors)

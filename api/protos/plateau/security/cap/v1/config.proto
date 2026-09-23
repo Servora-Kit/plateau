@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package plateau.security.cap.v1;
 
+import "buf/validate/validate.proto";
 import "google/protobuf/duration.proto";
 import "servora/conf/v1/annotations.proto";
 import "servora/redact/v3/redact.proto";
@@ -10,22 +11,20 @@ option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/
 
 // CAP configures the embedded proof-of-work challenge issuer and verifier.
 message CAP {
-  option (servora.conf.v1.section) = {
-    key: "cap"
-    optional: false
-  };
+  option (servora.conf.v1.section) = true;
 
   // Stable high-entropy HS256 key shared by every instance.
-  string signing_secret = 1 [
+  optional string signing_secret = 1 [
     (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1,
     (servora.redact.v3.value).string = ""
   ];
-  string redis_key_prefix = 2 [(servora.conf.v1.field) = {default: "cap:v2:"}];
+  optional string redis_key_prefix = 2 [(servora.conf.v1.field) = {default: "cap:v2:"}];
   google.protobuf.Duration challenge_ttl = 3 [(servora.conf.v1.field) = {default: "10m"}];
   google.protobuf.Duration token_ttl = 4 [(servora.conf.v1.field) = {default: "20m"}];
-  int32 challenge_count = 5 [(servora.conf.v1.field) = {default: "50"}];
-  int32 challenge_size = 6 [(servora.conf.v1.field) = {default: "32"}];
-  int32 challenge_difficulty = 7 [(servora.conf.v1.field) = {default: "4"}];
+  optional int32 challenge_count = 5 [(servora.conf.v1.field) = {default: "50"}];
+  optional int32 challenge_size = 6 [(servora.conf.v1.field) = {default: "32"}];
+  optional int32 challenge_difficulty = 7 [(servora.conf.v1.field) = {default: "4"}];
   // Optional fixed scope controlled by the server mounting the CAP handler.
   string default_scope = 8;
 }

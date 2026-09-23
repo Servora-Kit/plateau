@@ -10,7 +10,7 @@
 | nil, err | 配置存在但校验／连接／Ping 失败，消费方明确失败启动或降级 |
 | conn, nil | 已连接，消费方负责 Close |
 
-函数克隆 Proto 配置后 ApplyConf，映射连接池与超时；compression 仅支持空/none、lz4、zstd。TLS 使用 Servora TLS 能力构造。Ping 使用 dial timeout 派生的 context；Ping 失败主动关闭连接，成功后的生命周期交给 data/bootstrap。
+函数克隆 Proto 配置后 Apply，映射连接池与超时；compression 仅支持空/none、lz4、zstd。TLS 使用 Servora TLS 能力构造。Ping 使用 dial timeout 派生的 context；Ping 失败主动关闭连接，成功后的生命周期交给 data/bootstrap。
 
 不能把“未配置”和“配置失败”写成同一个 nil 分支；不能在 helper 与业务层重复记录相同日志。日志由消费方边界决定。
 

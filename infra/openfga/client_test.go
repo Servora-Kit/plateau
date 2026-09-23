@@ -25,10 +25,10 @@ func TestNewValidation(t *testing.T) {
 		cfg  *openfgaconfpb.OpenFGA
 	}{
 		{name: "nil"},
-		{name: "missing api url", cfg: &openfgaconfpb.OpenFGA{StoreId: testStoreID}},
-		{name: "missing store", cfg: &openfgaconfpb.OpenFGA{ApiUrl: "http://127.0.0.1"}},
-		{name: "token over HTTP", cfg: &openfgaconfpb.OpenFGA{ApiUrl: "http://openfga.example", StoreId: testStoreID, ApiToken: "secret-token"}},
-		{name: "token without hostname", cfg: &openfgaconfpb.OpenFGA{ApiUrl: "https://:443", StoreId: testStoreID, ApiToken: "secret-token"}},
+		{name: "missing api url", cfg: &openfgaconfpb.OpenFGA{StoreId: proto.String(testStoreID)}},
+		{name: "missing store", cfg: &openfgaconfpb.OpenFGA{ApiUrl: proto.String("http://127.0.0.1")}},
+		{name: "token over HTTP", cfg: &openfgaconfpb.OpenFGA{ApiUrl: proto.String("http://openfga.example"), StoreId: proto.String(testStoreID), ApiToken: "secret-token"}},
+		{name: "token without hostname", cfg: &openfgaconfpb.OpenFGA{ApiUrl: proto.String("https://:443"), StoreId: proto.String(testStoreID), ApiToken: "secret-token"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestNewMapsConfigWithoutMutationOrConstructorNetwork(t *testing.T) {
 	http.DefaultClient = server.Client()
 	defer func() { http.DefaultClient = previousDefault }()
 
-	config := &openfgaconfpb.OpenFGA{ApiUrl: server.URL, StoreId: testStoreID, ModelId: testModelID, ApiToken: "secret-token"}
+	config := &openfgaconfpb.OpenFGA{ApiUrl: proto.String(server.URL), StoreId: proto.String(testStoreID), ModelId: testModelID, ApiToken: "secret-token"}
 	before := proto.Clone(config)
 	client, err := New(config)
 	if err != nil {
@@ -89,7 +89,7 @@ func TestNewDisablesRedirectsWhenTokenConfigured(t *testing.T) {
 	http.DefaultClient = secure.Client()
 	defer func() { http.DefaultClient = previousDefault }()
 
-	client, err := New(&openfgaconfpb.OpenFGA{ApiUrl: secure.URL, StoreId: testStoreID, ApiToken: "secret-token"})
+	client, err := New(&openfgaconfpb.OpenFGA{ApiUrl: proto.String(secure.URL), StoreId: proto.String(testStoreID), ApiToken: "secret-token"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestNewDisablesRedirectsWhenTokenConfigured(t *testing.T) {
 func TestNewLeavesEmptyModelUnset(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { t.Fatal("constructor performed network request") }))
 	defer server.Close()
-	client, err := New(&openfgaconfpb.OpenFGA{ApiUrl: server.URL, StoreId: testStoreID})
+	client, err := New(&openfgaconfpb.OpenFGA{ApiUrl: proto.String(server.URL), StoreId: proto.String(testStoreID)})
 	if err != nil {
 		t.Fatal(err)
 	}

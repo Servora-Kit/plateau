@@ -18,7 +18,7 @@ func New(config *openfgaconfpb.OpenFGA) (*fgaclient.OpenFgaClient, error) {
 	if config == nil {
 		return nil, fmt.Errorf("openfga: config is nil")
 	}
-	if err := config.ApplyConf(); err != nil {
+	if err := config.Apply(); err != nil {
 		return nil, fmt.Errorf("openfga: config: %w", err)
 	}
 

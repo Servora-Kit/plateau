@@ -3,8 +3,40 @@
 
 package jwtv1
 
-// SectionKey returns the configuration section key declared on JwtAuthnConfig.
-func (*JwtAuthnConfig) SectionKey() string { return "jwt" }
+import (
+	fmt "fmt"
+	v1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1"
+)
 
-// SectionOptional reports whether the section may be absent from the config source.
-func (*JwtAuthnConfig) SectionOptional() bool { return true }
+// Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
+func (m *JwtAuthnConfig) Apply() error {
+	if m == nil {
+		return nil
+	}
+	for i, v := range m.VerificationKeys {
+		if v == nil {
+			return fmt.Errorf("%s[%d]: nil message", "verification_keys", i)
+		}
+		if err := _servoraConfCheckNil_af0075de3fac1b4a(v); err != nil {
+			return fmt.Errorf("%s[%d]: %w", "verification_keys", i, err)
+		}
+	}
+	return nil
+}
+
+func _servoraConfCheckNil_af0075de3fac1b4a(v *v1.VerificationKey) error {
+	if v == nil {
+		return nil
+	}
+	if selected, ok := v.Source.(*v1.VerificationKey_PublicKeyPem); ok {
+		if selected == nil {
+			return fmt.Errorf("%s: nil oneof branch", "public_key_pem")
+		}
+	}
+	if selected, ok := v.Source.(*v1.VerificationKey_PublicKeyPath); ok {
+		if selected == nil {
+			return fmt.Errorf("%s: nil oneof branch", "public_key_path")
+		}
+	}
+	return nil
+}

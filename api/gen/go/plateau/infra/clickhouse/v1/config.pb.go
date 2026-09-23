@@ -7,6 +7,7 @@
 package clickhousepb
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	v1 "github.com/Servora-Kit/servora/api/gen/go/servora/security/tls/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -32,11 +33,11 @@ type ClickHouse struct {
 	Password        string                 `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
 	DialTimeout     *durationpb.Duration   `protobuf:"bytes,5,opt,name=dial_timeout,json=dialTimeout,proto3" json:"dial_timeout,omitempty"`
 	ReadTimeout     *durationpb.Duration   `protobuf:"bytes,6,opt,name=read_timeout,json=readTimeout,proto3" json:"read_timeout,omitempty"`
-	MaxOpenConns    int32                  `protobuf:"varint,7,opt,name=max_open_conns,json=maxOpenConns,proto3" json:"max_open_conns,omitempty"`
-	MaxIdleConns    int32                  `protobuf:"varint,8,opt,name=max_idle_conns,json=maxIdleConns,proto3" json:"max_idle_conns,omitempty"`
+	MaxOpenConns    *int32                 `protobuf:"varint,7,opt,name=max_open_conns,json=maxOpenConns,proto3,oneof" json:"max_open_conns,omitempty"`
+	MaxIdleConns    *int32                 `protobuf:"varint,8,opt,name=max_idle_conns,json=maxIdleConns,proto3,oneof" json:"max_idle_conns,omitempty"`
 	ConnMaxLifetime *durationpb.Duration   `protobuf:"bytes,9,opt,name=conn_max_lifetime,json=connMaxLifetime,proto3" json:"conn_max_lifetime,omitempty"`
 	Tls             *v1.TLS                `protobuf:"bytes,10,opt,name=tls,proto3" json:"tls,omitempty"`
-	Compression     string                 `protobuf:"bytes,11,opt,name=compression,proto3" json:"compression,omitempty"`
+	Compression     *string                `protobuf:"bytes,11,opt,name=compression,proto3,oneof" json:"compression,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -114,15 +115,15 @@ func (x *ClickHouse) GetReadTimeout() *durationpb.Duration {
 }
 
 func (x *ClickHouse) GetMaxOpenConns() int32 {
-	if x != nil {
-		return x.MaxOpenConns
+	if x != nil && x.MaxOpenConns != nil {
+		return *x.MaxOpenConns
 	}
 	return 0
 }
 
 func (x *ClickHouse) GetMaxIdleConns() int32 {
-	if x != nil {
-		return x.MaxIdleConns
+	if x != nil && x.MaxIdleConns != nil {
+		return *x.MaxIdleConns
 	}
 	return 0
 }
@@ -142,8 +143,8 @@ func (x *ClickHouse) GetTls() *v1.TLS {
 }
 
 func (x *ClickHouse) GetCompression() string {
-	if x != nil {
-		return x.Compression
+	if x != nil && x.Compression != nil {
+		return *x.Compression
 	}
 	return ""
 }
@@ -152,30 +153,31 @@ var File_plateau_infra_clickhouse_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_infra_clickhouse_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"(plateau/infra/clickhouse/v1/config.proto\x12\x1bplateau.infra.clickhouse.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a$servora/security/tls/v1/config.proto\"\xb2\x04\n" +
+	"(plateau/infra/clickhouse/v1/config.proto\x12\x1bplateau.infra.clickhouse.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a$servora/security/tls/v1/config.proto\"\xeb\x04\n" +
 	"\n" +
-	"ClickHouse\x12\x1c\n" +
-	"\x05addrs\x18\x01 \x03(\tB\x06\x8a\xce\x18\x02\x10\x01R\x05addrs\x12\x1a\n" +
+	"ClickHouse\x12\x1e\n" +
+	"\x05addrs\x18\x01 \x03(\tB\b\xbaH\x05\x92\x01\x02\b\x01R\x05addrs\x12\x1a\n" +
 	"\bdatabase\x18\x02 \x01(\tR\bdatabase\x12\x1a\n" +
 	"\busername\x18\x03 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x04 \x01(\tR\bpassword\x12G\n" +
 	"\fdial_timeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
 	"\x0310sR\vdialTimeout\x12G\n" +
 	"\fread_timeout\x18\x06 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
-	"\x0330sR\vreadTimeout\x12.\n" +
+	"\x0330sR\vreadTimeout\x123\n" +
 	"\x0emax_open_conns\x18\a \x01(\x05B\b\x8a\xce\x18\x04\n" +
-	"\x0210R\fmaxOpenConns\x12-\n" +
+	"\x0210H\x00R\fmaxOpenConns\x88\x01\x01\x122\n" +
 	"\x0emax_idle_conns\x18\b \x01(\x05B\a\x8a\xce\x18\x03\n" +
-	"\x015R\fmaxIdleConns\x12O\n" +
+	"\x015H\x01R\fmaxIdleConns\x88\x01\x01\x12O\n" +
 	"\x11conn_max_lifetime\x18\t \x01(\v2\x19.google.protobuf.DurationB\b\x8a\xce\x18\x04\n" +
 	"\x025mR\x0fconnMaxLifetime\x12.\n" +
 	"\x03tls\x18\n" +
-	" \x01(\v2\x1c.servora.security.tls.v1.TLSR\x03tls\x12,\n" +
+	" \x01(\v2\x1c.servora.security.tls.v1.TLSR\x03tls\x121\n" +
 	"\vcompression\x18\v \x01(\tB\n" +
 	"\x8a\xce\x18\x06\n" +
-	"\x04noneR\vcompression:\x12\x82\xce\x18\x0e\n" +
-	"\n" +
-	"clickhouse\x10\x01BTZRgithub.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1;clickhousepbb\x06proto3"
+	"\x04noneH\x02R\vcompression\x88\x01\x01:\x04\x80\xce\x18\x01B\x11\n" +
+	"\x0f_max_open_connsB\x11\n" +
+	"\x0f_max_idle_connsB\x0e\n" +
+	"\f_compressionBTZRgithub.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1;clickhousepbb\x06proto3"
 
 var (
 	file_plateau_infra_clickhouse_v1_config_proto_rawDescOnce sync.Once
@@ -212,6 +214,7 @@ func file_plateau_infra_clickhouse_v1_config_proto_init() {
 	if File_plateau_infra_clickhouse_v1_config_proto != nil {
 		return
 	}
+	file_plateau_infra_clickhouse_v1_config_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

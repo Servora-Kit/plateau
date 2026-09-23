@@ -9,6 +9,7 @@ import (
 	ch "github.com/ClickHouse/clickhouse-go/v2"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	tlspb "github.com/Servora-Kit/servora/api/gen/go/servora/security/tls/v1"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -32,8 +33,8 @@ func TestNewConnOptionalAbsent(t *testing.T) {
 
 func TestClickHouseProtoDefaults(t *testing.T) {
 	cfg := &clickhousepb.ClickHouse{Addrs: []string{"127.0.0.1:9000"}}
-	if err := cfg.ApplyConf(); err != nil {
-		t.Fatalf("ApplyConf() error = %v", err)
+	if err := cfg.Apply(); err != nil {
+		t.Fatalf("Apply() error = %v", err)
 	}
 	if got := cfg.GetDialTimeout().AsDuration(); got != 10*time.Second {
 		t.Fatalf("DialTimeout = %s, want 10s", got)
@@ -99,7 +100,7 @@ func TestNewConnOptionalRejectsInvalidTLS(t *testing.T) {
 func TestNewConnOptionalDoesNotMutateConfigOnCompressionError(t *testing.T) {
 	cfg := &clickhousepb.ClickHouse{
 		Addrs:       []string{"127.0.0.1:9000"},
-		Compression: "brotli",
+		Compression: proto.String("brotli"),
 	}
 
 	_, err := NewConnOptional(context.Background(), cfg)

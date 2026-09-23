@@ -241,13 +241,15 @@ func (m *Cookie) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Name
-
-	// no validation rules for Path
-
 	// no validation rules for Domain
 
-	// no validation rules for SameSite
+	if m.Name != nil {
+		// no validation rules for Name
+	}
+
+	if m.Path != nil {
+		// no validation rules for Path
+	}
 
 	if m.Secure != nil {
 		// no validation rules for Secure
@@ -255,6 +257,10 @@ func (m *Cookie) validate(all bool) error {
 
 	if m.HttpOnly != nil {
 		// no validation rules for HttpOnly
+	}
+
+	if m.SameSite != nil {
+		// no validation rules for SameSite
 	}
 
 	if m.Persist != nil {

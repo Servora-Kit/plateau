@@ -85,7 +85,7 @@ connection, err := grpc.NewClient(target,
 接收方通常只需：
 
 ```yaml
-jwt:
+jwt_authn_config:
   issuer: https://iam.example.com
   audience: iam
 ```

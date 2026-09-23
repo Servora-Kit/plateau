@@ -274,7 +274,7 @@ components:
                     description: tenant_plan 是创建后不可修改的租户套餐快照。
                 nickname:
                     type: string
-                    description: nickname 保留 presence；显式 Clear 写入 NULL。
+                    description: nickname 区分未设置与空字符串；显式清除时写入 NULL。
                 temporaryPassword:
                     writeOnly: true
                     type: string

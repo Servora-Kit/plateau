@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	mailpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 type fakeSender struct {
@@ -68,6 +69,9 @@ func TestMailConfigurationIsRequired(t *testing.T) {
 	if _, err := NewSender(nil); err == nil {
 		t.Fatal("NewSender(nil) error = nil")
 	}
+	if _, err := NewSender(&mailpb.Mail{}); err == nil {
+		t.Fatal("缺失 SMTP 配置未被拒绝")
+	}
 	if _, err := NewFrom(nil); err == nil {
 		t.Fatal("NewFrom(nil) error = nil")
 	}
@@ -77,6 +81,12 @@ func TestMailConfigurationIsRequired(t *testing.T) {
 	}
 	if _, err := NewSender(config); err != nil {
 		t.Fatalf("NewSender(valid) error = %v", err)
+	}
+	if config.GetSmtp().GetPort() != 587 {
+		t.Fatalf("SMTP 默认端口 = %d，期望 587", config.GetSmtp().GetPort())
+	}
+	if _, err := NewSender(&mailpb.Mail{Smtp: &mailpb.SMTP{Host: "localhost", Port: proto.Int32(0)}}); err == nil {
+		t.Fatal("显式 SMTP 端口 0 未被拒绝")
 	}
 	if from, err := NewFrom(config); err != nil || from.Address != "no-reply@plateau.local" {
 		t.Fatalf("NewFrom(valid) = %#v, %v", from, err)

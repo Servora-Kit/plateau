@@ -121,10 +121,6 @@ func (m *ClickHouse) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for MaxOpenConns
-
-	// no validation rules for MaxIdleConns
-
 	if all {
 		switch v := interface{}(m.GetConnMaxLifetime()).(type) {
 		case interface{ ValidateAll() error }:
@@ -183,7 +179,17 @@ func (m *ClickHouse) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for Compression
+	if m.MaxOpenConns != nil {
+		// no validation rules for MaxOpenConns
+	}
+
+	if m.MaxIdleConns != nil {
+		// no validation rules for MaxIdleConns
+	}
+
+	if m.Compression != nil {
+		// no validation rules for Compression
+	}
 
 	if len(errors) > 0 {
 		return ClickHouseMultiError(errors)

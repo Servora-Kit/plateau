@@ -3,8 +3,44 @@
 
 package mailpb
 
-// SectionKey returns the configuration section key declared on Mail.
-func (*Mail) SectionKey() string { return "mail" }
+import (
+	fmt "fmt"
+)
 
-// SectionOptional reports whether the section may be absent from the config source.
-func (*Mail) SectionOptional() bool { return true }
+// Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
+func (m *Mail) Apply() error {
+	if m == nil {
+		return nil
+	}
+	if m.Smtp != nil {
+		if err := m.Smtp.Apply(); err != nil {
+			return fmt.Errorf("%s: %w", "smtp", err)
+		}
+	}
+	if m.From != nil {
+		if err := m.From.Apply(); err != nil {
+			return fmt.Errorf("%s: %w", "from", err)
+		}
+	}
+	return nil
+}
+
+// Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
+func (m *MailFrom) Apply() error {
+	if m == nil {
+		return nil
+	}
+	return nil
+}
+
+// Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
+func (m *SMTP) Apply() error {
+	if m == nil {
+		return nil
+	}
+	if m.Port == nil {
+		value := int32(587)
+		m.Port = &value
+	}
+	return nil
+}

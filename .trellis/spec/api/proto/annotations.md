@@ -20,7 +20,7 @@ PUBLIC 与 NONE 是不同维度：公开认证路由不自动关闭授权，NONE
 
 google.api 的 HTTP、resource、resource_reference、field_behavior 定义 API 形状；Servora errors、conf、crud、audit 定义各框架能力的附加合同。它们不共用 Plateau 的 optionmerge 语义，不能因名称相似就推断相同覆盖方式。
 
-例如 [OpenFGA config](../../../../api/protos/plateau/infra/openfga/v1/config.proto) 声明 section、required 字段；具体 ApplyConf 生成与调用由 [Servora Proto](../../servora/proto/index.md) 和消费方构造承担。字段注解只是输入，实际 CRUD 处理见 [contracts](contracts.md)。
+例如 [OpenFGA config](../../../../api/protos/plateau/infra/openfga/v1/config.proto) 声明 section、required 字段；具体 Apply 生成与调用由 [Servora Proto](../../servora/proto/index.md) 和消费方构造承担。字段注解只是输入，实际 CRUD 处理见 [contracts](contracts.md)。
 
 [Mail 配置](../../../../api/protos/plateau/infra/mail/v1/config.proto) 同样是平台共享 schema：`plateau.infra.mail.v1.Mail` 使用可选 `mail` section，保留 `smtp = 1`、`from = 2`；SMTP 包含 host/port/username/password/tls/skip_verify_ssl/send_timeout，发件人包含 address/name。它不拥有发送器或模板；当前发送、模板与主题文案由 [IAM internal/mail](../../../../app/iam/service/internal/mail/mail.go) 和 [SMTP sender](../../../../app/iam/service/internal/mail/smtp.go) 维护。共享 section 可选不等于具体 IAM 邮件功能的必需配置可缺失，消费方构造仍执行自身校验。
 

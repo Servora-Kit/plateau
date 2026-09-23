@@ -18,7 +18,7 @@
 - `REQUIRED` 读取 AuthN 写入的可信 Actor，使用静态 resource_id 或从 Proto 请求的 resource_id_field 解析裸 ID，再检查。
 - 缺 transport、缺规则、未知 mode 都失败；缺身份为 Unauthenticated，明确拒绝为 PermissionDenied，参数错误为 InvalidArgument，已分类依赖故障为 Unavailable。
 
-字段路径按 Proto 字段名遍历，不按 JSON 别名；中间节点必须是已存在的单值 message，不能走 repeated/map/真实 oneof；终点只接受支持的字符串或整数类型。optional 字段缺失与有效零值要按 presence 区分，不能直接字符串化任意字段。
+字段路径按 Proto 字段名遍历，不按 JSON 别名；中间节点必须是已存在的单值 message，不能走 repeated/map/真实 oneof；终点只接受支持的字符串或整数类型。optional 字段缺失与有效零值要按 字段设置状态 区分，不能直接字符串化任意字段。
 
 ## 应用职责
 

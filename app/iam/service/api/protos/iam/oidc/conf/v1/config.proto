@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package iam.oidc.conf.v1;
 
+import "buf/validate/validate.proto";
 import "google/protobuf/duration.proto";
 import "servora/conf/v1/annotations.proto";
 
@@ -9,17 +10,23 @@ option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1;
 
 // OIDC configures the Plateau IAM OpenID Provider.
 message OIDC {
-  option (servora.conf.v1.section) = {
-    key: "oidc"
-    optional: false
-  };
+  option (servora.conf.v1.section) = true;
 
   // The single public origin used as issuer, IAM Web origin and mail-link base.
-  string issuer = 1 [(servora.conf.v1.field) = {required: true}];
+  optional string issuer = 1 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1
+  ];
   // Stable RS256 private-key path; this key is distinct from TLS and crypto keys.
-  string signing_key_path = 2 [(servora.conf.v1.field) = {required: true}];
+  optional string signing_key_path = 2 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1
+  ];
   // Stable zitadel/oidc provider crypto-key path, distinct from signing and TLS keys.
-  string crypto_key_path = 3 [(servora.conf.v1.field) = {required: true}];
+  optional string crypto_key_path = 3 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1
+  ];
   // 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
   repeated OAuthClient clients = 4;
   google.protobuf.Duration service_access_token_ttl = 5 [(servora.conf.v1.field) = {default: "5m"}];
@@ -27,15 +34,21 @@ message OIDC {
 
 // OAuthClient 配置使用客户端 ID 和密钥认证的应用。
 message OAuthClient {
-  string client_id = 1 [(servora.conf.v1.field) = {required: true}];
+  optional string client_id = 1 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1
+  ];
   // Raw secret is configuration input only; IAM persists only its hash.
-  string client_secret = 2 [(servora.conf.v1.field) = {required: true}];
+  optional string client_secret = 2 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.min_len = 1
+  ];
   // Redirect URIs are compared exactly; wildcards are not supported.
   repeated string redirect_uris = 3;
   // 请求 scope 必须在允许集合中；用户流程还须符合提供方支持的用户 scope。
   repeated string allowed_scopes = 4;
   // 用户交互流程须为受信应用，当前未实现同意页面；机器流程不依赖此项。
   bool trusted = 5;
-  repeated string allowed_grant_types = 6 [(servora.conf.v1.field) = {required: true}];
+  repeated string allowed_grant_types = 6 [(buf.validate.field).repeated.min_items = 1];
   repeated string audiences = 7;
 }

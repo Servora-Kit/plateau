@@ -18,7 +18,13 @@ type smtpSender struct {
 
 // NewSender creates the required synchronous SMTP sender from shared Mail config.
 func NewSender(config *mailpb.Mail) (Sender, error) {
-	if config == nil || config.GetSmtp() == nil {
+	if config == nil {
+		return nil, fmt.Errorf("mail: SMTP configuration is required")
+	}
+	if err := config.Apply(); err != nil {
+		return nil, fmt.Errorf("mail: config: %w", err)
+	}
+	if config.GetSmtp() == nil {
 		return nil, fmt.Errorf("mail: SMTP configuration is required")
 	}
 	smtp := config.GetSmtp()
@@ -27,9 +33,6 @@ func NewSender(config *mailpb.Mail) (Sender, error) {
 		return nil, fmt.Errorf("mail: SMTP host is required")
 	}
 	port := int(smtp.GetPort())
-	if port == 0 {
-		port = 587
-	}
 	if port < 1 || port > 65535 {
 		return nil, fmt.Errorf("mail: SMTP port is invalid")
 	}

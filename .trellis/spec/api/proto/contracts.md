@@ -12,7 +12,7 @@
 
 - page_token 是不透明续页 token，不由前端拆解；filter/order_by 只承诺实现支持的确定性子集，不宣称完整查询语言。
 - Example 明示 skip、include_total 扩展；total_size 用 optional 表达未计算，不能把 absent 当零。show_deleted 控制是否包含 tombstone。
-- optional/presence、INPUT_ONLY、OUTPUT_ONLY、IMMUTABLE 与字段更新共同组成契约。update_mask 选择字段，省略与显式清除不可混淆。
+- 可选字段及其设置状态、INPUT_ONLY、OUTPUT_ONLY、IMMUTABLE 与字段更新共同组成契约。update_mask 选择字段，省略与显式清除不可混淆。
 - Example display_name 的空字符串与 nickname absent 的清除语义不同。etag、allow_missing、软删与恢复由业务显式执行，不由注解自动替业务保证。
 - 生成描述和字段常量、ResourcePlan、数据映射须保持同一语义；使用流程见 [service CRUD](../../service/backend/crud.md)，框架内部见 [framework CRUD](../../servora/framework/crud.md)。
 

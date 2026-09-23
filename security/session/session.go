@@ -18,7 +18,7 @@ func New(config *sessionpb.Session, store scs.Store) (*scs.SessionManager, error
 		return nil, fmt.Errorf("session: config and store are required")
 	}
 	c := proto.Clone(config).(*sessionpb.Session)
-	if err := c.ApplyConf(); err != nil {
+	if err := c.Apply(); err != nil {
 		return nil, fmt.Errorf("session: config: %w", err)
 	}
 	if err := c.GetLifetime().CheckValid(); err != nil || c.GetLifetime().AsDuration() <= 0 {

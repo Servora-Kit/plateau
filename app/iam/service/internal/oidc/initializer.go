@@ -26,6 +26,9 @@ func NewOIDCInitializer(config *oidcconfpb.OIDC, storage *OIDCStorage) (*OIDCIni
 	if config == nil || storage == nil {
 		return nil, fmt.Errorf("OIDC bootstrap dependencies are nil")
 	}
+	if err := config.Apply(); err != nil {
+		return nil, fmt.Errorf("OIDC initializer config: %w", err)
+	}
 	if _, _, err := normalizeIssuer(config.GetIssuer()); err != nil {
 		return nil, err
 	}

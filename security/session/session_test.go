@@ -16,7 +16,7 @@ import (
 )
 
 func config() *sessionpb.Session {
-	return &sessionpb.Session{Lifetime: durationpb.New(time.Hour), IdleTimeout: durationpb.New(10 * time.Minute), Cookie: &sessionpb.Cookie{Name: "__Host-test"}}
+	return &sessionpb.Session{Lifetime: durationpb.New(time.Hour), IdleTimeout: durationpb.New(10 * time.Minute), Cookie: &sessionpb.Cookie{Name: proto.String("__Host-test")}}
 }
 func newManager(t *testing.T) (*scs.SessionManager, *memstore.MemStore) {
 	t.Helper()
@@ -32,11 +32,11 @@ func TestConfigurationValidationAndIsolation(t *testing.T) {
 	for _, change := range []func(*sessionpb.Session){
 		func(c *sessionpb.Session) { c.Lifetime = durationpb.New(0) },
 		func(c *sessionpb.Session) { c.IdleTimeout = durationpb.New(-time.Second) },
-		func(c *sessionpb.Session) { c.Cookie.Name = "invalid name" },
+		func(c *sessionpb.Session) { c.Cookie.Name = proto.String("invalid name") },
 		func(c *sessionpb.Session) { c.Cookie.Domain = "example.test" },
-		func(c *sessionpb.Session) { c.Cookie.Path = "/account" },
+		func(c *sessionpb.Session) { c.Cookie.Path = proto.String("/account") },
 		func(c *sessionpb.Session) { c.Cookie.Secure = proto.Bool(false) },
-		func(c *sessionpb.Session) { c.Cookie.SameSite = "invalid" },
+		func(c *sessionpb.Session) { c.Cookie.SameSite = proto.String("invalid") },
 	} {
 		c := config()
 		change(c)

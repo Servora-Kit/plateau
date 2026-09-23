@@ -50,6 +50,9 @@ func NewIAMProvider(
 	if config == nil || storage == nil || sessions == nil || manager == nil {
 		return nil, fmt.Errorf("OIDC provider dependencies are nil")
 	}
+	if err := config.Apply(); err != nil {
+		return nil, fmt.Errorf("OIDC provider config: %w", err)
+	}
 	issuer, insecure, err := normalizeIssuer(config.GetIssuer())
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-audit:
+audit_contract:
   enabled: true
   emitter_type: noop
   topic: servora.audit.events

@@ -6,6 +6,7 @@ import (
 
 	iampb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/security/session"
 	"github.com/Servora-Kit/servora/core/bootstrap"
@@ -27,8 +28,8 @@ func TestDevelopmentConfigScan(t *testing.T) {
 				t.Fatal(err)
 			}
 			t.Cleanup(func() { _ = loaded.Close() })
-			iam, oidc, httpSession := new(iampb.IAM), new(oidcpb.OIDC), new(sessionpb.Session)
-			if err := bootstrap.Scan(&bootstrap.Runtime{Bootstrap: bc, Config: loaded}, iam, oidc, httpSession); err != nil {
+			iam, oidc, httpSession, openFGA := new(iampb.IAM), new(oidcpb.OIDC), new(sessionpb.Session), new(openfgapb.OpenFGA)
+			if err := bootstrap.Scan(&bootstrap.Runtime{Bootstrap: bc, Config: loaded}, iam, oidc, httpSession, openFGA); err != nil {
 				t.Fatal(err)
 			}
 			store := memstore.NewWithCleanupInterval(0)
@@ -42,8 +43,8 @@ func TestDevelopmentConfigScan(t *testing.T) {
 			if oidc.GetServiceAccessTokenTtl().AsDuration() != 5*time.Minute || iam.GetBootstrapUserEmail() != "seed@example.com" || oidc.GetIssuer() != bc.GetApp().GetExternalUrl() {
 				t.Fatal("IAM configuration/defaults disagree")
 			}
-			if len(oidc.Clients) != 2 || oidc.Clients[1].GetClientId() != "admin" || oidc.Clients[1].GetAudiences()[0] != "iam" {
-				t.Fatal("service configuration did not load")
+			if openFGA.GetStoreId() != "01M2AY5F5K50N3M0Z9B911E84B" || openFGA.GetApiUrl() == "" {
+				t.Fatal("OpenFGA 配置段未加载")
 			}
 		})
 	}

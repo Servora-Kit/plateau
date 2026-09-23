@@ -96,13 +96,12 @@ var File_plateau_security_authn_jwt_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_security_authn_jwt_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"*plateau/security/authn/jwt/v1/config.proto\x12\x1dplateau.security.authn.jwt.v1\x1a$plateau/security/jwt/v1/config.proto\x1a!servora/conf/v1/annotations.proto\"\xdb\x01\n" +
+	"*plateau/security/authn/jwt/v1/config.proto\x12\x1dplateau.security.authn.jwt.v1\x1a$plateau/security/jwt/v1/config.proto\x1a!servora/conf/v1/annotations.proto\"\xd4\x01\n" +
 	"\x0eJwtAuthnConfig\x12\x16\n" +
 	"\x06issuer\x18\x01 \x01(\tR\x06issuer\x12\x1a\n" +
 	"\baudience\x18\x02 \x01(\tR\baudience\x12U\n" +
 	"\x11verification_keys\x18\x03 \x03(\v2(.plateau.security.jwt.v1.VerificationKeyR\x10verificationKeys\x121\n" +
-	"\x04jwks\x18\x04 \x01(\v2\x1d.plateau.security.jwt.v1.JWKSR\x04jwks:\v\x82\xce\x18\a\n" +
-	"\x03jwt\x10\x01BOZMgithub.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1;jwtv1b\x06proto3"
+	"\x04jwks\x18\x04 \x01(\v2\x1d.plateau.security.jwt.v1.JWKSR\x04jwks:\x04\x80\xce\x18\x01BOZMgithub.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1;jwtv1b\x06proto3"
 
 var (
 	file_plateau_security_authn_jwt_v1_config_proto_rawDescOnce sync.Once

@@ -21,7 +21,7 @@ import (
 func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 	fixture := newProviderFixture(t)
 	const secret = "service-secret-with-at-least-32-bytes"
-	machine := &oidcpb.OAuthClient{ClientId: "admin", ClientSecret: secret,
+	machine := &oidcpb.OAuthClient{ClientId: proto.String("admin"), ClientSecret: proto.String(secret),
 		AllowedGrantTypes: []string{"client_credentials"}, Audiences: []string{"iam", "service-b"}}
 	fixture.config.Clients = append(fixture.config.Clients, machine)
 	if err := fixture.bootstrap.Initialize(t.Context()); err != nil {
@@ -104,19 +104,19 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 			t.Fatal("caller expanded token audience")
 		}
 	}
-	machine.ClientSecret = "rotated-service-secret-with-at-least-32-bytes"
+	machine.ClientSecret = proto.String("rotated-service-secret-with-at-least-32-bytes")
 	if err := fixture.bootstrap.Initialize(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 	assertOAuthError(t, requestToken("admin", secret, url.Values{"grant_type": {"client_credentials"}}), http.StatusUnauthorized, "invalid_client")
-	if got := requestToken("admin", machine.ClientSecret, url.Values{"grant_type": {"client_credentials"}}); got.Code != 200 {
+	if got := requestToken("admin", machine.GetClientSecret(), url.Values{"grant_type": {"client_credentials"}}); got.Code != 200 {
 		t.Fatalf("rotated secret rejected: %s", got.Body.String())
 	}
 	fixture.config.Clients = fixture.config.Clients[:1]
 	if err := fixture.bootstrap.Initialize(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	assertOAuthError(t, requestToken("admin", machine.ClientSecret, url.Values{"grant_type": {"client_credentials"}}), http.StatusUnauthorized, "invalid_client")
+	assertOAuthError(t, requestToken("admin", machine.GetClientSecret(), url.Values{"grant_type": {"client_credentials"}}), http.StatusUnauthorized, "invalid_client")
 	if _, err := authnjwt.Authenticate(t.Context(), authenticator, "Bearer "+payload.AccessToken, iamauthn.NewServiceClaims, iamauthn.ServiceActor); err != nil {
 		t.Fatalf("disabled client prematurely invalidated issued token: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 }
 
 func TestServiceConfigValidation(t *testing.T) {
-	valid := &oidcpb.OAuthClient{ClientId: "service-a", ClientSecret: "service-secret-with-at-least-32-bytes", AllowedGrantTypes: []string{"client_credentials"}, Audiences: []string{"iam"}}
+	valid := &oidcpb.OAuthClient{ClientId: proto.String("service-a"), ClientSecret: proto.String("service-secret-with-at-least-32-bytes"), AllowedGrantTypes: []string{"client_credentials"}, Audiences: []string{"iam"}}
 	if _, _, _, err := validateConfiguredClient(valid, map[string]struct{}{}); err != nil {
 		t.Fatal(err)
 	}

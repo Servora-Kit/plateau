@@ -7,6 +7,7 @@
 package iamconfv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -26,7 +27,7 @@ const (
 type IAM struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Bootstrap creates this single platform administrator idempotently.
-	BootstrapUserEmail string `protobuf:"bytes,1,opt,name=bootstrap_user_email,json=bootstrapUserEmail,proto3" json:"bootstrap_user_email,omitempty"`
+	BootstrapUserEmail *string `protobuf:"bytes,1,opt,name=bootstrap_user_email,json=bootstrapUserEmail,proto3,oneof" json:"bootstrap_user_email,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -62,8 +63,8 @@ func (*IAM) Descriptor() ([]byte, []int) {
 }
 
 func (x *IAM) GetBootstrapUserEmail() string {
-	if x != nil {
-		return x.BootstrapUserEmail
+	if x != nil && x.BootstrapUserEmail != nil {
+		return *x.BootstrapUserEmail
 	}
 	return ""
 }
@@ -72,10 +73,10 @@ var File_iam_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_iam_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\x18iam/conf/v1/config.proto\x12\viam.conf.v1\x1a!servora/conf/v1/annotations.proto\"J\n" +
-	"\x03IAM\x128\n" +
-	"\x14bootstrap_user_email\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x12bootstrapUserEmail:\t\x82\xce\x18\x05\n" +
-	"\x03iamBAZ?github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1;iamconfv1b\x06proto3"
+	"\x18iam/conf/v1/config.proto\x12\viam.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a!servora/conf/v1/annotations.proto\"j\n" +
+	"\x03IAM\x12D\n" +
+	"\x14bootstrap_user_email\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x12bootstrapUserEmail\x88\x01\x01:\x04\x80\xce\x18\x01B\x17\n" +
+	"\x15_bootstrap_user_emailBAZ?github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1;iamconfv1b\x06proto3"
 
 var (
 	file_iam_conf_v1_config_proto_rawDescOnce sync.Once
@@ -106,6 +107,7 @@ func file_iam_conf_v1_config_proto_init() {
 	if File_iam_conf_v1_config_proto != nil {
 		return
 	}
+	file_iam_conf_v1_config_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

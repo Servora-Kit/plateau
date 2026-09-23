@@ -4,14 +4,16 @@
 package capv1
 
 import (
+	validate "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	conf "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	redactv3 "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
 	proto "google.golang.org/protobuf/proto"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 )
 
+var _ validate.Rule
 var _ durationpb.Duration
-var _ conf.SectionRule
+var _ conf.FieldRule
 var _ redactv3.FieldRules
 
 // Redact returns a redacted representation without mutating x.
@@ -29,5 +31,6 @@ func (x *CAP) RedactFields() {
 	if x == nil {
 		return
 	}
-	x.SigningSecret = ``
+	value := ``
+	x.SigningSecret = &value
 }

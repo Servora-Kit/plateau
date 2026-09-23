@@ -3,8 +3,10 @@
 
 package auditconfv1
 
-// SectionKey returns the configuration section key declared on AuditConsumerConfig.
-func (*AuditConsumerConfig) SectionKey() string { return "audit_consumer" }
-
-// SectionOptional reports whether the section may be absent from the config source.
-func (*AuditConsumerConfig) SectionOptional() bool { return true }
+// Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
+func (m *AuditConsumerConfig) Apply() error {
+	if m == nil {
+		return nil
+	}
+	return nil
+}

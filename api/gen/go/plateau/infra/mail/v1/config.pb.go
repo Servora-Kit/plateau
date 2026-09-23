@@ -78,7 +78,7 @@ func (x *Mail) GetFrom() *MailFrom {
 type SMTP struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Host          string                 `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	Port          int32                  `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	Port          *int32                 `protobuf:"varint,2,opt,name=port,proto3,oneof" json:"port,omitempty"`
 	Username      string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
 	Password      string                 `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
 	Tls           bool                   `protobuf:"varint,5,opt,name=tls,proto3" json:"tls,omitempty"`
@@ -126,8 +126,8 @@ func (x *SMTP) GetHost() string {
 }
 
 func (x *SMTP) GetPort() int32 {
-	if x != nil {
-		return x.Port
+	if x != nil && x.Port != nil {
+		return *x.Port
 	}
 	return 0
 }
@@ -223,19 +223,20 @@ var File_plateau_infra_mail_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_infra_mail_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"\"plateau/infra/mail/v1/config.proto\x12\x15plateau.infra.mail.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"z\n" +
+	"\"plateau/infra/mail/v1/config.proto\x12\x15plateau.infra.mail.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"r\n" +
 	"\x04Mail\x12/\n" +
 	"\x04smtp\x18\x01 \x01(\v2\x1b.plateau.infra.mail.v1.SMTPR\x04smtp\x123\n" +
-	"\x04from\x18\x02 \x01(\v2\x1f.plateau.infra.mail.v1.MailFromR\x04from:\f\x82\xce\x18\b\n" +
-	"\x04mail\x10\x01\"\xde\x01\n" +
+	"\x04from\x18\x02 \x01(\v2\x1f.plateau.infra.mail.v1.MailFromR\x04from:\x04\x80\xce\x18\x01\"\xf7\x01\n" +
 	"\x04SMTP\x12\x12\n" +
-	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
-	"\x04port\x18\x02 \x01(\x05R\x04port\x12\x1a\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\"\n" +
+	"\x04port\x18\x02 \x01(\x05B\t\x8a\xce\x18\x05\n" +
+	"\x03587H\x00R\x04port\x88\x01\x01\x12\x1a\n" +
 	"\busername\x18\x03 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x04 \x01(\tR\bpassword\x12\x10\n" +
 	"\x03tls\x18\x05 \x01(\bR\x03tls\x12&\n" +
 	"\x0fskip_verify_ssl\x18\x06 \x01(\bR\rskipVerifySsl\x12<\n" +
-	"\fsend_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\vsendTimeout\"8\n" +
+	"\fsend_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\vsendTimeoutB\a\n" +
+	"\x05_port\"8\n" +
 	"\bMailFrom\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04nameBHZFgithub.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1;mailpbb\x06proto3"
@@ -275,6 +276,7 @@ func file_plateau_infra_mail_v1_config_proto_init() {
 	if File_plateau_infra_mail_v1_config_proto != nil {
 		return
 	}
+	file_plateau_infra_mail_v1_config_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -1,0 +1,13 @@
+{"file":".trellis/spec/servora/cmd/plugins.md","reason":"插件输入输出与生成期错误；以任务新契约替代文档中的旧配置方法名"}
+{"file":".trellis/spec/servora/proto/annotations.md","reason":"注解归属与命名空间；旧配置语义以已批准 PRD 为准"}
+{"file":".trellis/spec/servora/proto/generation.md","reason":"生成物禁止手改、基础生成与完整生成边界"}
+{"file":".trellis/spec/servora/framework/bootstrap.md","reason":"保持显式启动和 runtime cleanup 顺序；扫描接口按任务切换"}
+{"file":".trellis/spec/servora/framework/observability.md","reason":"logger/tracer 资源与关闭责任，避免独立 backend 配置包装"}
+{"file":".trellis/spec/servora/framework/providers.md","reason":"Redis/Kafka 官方 SDK 映射及生命周期"}
+{"file":".trellis/spec/api/proto/generation.md","reason":"Plateau 根与服务生成物、TS/Wire 归属和真实插件来源"}
+{"file":".trellis/spec/service/backend/bootstrap.md","reason":"服务 Scan、Wire、构造失败和应用 startup 分工"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"依赖注入、错误归属、context 和日志脱敏"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"先修 Servora 责任方；不扩展 Admin/Audit 业务或其他仓库"}
+{"file":".trellis/spec/plateau/project/development.md","reason":"GOWORK=off 独立门禁、真实依赖与固定端口"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"核对 Proto、生成物、加载和实际消费的完整链路"}
+{"file":".trellis/tasks/09-22-servora-proto-conf-fix-optimize/research/current-state.md","reason":"当前缺陷复现、13 段/5 key、值校验与 Buf 工作区实测证据"}

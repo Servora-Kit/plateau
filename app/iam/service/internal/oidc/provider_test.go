@@ -38,6 +38,7 @@ import (
 	fgaclient "github.com/openfga/go-sdk/client"
 	goredis "github.com/redis/go-redis/v9"
 	oidcprotocol "github.com/zitadel/oidc/v3/pkg/oidc"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -81,14 +82,14 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if seededAgain.SecretHash != originalHash {
 		t.Fatal("idempotent bootstrap replaced the persisted client-secret hash")
 	}
-	fixture.config.Clients[0].ClientSecret = "different-client-secret-with-at-least-32-bytes"
+	fixture.config.Clients[0].ClientSecret = proto.String("different-client-secret-with-at-least-32-bytes")
 	if err := fixture.bootstrap.Initialize(ctx); err != nil {
 		t.Fatalf("rotate client secret: %v", err)
 	}
 	if fixture.client.OAuthClient.GetX(ctx, testClientID).SecretHash == originalHash {
 		t.Fatal("secret rotation was not persisted")
 	}
-	fixture.config.Clients[0].ClientSecret = testClientSecret
+	fixture.config.Clients[0].ClientSecret = proto.String(testClientSecret)
 	if err := fixture.bootstrap.Initialize(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -430,7 +431,7 @@ func newProviderFixture(t *testing.T) *providerFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	manager, cleanupSession, err := data.NewHTTPSessionManager(&sessionconfig.Session{Cookie: &sessionconfig.Cookie{Name: "__Host-iam_session"}}, database, client)
+	manager, cleanupSession, err := data.NewHTTPSessionManager(&sessionconfig.Session{Cookie: &sessionconfig.Cookie{Name: proto.String("__Host-iam_session")}}, database, client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -496,12 +497,12 @@ func testOIDCConfig(t *testing.T) *oidcconfv1.OIDC {
 		t.Fatalf("write crypto key: %v", err)
 	}
 	return &oidcconfv1.OIDC{
-		Issuer:         testIssuer,
-		SigningKeyPath: signingPath,
-		CryptoKeyPath:  cryptoPath,
+		Issuer:         proto.String(testIssuer),
+		SigningKeyPath: proto.String(signingPath),
+		CryptoKeyPath:  proto.String(cryptoPath),
 		Clients: []*oidcconfv1.OAuthClient{{
-			ClientId:          testClientID,
-			ClientSecret:      testClientSecret,
+			ClientId:          proto.String(testClientID),
+			ClientSecret:      proto.String(testClientSecret),
 			RedirectUris:      []string{testRedirectURI},
 			AllowedScopes:     append([]string(nil), supportedScopes...),
 			Trusted:           true,

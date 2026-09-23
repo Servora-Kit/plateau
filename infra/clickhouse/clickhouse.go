@@ -38,7 +38,7 @@ func NewConnOptional(ctx context.Context, cfg *clickhousepb.ClickHouse) (driver.
 	}
 
 	config := proto.Clone(cfg).(*clickhousepb.ClickHouse)
-	if err := config.ApplyConf(); err != nil {
+	if err := config.Apply(); err != nil {
 		return nil, err
 	}
 

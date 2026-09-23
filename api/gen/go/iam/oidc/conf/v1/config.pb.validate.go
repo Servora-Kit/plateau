@@ -56,12 +56,6 @@ func (m *OIDC) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Issuer
-
-	// no validation rules for SigningKeyPath
-
-	// no validation rules for CryptoKeyPath
-
 	for idx, item := range m.GetClients() {
 		_, _ = idx, item
 
@@ -123,6 +117,18 @@ func (m *OIDC) validate(all bool) error {
 				cause:  err,
 			}
 		}
+	}
+
+	if m.Issuer != nil {
+		// no validation rules for Issuer
+	}
+
+	if m.SigningKeyPath != nil {
+		// no validation rules for SigningKeyPath
+	}
+
+	if m.CryptoKeyPath != nil {
+		// no validation rules for CryptoKeyPath
 	}
 
 	if len(errors) > 0 {
@@ -224,11 +230,15 @@ func (m *OAuthClient) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ClientId
-
-	// no validation rules for ClientSecret
-
 	// no validation rules for Trusted
+
+	if m.ClientId != nil {
+		// no validation rules for ClientId
+	}
+
+	if m.ClientSecret != nil {
+		// no validation rules for ClientSecret
+	}
 
 	if len(errors) > 0 {
 		return OAuthClientMultiError(errors)

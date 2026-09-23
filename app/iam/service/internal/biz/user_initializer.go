@@ -31,6 +31,9 @@ func NewUserInitializer(config *iamconfpb.IAM, users UserRepo, creator InitialUs
 	if config == nil || users == nil || creator == nil {
 		return nil, fmt.Errorf("user initializer: dependency is nil")
 	}
+	if err := config.Apply(); err != nil {
+		return nil, fmt.Errorf("user initializer config: %w", err)
+	}
 	email := config.GetBootstrapUserEmail()
 	if email == "" {
 		return nil, fmt.Errorf("user initializer: email is empty")

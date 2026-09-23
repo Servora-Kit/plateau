@@ -41,6 +41,9 @@ func NewServiceAuthenticator(config *oidcpb.OIDC, verifier *securityjwt.Verifier
 	if config == nil {
 		return nil, nil, fmt.Errorf("IAM OIDC config is nil")
 	}
+	if err := config.Apply(); err != nil {
+		return nil, nil, fmt.Errorf("IAM OIDC config: %w", err)
+	}
 	return jwtAuthn.New(context.Background(), &jwtpb.JwtAuthnConfig{
 		Issuer: strings.TrimSuffix(strings.TrimSpace(config.GetIssuer()), "/"), Audience: "iam",
 	}, jwtAuthn.WithVerifier(verifier))

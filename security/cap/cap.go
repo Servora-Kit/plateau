@@ -29,10 +29,6 @@ import (
 )
 
 const (
-	defaultChallengeTTL = 10 * time.Minute
-	defaultTokenTTL     = 20 * time.Minute
-	defaultKeyPrefix    = "cap:v2:"
-
 	maxChallengeCount      = 1000
 	maxChallengeSize       = 256
 	maxChallengeDifficulty = 16
@@ -132,19 +128,18 @@ func New(config *pb.CAP, rdb *redis.Client) (*Cap, error) {
 		return nil, fmt.Errorf("cap: Redis client is nil")
 	}
 
-	config.ApplyDefaults()
-	if err := config.CheckRequired(); err != nil {
+	if err := config.Apply(); err != nil {
 		return nil, fmt.Errorf("cap: invalid config: %w", err)
 	}
 	if len([]byte(config.GetSigningSecret())) < minSigningSecretBytes {
 		return nil, fmt.Errorf("cap: signing_secret must be at least %d bytes", minSigningSecretBytes)
 	}
 
-	challengeTTL, err := validDuration("challenge_ttl", config.GetChallengeTtl(), defaultChallengeTTL)
+	challengeTTL, err := validDuration("challenge_ttl", config.GetChallengeTtl())
 	if err != nil {
 		return nil, err
 	}
-	tokenTTL, err := validDuration("token_ttl", config.GetTokenTtl(), defaultTokenTTL)
+	tokenTTL, err := validDuration("token_ttl", config.GetTokenTtl())
 	if err != nil {
 		return nil, err
 	}
@@ -158,10 +153,6 @@ func New(config *pb.CAP, rdb *redis.Client) (*Cap, error) {
 	}
 
 	prefix := config.GetRedisKeyPrefix()
-	if prefix == "" {
-		prefix = defaultKeyPrefix
-	}
-
 	return &Cap{
 		rdb:             rdb,
 		signingSecret:   []byte(config.GetSigningSecret()),
@@ -174,11 +165,8 @@ func New(config *pb.CAP, rdb *redis.Client) (*Cap, error) {
 	}, nil
 }
 
-func validDuration(name string, value *durationpb.Duration, fallback time.Duration) (time.Duration, error) {
-	if value == nil {
-		return fallback, nil
-	}
-	if !value.IsValid() {
+func validDuration(name string, value *durationpb.Duration) (time.Duration, error) {
+	if value == nil || !value.IsValid() {
 		return 0, fmt.Errorf("cap: invalid config: %s is invalid", name)
 	}
 	duration := value.AsDuration()

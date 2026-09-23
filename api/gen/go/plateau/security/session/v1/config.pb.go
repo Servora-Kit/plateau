@@ -7,6 +7,7 @@
 package sessionv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -87,14 +88,14 @@ func (x *Session) GetCookie() *Cookie {
 // Cookie 标识由应用明确配置，避免隐式共享登录状态。
 type Cookie struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
-	Name   string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Path   string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Name   *string                `protobuf:"bytes,1,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	Path   *string                `protobuf:"bytes,2,opt,name=path,proto3,oneof" json:"path,omitempty"`
 	Domain string                 `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain,omitempty"`
 	// 省略时为 true；显式 false 由构造时的 Cookie 约束校验。
-	Secure        *bool  `protobuf:"varint,4,opt,name=secure,proto3,oneof" json:"secure,omitempty"`
-	HttpOnly      *bool  `protobuf:"varint,5,opt,name=http_only,json=httpOnly,proto3,oneof" json:"http_only,omitempty"`
-	SameSite      string `protobuf:"bytes,6,opt,name=same_site,json=sameSite,proto3" json:"same_site,omitempty"`
-	Persist       *bool  `protobuf:"varint,7,opt,name=persist,proto3,oneof" json:"persist,omitempty"`
+	Secure        *bool   `protobuf:"varint,4,opt,name=secure,proto3,oneof" json:"secure,omitempty"`
+	HttpOnly      *bool   `protobuf:"varint,5,opt,name=http_only,json=httpOnly,proto3,oneof" json:"http_only,omitempty"`
+	SameSite      *string `protobuf:"bytes,6,opt,name=same_site,json=sameSite,proto3,oneof" json:"same_site,omitempty"`
+	Persist       *bool   `protobuf:"varint,7,opt,name=persist,proto3,oneof" json:"persist,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -130,15 +131,15 @@ func (*Cookie) Descriptor() ([]byte, []int) {
 }
 
 func (x *Cookie) GetName() string {
-	if x != nil {
-		return x.Name
+	if x != nil && x.Name != nil {
+		return *x.Name
 	}
 	return ""
 }
 
 func (x *Cookie) GetPath() string {
-	if x != nil {
-		return x.Path
+	if x != nil && x.Path != nil {
+		return *x.Path
 	}
 	return ""
 }
@@ -165,8 +166,8 @@ func (x *Cookie) GetHttpOnly() bool {
 }
 
 func (x *Cookie) GetSameSite() string {
-	if x != nil {
-		return x.SameSite
+	if x != nil && x.SameSite != nil {
+		return *x.SameSite
 	}
 	return ""
 }
@@ -182,26 +183,29 @@ var File_plateau_security_session_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_security_session_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"(plateau/security/session/v1/config.proto\x12\x1bplateau.security.session.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xdd\x01\n" +
+	"(plateau/security/session/v1/config.proto\x12\x1bplateau.security.session.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xd4\x01\n" +
 	"\aSession\x12@\n" +
 	"\blifetime\x18\x01 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
 	"\x0324hR\blifetime\x12<\n" +
 	"\fidle_timeout\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\vidleTimeout\x12C\n" +
-	"\x06cookie\x18\x03 \x01(\v2#.plateau.security.session.v1.CookieB\x06\x8a\xce\x18\x02\x10\x01R\x06cookie:\r\x82\xce\x18\t\n" +
-	"\asession\"\x84\x02\n" +
-	"\x06Cookie\x12\x1a\n" +
-	"\x04name\x18\x01 \x01(\tB\x06\x8a\xce\x18\x02\x10\x01R\x04name\x12\x1b\n" +
+	"\x06cookie\x18\x03 \x01(\v2#.plateau.security.session.v1.CookieB\x06\x8a\xce\x18\x02\x10\x01R\x06cookie:\x04\x80\xce\x18\x01\"\xba\x02\n" +
+	"\x06Cookie\x12&\n" +
+	"\x04name\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x04name\x88\x01\x01\x12 \n" +
 	"\x04path\x18\x02 \x01(\tB\a\x8a\xce\x18\x03\n" +
-	"\x01/R\x04path\x12\x16\n" +
+	"\x01/H\x01R\x04path\x88\x01\x01\x12\x16\n" +
 	"\x06domain\x18\x03 \x01(\tR\x06domain\x12\x1b\n" +
-	"\x06secure\x18\x04 \x01(\bH\x00R\x06secure\x88\x01\x01\x12 \n" +
-	"\thttp_only\x18\x05 \x01(\bH\x01R\bhttpOnly\x88\x01\x01\x12&\n" +
+	"\x06secure\x18\x04 \x01(\bH\x02R\x06secure\x88\x01\x01\x12 \n" +
+	"\thttp_only\x18\x05 \x01(\bH\x03R\bhttpOnly\x88\x01\x01\x12+\n" +
 	"\tsame_site\x18\x06 \x01(\tB\t\x8a\xce\x18\x05\n" +
-	"\x03laxR\bsameSite\x12\x1d\n" +
-	"\apersist\x18\a \x01(\bH\x02R\apersist\x88\x01\x01B\t\n" +
+	"\x03laxH\x04R\bsameSite\x88\x01\x01\x12\x1d\n" +
+	"\apersist\x18\a \x01(\bH\x05R\apersist\x88\x01\x01B\a\n" +
+	"\x05_nameB\a\n" +
+	"\x05_pathB\t\n" +
 	"\a_secureB\f\n" +
 	"\n" +
-	"_http_onlyB\n" +
+	"_http_onlyB\f\n" +
+	"\n" +
+	"_same_siteB\n" +
 	"\n" +
 	"\b_persistBQZOgithub.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1;sessionv1b\x06proto3"
 

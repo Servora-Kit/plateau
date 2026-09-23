@@ -12,6 +12,7 @@ import (
 	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/security/password"
+	"google.golang.org/protobuf/proto"
 )
 
 type fakeBootstrapCreator struct {
@@ -36,7 +37,7 @@ func TestUserBootstrapCreatesOnceAndReusesIdentity(t *testing.T) {
 	var output bytes.Buffer
 	logger := slog.New(slog.NewJSONHandler(&output, nil))
 	bootstrap, err := NewUserInitializer(
-		&iamconfpb.IAM{BootstrapUserEmail: " Admin@Example.com "},
+		&iamconfpb.IAM{BootstrapUserEmail: proto.String(" Admin@Example.com ")},
 		users, creator, logger,
 	)
 	if err != nil {
@@ -74,7 +75,7 @@ func TestUserBootstrapCreatesOnceAndReusesIdentity(t *testing.T) {
 func TestUserBootstrapRejectsInactiveExistingUser(t *testing.T) {
 	users := &fakeAccountUsers{user: &userpb.User{UserId: "user-1", Status: userpb.UserStatus_USER_STATUS_DISABLED}}
 	creator := &fakeBootstrapCreator{users: users}
-	bootstrap, err := NewUserInitializer(&iamconfpb.IAM{BootstrapUserEmail: "alice@example.com"}, users, creator, nil)
+	bootstrap, err := NewUserInitializer(&iamconfpb.IAM{BootstrapUserEmail: proto.String("alice@example.com")}, users, creator, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

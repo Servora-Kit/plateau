@@ -56,13 +56,17 @@ func (m *OpenFGA) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ApiUrl
-
-	// no validation rules for StoreId
-
 	// no validation rules for ModelId
 
 	// no validation rules for ApiToken
+
+	if m.ApiUrl != nil {
+		// no validation rules for ApiUrl
+	}
+
+	if m.StoreId != nil {
+		// no validation rules for StoreId
+	}
 
 	if len(errors) > 0 {
 		return OpenFGAMultiError(errors)

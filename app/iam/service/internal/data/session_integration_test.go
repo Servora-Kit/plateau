@@ -14,6 +14,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordauthenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordresettoken"
 	"github.com/alexedwards/scs/postgresstore"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -21,7 +22,7 @@ func TestPostgresSCSStoreUsesEntSchema(t *testing.T) {
 	client, db := newPostgresTestClient(t)
 	manager, cleanup, err := NewHTTPSessionManager(&sessionpb.Session{
 		Lifetime: durationpb.New(time.Hour),
-		Cookie:   &sessionpb.Cookie{Name: "__Host-iam_session"},
+		Cookie:   &sessionpb.Cookie{Name: proto.String("__Host-iam_session")},
 	}, db, client)
 	if err != nil {
 		t.Fatal(err)

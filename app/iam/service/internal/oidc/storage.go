@@ -29,19 +29,20 @@ func NewOIDCStorage(client *entmodel.Client, config *oidcconfpb.OIDC, tokens biz
 	if config == nil || tokens == nil {
 		return nil, fmt.Errorf("OIDC configuration is nil")
 	}
+	if err := config.Apply(); err != nil {
+		return nil, fmt.Errorf("OIDC storage config: %w", err)
+	}
 	privateKey, keyID, publicJWK, err := loadSigningKey(config.GetSigningKeyPath())
 	if err != nil {
 		return nil, err
 	}
-	ttl := 5 * time.Minute
-	if config.ServiceAccessTokenTtl != nil {
-		if err := config.ServiceAccessTokenTtl.CheckValid(); err != nil {
-			return nil, err
-		}
-		ttl = config.ServiceAccessTokenTtl.AsDuration()
-		if ttl <= 0 {
-			return nil, fmt.Errorf("OIDC service access token TTL must be positive")
-		}
+	ttlConfig := config.GetServiceAccessTokenTtl()
+	if err := ttlConfig.CheckValid(); err != nil {
+		return nil, err
+	}
+	ttl := ttlConfig.AsDuration()
+	if ttl <= 0 {
+		return nil, fmt.Errorf("OIDC service access token TTL must be positive")
 	}
 	return &OIDCStorage{
 		tokens: tokens, serviceAccessTokenTTL: ttl,

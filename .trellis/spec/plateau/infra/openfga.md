@@ -2,7 +2,7 @@
 
 本包只将 Plateau 配置映射到官方 SDK client，不封装业务授权数据面。具体主体、资源、检查结果归 [AuthZ](../security/authZ.md)。
 
-[New](../../../../infra/openfga/client.go) 接收生成的 OpenFGA 配置并执行 ApplyConf，将 api_url、store_id、model_id 传给 SDK。model_id 可留空，不能据此宣称已固定模型版本。构造不执行 model apply 或授权请求。
+[New](../../../../infra/openfga/client.go) 接收生成的 OpenFGA 配置并执行 Apply，将 api_url、store_id、model_id 传给 SDK。model_id 可留空，不能据此宣称已固定模型版本。构造不执行 model apply 或授权请求。
 
 配置 api_token 时要求合法 HTTPS URL、有效 hostname 且不含 userinfo；克隆 HTTP client 并禁用重定向，避免凭据随重定向泄漏。不修改全局默认 HTTP client，也不为了开发便利放宽带 token 的明文 URL。
 
