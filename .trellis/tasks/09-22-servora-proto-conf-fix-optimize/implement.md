@@ -146,12 +146,12 @@ just lint
 
 ## 阶段 F：真实依赖与发布门禁
 
-本地源码验证不等于发布后的独立消费。当前 Plateau 固定旧 Servora Go 版本和 BSR commit；新 API 无法靠这些旧版本完成真实独立构建。
+本地源码验证与正式依赖验证分别执行。Servora v0.9.9 已发布；Plateau 的 Go 依赖和插件版本已升级，buf.yaml 按用户要求保留无版本号引用，buf.lock 锁定本次发布对应提交。
 
-- [ ] 在源码验证完成后请求单独的发布授权；未授权不 commit/push/tag/BSR push，不捏造新版本。
-- [ ] 真实新 Servora 版本/schema 可用后，同步 Plateau go.mod/go.sum、SERVORA_VERSION 和 buf.lock；不留下本机 replace。
-- [ ] 重新生成并在无父 workspace、无临时 modfile、无旧 PATH 插件掩盖的环境完成根门禁。
-- [x] 正式依赖门禁未完成，任务保持 in_progress 并明确标记等待发布授权；本地源码验证不冒充独立发布版本接入完成。
+- [x] 用户已单独授权提交、发布 Servora v0.9.9、更新 Plateau 正式依赖并归档。
+- [x] go.mod/go.sum、SERVORA_VERSION 和 buf.lock 已同步，没有本机 replace。
+- [x] 使用正式版本重新生成，并在 GOWORK=off、无临时依赖文件的情况下完成根目录和服务检查。
+- [x] 正式依赖门禁已通过，任务可按 Trellis 流程归档。
 
 ## 收尾与最终审查
 

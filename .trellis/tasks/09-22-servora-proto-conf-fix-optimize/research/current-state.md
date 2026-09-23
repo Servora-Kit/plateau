@@ -268,3 +268,39 @@ Plateau 编译和测试使用仓库外临时依赖文件，把 Servora 指向当
 - 尚未提交、推送、打标签、发布 Go 版本、推送 BSR 或部署。
 - Plateau 仍固定旧 Servora v0.9.7 与旧 BSR 引用；无临时覆盖的独立消费验证未完成，不能把本地源码通过标成完整任务完成。
 - `logger.New` 改为三个返回值。LSP 发现第三仓 `servora-example/app/master/service/internal/server/tcp_config_scan_test.go:28` 仍使用两个返回值；该仓不在本次范围，没有修改，发布前需安排其迁移。
+
+## 12. 正式发布与独立接入验证
+
+用户已明确授权提交两仓、发布 Servora v0.9.9、更新 Plateau 正式依赖并按 Trellis 归档；本节关闭第 11 节保留的发布门禁。
+
+### 提交与发布
+
+- Servora 实现提交：`fe93c3d397cb228d9e3213711ef227f83ae9cc08`，`fix(conf)!: 统一配置应用契约`，已推送 main。
+- Plateau 实现提交：`0cf0293`，`refactor(conf)!: 接入统一配置应用契约`。
+- main 的 [CI](https://github.com/Servora-Kit/servora/actions/runs/35855905124)、Buf CI 和代码质量检查均通过后，推送 v0.9.9 标签。
+- [Release 工作流](https://github.com/Servora-Kit/servora/actions/runs/35856408227) 和 [版本标签的 Buf CI](https://github.com/Servora-Kit/servora/actions/runs/35856408305) 均成功。
+- [GitHub Release v0.9.9](https://github.com/Servora-Kit/servora/releases/tag/v0.9.9) 已公开，不是草稿或预发布版本。
+- BSR 的 main 和 v0.9.9 标签均指向 `66efd9fc6c25423eb504dcc1834f1552`。按用户要求，buf.yaml 保留 `buf.build/servora/servora`，具体提交由 buf.lock 固定。
+
+### 正式依赖来源
+
+- go.mod 和 Just 的 SERVORA_VERSION 均为 v0.9.9；go.sum 已更新，protovalidate 因生成代码直接使用而转为直接依赖。
+- `go list -m -json github.com/Servora-Kit/servora` 显示真实 v0.9.9、模块缓存路径及校验和，没有 Replace 字段。
+- 本机镜像对新版本的校验记录暂时返回 404，改用官方 Go 代理和 sum.golang.org 后成功；未关闭校验。
+- 从发布版本安装全部 Servora 生成插件到仓库外临时目录；配置插件的 `go version -m` 明确显示 v0.9.9。Plateau 插件从当前仓库构建。
+- 使用正式 BSR 依赖执行 `just gen` 和 Example 独立 TypeScript 生成；生成产物与实现阶段一致，没有新增生成文件差异。
+- buf dep update 同时刷新了默认引用的 protovalidate 定义，Google APIs 锁定提交不变。
+
+### 独立验证结果
+
+以下 Go 检查均设置 GOWORK=off 并清空 GOFLAGS，没有临时依赖文件或本地源码覆盖：
+
+- 连续执行 go mod tidy，第二次 go.mod/go.sum 的 SHA-256 不变。
+- `go list ./...`、`go build ./...`：通过。
+- `go test -short ./...`：257 项通过，90 个包。
+- `just lint`、`just service::lint`：全部通过，不再需要隔离源码副本。
+- `just service::_build`：Audit、Example、IAM 独立构建入口通过。
+- Example Web 类型检查通过；共享 TypeScript 与 Proto 检查由根 lint 覆盖。
+- Example 使用正式依赖启动，GET `/v1/tenants/servora-v099-smoke/users` 返回 `{"users":[],"nextPageToken":""}`；完成后已停止本次进程。
+
+没有发布前端 npm 包、部署业务服务或修改第三仓。第三仓旧 logger.New 调用仍由其自身升级负责，不影响本次两仓验收。

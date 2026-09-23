@@ -114,7 +114,7 @@ CORS 在创建中间件时确定有效设置、预计算可复用响应头；不
 
 自举顺序：先修改 annotation 与使用其新语法的源 Proto；以基础插件（protoc-gen-go 与现有 protoc-gen-validate）的临时模板一起更新 annotation 的 Go API 和 PGV 校验生成文件；再编译新 conf 插件；最后生成其余 Go/TS 辅助生成文件 和必要 Wire 产物。当前 annotation 目录同时有 annotations.pb.go 与 annotations.pb.validate.go，只更新前者会让旧 PGV 文件继续引用已删除的 SectionRule。不能让旧 conf 插件读取新 bool section schema，也不能手改生成物绕过自举。
 
-本轮已验证一种无发布的本地联调方式：仓库外临时 Buf workspace 纳入 Servora 和 Plateau 的四个 Proto 输入根，Servora 作为同名本地 module，依赖只保留已锁定的 googleapis/protovalidate；构建的 descriptor 含 47 个文件，五个输入域均存在。新注解与新插件的实际生成仍需实施后验证，本轮未修改其产品代码。
+规划阶段先在仓库外临时 Buf 工作区验证五个输入域，共 47 个 Proto 文件。实施阶段用当前源码自举注解和新插件；发布阶段再使用 Servora v0.9.9 的 Go module、BSR 定义和版本化插件独立重新生成，实际结果见研究记录第 12 节。
 
 本地编译使用临时 modfile/replace 指向当前 Servora、GOWORK=off；不把临时覆盖提交到仓库，也不把它称为真实发布依赖验收。最终 Plateau 的 go.mod、插件版本和 buf.lock 必须切到真实、可解析的新 Servora 版本/schema 后再独立检查。
 
