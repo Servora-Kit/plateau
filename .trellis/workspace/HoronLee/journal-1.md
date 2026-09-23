@@ -81,3 +81,42 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Next Steps
 
 - 保留 Admin 初始化与 spec 重组的并行工作区改动，另行完成对应任务。
+
+
+## Session 3: 配置契约修复与 Servora v0.9.9 发布
+<!-- trellis-session: v=2 fp=2d743d62ddd01906 -->
+
+**Date**: 2026-09-23
+**Task**: 配置契约修复与 Servora v0.9.9 发布
+**Package**: servora
+**Branch**: `main`
+
+### Summary
+
+完成两仓配置契约提交，发布 Servora v0.9.9，验证 Plateau 正式依赖并归档任务。
+
+### Main Changes
+
+- 配置处理统一为 Apply；修复默认值、必填、集合、跨包和失败清理，相关说明使用易读中文。
+- Servora main 与 v0.9.9 标签已推送，GitHub Release 和 BSR 发布成功；Plateau Go 依赖与插件版本升级为 v0.9.9，BSR 保留默认引用并由锁文件固定。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fe93c3d397cb228d9e3213711ef227f83ae9cc08` | fix(conf)!: 统一配置应用契约 |
+| `0cf02934` | refactor(conf)!: 接入统一配置应用契约 |
+| `d25ff73a` | build(deps): 升级 Servora 至 v0.9.9 |
+
+### Testing
+
+- [OK] Servora 本地753项短测试通过；远端 main CI、Release 与 Buf CI 成功。
+- [OK] Plateau GOWORK=off 的 list/build、257项短测试、根目录及服务 lint、三个服务构建、TypeScript检查与 Example真实HTTP请求均通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 第三仓 servora-example 升级时需要迁移 logger.New 的三个返回值；本次未修改该仓。
