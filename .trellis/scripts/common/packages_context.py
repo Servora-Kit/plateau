@@ -41,14 +41,6 @@ def _scan_spec_layers(spec_dir: Path, package: str | None = None) -> list[str]:
     )
 
 
-def _get_spec_index(repo_root: Path, package: str | None = None) -> str | None:
-    """Return the existing root index as a repo-relative path, independent of layers."""
-    spec_dir = repo_root / DIR_WORKFLOW / DIR_SPEC
-    target = spec_dir / package if package else spec_dir
-    index = target / "index.md"
-    return index.relative_to(repo_root).as_posix() if index.is_file() else None
-
-
 def _get_active_task_package(repo_root: Path) -> str | None:
     """Get the package field from the active task's task.json."""
     current = get_current_task(repo_root)
@@ -100,7 +92,7 @@ def get_packages_info(repo_root: Path) -> list[dict]:
     """Get structured package info for monorepo projects.
 
     Returns list of dicts with keys: name, path, type, default, specLayers,
-    specIndex (repo-relative path or None), isSubmodule, isGitRepo.
+    isSubmodule, isGitRepo.
     Returns empty list for single-repo projects.
     """
     packages = get_packages(repo_root)
@@ -123,7 +115,6 @@ def get_packages_info(repo_root: Path) -> list[dict]:
             "type": pkg_type,
             "default": pkg_name == default_pkg,
             "specLayers": layers,
-            "specIndex": _get_spec_index(repo_root, pkg_name),
             "isSubmodule": pkg_type == "submodule",
             "isGitRepo": _is_true_config_value(pkg_git),
         })
@@ -141,9 +132,6 @@ def get_packages_section(repo_root: Path) -> str:
 
     if not pkg_info:
         lines.append("(single-repo mode)")
-        spec_index = _get_spec_index(repo_root)
-        if spec_index:
-            lines.append(f"Spec index: {spec_index}")
         layers = _scan_spec_layers(spec_dir)
         if layers:
             lines.append(f"Spec layers: {', '.join(layers)}")
@@ -153,13 +141,11 @@ def get_packages_section(repo_root: Path) -> str:
 
     for pkg in pkg_info:
         layers_str = f"  [{', '.join(pkg['specLayers'])}]" if pkg["specLayers"] else ""
-        index_str = f"  (spec: {pkg['specIndex']})" if pkg["specIndex"] else ""
         submodule_tag = "  (submodule)" if pkg["isSubmodule"] else ""
         git_repo_tag = "  (git repo)" if pkg["isGitRepo"] else ""
         default_tag = "  *" if pkg["default"] else ""
         lines.append(
-            f"- {pkg['name']:<16} {pkg['path']:<20}{layers_str}{index_str}"
-            f"{submodule_tag}{git_repo_tag}{default_tag}"
+            f"- {pkg['name']:<16} {pkg['path']:<20}{layers_str}{submodule_tag}{git_repo_tag}{default_tag}"
         )
 
     if default_pkg:
@@ -180,9 +166,6 @@ def get_context_packages_text(repo_root: Path | None = None) -> str:
         spec_dir = repo_root / DIR_WORKFLOW / DIR_SPEC
         lines.append("Single-repo project (no packages configured)")
         lines.append("")
-        spec_index = _get_spec_index(repo_root)
-        if spec_index:
-            lines.append(f"Spec index: {spec_index}")
         layers = _scan_spec_layers(spec_dir)
         if layers:
             lines.append(f"Spec layers: {', '.join(layers)}")
@@ -209,13 +192,11 @@ def get_context_packages_text(repo_root: Path | None = None) -> str:
 
         lines.append(f"### {pkg['name']}{default_tag}{type_tag}{git_tag}{scope_tag}")
         lines.append(f"Path: {pkg['path']}")
-        if pkg["specIndex"]:
-            lines.append(f"Spec index: {pkg['specIndex']}")
         if pkg["specLayers"]:
             lines.append(f"Spec layers: {', '.join(pkg['specLayers'])}")
             for layer in pkg["specLayers"]:
                 lines.append(f"  - .trellis/spec/{pkg['name']}/{layer}/index.md")
-        elif not pkg["specIndex"]:
+        else:
             lines.append("Spec: not configured")
         lines.append("")
 
@@ -242,7 +223,6 @@ def get_context_packages_json(repo_root: Path | None = None) -> dict:
         return {
             "mode": "single-repo",
             "specLayers": layers,
-            "specIndex": _get_spec_index(repo_root),
         }
 
     default_pkg = get_default_package(repo_root)

@@ -106,7 +106,7 @@
     ".omp/extensions/trellis/index.ts": "804d23c4c78684f542e1ab3ae6a8d77bd663ed9ed66b60d64c763c7a9b23dd86",
     ".trellis/agents/check.md": "edb4f57361407249a53bf5998ebf91c40d2b969e826a2c5e1b4e813a08bcb175",
     ".trellis/agents/implement.md": "66e25ad046c94869442834bc3cdfbd5a9a7412d3ff54561d64d2886552c27e87",
-    ".trellis/config.yaml": "94fccabcf6f05f4e13701d695a779294de3ec4184f44e6dca2fb65b3897397d1",
+    ".trellis/config.yaml": "a966e6d374e9e6ff283cf761ccd99631323ee1754856cef51ad154ca0afb9dfa",
     ".trellis/scripts/__init__.py": "1242be5b972094c2e141aecbe81a4efd478f6534e3d5e28306374e6a18fcf46c",
     ".trellis/scripts/add_session.py": "f61a452ec5f7eece8d7e0f0dd56ce5851166cbc83ca4822e30acbb36eeb5896f",
     ".trellis/scripts/common/__init__.py": "f258cd873681dc5a4d71db0dd71d10fd78656de55bec96418d6702503c16e87d",
@@ -135,6 +135,7 @@
     ".trellis/scripts/hooks/linear_sync.py": "e09cc4ce4699aada908808718698f33f705a3edf55c4dcf8f777ad892f80ca79",
     ".trellis/scripts/init_developer.py": "f9e6c0d882406e81c8cd6b1c5abb204b0befc0069ff89cf650cd536a80f8c60e",
     ".trellis/scripts/task.py": "b415e0a2dbc9e8cba1ada0c7997999aaaaea0eec96d3419db640830e88e84cfe",
-    ".trellis/workflow.md": "eb4508a4f6792f3d53705c1f9e7d21807dabd774543bd7b01f56372a704f6ad0"
+    ".trellis/workflow.md": "eb4508a4f6792f3d53705c1f9e7d21807dabd774543bd7b01f56372a704f6ad0",
+    "AGENTS.md": "fdbe354dd1b5b014478db80c423ca4008419f4c255c0dd9fd5fee2fa68cbe322"
   }
 }
