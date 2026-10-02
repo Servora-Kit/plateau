@@ -59,9 +59,6 @@ tmp/
 .opencode/
 .cursor/
 .understand-anything/
-.agents/
-.codex/
-.omp/
 
 # Environment files
 .env
