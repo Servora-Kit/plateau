@@ -84,7 +84,7 @@ func assertGeneratedGo(t testing.TB, source, packageName, testSource string) {
 		t.Fatal("resolve plugintest helper path")
 	}
 	repoRoot := filepath.Clean(filepath.Join(filepath.Dir(helperFile), "..", "..", ".."))
-	goMod := "module sandbox\n\ngo 1.27.0\n\nrequire github.com/Servora-Kit/plateau v0.0.0\n\nreplace github.com/Servora-Kit/plateau => " + repoRoot + "\n"
+	goMod := "module sandbox\n\ngo 1.27.1\n\nrequire github.com/Servora-Kit/plateau v0.0.0\n\nreplace github.com/Servora-Kit/plateau => " + repoRoot + "\n"
 	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}
