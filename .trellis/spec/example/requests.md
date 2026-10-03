@@ -4,7 +4,7 @@ Example 的生成 API 从 `@/api/generated/**` 导入。`userApi.ts` 以 [`trans
 
 ## 应用自有 transport
 
-该 adapter 是原生 `fetch` 实现，默认请求地址由 `VITE_API_BASE_URL` 或同源相对路径决定；Vite 在开发和预览时将 `/v1` 代理至 `127.0.0.1:10030`，配置见 [`vite.config.ts`](../../../app/example/web/vite.config.ts)。它设置 `Accept: application/json`，仅在 body 非空时设置 `Content-Type: application/json`，并直接传递已经序列化的 ProtoJSON body。
+该 adapter 是原生 `fetch` 实现，默认请求地址由 `VITE_API_BASE_URL` 或同源相对路径决定；Vite 在开发和预览时将 `/v1` 代理至 `127.0.0.1:10080`，配置见 [`vite.config.ts`](../../../app/example/web/vite.config.ts)。它设置 `Accept: application/json`，仅在 body 非空时设置 `Content-Type: application/json`，并直接传递已经序列化的 ProtoJSON body。
 
 适配器将超时转为 `ApiError.kind === "timeout"`，原生 fetch `TypeError` 转为 `"network"`，非成功 HTTP 响应保留 status、响应体和生成调用提供的 service/method 元数据。服务端流和双向流会明确抛出“不支持”，因为当前 User reference API 没有这些调用。
 

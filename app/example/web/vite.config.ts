@@ -19,17 +19,17 @@ export default defineConfig({
     dedupe: ['@servora/proto-utils'],
   },
   server: {
-    port: 10032,
+    port: 10082,
     strictPort: true,
     proxy: {
       '/v1': {
-        target: 'http://127.0.0.1:10030',
+        target: 'http://127.0.0.1:10080',
         changeOrigin: true,
       },
     },
   },
   preview: {
-    port: 10032,
+    port: 10082,
     strictPort: true,
   },
 })

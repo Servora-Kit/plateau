@@ -1,111 +1,31 @@
-# Reference https://github.com/github/gitignore/blob/master/Go.gitignore
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.dylib
-./server
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-vendor/
-
-# Go workspace (local development only)
-/go.work
-/go.work.sum
-
-# Compiled Object files, Static and Dynamic libs (Shared Objects)
-*.o
-*.a
-*.so
-
-# OS General
-Thumbs.db
-.DS_Store
-
-# project
-.cache/
-*.cert
-*.crt
+# 本地配置与密钥
+.env
+.env.local
+.env.*.local
 *.key
 *.pem
-*.log
-bin/
-logs/
-cache/
-data.db
-examples/
-/server
-/svr
-tmp/
-# docs/adr/
+*.crt
+*.cert
+/configs/keys/
 
-# Develop tools
+# Go 工作区与服务产物
+/go.work
+/go.work.sum
+/app/*/service/bin/
+/app/*/service/tmp/
+/app/*/service/logs/
+/app/*/service/server
+*.test
+coverage.out
+
+# 共享前端依赖；应用构建产物由各自的 .gitignore 管理
+node_modules/
+*.tsbuildinfo
+
+# 本地工具与运行缓存
+.cache/
+*.log
+.DS_Store
 .vscode/
 .idea/
 *.swp
-
-# AI Agents
-.kilocode/
-.kiro/
-.sisyphus/
-.claude/
-.omc/
-.opencode/
-.cursor/
-.understand-anything/
-
-# Environment files
-.env
-.env.local
-
-# Frontend
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-package-lock.json
-.DS_Store
-dist
-dist-ssr
-coverage
-*.local
-
-/web/.env
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-*.tsbuildinfo
-
-.eslintcache
-
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
-
-# Vitest
-__screenshots__/
-
-test-results/
-playwright-report/
-app/iam/service/server
-configs/keys/

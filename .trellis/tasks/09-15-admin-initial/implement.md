@@ -1,6 +1,6 @@
 # Admin 建设实施计划
 
-状态：规划待评审。端口调整是 AGENTS 与应用配置的附带改动，不设独立迁移阶段。本文是实施顺序，不代表步骤已执行。需求以 [PRD](prd.md) 为准，接口、事务和兼容性以 [design](design.md) 为准。
+状态：规划待评审。本文是实施顺序，不代表步骤已执行。需求以 [PRD](prd.md) 为准，接口、事务和兼容性以 [design](design.md) 为准。
 
 ## 启动条件与工作区约束
 
@@ -27,7 +27,6 @@
 - [ ] User 增加软删除字段，密码凭据增加首次改密状态；补齐首次改密凭证与初始化完成记录 schema。
 - [ ] 在根 Buf workspace 注册 Admin 源 Proto，输出共享 Go/TS/errors/CRUD sidecar；为 Admin HTTP API 建立所属源合同。
 - [ ] 新增配置字段、默认值和校验；更新本地/docker配置样例与环境变量文档。
-- [ ] 附带完成 R20：更新根 AGENTS 端口表及 Admin/Example/Test 的前后端启动与代理配置、相关 Compose 宿主映射，IAM 段保持不变；Audit 现有配置按 design 顺移到 10020/10021 解除冲突，表中不写 Audit/CMS。只修改实际配置引用，随最终联调验证，不新增迁移阶段或工具。
 - [ ] 验证新增字段可对旧数据库执行非破坏性迁移，不批量给已有普通用户设置首次改密要求；确认旧 seed 的升级策略。
 
 阶段门禁：Proto lint、生成器输出检查、共享 TS typecheck、受影响 Go 编译。后续阶段在本阶段合同稳定后开展，不能各自手写不同的 HTTP DTO。
@@ -65,9 +64,9 @@
 
 ### S4：Admin 服务、初始化与两层授权
 
-依赖：S1；初始化需 S3 的 seed 行为；管理功能集成需 S2。覆盖 R1、R4–R7、R11、R18、R20、R21。
+依赖：S1；初始化需 S3 的 seed 行为；管理功能集成需 S2。覆盖 R1、R4–R7、R11、R18、R21。
 
-- [ ] 在 S1 新建的 Admin 工程和合同上实现管理用例、远端 IAM adapter、本地存储与运行接线，参考 IAM 的认证/会话/startup 实践并遵循 Trellis 分层；加入 `just/services.just` 和启动配置，与 S1 的 Buf 注册保持一致。端口使用新规划的 10010 段，Web 为 10012。
+- [ ] 在 S1 新建的 Admin 工程和合同上实现管理用例、远端 IAM adapter、本地存储与运行接线，参考 IAM 的认证/会话/startup 实践并遵循 Trellis 分层；加入 `just/services.just` 和启动配置，与 S1 的 Buf 注册保持一致。
 - [ ] 实现 confidential OIDC 登录、服务端会话、可信 Actor、CSRF、受保护会话查询和 Admin 本地退出。
 - [ ] 用户 token introspection/refresh 必须使用发行方 `admin-web` client；验证错用 `admin-service` 被 IAM 拒绝，以及原 token 被撤销时现有 Admin 会话不能继续管理。
 - [ ] Admin 到 IAM 使用独立 client credentials 服务身份；IAM 接收方验证令牌及 `iam.manage_users`，前端不得持有该凭据。
@@ -103,7 +102,7 @@
 
 依赖：S1–S5。
 
-- [ ] 逐项验收 PRD AC1–AC22，将结果与可复现步骤记录于本任务的验证记录；未跑、失败、环境阻塞分开记载。
+- [ ] 逐项验收 PRD AC1–AC19、AC21–AC22，将结果与可复现步骤记录于本任务的验证记录；未跑、失败、环境阻塞分开记载。
 - [ ] 运行下述质量命令，检查生成 diff 与所有跨层合同；只在新变更、失败或未解决风险出现时扩大/重复测试。
 - [ ] 同时记录仓库支持、实际启用配置和端到端结果，不将其中一种等同于另外两种。
 - [ ] 评审本任务最终 diff，确认无产品范围扩展、无明文密码/token日志、无 spec 提前承诺或未归属改动。
@@ -154,7 +153,7 @@ rtk proxy just web::admin::build
 
 ## 本地运行和浏览器验收矩阵
 
-先按配置启动 PostgreSQL、OpenFGA 和 IAM 使用的邮件/会话依赖，记录 IAM issuer、两个 Admin client、IAM 服务授权 tuple、Admin bootstrap 结果。原生运行使用下列独立终端命令；同一端口不得再被应用容器占用。
+先按配置启动 PostgreSQL、OpenFGA 和 IAM 使用的邮件/会话依赖，记录 IAM issuer、两个 Admin client、IAM 服务授权 tuple、Admin bootstrap 结果。原生运行使用下列独立终端命令。
 
 ```bash
 rtk proxy env GOWORK=off just service::iam::run
@@ -180,7 +179,6 @@ rtk proxy just web::admin::dev
 | 初始化重试 | 重启、断点重试、配置变化、禁用/删除和同邮箱新 UID 均不导致重新赋权 | R11 设计合同 |
 | 依赖失败 | IAM/OpenFGA 不可用时明确失败，不沿用“管理员”缓存放行或显示成功 | AC5、AC6 |
 | 受保护 gRPC 调用 | 服务身份与人类资格分开检查；无效凭据/无权限被拒绝，deadline/cancel/trace 和错误按约定传播；有上游改动时附框架回归与独立消费证据 | AC21 |
-| 端口重排 | IAM 保持原段，Admin/Example/Test 使用新段，dev/preview/代理/callback/宿主映射一致，Audit 冲突已解除，新表不含 Audit/CMS 占位 | AC20 |
 
 浏览器优先使用 Codex 内置集成。双浏览器会话、多个设备 token、邮箱验证链接、短恢复期仅使用隔离测试账号与环境，不能拿真实用户数据做 purge 验收。
 

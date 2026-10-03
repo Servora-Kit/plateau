@@ -4,7 +4,11 @@ export default defineConfig(async () => {
   return {
     application: {},
     vite: {
+      preview: {
+        port: 10012,
+      },
       server: {
+        strictPort: true,
         proxy: {
           '/api': {
             changeOrigin: true,

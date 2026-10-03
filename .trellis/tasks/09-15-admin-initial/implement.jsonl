@@ -30,7 +30,6 @@
 {"file":".trellis/tasks/09-15-admin-initial/research/lifecycle-design-evidence.md","reason":"删除恢复清理的数据集合、软删除过滤、邮箱唯一约束与并发证据；最终合同以 design 为准"}
 {"file":".trellis/tasks/09-15-admin-initial/research/first-login-bootstrap-design.md","reason":"首次改密受限凭证及 bootstrap 稳定绑定、迁移证据；技术候选由 design 裁定"}
 {"file":".trellis/tasks/09-15-admin-initial/research/admin-integration-design.md","reason":"BFF、CSRF、服务身份、OpenFGA 与 Vben 接入证据；路由与最终选择以 design 为准"}
-{"file":".trellis/tasks/09-15-admin-initial/research/port-layout-migration.md","reason":"附带端口配置修改的实际文件与 Audit 冲突；保持 AGENTS 和前后端配置范围，不另建迁移流程"}
 {"file":".trellis/spec/plateau/project/boundaries.md","reason":"R21 跨仓协同迭代：证实框架职责后在 Servora 修正，保留 Plateau 身份和授权边界"}
 {"file":".trellis/spec/servora/framework/transport.md","reason":"Servora gRPC client、endpoint 与 middleware 装配的现有合同及回归入口"}
 {"file":".trellis/tasks/09-15-admin-initial/research/design-gap-review.md","reason":"IAM adapter 与错误归因、服务 JWT 离线语义、tombstone 查询隔离及已确认邮件行为；G5 复制树证据已过时，按新建 Admin 方案实施"}

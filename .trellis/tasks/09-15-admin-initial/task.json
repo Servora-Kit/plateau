@@ -2,7 +2,7 @@
   "id": "admin-initial",
   "name": "admin-initial",
   "title": "Admin 首期建设",
-  "description": "规划平台 Admin 管理与 IAM 生命周期能力、端口配置；以受保护 RPC 验证 Servora gRPC client、错误和日志，并将 Ent 软删除便利层迁到 Plateau infra，保持 CRUD adapter 边界与现有消费。",
+  "description": "规划平台 Admin 管理与 IAM 生命周期能力；以受保护 RPC 验证 Servora gRPC client、错误和日志，并将 Ent 软删除便利层迁到 Plateau infra，保持 CRUD adapter 边界与现有消费。",
   "status": "planning",
   "dev_type": null,
   "scope": null,

@@ -11,7 +11,7 @@
 ## 质量检查
 
 - `just web::example::lint`；单元测试和类型检查分别使用 `pnpm --dir app/example/web run test:unit`、`pnpm --dir app/example/web run type-check`。
-- `just web::example::build` 检查生产构建；Vite 的 dev/preview 端口都是 10032，不要并行启动。
+- `just web::example::build` 检查生产构建；Vite 的 dev/preview 端口都是 10082，不要并行启动。
 - 真实请求验证需要先运行 `just service::example::run`，再用 `just web::example::dev` 在浏览器执行 CRUD。当前任务未运行此联调，不能表述为已验收。
 
 ## 目录职责

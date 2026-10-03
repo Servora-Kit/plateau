@@ -26,7 +26,6 @@
 {"file":".trellis/tasks/09-15-admin-initial/research/lifecycle-design-evidence.md","reason":"核对软删除事务、关联清理、恢复边界及邮箱释放时机"}
 {"file":".trellis/tasks/09-15-admin-initial/research/first-login-bootstrap-design.md","reason":"核对未完成改密无法获得普通会话、bootstrap 不误绑或重授；最终设计优先"}
 {"file":".trellis/tasks/09-15-admin-initial/research/admin-integration-design.md","reason":"核对 Admin 两层授权、cookie/CSRF、本地退出、已有会话撤权与真实协议接线"}
-{"file":".trellis/tasks/09-15-admin-initial/research/port-layout-migration.md","reason":"检查应用端口/代理/宿主映射同步，容器内部与中间件端口未被错误替换"}
 {"file":".trellis/spec/plateau/project/boundaries.md","reason":"检查 R21 框架责任证据、无静默绕过、上游回归与 Plateau 实际消费均有验证"}
 {"file":".trellis/spec/servora/framework/transport.md","reason":"检查客户端装配、middleware 顺序和上下文传播未被应用侧重复实现"}
 {"file":".trellis/tasks/09-15-admin-initial/research/design-gap-review.md","reason":"核对设计复核问题已关闭或明确待确认，不把未实现能力和未经确认的部分完成行为当作已验收"}

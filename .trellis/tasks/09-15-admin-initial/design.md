@@ -1,6 +1,6 @@
 # Admin 技术设计
 
-状态：2026-09-16 规划待整体评审，尚未实施。端口调整按用户要求作为 AGENTS 与前后端配置的附带改动，不独立设计迁移流程。产品行为以 [PRD](prd.md) 为准；本文裁定调研中的技术候选，不能把 research 中的备选或旧问题当作新增需求。执行与验证见 [implement.md](implement.md)。
+状态：2026-09-16 规划待整体评审，尚未实施。产品行为以 [PRD](prd.md) 为准；本文裁定调研中的技术候选，不能把 research 中的备选或旧问题当作新增需求。执行与验证见 [implement.md](implement.md)。
 
 ## 1. 职责与术语
 
@@ -22,7 +22,7 @@ Admin 没有 tenant、组织、业务岗位或业务运营模型。所有当前�
 
 - 实施时在`app/admin/service`路径建立独立 Admin 服务，使用仓库根 Go module；以 Example 的通用工程和 `service → biz ← data` 为起点，按需参考 IAM 的认证、会话、Wire 与 startup 接线。以 Trellis [布局](../../spec/service/backend/layout.md)、[分层](../../spec/service/backend/layers.md)、[编码](../../spec/service/backend/coding.md) 及 [Example](../../spec/example/backend.md)/[IAM](../../spec/iam/backend.md) 后端规范为依据，结合 Admin 已确认职责组织代码，不恢复旧复制树。
 - Admin 自有 PostgreSQL 数据库保存服务端会话、OIDC 登录事务和 bootstrap 进度；不复制 IAM 用户/密码表，也不维护第二份管理员关系真相。OpenFGA 中的资格关系是唯一授权来源。
-- Admin 的人类管理 API 首先只注册 HTTP transport；新规划 10010 为 HTTP，10011 预留 gRPC，10012 为 Web。生成 gRPC stub 不等于开放管理 gRPC 入口；以后增加入口须重新完成可信 Actor 与授权接线。
+- Admin 的人类管理 API 首先只注册 HTTP transport。生成 gRPC stub 不等于开放管理 gRPC 入口；以后增加入口须重新完成可信 Actor 与授权接线。
 - Vben `app/admin/web/apps/web-antd` 保留独立 workspace/lockfile；使用共享 `@plateau/api` 和 `@plateau/client` 的本地包依赖，不复制生成类型。相对该 app package 的路径分别是 `../../../../../api/gen`、`../../../../../web/packages/client`；安装与 lockfile 仍在 `app/admin/web`。
 - Admin Proto 放 `app/admin/service/api/protos/admin/**`，在根 `buf.yaml` 注册，生成到根 `api/gen/go` 和 `api/gen/ts`；IAM 的 Proto 扩展继续归 IAM。OpenAPI 随 Admin 服务生成。
 - `just/services.just` 增加 Admin 后端；现有 `just/webs.just` 已有 Admin Web。不新增独立 `go.mod`，不依赖本机父级 `go.work` 才能编译。
@@ -38,7 +38,7 @@ S1 先建立下列职责对应的应用骨架与 `app/admin/service/api/protos/a
 | `oidc` / `authn` | Admin RP 登录与会话到可信 user Actor 的适配；不发行平台 OIDC token、不保留 IAM Provider 或密码登录 |
 | `startup` / Wire | 装配上述依赖及清理函数；初始化调用远端 GetBootstrapUser，不创建本地 seed 或输出本地初始密码 |
 
-按现有实践建立启动、配置加载、可观测性与 transport 骨架，只装配 Admin 所需的依赖。IAM User/Credential/Account 持久化、OIDC Provider、邮件和 seed 创建继续归 IAM。Admin 公开 API 以 5.3 为唯一清单，复用 IAM 公共 User/Profile 消息。OIDC redirect/callback 可用专用 HTTP handler，无需为复用生成器把重定向硬套为普通 JSON RPC。Admin public origin、IAM issuer 与两个 client 凭据分别配置；只建立当前需要的 HTTP server，gRPC 端口继续预留。
+按现有实践建立启动、配置加载、可观测性与 transport 骨架，只装配 Admin 所需的依赖。IAM User/Credential/Account 持久化、OIDC Provider、邮件和 seed 创建继续归 IAM。Admin 公开 API 以 5.3 为唯一清单，复用 IAM 公共 User/Profile 消息。OIDC redirect/callback 可用专用 HTTP handler，无需为复用生成器把重定向硬套为普通 JSON RPC。Admin public origin、IAM issuer 与两个 client 凭据分别配置；只建立当前需要的 HTTP server。
 
 ## 3. Admin 登录、会话与服务调用
 
@@ -237,26 +237,11 @@ Admin 自有单例记录 `primary, iam_user_id, state(PENDING/COMPLETED), comple
 
 ## 9. Web、部署与回退边界
 
-### 9.1 本地端口布局
-
-按本次用户决定重排；以下是实施目标，当前根 AGENTS 与运行配置仍是旧分配。每应用十个端口，+0 HTTP、+1 gRPC、+2 Web，+3～+9 预留；缺失的服务槽位只保留位置，不新增不需要的服务。
-
-| 应用 | 端口段 | HTTP | gRPC | Web |
-| --- | --- | --- | --- | --- |
-| IAM | 10000–10009 | 10000 | 10001 | 10002 |
-| Admin | 10010–10019 | 10010 | 10011（预留） | 10012 |
-| Example | 10080–10089 | 10080 | 10081 | 10082 |
-| Test | 10090–10099 | 10090（预留） | 10091（预留） | 10092 |
-
-10020–10079 留给后续基础微服务，从 Admin 后面的空闲段按需登记，不能因为 Example/Test 编号较大就从 10100 继续顺排。Audit/CMS 暂不在新登记表占位。现有 Audit 配置占用 10010/10011，会与 Admin 冲突；按用户给出的“在 Admin 后面”顺序，将现有 Audit 的本地监听/宿主映射顺移到 10020/10021，表中暂不增加该服务条目。后续登记须检查实际配置占用，不能因表中暂未列 Audit 再将同段分配给其他服务。
-
-本规则用于本地监听和 Docker 宿主映射，不重排容器内部/共享中间件/生产公开端口；dev 与 preview 共用 Web 槽位。当前 AGENTS 的“已有编号不重排”由本次明确调整覆盖，之后新登记仍保持已有应用编号稳定。实际改动限定为根 AGENTS 与相关配置/启动脚本（含 proxy、静态 callback、宿主映射），随应用联调检查；不批量改写历史文档或 spec，不新增迁移工具。
-
 ### 9.2 页面与公开地址
 
 Vben 仅提供两个平级菜单。用户管理对 IAM 用户执行独立命令，已删除视图展示原状态、删除/清理时间和恢复按钮；权限管理直接展示管理员资格列表。资格变更与身份编辑分别保存并反馈，不构造跨 IAM/OpenFGA 的假原子“保存全部”。资料字段全选定，邮箱只读，头像 URL 不增加上传能力。IAM 个人设置可通过导航进入。
 
-本地默认 issuer 为 `http://localhost:10002`，IAM HTTP/gRPC 为 10000/10001，Admin Web 为 `http://localhost:10012`，Admin HTTP 为 10010；Admin OIDC callback 走 Web 同源代理 `/auth/callback`，浏览器 `/auth` 与 `/v1/admin` 请求代理到 10010。Example Web/后端代理一起迁到 10082/10080，Test Web 的 dev 与 preview 都迁到 10092。生产仍采用各应用同源反向代理及 HTTPS，不把容器内部地址注册为公开 callback。
+IAM issuer、Admin public origin 与后端 endpoint 分别配置。Admin OIDC callback 走 Web 同源代理 `/auth/callback`，浏览器 `/auth` 与 `/v1/admin` 请求代理到 Admin HTTP 服务。生产仍采用各应用同源反向代理及 HTTPS，不把容器内部地址注册为公开 callback。
 
 新增 Admin 服务 local/docker配置和数据库登记；当前应用 Compose 只有 Audit，不能宣称现成 IAM/Admin 一键容器运行。本任务以原生服务 + 容器基础设施完成端到端验收，记录四个启动入口和静态client/tuple配置；不顺带重建全套容器部署。
 

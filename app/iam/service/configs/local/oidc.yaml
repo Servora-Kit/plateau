@@ -6,7 +6,7 @@ oidc:
     # - client_id: test-web
     #   client_secret: "${IAM_TEST_WEB_CLIENT_SECRET}"
     #   redirect_uris:
-    #     - "${IAM_TEST_WEB_REDIRECT_URI:http://localhost:10042/callback}"
+    #     - "${IAM_TEST_WEB_REDIRECT_URI:http://localhost:10092/callback}"
     #   allowed_scopes:
     #     - openid
     #     - profile

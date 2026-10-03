@@ -1,19 +1,19 @@
 # Admin 接入设计核对
 
-核对日期：2026-09-16。本文件承接 `09-15-admin-initial` 的技术设计，不代表 Admin 后端或 OIDC RP 已经实现。早期 [current-state.md](current-state.md) 记录后端目录不存在；最新 [端口核查](port-layout-migration.md) 已发现工作树中的 IAM 复制内容，尚未完成独立 Admin 接线，Vben 登录仍是演示实现。实施以最新工作树为准并保留用户改动。
+核对日期：2026-09-16。本文件承接 `09-15-admin-initial` 的技术设计，不代表 Admin 后端或 OIDC RP 已经实现。[current-state.md](current-state.md) 记录后端目录不存在，尚未完成独立 Admin 接线，Vben 登录仍是演示实现。实施以最新工作树为准并保留用户改动。
 
 ## 现状锚点与结论
 
-- IAM 的本地公开 HTTP 是 `10000`、gRPC 是 `10001`，OIDC issuer/浏览器公开入口是 `http://localhost:10002`（[bootstrap.yaml](../../../../app/iam/service/configs/local/bootstrap.yaml):1-22、[oidc.yaml](../../../../app/iam/service/configs/local/oidc.yaml):1-20）。本地 OIDC 配置中的 `test-web` 和 `admin` client 目前是注释示例，不能当作已经启用的 Admin client；IAM 代码支持授权码、PKCE、refresh token 和 client credentials（[provider.go](../../../../app/iam/service/internal/oidc/provider.go):61-80、157-180）。
+- IAM 的 OIDC issuer/浏览器公开入口由本地 OIDC public origin 配置决定，与后端 HTTP/gRPC endpoint 分开配置（[bootstrap.yaml](../../../../app/iam/service/configs/local/bootstrap.yaml):1-22、[oidc.yaml](../../../../app/iam/service/configs/local/oidc.yaml):1-20）。本地 OIDC 配置中的 `test-web` 和 `admin` client 目前是注释示例，不能当作已经启用的 Admin client；IAM 代码支持授权码、PKCE、refresh token 和 client credentials（[provider.go](../../../../app/iam/service/internal/oidc/provider.go):61-80、157-180）。
 - IAM 已有浏览器会话由 `security/session.New` 接入 SCS，服务端保存数据、cookie 使用 `HttpOnly`/`Secure`/`SameSite` 等配置（[session.go](../../../../security/session/session.go):15-77）。这套封装可复用“会话管理器构造和 LoadAndSave 生命周期”，Admin 必须使用独立 Store 命名空间和独立 cookie 名称（生产 `__Host-admin_session`，开发 `admin_session`），不能读取或覆盖 `__Host-iam_session`；封装本身没有 CSRF 校验。
 - 共享 session AuthN 会从应用拥有的会话身份映射可信 `security.Actor`，并明确 `WithActor` 不负责认证或授权（[authn.go](../../../../security/authn/session/authn.go):12-19、43-78、[actor.go](../../../../security/actor.go):15-46）。Admin callback 验证 OIDC `sub` 后才将其映射为 `ActorTypeHuman`，后续请求仍须走 OpenFGA PEP/PDP。
 - Admin 模型已经表达“人类 Admin 资格”和“IAM 服务身份权限”是两条关系：`admin:global#admin` 接受 `user` 并派生 `manage_users`（[admin.fga](../../../../manifests/openfga/admin.fga):1-6），IAM 的 `iam:global#manage_users` 接受 `service`（[iam.fga](../../../../manifests/openfga/iam.fga):1-9）。模型和测试 tuple 不等于 Admin 运行时关系初始化或后端接线完成。
 
 ## 浏览器认证、会话与路由
 
-### 端口和公开拓扑
+### 公开地址与同源拓扑
 
-本任务按用户最新要求将 Admin 规划为 HTTP `10010`、gRPC `10011`（预留）、Web `10012`；根 AGENTS 和实际配置目前仍为旧布局，待实施时更新。路由和 client 命名以主 design 为准：callback 是 `/auth/callback`，会话是 `/v1/admin/session`，用户管理是 `/v1/admin/users`，资格管理是 `/v1/admin/administrators`，OIDC clients 是 `admin-web` 与 `admin-service`。开发和生产都让浏览器只看到一个 Admin public origin：开发为 `http://localhost:10012`，Vite 将 `/auth/*`、`/v1/*` 代理到 Admin HTTP `10010`；生产由反向代理把同一路径转发给 BFF。Cookie 作用域由 host/path 决定，不由端口隔离；同源 proxy 的目的在于减少跨源请求的 CORS 和部署复杂度，并让两套应用继续使用不同 cookie 名称。IAM issuer 仍为 `http://localhost:10002`，不能误写成 IAM HTTP `10000` 或 gRPC `10001`。
+路由和 client 命名以主 design 为准：callback 是 `/auth/callback`，会话是 `/v1/admin/session`，用户管理是 `/v1/admin/users`，资格管理是 `/v1/admin/administrators`，OIDC clients 是 `admin-web` 与 `admin-service`。开发和生产都让浏览器只看到配置的 `admin.public_origin`：开发由 Vite 将 `/auth/*`、`/v1/*` 代理到 Admin HTTP 服务；生产由反向代理把同一路径转发给 BFF。Cookie 作用域由 host/path 决定，不由端口隔离；同源 proxy 的目的在于减少跨源请求的 CORS 和部署复杂度，并让两套应用继续使用不同 cookie 名称。IAM issuer 使用 `iam.issuer` 配置，不能误写成 IAM 后端 HTTP 或 gRPC endpoint。
 
 建议的 Admin BFF 路由如下。所有改变状态的路由使用 POST，并经过 CSRF 中间件；GET 只读。
 
@@ -32,14 +32,14 @@
 
 ### OIDC code + PKCE confidential BFF
 
-Admin 应注册 `admin-web` 授权码 client，secret 只注入 Admin 后端；另用 `admin-service` client credentials 给 IAM gRPC。两者不能共用 secret、不能把 secret 打进 Vben bundle。IAM 静态 client schema 约束 secret、精确 redirect URI、允许 scope、trusted 和 grant type（[config.proto](../../../../app/iam/service/api/protos/iam/oidc/conf/v1/config.proto):17-40）。建议启用的本地配置是：
+Admin 应注册 `admin-web` 授权码 client，secret 只注入 Admin 后端；另用 `admin-service` client credentials 给 IAM gRPC。两者不能共用 secret、不能把 secret 打进 Vben bundle。IAM 静态 client schema 约束 secret、精确 redirect URI、允许 scope、trusted 和 grant type（[config.proto](../../../../app/iam/service/api/protos/iam/oidc/conf/v1/config.proto):17-40）。以下为配置示意；redirect URI 必须按 `admin.public_origin` 展开为精确地址后写入配置：
 
 ```yaml
 # IAM oidc.yaml：由部署环境注入 secret，实际值不提交仓库
 - client_id: admin-web
   client_secret: "${IAM_ADMIN_WEB_CLIENT_SECRET}"
   redirect_uris:
-    - "http://localhost:10012/auth/callback"
+    - "${admin.public_origin}/auth/callback"
   allowed_scopes: [openid, profile, email, offline_access]
   trusted: true
   allowed_grant_types: [authorization_code, refresh_token]
@@ -49,7 +49,7 @@ Admin 应注册 `admin-web` 授权码 client，secret 只注入 Admin 后端；�
   audiences: [iam]
 ```
 
-`trusted: true` 只表示 IAM 不显示 consent 页，不替 Admin 资格检查。Admin 配置应包含 `iam.issuer=http://localhost:10002`、`admin-web`/`admin-service` client ID、secret、精确 callback、`admin.public_origin=http://localhost:10012`、`iam.grpc_endpoint=127.0.0.1:10001`、OpenFGA store/model/endpoint，以及独立 session 配置。
+`trusted: true` 只表示 IAM 不显示 consent 页，不替 Admin 资格检查。Admin 配置应包含 `iam.issuer`、`admin-web`/`admin-service` client ID、secret、精确 callback、`admin.public_origin`、`iam.grpc_endpoint`、OpenFGA store/model/endpoint，以及独立 session 配置。
 
 登录交易的 server-side 记录至少包括 state hash、PKCE verifier、nonce、redirect URI、return_to、创建时间和已消费标记；state 必须绑定当前 Admin 浏览器会话并在 token exchange 前删除，防重放。callback 要使用发现文档/JWKS 验证 ID token，且只以 `sub` 作为稳定 IAM user ID；email、显示名及浏览器提交的 user ID 都不能用于身份绑定。IAM 发现文档明确列出 `sub`、`iss`、`aud`、`exp`、`nonce` 和 profile claims，且只支持 S256 PKCE（[provider.go](../../../../app/iam/service/internal/oidc/provider.go):157-180）。协议实现可在实施时选用与当前 IAM 版本相容的 `github.com/zitadel/oidc/v3/pkg/client/rp` 或 `x/oauth2` 配合验证器；这属于新增 Admin RP 代码和依赖，不是当前已支持能力。Context7 查阅的官方材料：ZITADEL RP 的 authorization code/PKCE/nonce 示例、`x/oauth2` 的 verifier 与 client credentials、SCS 的 server-side cookie 会话。
 
@@ -59,7 +59,7 @@ Vben 当前 `apps/web-antd` 是独立 workspace 和 lockfile；它的演示 `/au
 
 ### Cookie、CSRF 与退出
 
-Admin 复用 `security/session.New` 的 cookie 校验、SCS Store、HashTokenInStore 和 `LoadAndSave`，但用 Admin 自己的 Redis/Store namespace 与 cookie 名称。生产使用 `__Host-admin_session`、Path `/`、无 Domain、Secure、HttpOnly、SameSite=Lax；本地明确定义普通 `admin_session`、`Secure=false`、HttpOnly、SameSite=Lax，以适配 `http://localhost:10012`，不能把 `__Host-` 前缀与非 Secure cookie 混用。Cookie 按 host/path 发送，端口不是隔离边界；同源 proxy 仍用于减少跨源 CORS 与部署复杂度。回调完成身份提权前先 `RenewToken`，避免 session fixation。
+Admin 复用 `security/session.New` 的 cookie 校验、SCS Store、HashTokenInStore 和 `LoadAndSave`，但用 Admin 自己的 Redis/Store namespace 与 cookie 名称。生产使用 `__Host-admin_session`、Path `/`、无 Domain、Secure、HttpOnly、SameSite=Lax；本地明确定义普通 `admin_session`、`Secure=false`、HttpOnly、SameSite=Lax，以适配本地 HTTP public origin，不能把 `__Host-` 前缀与非 Secure cookie 混用。Cookie 按 host/path 发送，端口不是隔离边界；同源 proxy 仍用于减少跨源 CORS 与部署复杂度。回调完成身份提权前先 `RenewToken`，避免 session fixation。
 
 现有 session 封装不提供 CSRF，因此新增 `security` 或 Admin 内的中间件：登录后在 SCS 保存 CSRF token 的 hash，`GET /auth/csrf` 返回一次性/可轮换 token，所有 POST/PATCH/DELETE 要求 `X-CSRF-Token`、常量时间比较和允许的 `Origin`/`Referer`；Admin API 不开放跨源 credential CORS。OIDC callback 另由一次性 state + nonce + PKCE 保护，不用普通 CSRF token 代替。
 
@@ -139,12 +139,12 @@ OpenFGA read/write 的一致性并不替代数据库事务：并发 grant/revoke
 
 ## 必要验证清单
 
-1. **OIDC 协议**：issuer discovery 为 `http://localhost:10002`；未登记 redirect、state/nonce/PKCE 错误、callback 重放、签名/issuer/audience/exp 不符都拒绝；正确 code + S256 verifier 建立 Admin session；无 `admin:global#admin` 的普通 IAM 用户得到 forbidden；首次改密/邮箱验证要求不能由 Admin callback 绕过。
-2. **会话与 CSRF**：登录前后 session ID 轮换；cookie 具备独立名称、HttpOnly、Secure、Path/Domain/SameSite 约束；缺失/错误 CSRF 或错误 Origin 的 POST/PATCH/DELETE 拒绝；GET 只读；`POST /auth/logout` 后旧 Admin cookie 不能访问管理 API，但 IAM `10002` 的会话仍可继续访问 IAM Web，且没有请求 `/end_session`。
+1. **OIDC 协议**：issuer discovery 使用 `iam.issuer` 配置；未登记 redirect、state/nonce/PKCE 错误、callback 重放、签名/issuer/audience/exp 不符都拒绝；正确 code + S256 verifier 建立 Admin session；无 `admin:global#admin` 的普通 IAM 用户得到 forbidden；首次改密/邮箱验证要求不能由 Admin callback 绕过。
+2. **会话与 CSRF**：登录前后 session ID 轮换；cookie 具备独立名称、HttpOnly、Secure、Path/Domain/SameSite 约束；缺失/错误 CSRF 或错误 Origin 的 POST/PATCH/DELETE 拒绝；GET 只读；`POST /auth/logout` 后旧 Admin cookie 不能访问管理 API，但 IAM 的会话仍可继续访问 IAM Web，且没有请求 `/end_session`。
 3. **两层 AuthN/AuthZ**：Admin 人类请求只产生 human Actor；IAM gRPC 请求只使用 service client credentials；错误 secret、错误 issuer/audience、过期 service token、缺少 `iam:global` tuple 均被拒绝；不能以人类 Admin tuple 替换 `service:admin` tuple。
 4. **资格单事实源**：grant/list/revoke 均读写 `admin:global` 的 OpenFGA relation；不建本地权威名单；列表补齐 IAM 用户资料；grant/revoke 响应后使用高一致性读取验证；撤销后一条已有 session 的下一请求返回 403；自撤销及对自身生命周期操作被后端拒绝。
-5. **远端管理链路**：Vben `10012` → Admin HTTP `10010` → IAM gRPC `10001` 的成功、未登录、无 Admin 资格、IAM 拒绝、etag 冲突和依赖不可用均显示真实结果；Profile 七字段 field mask 正确，email 不可变；password 不出日志/响应；不连接 IAM 数据库。
-6. **端口和依赖**：Admin dev proxy、IAM `10000/10001/10002`、OpenFGA endpoint/store/model 的本地配置逐项可启动并验证；Vben 继续使用独立 workspace/lockfile，以相对 `../../../../../api/gen` 与 `../../../../../web/packages/client` 消费平台包，不修改根 workspace 纳管规则。需要运行时才能证明的项目（client bootstrap 是否已启用、OpenFGA 当前 datastore 的强一致语义、IAM 禁用对 Admin session 的即时观察）在实现验收前不得写成“已支持”。
+5. **远端管理链路**：Vben → Admin HTTP → IAM gRPC 的成功、未登录、无 Admin 资格、IAM 拒绝、etag 冲突和依赖不可用均显示真实结果；Profile 七字段 field mask 正确，email 不可变；password 不出日志/响应；不连接 IAM 数据库。
+6. **运行配置与依赖**：Admin 同源代理、IAM issuer/HTTP/gRPC endpoint、OpenFGA endpoint/store/model 的本地配置逐项可启动并验证；Vben 继续使用独立 workspace/lockfile，以相对 `../../../../../api/gen` 与 `../../../../../web/packages/client` 消费平台包，不修改根 workspace 纳管规则。需要运行时才能证明的项目（client bootstrap 是否已启用、OpenFGA 当前 datastore 的强一致语义、IAM 禁用对 Admin session 的即时观察）在实现验收前不得写成“已支持”。
 
 ## 参考资料
 
