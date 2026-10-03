@@ -6,9 +6,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	entgomixin "github.com/Servora-Kit/servora/contrib/db/entgo/mixin"
+	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
 )
-
 
 // User stores the private persistence shape for example.servora.dev/User.
 type User struct {

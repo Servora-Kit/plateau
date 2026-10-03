@@ -47,7 +47,7 @@ Audit/CMS 暂不列入上表；现有 Audit 的本地监听和宿主映射占用
   - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/` AuthN/AuthZ 代码生成插件；插件从当前 checkout 的 `cmd/` 本地安装
 - `internal/codegen/` 共享代码生成实现
 - `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
-- `infra/` 共享基础设施：`openfga/`、`clickhouse/`；Ent 适配归 Servora 的 `contrib/db/entgo/`
+- `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`entgo/mixin/` 软删除便利层；通用 Ent driver 与 CRUD adapter 归 Servora 的 `contrib/db/entgo/`
 - `web/packages/client/` 平台共享前端通信能力（见 [web/client 规范](.trellis/spec/web/client/index.md)）
 - `just/` 平台共享 Just settings、registry 与 service 实现
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）

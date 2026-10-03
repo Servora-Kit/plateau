@@ -16,10 +16,9 @@
 
 ### S1：接口与持久化基础
 
-依赖：规划获批。覆盖 R2、R3、R8–R17、R22。
+依赖：规划获批。覆盖 R2、R3、R8–R17。
 
 - [ ] 用户已删除旧 Admin 后端复制目录。实施先核对届时工作区，再参考 Example 通用工程、IAM 相关接线及 Trellis layout/layers/coding 建立 `app/admin/service` 骨架；在 `app/admin/service/api/protos/admin/**` 定义 Admin 合同与私有配置，配置对应 imports/OpenAPI 输入，再注册 Buf 并生成。只建立 design 第 2 节所需依赖、schema 与 Wire provider，保留 Web 和其他已有改动，不恢复整套 IAM 复制树。
-- [ ] R22：将软删除便利实现及专属测试迁到 Plateau `infra/entgo/mixin`，更新 Example schema/repository 与 Ent 生成产物；IAM 新字段接线依赖该步骤。Servora CRUD 的 fixture 改为测试自用字段/显式查询范围，保留相关 CRUD 合同且不 import Plateau。两仓回归及消费确认后移除 Servora 旧包；不迁移 driver/List/Clear，也不顺带重写整个 Ent 层。
 - [ ] IAM UserService 增加管理设密、删除、恢复、强制登出；补齐 deleted 视图、邮箱精确过滤和生命周期输出字段，保持原字段号。
 - [ ] 为管理创建后的验证邮件失败声明独立 reason 及安全资源引用合同，生成两端错误辅助代码；正常 CreateUser 返回 User 保持不变。
 - [ ] AccountService 增加当前用户删除接口；AuthnService 增加用途受限的首次改密完成接口与登录分支响应。
@@ -102,7 +101,7 @@
 
 依赖：S1–S5。
 
-- [ ] 逐项验收 PRD AC1–AC19、AC21–AC22，将结果与可复现步骤记录于本任务的验证记录；未跑、失败、环境阻塞分开记载。
+- [ ] 逐项验收 PRD AC1–AC19、AC21，将结果与可复现步骤记录于本任务的验证记录；未跑、失败、环境阻塞分开记载。
 - [ ] 运行下述质量命令，检查生成 diff 与所有跨层合同；只在新变更、失败或未解决风险出现时扩大/重复测试。
 - [ ] 同时记录仓库支持、实际启用配置和端到端结果，不将其中一种等同于另外两种。
 - [ ] 评审本任务最终 diff，确认无产品范围扩展、无明文密码/token日志、无 spec 提前承诺或未归属改动。
@@ -127,8 +126,6 @@ rtk proxy git diff --check
 `just lint` 当前包含 Proto、Go lint 与共享 TS 检查，不包含 Web lint。OpenFGA model apply 属于环境写操作，在实施联调的明确目标环境执行并记录 store/model ID；上面两个静态命令不能证明模型已部署。
 
 若 R21 涉及 Servora 改动，在 `../servora` 按实际受影响包执行回归与对应 lint，并将确切命令、依赖提交/版本、Plateau 更新方式补充到验证记录。父级 go.work 可辅助开发，但最终还需验证 Plateau 的独立依赖消费及真实受保护 RPC；不自动发布或打标签。
-
-R22 的旧实现基线已在本轮运行，结果见 [归属核查](research/ent-mixin-ownership.md)。迁移后须重新执行 Plateau 新共享包与 Example 的相关测试、软删除的生成 Ent/数据库合同，以及 Servora 独立 `core/crud`、Ent CRUD 单测和 SQLite live contract；IAM 的真实 PostgreSQL 生命周期并发验证仍不能由 SQLite 替代。检查源 schema、生成引用及活跃文档不存在未处理的旧包依赖。此段是迁移后的验收要求，不把基线通过记作迁移通过。
 
 数据库并发验证：先给当前进程提供隔离测试库的 `IAM_TEST_POSTGRES_DSN`，不把连接密码写入记录。IAM 当前测试会创建独立 schema，并在结束时清理该 schema。检查输出确认 PostgreSQL 测试没有因为缺少变量而 SKIP。
 

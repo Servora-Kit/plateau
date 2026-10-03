@@ -6,7 +6,7 @@
 
 Ent schema 是应用持久化模型的唯一来源，负责字段的 optional/nillable、immutable、default、sensitive 与唯一约束；这些取决于领域，不能由 CRUD adapter 自动推断。Example 的 [User schema](../../../../app/example/service/internal/data/ent/schema/user.go) 把 `(tenant_id, resource_id)` 设为对活动和 tombstone 行都生效的唯一键，这是该资源的选择，不是所有服务的模板。
 
-采用 `SoftDeleteMixin` 的 schema 默认过滤 tombstone，并把 Delete/DeleteOne 改写为带 `delete_time` 的更新；只有包含 tombstone 的业务读取或硬删除才显式使用 `entgomixin.SkipSoftDelete`，见 [mixin 实现](../../../../../servora/contrib/db/entgo/mixin/soft_delete.go) 和 [Example Repo](../../../../app/example/service/internal/data/user.go)。`show_deleted` 改变可见性时，Repo 既要显式改变查询 context，也要把可见性写入 page-token scope fingerprint；两者分别控制数据库结果和 token 重用，不能互相代替。
+共享软删除能力使用 Plateau `infra/entgo/mixin`：`SoftDeleteMixin` 提供 tombstone 字段、默认查询过滤和 Delete/DeleteOne 改写，`SkipSoftDelete` 用于显式 tombstone 读取与硬删除。见 [mixin 实现](../../../../infra/entgo/mixin/soft_delete.go) 和 [Example Repo](../../../../app/example/service/internal/data/user.go)。`show_deleted` 对应的查询可见性同时写入 page-token scope fingerprint。
 
 一个领域不变量跨多个实体或需要锁定并发状态时，事务由 data Repo 拥有。IAM 的 [inTx](../../../../app/iam/service/internal/data/transaction.go) 负责 Begin、panic rollback、错误 rollback 与 commit，OAuth/凭据变更在该边界内锁定用户；简单单实体 Example User 操作不因此自动包事务。涉及真实数据库时，测试须在所选 dialect 的实际环境验证 schema、事务与 soft-delete 行为；本轮未运行该类环境。
 

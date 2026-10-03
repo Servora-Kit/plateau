@@ -163,9 +163,7 @@ Admin Web 对该结果展示“账号已创建，但验证邮件发送失败”�
 
 ### 6.1 存储与锁
 
-User 组合迁入 Plateau `infra/entgo/mixin` 的 `SoftDeleteMixin` 获得 tombstone 字段与默认查询过滤；IAM 显式设置 `purge_time`，共享便利包不处理恢复、关联撤销或定期清理。`SkipSoftDelete` 同时绕过查询过滤和删除改写，IAM data 层只在授权的 Get/List 已删除视图、GetBootstrapUser、恢复和 purge 的确切查询上局部创建派生 context，不能将其传播到整个请求或无关写入。物理 Delete 显式 bypass 仅归内部 purge 命令；公共 `show_deleted` 只控制可见性，不能改变 DeleteUser 的软删除语义。
-
-R22 先迁移当前实现、单测和软删除专属数据库合同，保持 Example 的已有语义；更新 Example schema/repository 并重新生成 Ent，再让 IAM 消费新路径。Servora 的 Ent driver、CRUD runtime/List/Clear 保持所属框架；其测试 fixture 改为自有字段和显式 query scope，只保留验证 CRUD 消费该范围的职责，不 import Plateau。完成两仓消费与回归后移除旧 mixin 包及活跃引用，不通过永久双份实现过渡。具体依赖和本轮基线验证见 [归属核查](research/ent-mixin-ownership.md)；包路径迁移不意味着 IAM 生命周期已经实现。
+User 组合 Plateau `infra/entgo/mixin` 的 `SoftDeleteMixin` 获得 tombstone 字段与默认查询过滤；IAM 显式设置 `purge_time`，共享便利包不处理恢复、关联撤销或定期清理。`SkipSoftDelete` 同时绕过查询过滤和删除改写，IAM data 层只在授权的 Get/List 已删除视图、GetBootstrapUser、恢复和 purge 的确切查询上局部创建派生 context，不能将其传播到整个请求或无关写入。物理 Delete 显式 bypass 仅归内部 purge 命令；公共 `show_deleted` 只控制可见性，不能改变 DeleteUser 的软删除语义。
 
 保留 LoginIdentifier 的全局 `(type, canonical_value)` 唯一索引。软删除不移走该行，不把索引改为只约束可用用户；注册冲突最终由数据库约束兜底，即使默认 User 查询已隐藏 tombstone。
 

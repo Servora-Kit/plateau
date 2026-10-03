@@ -11,7 +11,7 @@
 
 ## G2：已删除用户查询与物理删除的隔离
 
-- 当前事实：Servora [SkipSoftDelete](../../../../../servora/contrib/db/entgo/mixin/soft_delete.go):25-28 同时跳过默认查询过滤；同文件 72-78 表明它也绕过删除改写、允许执行原始删除。
+- 当前事实：Plateau [SkipSoftDelete](../../../../infra/entgo/mixin/soft_delete.go) 同时跳过默认查询过滤和删除改写、允许执行原始删除。
 - 设计缺口：[design](../design.md) 的 5.1 要求 Get/List 支持 `show_deleted`，5.2 的 GetBootstrapUser 允许返回 tombstone，但 6.1 又把 bypass 限定在恢复/purge 查询中，合同不一致。
 - 建议：由 IAM data 层对授权管理查询局部创建 bypass context，限制在确切查询调用，不把它写回整个请求上下文；恢复的特定 tombstone 查询同样局部使用，物理删除仅由内部 purge 命令显式启用。公共 `show_deleted` 参数不能控制写入路径是否物理删除。此项属于技术设计澄清，无需新增用户功能。
 - 验证：Get/List/GetBootstrapUser 的已删除视图正确；带查询可见性选项不能使 DeleteUser 物理删除；普通账号、登录与认证查询始终排除 tombstone。

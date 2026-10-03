@@ -1,5 +1,5 @@
 # 本地配置与密钥
-.env
+/.env
 .env.local
 .env.*.local
 *.key

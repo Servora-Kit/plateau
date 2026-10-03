@@ -29,5 +29,4 @@
 {"file":".trellis/spec/plateau/project/boundaries.md","reason":"检查 R21 框架责任证据、无静默绕过、上游回归与 Plateau 实际消费均有验证"}
 {"file":".trellis/spec/servora/framework/transport.md","reason":"检查客户端装配、middleware 顺序和上下文传播未被应用侧重复实现"}
 {"file":".trellis/tasks/09-15-admin-initial/research/design-gap-review.md","reason":"核对设计复核问题已关闭或明确待确认，不把未实现能力和未经确认的部分完成行为当作已验收"}
-{"file":".trellis/tasks/09-15-admin-initial/research/ent-mixin-ownership.md","reason":"核对 R22 未漏 Example/fixture/生成依赖、未让 Servora 依赖 Plateau、基线测试未被冒充迁移验收"}
 {"file":".trellis/tasks/09-15-admin-initial/research/grpc-error-logging.md","reason":"核对 code/reason 来源映射、cause 仅本地、日志关联与敏感字段未泄露"}

@@ -16,10 +16,10 @@
 
 | 问题 | 本轮实际情况 | 后续约束 |
 | --- | --- | --- |
-| 任务过大、整体把关缺失 | 同时实施 IAM 生命周期、首次改密、Admin BFF、两个 Web、跨仓 mixin；局部修补多于整体规范检查 | 先拆任务、固定文件所有者和跨任务接口，每个小任务独立过结构与运行门禁，再集成；不把代理交付或生成成功当成质量通过 |
+| 任务过大、整体把关缺失 | 同时实施 IAM 生命周期、首次改密、Admin BFF、两个 Web；局部修补多于整体规范检查 | 先拆任务、固定文件所有者和跨任务接口，每个小任务独立过结构与运行门禁，再集成；不把代理交付或生成成功当成质量通过 |
 | 数据层绕开现有 Ent 写法 | Admin 用 Ent 建表，却在业务 repository 内另写多段原生 SQL 和另一套事务组织 | 以 IAM/Example 的 Ent repository、行锁和事务模式为基线；有确切适配缺口再定位所属层，不为方便写第二套持久化惯例 |
 | gRPC 没有沿用既有示例 | 初版把 token 缓存、自写完成日志、配置拼装、错误映射混在一起；出现具体类型强转；后续仍重复调用 `BuildClientConfigIndex` | 参考 [worker_client.go](https://github.com/Servora-Kit/servora-example/blob/main/app/master/service/internal/data/worker_client.go)，使用 `iam_client.go`、`const iamServiceName = "iam.service"`、标准 `NewChainBuilder`、Dialer、repo 构造与薄 RPC 适配。连接复用和 cleanup 要明确，不重复扫描框架配置，也不机械重复每请求建连 |
-| 环境文件与工作流约定 | `.env.example` 最初有英文注释、分组不清；助手未经要求创建 feature 分支 | 中文注释，变量按职责分组、关联项相邻；默认 `main`，不开分支、不提交、不发布，除非用户明确要求 |
+| 工作流约定 | 助手未经要求创建 feature 分支 | 默认 `main`，不开分支、不提交、不发布，除非用户明确要求 |
 
 上述架构问题在中止时尚未全部纠正。临时进行过 repo/文件重排、Ent 改写和配置调用方迁移，但没有完成全部 Wire/测试联动；这些半完成修改已一并回退，不能在后续任务中当作存在的基线。
 
@@ -31,7 +31,6 @@
 - 原根 `.gitignore` 的全局 `cache/`、`bin/` 规则误忽略源码：除 shared/cache 外，`scripts/vsh/bin/vsh.mjs`、`scripts/turbo-run/bin/turbo-run.mjs` 也缺失，导致 `vsh lint` 找不到模块。
 - 中止前曾恢复六个 cache 源文件和两个 CLI 入口，随后随整体实施回退。2026-10-03 已在独立小事务中重新恢复；根 `.gitignore` 已精简并限定服务产物路径，移除误伤源码的宽泛规则，Vben 子目录无需维护额外例外。安装、显式 postinstall/stub 构建与两个 CLI 入口验证通过，浏览器已正常显示登录页。该缺失源码问题不再作为 Admin 子任务前置修复项，不代表 IAM 接入或完整前端验收已完成。
 - cache 来源为上游提交 `f2b3b1255389e69313463bee69c15e0d871132a7`；CLI 入口 blob 为 `407754d4e0a4fa566727971baf0acd606462e476`。这是可重取的来源证据，不要求后续盲目覆盖更高版本。
-- 原上游 `.env` 还有公开标题和偏好命名空间；本地缺失导致 `%VITE_APP_TITLE%` 未定义。应配置应用标题/命名空间，不重新启用演示 token 持久化或引入浏览器密钥。
 - 独立 Vben workspace 需沿用 catalog，不能新增裸版本依赖后留下未使用 catalog 项；共享源码包使用 `.ts` 导入时，消费端需正确配置 `allowImportingTsExtensions`。
 - Admin Web 曾完成生产构建和四条错误分类测试，但最后 lint 仍有三条 Vue closing-bracket 格式错误；不能把“构建成功”写成全部前端门禁通过。安装期间还有既有 peer/deprecation、可选 sharp 构建提示，不等同于新增业务失败。
 
@@ -49,13 +48,6 @@
 - 临时修正改为普通用户聚合创建、真实邮箱验证和密码认证，不放宽生产首次改密规则、不清 flag 绕过测试；修正后 OIDC 包通过。后续测试应建立符合真实领域不变量的数据。
 - `data/user.go` 曾出现事务内 `:=` 重声明导致编译失败，修正后才执行到数据库/transport 测试。Wire/Ent 生成成功不能替代完整编译。
 
-### 3.4 Ent 迁移和工具可复现性
-
-- R22 不能只删除 Servora mixin：Example、CRUD schema/live fixture 及生成引用均有消费；框架 fixture 应使用自有字段和显式 query scope，不反向 import Plateau。
-- Servora 原 `go generate` 因工具依赖校验和缺项失败；临时使用独立 `ent@v0.14.5` 又遇到 Go 1.27 下旧工具依赖的 `package context without types`。
-- 本轮用根 module 的 Ent tool 声明和 `go tool ent` 完成独立生成，随后相关测试通过；该工具声明也已回退。后续迁移任务须交付可重复生成入口，不能引用另一仓库的构建缓存绝对路径。
-- Example 公开 `GetUser` 原本显式允许读 tombstone，而默认 List 隐藏；一次 smoke 误把 IAM 的默认 Get 隐藏合同套在 Example 上。后续需验证保留原行为，不能为了测试预期改掉它。
-
 ## 4. 本轮实际验证与明确未完成项
 
 以下仅是**已回退临时代码**的历史结果，不可作为重新实施的验收结果。
@@ -66,7 +58,6 @@
 | IAM data、server | 设置隔离 PostgreSQL、Redis、OpenFGA 后包测试通过，包含新增数据库与 HTTP/gRPC 场景 |
 | IAM OIDC、cmd/server | 最初失败；上述 fixture/Duration 修正后两包测试通过 |
 | IAM Web | lint/typecheck/build 通过；浏览器仅验证了后端不可用时首次改密页的错误提示和 GET 状态重查，没有完整登录/改密端到端验收 |
-| Plateau mixin/Example 与 Servora CRUD | 单测及 SQLite live contract 通过；Example 实际 HTTP 创建、软删除、默认/显式列表、恢复通过 |
 | OpenFGA | 模型 4/4 tests、12/12 checks 通过；隔离实例已写模型及 `admin-service` 服务关系，不代表 Admin 人类资格闭环通过 |
 | Admin Web | 4 条错误结果测试、一次生产构建通过；typecheck 和最终完整 lint 未通过收尾 |
 | Admin 后端 | 未完成统一 build/test/runtime 验收，停止时仍在结构重整；不存在可宣称完成的 Admin/OIDC/Consul 管理闭环 |
@@ -79,10 +70,9 @@
 建议按可独立验收的交付物拆，而不是把原 S1–S6 直接改名：
 
 1. **工程与 Web 基线**：按用户决定复制 IAM 后端作为 Admin 起点，核对 Data/Repo/Wire/生成、Proto namespace、独立数据库。复制完成前不得用原 IAM 配置启动 Admin 副本，避免连到 IAM 数据库或执行 IAM seed/provider 初始化。
-2. **Ent 便利层归属迁移**：两仓切换、Example 行为、框架 fixture 和独立生成验证，与 IAM 新领域行为分开验收。
-3. **IAM 账号生命周期**：管理设密/强制登出、软删除/恢复/purge、自删与原子验证邮件流程；以真实 PostgreSQL 验证。
-4. **IAM 首次改密与稳定初始化**：seed/管理创建 flag、受限会话、Web/OIDC 衔接、失败交付与稳定 binding。
-5. **Admin 身份接入与权限**：标准 IAM client/Consul、OIDC BFF、共享 SCS、两层授权、初始化资格与本地退出。
-6. **Admin 管理界面与联合验收**：两个菜单、生命周期操作、资格操作、部分完成、冲突与依赖失败，逐项覆盖父任务 AC。
+2. **IAM 账号生命周期**：管理设密/强制登出、软删除/恢复/purge、自删与原子验证邮件流程；以真实 PostgreSQL 验证。
+3. **IAM 首次改密与稳定初始化**：seed/管理创建 flag、受限会话、Web/OIDC 衔接、失败交付与稳定 binding。
+4. **Admin 身份接入与权限**：标准 IAM client/Consul、OIDC BFF、共享 SCS、两层授权、初始化资格与本地退出。
+5. **Admin 管理界面与联合验收**：两个菜单、生命周期操作、资格操作、部分完成、冲突与依赖失败，逐项覆盖父任务 AC。
 
 具体子任务粒度和依赖仍待用户下一轮决定。复制 IAM 是工程起点，不改变“用户身份与凭据归 IAM、Admin 只拥有管理资格和自己的应用会话”的领域边界；复制后的 IAM 特有 provider、seed、身份仓储与 transport 暴露必须在 Admin 改造任务中显式处理，不能因为代码存在就把它们启动成第二个 IAM。

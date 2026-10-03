@@ -2,8 +2,6 @@
 
 核对日期：2026-09-15。依据本地源码，只读检查；未执行运行验收。本文件记录实现事实与规划缺口，不代替删除、会话失效等产品语义的决定。
 
-后续补充：2026-09-16 已重跑 Servora mixin/CRUD 单测及 SQLite live contract，且按用户方向规划迁入 Plateau infra；见 [归属与验证](ent-mixin-ownership.md)。下文“未运行”仅指本文件最初核查，不能覆盖后续实际验证记录。
-
 ## 能力对照
 
 | 操作 | 当前服务间管理 RPC | 可复用能力与缺口 |
@@ -72,18 +70,16 @@
 
 方法名拟沿用已有资源命名惯例：`UserService.DeleteUser`、`AccountService.DeleteAccount`、`UserService.UndeleteUser`；具体请求、响应与 HTTP 映射在设计阶段确定，当前并不存在这些 RPC。自助删除成功应结束当前浏览器 IAM 登录态，个人页面不增加自行恢复入口。
 
-### Servora 已有软删除机制
+### Plateau 共享软删除机制
 
-Plateau 的 `go.work` 使用相邻 Servora checkout；以下依据该 checkout 的当前实现，不以历史 CRUD 实现作为依据。
+IAM 后续复用 Plateau `infra/entgo/mixin` 的共享便利能力，领域生命周期仍由 IAM 实现。
 
-- 实际存储机制是 [SoftDeleteMixin](../../../../../servora/contrib/db/entgo/mixin/soft_delete.go) 第 43–101 行：加入 `delete_time`、`deleted_by`、`purge_time`，默认查询过滤已删除行，将 Ent `Delete`/`DeleteOne` 改为写入删除时间的 `Update`。
-- 同文件第 83–95 行的 Hook 只自动写 `delete_time` 和可选 `deleted_by`；`purge_time` 仅有字段与索引声明，不自动计算或赋值。恢复期配置、到期时间保存与清理调度需由 IAM 实现，不能把字段存在视为已提供自动清理。
-- 同文件第 113–137 行的 `SkipSoftDelete(ctx)` 同时绕过查询过滤与删除改写，可用于显式读取已删除行，也可使删除变成物理删除；不能当作无副作用的普通查询标志向管理调用方开放。
+- 实际存储机制是 [SoftDeleteMixin](../../../../infra/entgo/mixin/soft_delete.go)：加入 `delete_time`、`deleted_by`、`purge_time`，默认查询过滤已删除行，将 Ent `Delete`/`DeleteOne` 改为写入删除时间的 `Update`。
+- 同文件的 Hook 只自动写 `delete_time` 和可选 `deleted_by`；`purge_time` 仅有字段与索引声明，不自动计算或赋值。恢复期配置、到期时间保存与清理调度需由 IAM 实现，不能把字段存在视为已提供自动清理。
+- 同文件的 `SkipSoftDelete(ctx)` 同时绕过查询过滤与删除改写，可用于显式读取已删除行，也可使删除变成物理删除；不能当作无副作用的普通查询标志向管理调用方开放。
 - [core/crud/lifecycle.go](../../../../../servora/core/crud/lifecycle.go) 第 14–30 行提供 `ListOptions.ShowDeleted` 和 `DeleteOptions` 等选项，删除生命周期与业务事务仍归消费方；框架没有 `SoftDeletePolicy`、`DeletePlan` 或 `PrepareDelete` API。
-- [Servora CRUD 文档](../../../../../servora/docs/crud.md) 第 473–506 行说明：Mixin 不处理关联模型、恢复入口、清除任务或仅有效行的唯一索引；`show_deleted`、恢复与数据库唯一约束需要消费方明确装配。
+- Mixin 不处理关联模型、恢复入口、清除任务或仅有效行的唯一索引；`show_deleted`、恢复与数据库唯一约束需要消费方明确装配。
 - Plateau 已有 [Example DeleteUser](../../../../app/example/service/internal/biz/user.go) 第 165 行和 [data 实现](../../../../app/example/service/internal/data/user.go) 第 213 行作为接入参考；IAM 需在此机制上组合凭据、登录和 OAuth 会话的领域失效，不能直接套用 Example 的删除业务规则。
-
-证据层次：[Mixin 单元测试](../../../../../servora/contrib/db/entgo/mixin/soft_delete_test.go) 覆盖字段、默认过滤、删除改写和 bypass；[数据库合同测试](../../../../../servora/contrib/db/entgo/crud/live_contract_integration_test.go) 第 599–630 行覆盖删除后默认不可见、显式查询和清除标记后恢复。此次仅阅读测试，未运行这些测试，也未完成 IAM 接入。
 
 ### IAM 配置惯例与恢复期参数
 

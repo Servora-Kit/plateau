@@ -2,13 +2,11 @@
 
 本文服务于 `09-15-admin-initial` 的 design 阶段。只记录基于当前 checkout 的实现证据与技术方案边界，不修改产品代码或规范，也不把方案写成已实现能力。
 
-2026-09-16 后续调整：文中 Servora mixin 路径保留为调研时的源码事实；最新 R22 计划将便利层迁入 Plateau infra。依赖、实际基线测试与迁移范围见 [归属核查](ent-mixin-ownership.md)，实施以主 design 的新归属为准。
-
 ## 结论与边界
 
 IAM 需要把“删除用户”设计成一个 IAM 领域命令，由管理删除和 AccountService 自助删除共同调用；两个入口各自完成 AuthN/AuthZ、操作者/目标绑定和确认校验。删除、恢复、到期清理不得由 Admin 直接改表，也不得让 AccountService 通过受管理权限保护的 UserService RPC 间接复用。
 
-当前 `User` 没有软删除字段，只有稳定 ID、状态、profile、etag 和时间字段（`app/iam/service/internal/data/schema/user.go:13-41`）。Servora `SoftDeleteMixin` 可以提供 `delete_time`、`deleted_by`、`purge_time`、默认 tombstone 过滤和 Delete-to-Update 改写（`/Users/horonlee/projects/go/servora-kit/servora/contrib/db/entgo/mixin/soft_delete.go:36-55`、`:72-98`），但不会遍历关联表、实现 Undelete/Expunge、计算 `purge_time` 或运行清理任务（`/Users/horonlee/projects/go/servora-kit/servora/docs/crud.md:473-506`）。因此 IAM 必须显式组合生命周期事务。
+当前 `User` 没有软删除字段，只有稳定 ID、状态、profile、etag 和时间字段（`app/iam/service/internal/data/schema/user.go:13-41`）。Plateau [SoftDeleteMixin](../../../../infra/entgo/mixin/soft_delete.go) 可以提供 `delete_time`、`deleted_by`、`purge_time`、默认 tombstone 过滤和 Delete-to-Update 改写，但不会遍历关联表、实现 Undelete/Expunge、计算 `purge_time` 或运行清理任务。因此 IAM 必须显式组合生命周期事务。
 
 软删除期间保留 `User`、稳定 ID、login identifier、密码、邮箱验证事实和删除前账号状态；同时立即撤销所有 IAM login session 及 OAuth token session/access/refresh token，并在同一删除事务中删除 email verification/reset token。后两类 token 没有可复用的撤销字段，若保留会在恢复后复活敏感凭证，因此不应随 User 恢复。保留密码和状态是为了恢复原账号事实，撤销会话保证旧认证事件不能复活。登录、Session Resolve、OIDC user/token 入口都必须把 tombstone 当作不可用身份；恢复清除 tombstone 后，原状态决定是否可登录。恢复不恢复旧 session/token，也不新增或清除首次改密要求。
 
@@ -33,7 +31,7 @@ IAM 需要把“删除用户”设计成一个 IAM 领域命令，由管理删�
 
 ## 恢复事务
 
-建议提供 `UserService.UndeleteUser`；Admin 入口先校验操作者的人类 Admin 管理资格，随后以 IAM service 身份调用 UserService，由 IAM 仅按 `iam.manage_users` 服务身份授权执行，不让 IAM 回查 Admin 的人类资格。data 原语应在 `SkipSoftDelete(ctx)` 下显式查询 tombstone，再对同一 user 行加锁；Servora 的 `SkipSoftDelete` 同时绕过查询过滤与 Delete 改写，只能作为 IAM 内部恢复/清理实现细节，不能暴露给调用方（`/Users/horonlee/projects/go/servora-kit/servora/contrib/db/entgo/mixin/soft_delete.go:25-33`、`:113-137`）。
+建议提供 `UserService.UndeleteUser`；Admin 入口先校验操作者的人类 Admin 管理资格，随后以 IAM service 身份调用 UserService，由 IAM 仅按 `iam.manage_users` 服务身份授权执行，不让 IAM 回查 Admin 的人类资格。data 原语应在 `SkipSoftDelete(ctx)` 下显式查询 tombstone，再对同一 user 行加锁；Plateau 的 [SkipSoftDelete](../../../../infra/entgo/mixin/soft_delete.go) 同时绕过查询过滤与 Delete 改写，只能作为 IAM 内部恢复/清理实现细节，不能暴露给调用方。
 
 恢复检查应采用 `now < purge_time`；`now == purge_time` 视为恢复期已到，由清理竞争者取得锁并执行清理。锁内重新检查 tombstone，成功时只清除 `delete_time`、`deleted_by`、`purge_time` 并写新 etag。不得重建 User、login identifier 或 authenticator，不得恢复任何 login/token；原 status、password hash、email verified time 和未完成首次改密状态自然保留。原本 disabled 或 pending verification 的用户恢复后仍保持对应状态。
 
@@ -54,7 +52,7 @@ IAM 需要把“删除用户”设计成一个 IAM 领域命令，由管理删�
 
 当前 schema 证据显示上述关联字段分别存在于 `app/iam/service/internal/data/schema/email_verification_token.go`、`password_reset_token.go`、`oauth_authorization_code.go`、`oidc_authorization_request.go`、`oauth_token_session.go:16-38`、`iam_login_session.go:16-29`、`authenticator.go` 和 `login_identifier.go`。OAuth token session 明确保留 `iam_login_session_id`，但 authorization code/request 可能只在流程完成后具备关联，清理必须覆盖 user subject 和 login ID 两条路径。不得删除其他服务的业务用户、OpenFGA tuple、审计记录或历史引用；稳定 ID 的外部引用由所属领域处理。
 
-清理实现不能只依赖 User 的 SoftDeleteMixin。Mixin 不处理关联模型或唯一索引（`/Users/horonlee/projects/go/servora-kit/servora/docs/crud.md:483-506`）；所有子表删除、影响行数检查和最终 email 释放必须在 IAM 领域事务中完成。清理查询可以使用 `SkipSoftDelete`，但每个表仍需显式 user/subject/session 谓词，禁止无条件全表清理。
+清理实现不能只依赖 User 的 [SoftDeleteMixin](../../../../infra/entgo/mixin/soft_delete.go)。Mixin 不处理关联模型或唯一索引；所有子表删除、影响行数检查和最终 email 释放必须在 IAM 领域事务中完成。清理查询可以使用 `SkipSoftDelete`，但每个表仍需显式 user/subject/session 谓词，禁止无条件全表清理。
 
 ## 并发与注册邮箱
 

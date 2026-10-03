@@ -33,5 +33,4 @@
 {"file":".trellis/spec/plateau/project/boundaries.md","reason":"R21 跨仓协同迭代：证实框架职责后在 Servora 修正，保留 Plateau 身份和授权边界"}
 {"file":".trellis/spec/servora/framework/transport.md","reason":"Servora gRPC client、endpoint 与 middleware 装配的现有合同及回归入口"}
 {"file":".trellis/tasks/09-15-admin-initial/research/design-gap-review.md","reason":"IAM adapter 与错误归因、服务 JWT 离线语义、tombstone 查询隔离及已确认邮件行为；G5 复制树证据已过时，按新建 Admin 方案实施"}
-{"file":".trellis/tasks/09-15-admin-initial/research/ent-mixin-ownership.md","reason":"R22 的生产/fixture/Example 依赖、迁移范围与本轮基线验证；旧 spec 归属以最新任务设计调整为准"}
 {"file":".trellis/tasks/09-15-admin-initial/research/grpc-error-logging.md","reason":"已核实 Kratos 错误过网边界、日志与脱敏现状，按 R6/AC5 接入并验证"}
