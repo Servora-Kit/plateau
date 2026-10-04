@@ -5,6 +5,11 @@
       "command": "npx",
       "args": ["shadcn@latest", "mcp"],
       "directTools": true
+    },
+    "gitnexus": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "gitnexus@latest", "mcp"]
     }
   }
 }
