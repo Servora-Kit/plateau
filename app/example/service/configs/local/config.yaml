@@ -1,27 +1,44 @@
+app:
+  name: example.service
+  version: dev
+  env: dev
+
 server:
   http:
     listen:
-      addr: "127.0.0.1:10080"
+      addr: "0.0.0.0:10080"
       timeout: 30s
   grpc:
     listen:
-      addr: "127.0.0.1:10081"
+      addr: "0.0.0.0:10081"
       timeout: 30s
 
 data:
   database:
     driver: sqlite
     source: "file:servora_example?mode=memory&cache=shared&_foreign_keys=on"
+  client:
+    services:
+      - name: test.service
+        endpoints:
+          - protocol: grpc
+            endpoint: "discovery:///test.service"
+            timeout: 5s
 
-app:
-  name: example.service
-  version: dev
-  env: dev
+registry:
+  consul:
+    addr: "${REGISTRY_CONSUL_ADDR:localhost:8500}"
+    scheme: "${REGISTRY_CONSUL_SCHEME:http}"
+    datacenter: "${REGISTRY_CONSUL_DC:dc1}"
 
 obs:
   log:
     level: 0
     backends:
       - stdout: {}
+  trace:
+    endpoint: "localhost:4317"
+    insecure: true
+    sampling_ratio: 1.0
   metrics:
     enable: false

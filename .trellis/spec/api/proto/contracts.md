@@ -6,14 +6,14 @@
 
 平台共享 Proto 在 `api/protos/plateau/<domain>/<version>`，业务 Proto 在 `app/<应用>/service/api/protos`。go_package 指向共享生成模块对应路径，生成布局见 [generation](generation.md)。
 
-[Example User](../../../../app/example/service/api/protos/example/service/v1/user.proto) 是标准 CRUD 公开参考：资源名 `tenants/{tenant}/users/{user}`，Get/Update/Delete 按 name 定位，Create 由 parent 与 user_id 决定名字。不能把数据库 ID、URL 编码片段与 canonical resource name 混为一谈；业务是否有 tenant 由领域决定，不强加给 IAM 全局身份池。
+资源名由 Proto resource pattern 定义，不能与数据库 ID 或 URL 编码片段混用；租户与父子资源结构由领域决定，不推广业务实例。
 
 ## 查询与字段语义
 
 - page_token 是不透明续页 token，不由前端拆解；filter/order_by 只承诺实现支持的确定性子集，不宣称完整查询语言。
-- Example 明示 skip、include_total 扩展；total_size 用 optional 表达未计算，不能把 absent 当零。show_deleted 控制是否包含 tombstone。
+- 列表扩展须明确声明；未计算的统计值与零值区分，删除可见性与分页语义一致。
 - 可选字段及其设置状态、INPUT_ONLY、OUTPUT_ONLY、IMMUTABLE 与字段更新共同组成契约。update_mask 选择字段，省略与显式清除不可混淆。
-- Example display_name 的空字符串与 nickname absent 的清除语义不同。etag、allow_missing、软删与恢复由业务显式执行，不由注解自动替业务保证。
+- 并发控制、软删与恢复由业务实现，不由注解自动保证。
 - 生成描述和字段常量、ResourcePlan、数据映射须保持同一语义；使用流程见 [service CRUD](../../service/backend/crud.md)，框架内部见 [framework CRUD](../../servora/framework/crud.md)。
 
 ## 错误与兼容性
@@ -24,4 +24,4 @@
 
 检查入口：`just lint-proto`、`just api-ts-check`，生成变化还需受影响 Go 服务／前端检查。配置中有 breaking 规则不等于本次已执行 breaking 比较。
 
-来源：[api AGENTS](../../../../api/AGENTS.md)、[buf.yaml](../../../../buf.yaml)、[Example Proto](../../../../app/example/service/api/protos/example/service/v1/user.proto)。
+入口：[buf.yaml](../../../../buf.yaml)、[生成流程](generation.md)。

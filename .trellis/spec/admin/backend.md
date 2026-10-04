@@ -1,16 +1,7 @@
-# Admin 后端规范
+# 管理服务调用与授权
 
-适用于规划中的 `app/admin/service`。共通分层和框架使用遵循 [共享微服务规范](../service/backend/index.md)，应用定位见 [架构](architecture.md)。
+分层遵循 [共享微服务规范](../service/backend/index.md)，领域归属见 [架构](architecture.md)。
 
-## IAM 用户管理接入
-
-Admin 调用 IAM gRPC [UserService](../../../app/iam/service/api/protos/iam/user/v1/user.proto) 的 `CreateUser`、`GetUser`、`ListUsers`、`UpdateUser`、`DisableUser`、`EnableUser`。IAM service 层再委托给内部 `UserUsecase`；Admin 不跨服务调用内部 usecase，也不直接操作 IAM 数据表。
-
-Admin 对操作者执行管理权限检查；调用 IAM 时使用自己的服务身份，由 IAM 再验证调用方及其 `iam.manage_users` 权限。这两个检查的主体不同，现有 IAM 接收条件与模型边界统一引用 [IAM 授权](../iam/authorization.md) 和 [OIDC 服务令牌](../iam/oidc.md)。
-
-OAuth Client 当前由静态配置与启动协调拥有，见 [IAM 启动](../iam/startup.md)。动态管理能力应先在 IAM 建立，再由 Admin 接入，不能通过直接改库绕过静态配置的生命周期。
-
-## 开发前与质量检查
-
-- 用户状态和身份生命周期的规则在 IAM 实现，Admin 负责输入转换、管理授权和调用结果处理。
-- 源码落地后验证操作者权限、Admin 服务身份、IAM 接收权限与实际变更结果；模型文件或测试 tuple 存在不代表运行环境已完成授权装配。
+- 通过被管理服务公开契约调用，不跨服务访问内部 usecase 或数据表；状态转换和身份生命周期留在领域所有者。
+- 管理入口检查操作者权限；下游调用使用管理服务自身身份，由接收服务独立验证调用方和操作权限。两层检查主体不同，不可互相替代，见 [授权](../iam/authorization.md) 与 [服务令牌](../iam/oidc.md)。
+- 静态配置拥有的资源遵循所属服务的 [启动生命周期](../iam/startup.md)；动态管理能力先由领域所有者建立，不通过直接改库绕过配置协调。

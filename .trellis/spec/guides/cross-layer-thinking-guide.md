@@ -15,6 +15,6 @@
 
 - 安全变更组合 [API annotations](../api/proto/annotations.md)、[codegen](../plateau/codegen/index.md)、[AuthN](../plateau/security/authN.md)／[AuthZ](../plateau/security/authZ.md)。声明、生成、装配三者分别确认。
 - CRUD 变更组合 [API contracts](../api/proto/contracts.md)、[service CRUD](../service/backend/crud.md)、对应业务规范和前端请求主题。共同检查 read/write mask、绑定、mapper 和响应清理。
-- Web 契约组合 [生成归属](../api/proto/generation.md)、[shared client](../web/client/index.md) 与应用自己的状态/路由规范；不能把 Example 自有 fetch 的现状假定成所有应用共用 client。
+- Web 契约组合 [生成归属](../api/proto/generation.md)、[shared client](../web/client/index.md) 与应用状态/路由规范；不把某个应用的实现推广为全部应用的共同约束。
 
 发现冲突先给出真实文件、输入和可观察结果。区分推荐规范、现状与尚未验收能力；不要仅凭目录名称、文档标题或存在一个测试文件推断功能已可用。

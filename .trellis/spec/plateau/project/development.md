@@ -1,21 +1,18 @@
 # 本地开发与检查入口
 
-本规范记录现有开发入口。Plateau 仓库只使用根 Go module；本机父级 `/servora-kit/go.work` 可用于跨仓源码联调，但所有仓库级门禁必须能在 `GOWORK=off` 下独立运行。命令均从 Plateau 根目录运行；在采用 RTK 的环境中加 `rtk proxy` 前缀。
+仓库使用单一根 Go module；父级工作区只用于本机跨仓联调，仓库门禁须在 `GOWORK=off` 下独立运行。命令从仓库根目录执行，服务级命令从对应 service 目录执行。
 
 ## 固定端口
 
-每个应用保留 10 个端口：+0 HTTP、+1 gRPC、+2 Web，+3～+9 预留。新增基础服务从 10020–10079 的空闲段登记，已有应用保持固定编号。
+每个应用保留 10 个端口：+0 HTTP、+1 gRPC、+2 Web，其余预留。新增应用使用已登记的空闲段，不重排已有编号；具体分配以[项目约定](../../../../AGENTS.md)为准，不在规范重复业务端口表。
 
-| 应用 | HTTP | gRPC | Web |
-| --- | --- | --- | --- |
-| IAM | 10000 | 10001 | 10002 |
-| Admin | 10010（预留） | 10011（预留） | 10012 |
-| Example | 10080 | 10081 | 10082 |
-| Test | 10090（预留） | 10091（预留） | 10092 |
+原生服务与容器宿主映射不能占用同一端口，Web dev 与 preview/start 不同时运行。公开入口变更须同步 origin、Web 端口和后端代理地址。
 
-Audit 的本地监听及 Compose 宿主映射使用 10020/10021，占用 10020–10029 段。
+## 跨仓联调
 
-约定作用于本地监听和 Docker 宿主映射；容器内部、共享中间件和生产公开端口不受约束。相同应用的原生运行与容器映射不可同时占用同一端口，Web dev 与 preview/start 共用端口也不能同时启动。修改 IAM 公开入口须同步 `IAM_PUBLIC_ORIGIN`、Web 端口和后端代理地址。
+父级 Go/pnpm workspace 仅作为本机源码联调层，不提交到仓库。pnpm 使用最近的 workspace；跨仓命令显式从共同父目录执行，独立第三方 workspace 保持自己的依赖和 lockfile。
+
+本地包链接在安装后生效；exports 指向构建产物的共享包必须先构建或启用 watch，不能把 workspace 注册等同于已可消费。
 
 ## 命令及副作用
 
@@ -26,7 +23,7 @@ Audit 的本地监听及 Compose 宿主映射使用 10020/10021，占用 10020�
 | `just wire` | 各服务 Wire 装配刷新 |
 | `just lint` | API TS typecheck、Buf lint、从根 module 执行的全仓 Go lint；不等于全仓 Go 测试 |
 | `just api-ts-check` | 共享生成 TS 契约检查 |
-| `just web::<应用>::dev`／`build`／`lint` | Example、IAM、Test、Admin 统一的 Web 开发、构建与 lint 入口；其他工具按所属 package 的 pnpm script 执行 |
+| `just web::<应用>::dev`／`build`／`lint` | 应用 Web 开发、构建与 lint；其他工具使用所属 package 的 pnpm script |
 | `just openfga-model-validate`／`test` | 本地 model 与场景检查 |
 | `just openfga-model-apply` | 修改 model 后的应用步骤，会写外部 model／环境配置，需在明确目标环境执行 |
 
@@ -34,62 +31,13 @@ Audit 的本地监听及 Compose 宿主映射使用 10020/10021，占用 10020�
 
 开发或审查时先选择受影响模块和检查命令；记录实际执行与未执行项。基础设施 provider 的业务日志由 data/bootstrap 边界决定，不在构造函数中重复记录成功或失败。
 
-## 场景：维护单 Go module 边界
+## Go module 与门禁
 
-### 1. 范围／触发
+- 根 `go.mod`、`go.sum` 统一管理共享代码和服务，不在生成目录或应用目录新增 Go module，也不提交 `go.work`。
+- Wire/Ent 工具版本由根 `tool` 声明维护，通过 `go tool` 执行；本机工作区不能替代仓库依赖和生成器版本验证。
+- 受影响代码须通过 `GOWORK=off` 的构建、lint 和测试；根门禁覆盖全仓，服务级检查只提供定向反馈，不能互相替代。
+- 依赖变更执行 `go mod tidy` 并确认结果稳定；父级工作区通过而独立检查失败时，不视为验收通过。
+- 验证记录留在任务或变更说明，不写入规范。
 
-修改根 Go 依赖、`api/gen/go`、任一服务后端、Go 生成器或相关 Just 入口时，必须同时证明仓库可独立构建，并保留服务作为独立二进制和部署单元的边界。
+入口：[根命令](../../../../justfile)、[服务注册](../../../../just/services.just)、[服务命令](../../../../just/service.just)。
 
-### 2. 命令签名
-
-```bash
-GOWORK=off go mod tidy
-GOWORK=off go list ./...
-GOWORK=off go build ./...
-GOWORK=off just lint
-GOWORK=off just service::lint
-GOWORK=off just service::_build
-```
-
-Wire 入口固定为 `go tool wire ./cmd/server`；Ent 由服务 `generate.go` 中的 `go tool ent generate ...` 调用。版本只在根 `go.mod` 的 `tool` block 中维护。
-
-### 3. 契约
-
-- 仓库只跟踪根 `go.mod`、`go.sum`，不得在 `api/gen` 或 `app/*/service` 新建嵌套 Go module，也不得提交仓库级 `go.work`。
-- `GOWORK=off` 是可移植性门禁；未设置时允许 Go 自动发现本机父级 `/servora-kit/go.work` 进行跨仓源码联调。
-- 根 lint 覆盖根共享包、生成 package 与全部服务；服务 leaf lint/build 只提供定向反馈，不能替代根门禁。
-
-### 4. 校验与错误矩阵
-
-| 条件 | 判定 |
-| --- | --- |
-| `GOWORK=off` 无法解析 Plateau 或 Servora package | 根依赖或 module 边界错误，禁止提交 |
-| 父 workspace 模式通过、`GOWORK=off` 失败 | 依赖了本机源码覆盖，禁止视为验收通过 |
-| 根门禁通过、leaf build/lint 失败 | 服务入口回归，必须修复或记录为迁移前基线 |
-| `go mod tidy` 二次执行仍修改 `go.mod/go.sum` | 依赖状态不稳定，禁止提交 |
-
-### 5. Good／Base／Bad
-
-- Good：无父 workspace 的干净 checkout 仅凭根 module 完成 list、build、lint 和测试。
-- Base：本机从 Plateau cwd 自动发现父 `go.work`，用于同时调试 Plateau 与 Servora 当前源码。
-- Bad：为修复 leaf 命令重新增加服务 `go.mod`，或只报告父 workspace 模式成功。
-
-### 6. 必需测试
-
-- 两次执行 `GOWORK=off go mod tidy`，断言第二次无 diff。
-- 执行根 list、build、lint 与短测试，断言没有 module/workspace 解析错误。
-- 执行 Audit、Example、IAM 的 leaf build/lint，断言仍从根 module 解析依赖。
-- 运行受影响生成入口并审阅生成 diff，断言 Wire/Ent 工具版本来自根 `go.mod`。
-
-### 7. Wrong vs Correct
-
-```bash
-# Wrong：结果可能被父 workspace 悄悄覆盖
-go build ./...
-
-# Correct：先证明仓库自身完整，再按需验证父 workspace 联调
-GOWORK=off go build ./...
-go build ./...
-```
-
-来源：[根命令](../../../../justfile)、[服务注册](../../../../just/services.just)、[服务命令实现](../../../../just/service.just)、[根 AGENTS](../../../../AGENTS.md)。

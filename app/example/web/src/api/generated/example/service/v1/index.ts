@@ -39,6 +39,44 @@ function encodeMultiSegmentPath(value: unknown): string {
     .join('/');
 }
 
+export interface ExampleService {
+  Hello(
+    request: testservicev1_HelloRequest,
+  ): Promise<testservicev1_HelloResponse>;
+}
+
+export function createExampleServiceClient(
+  transport: ClientTransport,
+): ExampleService {
+  return {
+    Hello(request) {
+      const path = `v1/hello`;
+      const body = null;
+      const queryParams: string[] = [];
+      if (request.greeting !== undefined && request.greeting !== null) {
+        queryParams.push(
+          `greeting=${encodeURIComponent(request.greeting.toString())}`,
+        );
+      }
+      let uri = path;
+      if (queryParams.length > 0) {
+        uri += `?${queryParams.join('&')}`;
+      }
+      return transport.unary<testservicev1_HelloResponse>(uri, 'GET', body, {
+        service: 'ExampleService',
+        method: 'Hello',
+      });
+    },
+  };
+}
+export type testservicev1_HelloRequest = {
+  greeting?: string;
+};
+
+export type testservicev1_HelloResponse = {
+  reply?: string;
+};
+
 // UserErrorReason contains application-owned User business failures.
 export type UserErrorReason =
   | 'USER_ERROR_REASON_ALREADY_EXISTS'
@@ -422,11 +460,16 @@ export function createUserServiceClient(
   };
 }
 export class ApiClient {
+  private _exampleService?: ExampleService;
   private readonly _transport: ClientTransport;
   private _userService?: UserService;
 
   constructor(transport: ClientTransport) {
     this._transport = transport;
+  }
+
+  get exampleService(): ExampleService {
+    return this._exampleService ??= createExampleServiceClient(this._transport);
   }
 
   get userService(): UserService {

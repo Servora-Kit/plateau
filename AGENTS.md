@@ -31,7 +31,7 @@ Managed by Trellis. Edits outside this block are preserved; edits inside may be 
 | IAM | 10000–10009 | 10000 | 10001 | 10002 |
 | Admin | 10010–10019 | 10010（预留） | 10011（预留） | 10012 |
 | Example | 10080–10089 | 10080 | 10081 | 10082 |
-| Test | 10090–10099 | 10090（预留） | 10091（预留） | 10092 |
+| Test | 10090–10099 | 10090（预留） | 10091 | 10092 |
 
 Audit/CMS 暂不列入上表；现有 Audit 的本地监听和宿主映射占用 `10020/10021`，因此 `10020–10029` 段不可重复分配。Admin 后端尚未建立，表中的 HTTP/gRPC 仅预留，不表示已有服务监听。
 
@@ -59,8 +59,8 @@ Audit/CMS 暂不列入上表；现有 Audit 的本地监听和宿主映射占用
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
 - `buf.typescript.gen.yaml` 项目级统一 TypeScript HTTP、error reason 与 CRUD helper 生成配置
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
-- `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与三个 Go 后端的依赖
-- 本机父级 `/servora-kit/go.work` 仅用于可选的跨仓源码联调；仓库自身不跟踪 `go.work`
+- `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与四个 Go 后端的依赖
+- 本机共同父目录的 `../go.work` 纳入 `./plateau`、`./servora`，用于跨仓源码联调与 LSP；仓库自身不跟踪 `go.work`，独立构建门禁使用 `GOWORK=off`
 - `docker-compose.yaml` 本地基础设施编排；`docker-compose.apps.yaml` 应用容器编排
 
 ## 命令

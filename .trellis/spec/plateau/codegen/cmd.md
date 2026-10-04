@@ -1,6 +1,6 @@
 # 平台安全生成命令
 
-根 `cmd/` 当前的两个 protoc 插件和 `internal/codegen/` 共同属于平台代码生成能力，不单设 cmd spec package。服务自己的 cmd/server 见 [bootstrap](../../service/backend/bootstrap.md)，母框架命令见 [servora/cmd](../../servora/cmd/index.md)。
+根 `cmd/` 的安全 protoc 插件和 `internal/codegen/` 属于平台代码生成能力。应用启动入口见 [bootstrap](../../service/backend/bootstrap.md)，框架命令见 [servora/cmd](../../servora/cmd/index.md)。
 
 ## 插件契约
 
@@ -15,8 +15,6 @@
 
 ## 校验归属
 
-AuthN 检查声明 mode。AuthZ 除检查 mode，还验证合并后 REQUIRED 规则的 action、resource_type 和唯一目标，沿 RPC input descriptor 校验字段路径。未知枚举即使出现在被覆盖声明中也不能跳过检查。命令源码含实际生成和领域校验，不把它描述成只解析参数的薄入口。
+AuthN 检查声明 mode。AuthZ 还校验合并后 REQUIRED 规则的 action、resource_type 和唯一目标，沿 RPC input descriptor 校验字段路径。被覆盖声明中的未知枚举也必须检查。
 
-测试入口：`go test ./cmd/protoc-gen-plateau-authn ./cmd/protoc-gen-plateau-authz`。检查合并、未知 mode、字段路径、无规则无输出、冲突 Go package、输出排序与返回值隔离。测试通过后仍需在实际 Proto 变更任务中检查生成 diff，不手改产物。
-
-依据：[AuthN main](../../../../cmd/protoc-gen-plateau-authn/main.go)、[AuthZ main](../../../../cmd/protoc-gen-plateau-authz/main.go)、[AuthN tests](../../../../cmd/protoc-gen-plateau-authn/main_test.go)、[AuthZ tests](../../../../cmd/protoc-gen-plateau-authz/main_test.go)。
+检查合并、未知 mode、字段路径、无规则无输出、冲突 Go package、输出排序与返回值隔离。入口：`go test ./cmd/protoc-gen-plateau-authn ./cmd/protoc-gen-plateau-authz`；同时审阅生成 diff，不手改产物。

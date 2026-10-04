@@ -14,7 +14,7 @@ import (
 )
 
 // NewHTTPServer creates the HTTP server for the example service.
-func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metrics, l *slog.Logger, svc *service.UserService) *khttp.Server {
+func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metrics, l *slog.Logger, svc *service.UserService, exampleSvc *service.ExampleService) *khttp.Server {
 	hlog := l.With("scope", "example/server/http")
 
 	ms := middleware.NewChainBuilder(hlog).
@@ -27,6 +27,7 @@ func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		svrhttp.WithMetrics(m),
 		svrhttp.WithServices(func(s *khttp.Server) {
 			examplev1.RegisterUserServiceHTTPServer(s, svc)
+			examplev1.RegisterExampleServiceHTTPServer(s, exampleSvc)
 		}),
 	}
 	if c != nil && c.Http != nil {

@@ -1,0 +1,27 @@
+app:
+  name: test.service
+  version: dev
+  env: dev
+
+server:
+  grpc:
+    listen:
+      addr: "0.0.0.0:10091"
+
+registry:
+  consul:
+    addr: "${REGISTRY_CONSUL_ADDR:localhost:8500}"
+    scheme: "${REGISTRY_CONSUL_SCHEME:http}"
+    datacenter: "${REGISTRY_CONSUL_DC:dc1}"
+
+obs:
+  log:
+    level: 0
+    backends:
+      - stdout: {}
+  trace:
+    endpoint: "localhost:4317"
+    insecure: true
+    sampling_ratio: 1.0
+  metrics:
+    enable: false

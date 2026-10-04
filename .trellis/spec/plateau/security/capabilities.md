@@ -16,12 +16,10 @@
 
 嵌入路由为 `POST /cap/challenge` 和 `POST /cap/redeem`；前者返回 `challenge: {c,s,d}`、签名 `token` 和毫秒 `expires`，后者接收 `token`、整数数组 `solutions`。解码拒绝未知字段、重复字段等歧义 JSON；失败正文不暴露 Redis 或签名内部错误。业务认证白名单使用导出的 operation 常量，不重新拼旧 `/v1/cap` 路径。
 
-当前协议 v2 不读取旧有状态实现的 challenge/token 记录。基础 SHA-256 wire 与 capjs-core 0.1.x 对齐，已有 widget 0.1.57 的本地 HTTP 互操作测试；不据此宣称支持 RSW、format-2、Cap Standalone 或 siteverify。多实例共享同一密钥与 Redis 时，一次性兑换／消费约束应跨实例成立；本地测试不等同于真实浏览器和部署环境验收。
+协议 v2 不读取旧有状态实现的 challenge/token 记录。基础 SHA-256 wire 与 capjs-core 0.1.x 对齐，不据此承诺 RSW、format-2、Cap Standalone 或 siteverify 支持。多实例共享同一密钥与 Redis 时，一次性兑换／消费约束应跨实例成立。
 
 ## 失败与检查
 
 错误解题不应提前消耗 challenge；并发兑换最多发放一枚 token；Redis 错误返回失败而非降级放行；错误 scope 不消耗可供正确 scope 使用的 token。公开兑换响应区分 `Success=false` 与内部依赖错误。
 
-依据：[cap.go](../../../../security/cap/cap.go)、[协议向量测试](../../../../security/cap/cap_test.go)、[跨实例与一次性消费测试](../../../../security/cap/cap_integration_test.go)。入口：`go test ./security/cap`。
-
-历史 `security/cap/AGENTS.md` 对“challenge 与 token 都基于 Redis 存储”的概括不准确；以本主题和当前实现的签名 challenge／一次性状态边界为准。
+检查签名 challenge、协议向量、跨实例与一次性消费。入口：`go test ./security/cap`。

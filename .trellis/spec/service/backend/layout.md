@@ -1,18 +1,18 @@
 # 后端布局
 
-每个服务位于 `app/{ServiceName}/service/`，属于 Plateau 根 Go module，但仍是独立二进制与部署单元。完整目录职责来自 [app 服务结构](../../../../app/AGENTS.md)：
+服务位于 `app/*/service/`，共享根 Go module，但各自是独立二进制与部署单元。目录职责见 [app 服务结构](../../../../app/AGENTS.md)：
 
-- `api/protos/` 同时放服务领域 Proto 和私有配置，均按所属领域组织；IAM 现有配置源为 [`iam/conf/v1/config.proto`](../../../../app/iam/service/api/protos/iam/conf/v1/config.proto) 与 [`iam/oidc/conf/v1/config.proto`](../../../../app/iam/service/api/protos/iam/oidc/conf/v1/config.proto)。`api/buf.openapi.gen.yaml` 是服务 OpenAPI 配置。
+- `api/protos/` 按领域组织业务 Proto 和私有配置；`api/buf.openapi.gen.yaml` 管理服务 OpenAPI 生成。
 - `cmd/server/` 是启动入口；`configs/local/` 与 `configs/docker/` 分别承载本地和容器配置。
 - `internal/assets/` 放 OpenAPI 等内嵌产物；`internal/server`、`service`、`biz`、`data` 承担通用四层。
-- Ent 的 schema 与生成目录在 `internal/data/schema`、`internal/data/ent`；`generate.go` 通过根 `go.mod` 声明的 `go tool ent` 生成，不能手改 `ent/`。Wire 同样由根 module 的 `go tool wire` 固定版本。
+- Ent schema 属于手写持久化模型；Ent/Wire 产物通过根 module 固定版本的 `go tool ent`、`go tool wire` 生成，不手改。
 
-新增应用以 [Example 服务](../../../../app/example/service/) 为起点，保留服务自己的 `justfile`、配置和 API，并由仓库根 `go.mod` 统一管理依赖。根生成流程与 Go、TypeScript、OpenAPI、Wire、Ent 产物所有权遵循 [API 生成规范](../../api/proto/generation.md)；服务 leaf 的生成细节以自身 `justfile` 为准。
+服务保留自己的 `justfile`、配置和 API，依赖统一由根 `go.mod` 管理。生成入口与产物所有权遵循 [API 生成规范](../../api/proto/generation.md)，服务细节以自身 `justfile` 为准。
 
 ## 应用专有模块
 
-不能硬把独立领域塞进四层。像 IAM 现有的 [oidc](../../../../app/iam/service/internal/oidc/)、[authn](../../../../app/iam/service/internal/authn/)、[authz](../../../../app/iam/service/internal/authz/)、[mail](../../../../app/iam/service/internal/mail/) 和 [startup](../../../../app/iam/service/internal/startup/) 与四层同级放在 `internal/`。它们仍须有明确职责和依赖边界；领域规则写入应用规范，不提升为平台共享能力。
+独立的应用模块可与四层同级放在 `internal/`，保持明确职责与依赖边界。领域规则留在应用规范，不提升为平台共享能力。
 
 ## `internal/server` 的生产文件
 
-通常只有 `server.go`、`grpc.go`、`http.go`，按实际服务端职责再增加 `sse.go`、`asynq.go` 等。Example 的 [server.go](../../../../app/example/service/internal/server/server.go)、[http.go](../../../../app/example/service/internal/server/http.go)、[grpc.go](../../../../app/example/service/internal/server/grpc.go) 是现有样式。测试文件可按测试职责同包存在；此约定不要求删除测试。
+以 `server.go`、`grpc.go`、`http.go` 为基本划分，仅按新增 transport 职责扩展文件；测试文件可同包存在。

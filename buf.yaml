@@ -4,6 +4,7 @@ modules:
   - path: api/protos
   - path: app/audit/service/api/protos
   - path: app/example/service/api/protos
+  - path: app/test/service/api/protos
 
   - path: app/iam/service/api/protos
 

@@ -14,7 +14,7 @@ import (
 )
 
 // NewGRPCServer creates the gRPC server for the example service.
-func NewGRPCServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metrics, l *slog.Logger, svc *service.UserService) *kgrpc.Server {
+func NewGRPCServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metrics, l *slog.Logger, svc *service.UserService, exampleSvc *service.ExampleService) *kgrpc.Server {
 	glog := l.With("scope", "example/server/grpc")
 
 	ms := middleware.NewChainBuilder(glog).
@@ -26,6 +26,7 @@ func NewGRPCServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 		svrgrpc.WithMiddleware(ms...),
 		svrgrpc.WithServices(func(s *kgrpc.Server) {
 			examplev1.RegisterUserServiceServer(s, svc)
+			examplev1.RegisterExampleServiceServer(s, exampleSvc)
 		}),
 	}
 	if c != nil && c.Grpc != nil {

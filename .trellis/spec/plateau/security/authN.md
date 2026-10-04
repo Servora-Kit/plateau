@@ -25,6 +25,4 @@
 
 取消／超时保持原错误。凭据缺失、失效与 Actor 映射失败映射为公开 Unauthenticated；Session 依赖不可用映射 Unavailable；其他内部错误保留 cause 并隐藏内部说明。具体分类以各实现的 `apiError` 为准。
 
-修改后检查缺规则、匿名、有效凭据、错误 profile、claims 隔离和 manager 归属：`go test ./security/authn/...`。这是验证入口，不代表每次读规范已经运行。
-
-依据：[规则聚合](../../../../security/authn/rules.go)、[JWT middleware](../../../../security/authn/jwt/middleware.go)、[JWT tests](../../../../security/authn/jwt/authn_test.go)、[Session middleware](../../../../security/authn/session/middleware.go)、[Session tests](../../../../security/authn/session/authn_test.go)。
+检查缺规则、匿名、有效凭据、错误 profile、claims 隔离和 manager 归属。入口：`go test ./security/authn/...`。

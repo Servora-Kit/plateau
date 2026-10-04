@@ -1,7 +1,5 @@
-# IAM 服务启动边界
+# 初始化所有权与生命周期
 
-`internal/startup` 承担 IAM 特有启动逻辑，不应移入通用 `data` 或 `server`。`Initializer` 与 provider 组合定义于 [providers.go](../../../app/iam/service/internal/startup/providers.go)，具体初始化顺序见 [initializer.go](../../../app/iam/service/internal/startup/initializer.go)。OIDC 静态 client/密钥协调归 `internal/oidc` 的 initializer。
-
-`cmd/server/main.go` 仍只负责 bootstrap runtime、配置扫描和运行；Wire 在 [cmd/server/wire.go](../../../app/iam/service/cmd/server/wire.go) 明确组合 startup、authn、authz、oidc 和通用四层。新增初始化步骤必须有幂等定义、错误传播和 shutdown 所有权，不能在请求路径首次触发或手改 `wire_gen.go`。
-
-启动配置可被静态读取或单测覆盖；外部 PostgreSQL、OpenFGA、密钥文件和 OIDC public origin 未启动时，不应把启动链说明成部署验收。
+- 应用专属初始化归独立启动模块，不塞入通用 data 或 server；协议静态 client 与密钥协调归协议模块。
+- 主入口只负责 bootstrap runtime、配置扫描和运行，Wire 显式组合应用模块与通用层；不手改 `wire_gen.go`。
+- 初始化须定义幂等性、错误传播和 shutdown 所有权，在服务可用前完成，不在请求路径首次触发。

@@ -5,4 +5,4 @@ import (
 )
 
 // ProviderSet contains business-layer providers.
-var ProviderSet = wire.NewSet(NewUserUsecase)
+var ProviderSet = wire.NewSet(NewUserUsecase, NewExampleUsecase)

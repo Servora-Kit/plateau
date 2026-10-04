@@ -2,7 +2,7 @@
 
 适用于 infra 下的 OpenFGA、ClickHouse 接入和 Ent 软删除 mixin。通用 provider、Ent driver 与 CRUD adapter 见 [Servora](../../servora/framework/index.md)。
 
-Mail 当前仅有平台共享配置 schema，契约见 [API 注解](../../api/proto/annotations.md)；发送行为归 IAM 的 `internal/mail`，不在平台 infra 下虚构共享 Mail runtime。ClickHouse 当前由 Plateau 维护，历史 Servora contrib 路径不再是现行归属。
+Mail 仅提供平台共享配置 schema，见 [API 注解](../../api/proto/annotations.md)；发送行为由消费应用拥有，不在平台 infra 下扩张运行时职责。ClickHouse 连接适配由 Plateau 维护。
 
 | 主题 | 何时读取 |
 | --- | --- |
@@ -10,4 +10,4 @@ Mail 当前仅有平台共享配置 schema，契约见 [API 注解](../../api/pr
 | [ClickHouse](clickhouse.md) | 可选连接、TLS 与清理责任 |
 | [Ent 软删除](../../../../infra/entgo/mixin/soft_delete.go) | tombstone 字段、默认查询过滤、删除改写与显式 bypass |
 
-开发前检查实际配置源与消费方，确认未配置、配置错误和运行故障的区别。质量检查覆盖配置校验、输入/全局对象隔离、日志归属和资源关闭。入口：`go test ./infra/...`；构造测试不代替真实依赖环境验收。
+开发前检查配置源与消费方，区分未配置、配置错误和运行故障。质量检查覆盖配置校验、输入/全局对象隔离、日志归属和资源关闭。入口：`go test ./infra/...`。

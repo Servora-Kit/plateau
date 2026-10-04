@@ -2,7 +2,7 @@
 
 适用于修改 `../servora/core/`、`transport/`、`obs/`、`contrib/` 或 `security/tls/` 的框架运行时代码。
 
-开发前检查：确认改动是多个 capability 复用、具有清晰协议且不绑定业务语义；这与 [`core/AGENTS.md`](../../../../../servora/core/AGENTS.md) 的准入要求一致。单一 capability 的工具留在该 capability，不创建 `util`、`helper` 或 `common` 聚合包。
+开发前按 [架构准入](architecture.md) 确认复用与协议边界。单一 capability 的工具留在该 capability，不创建 `util`、`helper` 或 `common` 聚合包。
 
 | 主题 | 读取时机 |
 | --- | --- |
@@ -15,4 +15,4 @@
 | [providers](providers.md) | `contrib` provider、生命周期或 adapter |
 | [tls](tls.md) | TLS Proto 到 `crypto/tls.Config` 的构造 |
 
-质量检查按改动包运行 `go test ./<package>/...`；影响 core 时还要考虑 `go test -short ./...`。改动 public Proto、生成器或 web 合同时，再读取相应分组的检查入口。不要把这些命令的存在写成已经完成的验收。
+按改动包运行 `go test ./<package>/...`；影响 core 时考虑 `go test -short ./...`。涉及公共 Proto、生成器或 Web 契约时，再读取相应分组的检查入口。

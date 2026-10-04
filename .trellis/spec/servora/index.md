@@ -11,4 +11,4 @@
 | [cmd](cmd/index.md) | `svr` 开发 CLI 与 `protoc` 插件 |
 | [web](web/index.md) | `@servora/proto-utils` 的共享 TypeScript 契约 |
 
-框架的常规检查入口由 [`../servora/AGENTS.md`](../../../../servora/AGENTS.md) 定义：`just test`、`just test-all`、`just lint-proto`、`just web-typecheck` 和 `just web-build` 按影响面选择执行。生成或发布命令只是框架维护入口；本任务未运行它们。
+框架检查入口见 [`../servora/AGENTS.md`](../../../../servora/AGENTS.md)，按影响面选择测试、Proto lint 和 Web 类型/构建检查。

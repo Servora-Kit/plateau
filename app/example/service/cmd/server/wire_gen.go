@@ -36,6 +36,8 @@ func wireApp(runtime *bootstrap.Runtime) (*kratos.App, func(), error) {
 		return nil, nil, err
 	}
 	corev1Data := corev1Bootstrap.Data
+	discovery := registry.NewDiscovery(corev1Registry)
+	dialer := data.NewDialer(corev1Data, observability, metricsMetrics, discovery, logger)
 	driver, err := data.NewEntDriver(corev1Data)
 	if err != nil {
 		cleanup()
@@ -46,7 +48,7 @@ func wireApp(runtime *bootstrap.Runtime) (*kratos.App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	dataData, cleanup2, err := data.NewData(client)
+	dataData, cleanup2, err := data.NewData(dialer, client)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -64,10 +66,19 @@ func wireApp(runtime *bootstrap.Runtime) (*kratos.App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, logger, userService)
-	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger, userService)
+	exampleRepo, cleanup3, err := data.NewExampleRepo(dataData, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	exampleUsecase := biz.NewExampleUsecase(exampleRepo, logger)
+	exampleService := service.NewExampleService(exampleUsecase)
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, logger, userService, exampleService)
+	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger, userService, exampleService)
 	kratosApp := newApp(runtime, registrar, grpcServer, httpServer)
 	return kratosApp, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil

@@ -8,13 +8,13 @@
 
 | 源／模板 | 输出与维护方 |
 | --- | --- |
-| buf.yaml 中平台、Audit、Example、IAM 模块 + buf.go.gen.yaml | `api/gen/go`：Proto/gRPC/HTTP/errors/validate/redact、Plateau AuthN/AuthZ、Servora CRUD/audit/conf |
+| buf.yaml 中平台、应用等 Proto 模块 + buf.go.gen.yaml | `api/gen/go`：Go 生成产物 |
 | 同一 workspace + buf.typescript.gen.yaml | `api/gen/ts`：HTTP client、TS errors、TS CRUD sidecar |
-| Example 的 api/buf.typescript.gen.yaml | `app/example/web/src/api/generated`：Example 前端实际消费的独立 HTTP client、TS errors、TS CRUD sidecar |
-| 各服务 api/buf.openapi.gen.yaml | 服务自己的 OpenAPI assets，例如 Example `internal/assets` |
+| 服务级 api/buf.typescript.gen.yaml | 应用独立消费的 HTTP client、TS errors、TS CRUD sidecar |
+| 服务级 api/buf.openapi.gen.yaml | 服务自己的 OpenAPI assets |
 | 服务 Wire／Ent 源 | 相应服务 cmd/server、internal/data 中的生成输出 |
 
-Go、TS 根模板及 Example leaf TS 模板均为 `clean: true`，只清理各自输出目录；共享 TS 与 leaf TS 互不刷新，修改前确认消费者实际导入哪份产物。旧 `buf.es.gen.yaml` 停用，不把 Protobuf-ES 参考模板当作当前实际链路。
+生成模板只清理自身输出目录；共享 TS 与服务级 TS 互不刷新，修改前确认真实消费者。停用的参考模板不属于实际生成链。
 
 ## 包和工具边界
 
@@ -28,6 +28,6 @@ Plateau AuthN/AuthZ 插件从当前 checkout 本地安装；Servora 插件由 Ju
 
 ## 验证
 
-Proto 修改后运行 `just gen` 并审阅生成 diff，再运行 `just lint-proto`、`just api-ts-check` 及受影响消费者的检查。涉及 Example API 时，还需运行根入口 `just service::example::api-ts`（或在该服务 leaf 中运行 `just api-ts`），刷新其独立 TS 输出，并执行 Example Web 的 `pnpm --dir app/example/web type-check`。共享 TS 检查不能证明 leaf 产物已同步。只修改规范时不为证明命令存在而重建产物。OpenAPI、Wire、Ent 都有写文件副作用，不能混入只读调查。
+Proto 修改后运行生成、Buf lint、API TS 检查及受影响消费者检查；独立消费服务级 TS 的应用还须刷新该产物并运行自身类型检查。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
 
-来源：[根 justfile](../../../../justfile)、[service.just](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)、[TS exports](../../../../api/gen/package.json)、[tsconfig](../../../../api/gen/tsconfig.json)、[Example leaf TS 模板](../../../../app/example/service/api/buf.typescript.gen.yaml)、[Example 实际导入](../../../../app/example/web/src/api/userApi.ts)、[Example OpenAPI 模板](../../../../app/example/service/api/buf.openapi.gen.yaml)。
+入口：[根 justfile](../../../../justfile)、[服务命令](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)。

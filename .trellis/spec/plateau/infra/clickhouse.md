@@ -14,4 +14,4 @@
 
 不能把“未配置”和“配置失败”写成同一个 nil 分支；不能在 helper 与业务层重复记录相同日志。日志由消费方边界决定。
 
-检查入口：`go test ./infra/clickhouse`；[测试](../../../../infra/clickhouse/clickhouse_test.go) 覆盖未配置、默认值、Ping 失败、TLS 与压缩错误、输入隔离，不代替实际 ClickHouse 端到端验收。配置源：[config.proto](../../../../api/protos/plateau/infra/clickhouse/v1/config.proto)。
+检查未配置、默认值、Ping 失败、TLS 与压缩错误、输入隔离。入口：`go test ./infra/clickhouse`。配置源：[config.proto](../../../../api/protos/plateau/infra/clickhouse/v1/config.proto)。

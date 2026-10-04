@@ -6,4 +6,4 @@ import (
 	"github.com/google/wire"
 )
 
-var ProviderSet = wire.NewSet(registry.NewRegistrar, metrics.New, NewGRPCServer, NewHTTPServer)
+var ProviderSet = wire.NewSet(registry.NewRegistrar, registry.NewDiscovery, metrics.New, NewGRPCServer, NewHTTPServer)

@@ -3,10 +3,26 @@
 
 openapi: 3.0.3
 info:
-    title: UserService API
-    description: UserService exposes the User CRUD reference flow over gRPC and HTTP.
+    title: ""
     version: 0.0.1
 paths:
+    /v1/hello:
+        get:
+            tags:
+                - ExampleService
+            operationId: ExampleService_Hello
+            parameters:
+                - name: greeting
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HelloResponse'
     /v1/tenants/{tenant}/users:
         get:
             tags:
@@ -228,6 +244,11 @@ paths:
                                 $ref: '#/components/schemas/User'
 components:
     schemas:
+        HelloResponse:
+            type: object
+            properties:
+                reply:
+                    type: string
         ListUsersResponse:
             type: object
             properties:
@@ -304,4 +325,6 @@ components:
                     format: date-time
             description: User 表示 tenant 下的公开用户资源。
 tags:
+    - name: ExampleService
     - name: UserService
+      description: UserService exposes the User CRUD reference flow over gRPC and HTTP.
