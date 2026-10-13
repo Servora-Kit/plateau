@@ -1,0 +1,30 @@
+{
+  "id": "ai-api-relay-research",
+  "name": "ai-api-relay-research",
+  "title": "七款 AI API 中转项目技术调研",
+  "description": "只读调研 Higress、Floway、gpt-load、CLIProxyAPI、new-api、sub2api、Magpie 的功能、技术栈与架构；补充 Magpie 的协议/流式转换和公开 Go 库复用比较，保存来源与隔离验证，不实施业务代码变更。",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": "plateau",
+  "priority": "P2",
+  "creator": "HoronLee",
+  "assignee": "HoronLee",
+  "createdAt": "2026-10-05",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    ".trellis/tasks/10-05-ai-api-relay-research/prd.md",
+    ".trellis/tasks/10-05-ai-api-relay-research/research/comparison.md",
+    ".trellis/tasks/10-05-ai-api-relay-research/research/magpie.md"
+  ],
+  "notes": "2026-10-13 按用户要求扩展 Magpie 调研；保留原任务目录及 planning 状态，不启动实现。原六个项目的比较为 2026-10-05 快照。",
+  "meta": {}
+}
