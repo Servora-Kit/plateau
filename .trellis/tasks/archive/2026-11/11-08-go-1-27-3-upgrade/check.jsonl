@@ -1,0 +1,6 @@
+{"file":".trellis/spec/plateau/project/development.md","reason":"检查跨仓独立构建、工作区与依赖控制是否满足项目约定"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"检查所改行为的测试与实际运行证据，禁止语法文本断言"}
+{"file":".trellis/spec/servora/cmd/plugins.md","reason":"确认 Conf fixture 继续执行真实生成编译且不手改生成物"}
+{"file":".trellis/spec/servora/framework/crud.md","reason":"核对 string/int32 指针和 CRUD filter 行为不变"}
+{"file":".trellis/tasks/archive/2026-11/11-08-go-1-27-3-upgrade/research/upgrade-inventory.md","reason":"逐模块与全部有效配置核对升级完整性"}
+{"file":".trellis/tasks/archive/2026-11/11-08-go-1-27-3-upgrade/research/go-language.md","reason":"核对采纳项、公开 API 不变、分配与空切片形态不变"}

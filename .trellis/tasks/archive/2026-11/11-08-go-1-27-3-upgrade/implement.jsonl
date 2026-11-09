@@ -1,0 +1,7 @@
+{"file":".trellis/spec/plateau/project/development.md","reason":"Go module、父级工作区、GOWORK=off 与质量命令约定"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"Example 和 Audit 手写后端改写的错误、类型与编码约束"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"账户、用户与 Audit 行为验证的现有测试约定"}
+{"file":".trellis/spec/servora/framework/crud.md","reason":"Servora CRUD filter 动态描述符测试的类型与配置契约"}
+{"file":".trellis/spec/servora/cmd/plugins.md","reason":"Conf 生成编译 fixture 与插件验证约定"}
+{"file":".trellis/tasks/archive/2026-11/11-08-go-1-27-3-upgrade/research/upgrade-inventory.md","reason":"三个保留模块、父级工作区成员精简、版本入口与最新环境状态的精确证据"}
+{"file":".trellis/tasks/archive/2026-11/11-08-go-1-27-3-upgrade/research/go-language.md","reason":"官方版本、允许采纳的语法范围、类型不变量和不采纳理由"}
