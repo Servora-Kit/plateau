@@ -120,3 +120,48 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Next Steps
 
 - 第三仓 servora-example 升级时需要迁移 logger.New 的三个返回值；本次未修改该仓。
+
+
+## Session 4: Go 1.27.3 升级与 etcd 重试修复
+<!-- trellis-session: v=2 fp=d1d280e04dc95e8c -->
+
+**Date**: 2026-11-09
+**Task**: Go 1.27.3 升级与 etcd 重试修复
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成三个本地模块 Go 1.27.3 升级和指定语法优化，移除旧示例工作区成员，修复 etcd 重试通知及既有集成 fixture；四仓业务改动已提交，任务已归档。
+
+### Main Changes
+
+- Plateau、Servora、TCP 模块及父级 go.work 升至 Go 1.27.3；servora-example 四成员移出，仅本机工作区修改，不提交父级 go.work。
+- 迁移 new(expr)、errors.AsType、strings.CutPrefix；删除四个私有取址 helper；修复 SQLite fixture 构造参数与 etcd 失败信号通道。
+- GitNexus/OpenSSL 临时绕过及永久修复待办记录到 nix-config/TODO.md；nix-config 的 Zed 设置改动保持未提交。
+- 任务归档至 .trellis/tasks/archive/2026-11/11-08-go-1-27-3-upgrade；直接 main 任务使用 skip-branch-validation，补齐未跟踪目录造成的自动归档提交失败，并修复归档上下文引用。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3f87fe124579306dab20a7514f5977e38317948e` | build: 升级 Go 1.27.3 并精简语法 |
+| `599252632613439266bf08b6c7524d23a1a838d8` | build: 升级 Go 1.27.3 并精简语法 |
+| `265559baa8eb3534629a861e5f21f29847093d1b` | fix(registry): 明确 etcd 心跳失败重试信号 |
+| `cb9d326a477dc56384cdff185a87a6e68e44f630` | chore(go): upgrade to Go 1.27.3 |
+| `945e282a5ff1ea9cfb5b9a24cf26e1f41b305951` | docs: note GitNexus OpenSSL workaround |
+
+### Testing
+
+- [OK] Plateau 独立 build、27 个测试包的 short/race 测试与全仓 lint 通过。
+- [OK] Servora 独立 build、45 个测试包的 short/race 测试与全仓 lint 通过；etcd 故障注入 20 轮通过。
+- [OK] TCP build/test、三模块工作区 build、真实 SQLite integration、CLI/插件生成执行和服务二进制 smoke 均通过。
+- [OK] CGO 验证按命令临时使用 Xcode clang/SDK；已恢复同版本 Nacos 缓存并清理旧构建索引；无依赖升级和全局配置修改。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- GitNexus/OpenSSL 永久修复另见 nix-config/TODO.md；本任务不发布版本标签。
