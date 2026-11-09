@@ -260,8 +260,8 @@ func serviceFromSource(source string) string {
 	if source == "" {
 		return ""
 	}
-	if strings.HasPrefix(source, "//") {
-		return strings.TrimPrefix(source, "//")
+	if service, ok := strings.CutPrefix(source, "//"); ok {
+		return service
 	}
 	trimmed := strings.TrimPrefix(source, "/")
 	if i := strings.Index(trimmed, "/"); i > 0 {

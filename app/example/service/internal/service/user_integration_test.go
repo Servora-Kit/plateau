@@ -229,7 +229,7 @@ func TestUserReferenceIntegration(t *testing.T) {
 			Name:              alpha.GetName(),
 			DisplayName:       &displayName,
 			TenantPlan:        &tenantPlan,
-			TemporaryPassword: stringPointer("replacement-secret"),
+			TemporaryPassword: new("replacement-secret"),
 			Etag:              alpha.GetEtag(),
 			CreateTime:        timestamppb.New(time.Unix(2, 0)),
 		},
@@ -339,7 +339,7 @@ func newLiveUserService(t *testing.T, dsn string) *userservice.UserService {
 			t.Errorf("close fixture client: %v", err)
 		}
 	})
-	store, _, err := data.NewData(transaction.Client())
+	store, _, err := data.NewData(nil, transaction.Client())
 	if err != nil {
 		t.Fatalf("NewData: %v", err)
 	}
@@ -376,7 +376,7 @@ func createUser(
 			DisplayName:       &displayName,
 			Email:             &email,
 			TenantPlan:        &tenantPlan,
-			Nickname:          stringPointer(strings.ToLower(displayName)),
+			Nickname:          new(strings.ToLower(displayName)),
 			TemporaryPassword: temporaryPassword,
 			CreateTime:        createTime,
 		},
@@ -414,5 +414,3 @@ func userNames(users []*examplev1.User) []string {
 	}
 	return names
 }
-
-func stringPointer(value string) *string { return &value }

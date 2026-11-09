@@ -206,7 +206,7 @@ func TestAccountRejectsInvalidCAPWithoutUserSideEffects(t *testing.T) {
 
 func TestAccountVerifyEmailConsumesTokenAndActivatesUser(t *testing.T) {
 	users := &fakeAccountUsers{user: &userpb.User{
-		UserId: "user-1", Email: stringPtr("person@example.com"),
+		UserId: "user-1", Email: new("person@example.com"),
 		Status: userpb.UserStatus_USER_STATUS_PENDING_EMAIL_VERIFICATION,
 	}}
 	tokens := &fakeVerificationTokens{userID: "user-1", tokenHash: HashOpaqueSecret("verification-token")}
@@ -223,7 +223,7 @@ func TestAccountVerifyEmailConsumesTokenAndActivatesUser(t *testing.T) {
 func TestAccountPasswordResetUsesCAPAndRevokesSessions(t *testing.T) {
 	mail := new(fakeMailSender)
 	users := &fakeAccountUsers{user: &userpb.User{
-		UserId: "user-1", Email: stringPtr("person@example.com"),
+		UserId: "user-1", Email: new("person@example.com"),
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
 	}}
 	resetTokens := new(fakePasswordResetTokens)
@@ -272,7 +272,7 @@ func TestAccountChangePasswordPreservesCurrentSessionAndRevokesOthers(t *testing
 
 func TestUserDisableRevokesLoginAndOAuthSessions(t *testing.T) {
 	users := &fakeAccountUsers{user: &userpb.User{
-		Name: "users/user-1", UserId: "user-1", Email: stringPtr("person@example.com"),
+		Name: "users/user-1", UserId: "user-1", Email: new("person@example.com"),
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true, Etag: "etag-1",
 	}}
 	account := newAccountForTest(t, users, new(fakeVerificationTokens), new(fakePasswordResetTokens), new(fakeMailSender))
@@ -294,5 +294,3 @@ func TestUserDisableRevokesLoginAndOAuthSessions(t *testing.T) {
 		t.Fatalf("repeated DisableUser() error = %v", err)
 	}
 }
-
-func stringPtr(value string) *string { return &value }

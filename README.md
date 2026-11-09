@@ -16,6 +16,8 @@
 
 `plateau` 当前包含具体 JWT AuthN、OpenFGA AuthZ、JWT/OpenFGA 基础能力、安全 Proto/codegen、IAM 微服务、Audit 微服务、Example CRUD 服务及其 Web 入口。
 
+Go 后端开发与构建要求 **Go 1.27.3 或更新版本**。
+
 
 ## 微服务
 

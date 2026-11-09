@@ -56,7 +56,7 @@ func (repo *fakeSessions) Revoke(context.Context, string, time.Time) error {
 
 func activeUser() *userpb.User {
 	return &userpb.User{
-		UserId: "user-1", Email: stringPtr("person@example.com"),
+		UserId: "user-1", Email: new("person@example.com"),
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
 	}
 }
@@ -115,8 +115,8 @@ func TestAuthenticationRejectsInvalidCredentialsWithoutSession(t *testing.T) {
 		pass string
 	}{
 		{name: "wrong password", user: activeUser(), pass: "wrong password"},
-		{name: "pending email", user: &userpb.User{UserId: "user-1", Email: stringPtr("person@example.com"), Status: userpb.UserStatus_USER_STATUS_PENDING_EMAIL_VERIFICATION}, pass: "correct horse battery staple"},
-		{name: "disabled user", user: &userpb.User{UserId: "user-1", Email: stringPtr("person@example.com"), Status: userpb.UserStatus_USER_STATUS_DISABLED, EmailVerified: true}, pass: "correct horse battery staple"},
+		{name: "pending email", user: &userpb.User{UserId: "user-1", Email: new("person@example.com"), Status: userpb.UserStatus_USER_STATUS_PENDING_EMAIL_VERIFICATION}, pass: "correct horse battery staple"},
+		{name: "disabled user", user: &userpb.User{UserId: "user-1", Email: new("person@example.com"), Status: userpb.UserStatus_USER_STATUS_DISABLED, EmailVerified: true}, pass: "correct horse battery staple"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			sessions := new(fakeSessions)

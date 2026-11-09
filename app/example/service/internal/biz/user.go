@@ -254,8 +254,7 @@ func hashTemporaryPassword(plaintext *string) (*string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("hash temporary password: %w", err)
 	}
-	value := string(hash)
-	return &value, nil
+	return new(string(hash)), nil
 }
 
 func newEtag() (string, error) {
@@ -276,8 +275,7 @@ func (*UserUsecase) translateRepoError(err error) error {
 	case errors.Is(err, ErrAlreadyExists):
 		return examplev1.ErrorUserErrorReasonAlreadyExists("user already exists").WithCause(err)
 	}
-	var apiError *kerrors.Error
-	if errors.As(err, &apiError) {
+	if _, ok := errors.AsType[*kerrors.Error](err); ok {
 		return err
 	}
 	return kerrors.InternalServer("USER_INTERNAL", "user operation failed").WithCause(err)
