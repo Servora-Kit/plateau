@@ -2,7 +2,7 @@
   "id": "admin-v1",
   "name": "admin-v1",
   "title": "admin-v1",
-  "description": "建设 Admin v1 的 IAM 用户管理与管理员资格管理，补齐 IAM 账号生命周期、自助删除和首次改密，并验证服务间调用。",
+  "description": "为唯一平台管理员建设总览与 IAM 用户管理，补齐 IAM 账号生命周期、自助删除和首次改密，并验证服务间调用。",
   "status": "planning",
   "dev_type": null,
   "scope": null,
@@ -18,9 +18,13 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "10-18-admin-v1-iam",
+    "10-18-admin-v1-backend",
+    "10-18-admin-v1-web"
+  ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "",
+  "notes": "用户已确认主 PRD 及三个规划子任务，并将删除策略调整为无限保留、未 Expunge 时一直可恢复、仅管理员显式永久删除，不设固定恢复期或自动清理。技术栈、业务实现、接口和具体调用链由 HoronLee 逐项确认；助手负责证据、方案对比与验证。未来调度技术讨论不属于本期交付。父任务不直接实施，尚未批准任何子任务开始实现。",
   "meta": {}
 }

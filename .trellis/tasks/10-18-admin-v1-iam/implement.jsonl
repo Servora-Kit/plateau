@@ -1,0 +1,13 @@
+{"file":".trellis/tasks/10-18-admin-v1-iam/prd.md","reason":"IAM 需求与验收编号"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/design.md","reason":"确定的 API、事务、错误及数据合同"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/implement.md","reason":"分阶段实施顺序与业务验收安排"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/research/lifecycle-implementation-design.md","reason":"生命周期 Repo 签名、逐表谓词和并发写入"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/research/credential-implementation-design.md","reason":"创建发信、凭据快照和认证接线"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/research/credential-web-and-callsites.md","reason":"HTTP来源约束、页面和全部调用方迁移"}
+{"file":".trellis/spec/service/backend/data.md","reason":"Ent 事务、mapper 与软删除惯例"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"错误归属、日志与请求 context"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"源 Proto、字段与错误兼容合同"}
+{"file":".trellis/spec/iam/identity.md","reason":"凭据和邮件入口既有规则"}
+{"file":".trellis/spec/iam/sessions.md","reason":"IAM 登录与 OAuth 撤销语义"}
+{"file":".trellis/spec/iam/oidc.md","reason":"OIDC 授权与服务 token 分离"}
+{"file":".trellis/spec/iam/frontend.md","reason":"IAM Web 同源与敏感数据约定"}

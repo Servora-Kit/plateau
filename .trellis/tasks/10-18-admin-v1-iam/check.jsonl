@@ -1,0 +1,12 @@
+{"file":".trellis/tasks/10-04-admin-v1/prd.md","reason":"跨子任务验收与范围约束"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/prd.md","reason":"逐条核对 IAM 验收"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/design.md","reason":"核对 API、状态与事务一致性"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/implement.md","reason":"生成物、调用方和业务检查覆盖"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/research/lifecycle-implementation-design.md","reason":"永久清理谓词及用户锁顺序"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/research/credential-implementation-design.md","reason":"重放、竞争、cookie失败与页面继续规则"}
+{"file":".trellis/tasks/10-18-admin-v1-iam/research/credential-web-and-callsites.md","reason":"浏览器交互及生成消费者核对"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"公共字段兼容和错误编码"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"沿用现有消费者行为测试分层"}
+{"file":".trellis/spec/iam/identity.md","reason":"密码与验证令牌所有权"}
+{"file":".trellis/spec/iam/sessions.md","reason":"普通登录和令牌生命周期"}
+{"file":".trellis/spec/iam/frontend.md","reason":"敏感输入和会话反馈"}
