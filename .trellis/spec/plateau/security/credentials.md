@@ -22,4 +22,13 @@
 
 [session.NewFilter](../../../../security/session/filter.go) 校验公开入口裸 origin，按应用声明的 `JSONPrefixes`、`SameOriginPaths` 与 `CrossOriginPaths` 分流防护和 `LoadAndSave`：JSON 路由前缀在装载会话前拦截非 `application/json` 写请求（415）与跨源请求（403）；应用自有同源路径在装载会话前拦截非安全跨源请求（403）；标准跨站协议路径仅装载会话；其余路径透传不触碰会话存储。
 
-检查入口：`go test ./security/password ./security/jwt ./security/session`。
+
+PostgreSQL 会话持久化统一使用 [HTTPSessionMixin](../../../../infra/entgo/mixin/http_session.go) 声明 `sessions` 表结构，并由 [session.NewPostgres](../../../../security/session/postgres.go) 绑定 `postgresstore`（配置校验失败时立即停止后台清理协程）。邮箱比较统一调用 [security.NormalizeEmail](../../../../security/identity.go)（trim + Unicode NFC + Unicode case-fold）。
+
+## OIDC 客户端工具
+
+[security/oidc](../../../../security/oidc/rp.go) 基于 `plateau.security.oidc.v1.OIDCClient`（`oidc_client` 配置段）提供两类共享能力：
+- `NewRelyingParty`：使用 HKDF（SHA-256）从不少于 32 字节的 `cookie_secret` 派生独立签名与加密密钥，维护 5 分钟单次加密握手 Cookie（`{state, nonce, code_verifier, return_to}`），单飞惰性执行 OIDC Discovery，完成 PKCE S256、`nonce`、签名与站内相对 `return_to` 校验，并在需要时经 `/userinfo` 补齐邮箱与资料声明。
+- `NewServiceTokenMiddleware`：维护进程内共享的 `client_credentials` 令牌源，通过 `singleflight` 合并冷启动/续期请求并监听当前请求 `ctx.Done()` 立即中断等待；取令牌失败统一包装为脱敏的 `ErrTokenSourceUnavailable`。
+
+检查入口：`go test ./security/...`。

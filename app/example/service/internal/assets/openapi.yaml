@@ -48,9 +48,7 @@ paths:
                     type: string
                 - name: skip
                   in: query
-                  description: |-
-                    可单独使用，也可在 page_token 恢复 cursor 后额外跳过资源；服务可以限制最大值。
-                     Servora 的随机跳页扩展；项目 api-linter 配置明示允许该字段。
+                  description: 可单独使用，也可在 page_token 恢复 cursor 后额外跳过资源；服务可以限制最大值。
                   schema:
                     type: string
                 - name: filter
@@ -65,9 +63,7 @@ paths:
                     type: string
                 - name: includeTotal
                   in: query
-                  description: |-
-                    只有 true 时执行 Count 并返回 total_size。
-                     Servora 的可选 total 扩展；项目 api-linter 配置需允许该附加字段。
+                  description: 只有 true 时执行 Count 并返回 total_size。
                   schema:
                     type: boolean
                 - name: showDeleted
@@ -265,7 +261,6 @@ components:
                     description: |-
                         仅在 include_total 为 true 时设置。Servora 明示使用 optional int64
                          表达“未计算”并支持大型集合。
-                         Servora 的可选 total 扩展；项目 api-linter 配置明示允许该字段。
             description: ListUsersResponse 包含一页 User 及分页元数据。
         UndeleteUserRequest:
             required:

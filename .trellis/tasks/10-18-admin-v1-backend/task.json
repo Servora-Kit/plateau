@@ -3,7 +3,7 @@
   "name": "admin-v1-backend",
   "title": "admin-v1：Admin 后端",
   "description": "承接 admin-v1 的 IAM 登录接入、独立本地会话、唯一管理员识别、自我保护及面向 Admin Web 的管理接口。",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": "admin",
@@ -12,7 +12,7 @@
   "assignee": "HoronLee",
   "createdAt": "2026-10-18",
   "completedAt": null,
-  "branch": null,
+  "branch": "main",
   "base_branch": "main",
   "worktree_path": null,
   "commit": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": "10-04-admin-v1",
   "relatedFiles": [],
-  "notes": "仅批准需求拆分与规划。技术栈、接口、调用链、会话实现和客户端装配由 HoronLee 逐项设计确认；未批准技术方案或实施。依赖 IAM 子任务的契约，向 Web 子任务提供统一接口。",
+  "notes": "已完成 D1~D5 全部技术决策确认并定稿 prd.md、design.md、implement.md、implement.jsonl 与 check.jsonl，保持 planning 状态等待最终规划审阅批准后执行 task.py start。确定采用 PostgreSQL(plateau_admin)+Ent+共享 HTTPSessionMixin、OpenFGA 三层关系(access/manage_users/expunge_users)+bootstrap_admin_email 幂等种子、共享 security/oidc(RP+服务令牌中间件)、单一 /v1/admin/* 前缀与同 workspace Proto 生成，以及参照 example 风格的 Servora gRPC Dialer 装配。",
   "meta": {}
 }

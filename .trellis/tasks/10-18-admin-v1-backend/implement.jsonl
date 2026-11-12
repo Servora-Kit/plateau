@@ -1,0 +1,13 @@
+{"file":".trellis/tasks/10-18-admin-v1-backend/prd.md","reason":"Admin 后端需求范围与 AC-B1~AC-B9 验收标准"}
+{"file":".trellis/tasks/10-18-admin-v1-backend/design.md","reason":"确定的共享模块提炼、OIDC BFF、Proto 契约与错误映射合同"}
+{"file":".trellis/tasks/10-18-admin-v1-backend/implement.md","reason":"分阶段实施顺序与全链路验证门禁"}
+{"file":".trellis/spec/admin/architecture.md","reason":"Admin 编排定位与领域所有权"}
+{"file":".trellis/spec/admin/backend.md","reason":"Admin 两层授权与下游服务调用规则"}
+{"file":".trellis/spec/service/backend/layout.md","reason":"微服务标准目录与生成产物归属"}
+{"file":".trellis/spec/service/backend/bootstrap.md","reason":"main/wire 启动装配与 cleanup 生命周期"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"错误归属、Context 传播与单次日志记录约定"}
+{"file":".trellis/spec/plateau/security/authN.md","reason":"Session/JWT 认证器装配与 Actor 投影规则"}
+{"file":".trellis/spec/plateau/security/authZ.md","reason":"OpenFGA 能力检查、BatchCheck 与失败分类"}
+{"file":".trellis/spec/plateau/security/credentials.md","reason":"SCS 会话、NewFilter 路由防护与凭据安全规则"}
+{"file":".trellis/spec/iam/oidc.md","reason":"IAM OIDC 授权码、PKCE/nonce 与服务令牌验证要求"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"源 Proto 字段、注解与错误原因约定"}

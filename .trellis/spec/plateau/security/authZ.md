@@ -4,8 +4,7 @@
 
 ## 具体能力
 
-[Authorizer](../../../../security/authz/openfga/authz.go) 接收官方 SDK client 与应用 `SubjectMapper`，将有效、非匿名 Actor 映射为直接 subject，再组装 relation 和 object。
-
+[Authorizer](../../../../security/authz/openfga/authz.go) 接收官方 SDK client 与 `SubjectMapper`，将有效、非匿名 Actor 映射为直接 subject，再组装 relation 和 object。平台标准人类/服务主体（`user:<id>`、`service:<id>`）直接使用共享的 `DefaultSubject` 与 `NewDefault(client)`，无需在各应用重复包装。
 - `Check` 返回是否允许；拒绝与 provider 故障分开表达。
 - `BatchCheck` 用输入序号作为 correlation ID，按原输入顺序返回。数量、ID、allowed 或单项错误异常使整个调用失败，不能把缺结果默认为拒绝或允许。
 - `ListAllowed` 调用 ListObjects，要求返回 object 前缀精确匹配资源类型，剥离后返回裸 ID；不把跨类型对象混入结果。

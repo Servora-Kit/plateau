@@ -14,5 +14,11 @@
   - 当前 `crudmapper.WithFieldMapping` 拒绝含 `.` 的 `FieldPath`（`core/crud/mapper/mapper.go`），导致 `plateau` 的 `app/iam`、`app/example` 等服务需重复手写 `WithPostToDTOHook` 与嵌套字段局部更新逻辑。
   - 支持声明式嵌套路径双向映射，明确子 Message 字段全为空时的置空与初始化语义，并与 `contrib/db/entgo/crud.ClearHelper` 的嵌套掩码清理对齐；升级后移除 `plateau` 各服务的手写转换样板。
 - [ ] 让 `protoc-gen-servora-crud` 生成的 `Parse<Resource>Name` 直接返回结构化 `CRUD_ERROR_REASON_INVALID_RESOURCE_NAME`（400）错误。
-  - 当前生成函数（`cmd/protoc-gen-servora-crud/generate_go.go`）在格式不合法时仅返回裸 `fmt.Errorf`，迫使各服务 `service` 层额外编写私有 `parse<Resource>Name` 调用 `plan.ParseName` 包装错误。
+  - 当前生成函数（`cmd/protoc-gen-servora-crud/generate_go.go`）在格式不合法时仅返回裸 `fmt.Errorf`，迫使各服务 `service` 层额外编写私有 `parse<Resource>Name` 调用 `plan.ParseName` 包装错误。比如：./app/admin/service/internal/service/user.go中的func (s *UserService) parseUserName(raw string) (string, string, error)，所以修复之后要顺便删除所有类似方法并且简化原调用方行为
   - 统一由生成的 `Parse<Resource>Name` 返回（或委托 `Plan()` 产出）带 `CRUD_ERROR_REASON_INVALID_RESOURCE_NAME` 原因的结构化错误；发版并重新生成后清理 `plateau` 各服务的重复包装函数。
+
+## 平台安全认证（`security/authn`）
+
+- [ ] 讨论并提炼 `security/authn/jwt` 与 `security/authn/session` 的平台公共身份解析组件（IAM 专属查表会话认证仍留在 `app/iam/service/internal/authn`）：
+  - **服务令牌声明共享（`security/authn/jwt`）**：将 `app/iam/service/internal/authn/jwt.go` 中的 `ServiceClaims`、`NewServiceClaims`、`ServiceActor` 下沉至 `security/authn/jwt`（具体文件划分待讨论确认），供所有接收内部服务调用的微服务统一复用；IAM 仅保留注入本地公钥的 `NewServiceAuthenticator`。
+  - **BFF 本地会话快照认证共享（`security/authn/session`）**：将 OIDC 客户端服务（如 Admin 及后续业务 Web 后端）通用的本地 SCS 会话身份快照读写、`Authenticator` 构造及 `context` 读取函数提炼至 `security/authn/session`（具体文件与类型划分待讨论确认），消除各 BFF 服务的私有 `internal/authn` 样板。

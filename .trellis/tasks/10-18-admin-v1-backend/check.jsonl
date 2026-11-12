@@ -1,0 +1,11 @@
+{"file":".trellis/tasks/10-04-admin-v1/prd.md","reason":"核对父任务跨服务约束与排除项"}
+{"file":".trellis/tasks/10-18-admin-v1-backend/prd.md","reason":"逐条核对 AC-B1 至 AC-B9 验收标准"}
+{"file":".trellis/tasks/10-18-admin-v1-backend/design.md","reason":"核对共享组件、API 契约、自我保护与 503 下游错误隔离"}
+{"file":".trellis/tasks/10-18-admin-v1-backend/implement.md","reason":"核对生成物、配置与全链路集成测试覆盖"}
+{"file":".trellis/spec/admin/backend.md","reason":"两层独立鉴权与领域所有权核查"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"禁止重复错误日志、敏感字段脱敏与 Context 传播核查"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"消费者行为导向测试分层与真实依赖验证标准"}
+{"file":".trellis/spec/plateau/security/authN.md","reason":"本地会话独立性与认证边界核查"}
+{"file":".trellis/spec/plateau/security/authZ.md","reason":"OpenFGA 主体映射与默认拒绝核查"}
+{"file":".trellis/spec/plateau/security/credentials.md","reason":"Cookie 属性、跨源写防护与密钥不落日志核查"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"Proto 兼容性、字段掩码与错误编码核查"}

@@ -4,17 +4,16 @@
 
 ## 现有流程
 
-根 `just gen` 先执行 `api`（api-go、api-ts），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。服务 leaf 的 `api` 则先回根生成 Go，再用服务自己的 TS 模板生成前端产物；根 `gen` 不执行这一步服务级 TS 生成。
+根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。所有注册在根 `buf.yaml` 的平台与应用模块（含 `iam`、`admin`、`example`、`test`、`audit`）统一生成至共享目录，不再为单个服务重复维护独立的 `buf.typescript.gen.yaml` 产物。
 
 | 源／模板 | 输出与维护方 |
 | --- | --- |
-| buf.yaml 中平台、应用等 Proto 模块 + buf.go.gen.yaml | `api/gen/go`：Go 生成产物 |
-| 同一 workspace + buf.typescript.gen.yaml | `api/gen/ts`：HTTP client、TS errors、TS CRUD sidecar |
-| 服务级 api/buf.typescript.gen.yaml | 应用独立消费的 HTTP client、TS errors、TS CRUD sidecar |
-| 服务级 api/buf.openapi.gen.yaml | 服务自己的 OpenAPI assets |
-| 服务 Wire／Ent 源 | 相应服务 cmd/server、internal/data 中的生成输出 |
+| `buf.yaml` 中平台与应用 Proto 模块 + `buf.go.gen.yaml` | `api/gen/go`：统一 Go 生成产物 |
+| 同一 workspace + `buf.typescript.gen.yaml` | `api/gen/ts`（`@plateau/api`）：HTTP client、TS errors、TS CRUD sidecar |
+| 服务级 `api/buf.openapi.gen.yaml` | 各服务自己的 `internal/assets/openapi.yaml` |
+| 服务 Wire／Ent 源 | 相应服务 `cmd/server`、`internal/data` 中的生成输出 |
 
-生成模板只清理自身输出目录；共享 TS 与服务级 TS 互不刷新，修改前确认真实消费者。停用的参考模板不属于实际生成链。
+生成模板只清理自身输出目录；停用的参考模板（如 `buf.es.gen.yaml`）不属于实际生成链。
 
 ## 包和工具边界
 
@@ -28,6 +27,6 @@ Plateau AuthN/AuthZ 插件从当前 checkout 本地安装；Servora 插件由 Ju
 
 ## 验证
 
-Proto 修改后运行生成、Buf lint、API TS 检查及受影响消费者检查；独立消费服务级 TS 的应用还须刷新该产物并运行自身类型检查。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
+Proto 修改后运行生成（`just gen`）、Buf lint（`just lint-proto`）、API TS 检查（`just api-ts-check`）及受影响消费者检查。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
 
 入口：[根 justfile](../../../../justfile)、[服务命令](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)。
