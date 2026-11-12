@@ -165,3 +165,29 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Next Steps
 
 - GitNexus/OpenSSL 永久修复另见 nix-config/TODO.md；本任务不发布版本标签。
+
+
+## Session 5: 完成 10-18-admin-v1-iam 实现、会话过滤公共化与结项归档
+<!-- trellis-session: v=2 fp=9e400984387928ea -->
+
+**Date**: 2026-11-12
+**Task**: 完成 10-18-admin-v1-iam 实现、会话过滤公共化与结项归档
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 IAM 用户软删除/恢复/永久删除、管理建号与发信拆分、首次改密、自助删除及 IAM Web 交互；提炼 security/session.NewFilter 三类路径防护并清理 *bootstrap.Runtime 误注入与冗余判空；通过全量单元/集成测试与 lint 并归档任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1b44d10a` | feat(security): 统一浏览器会话 HTTP 路由过滤与跨源写防护 |
+| `23075871` | feat(iam): 补齐账号生命周期、软删除恢复、永久清理、自助删除与首次改密 |
+| `f3a2bc18` | chore(api): 同步 protoc-gen-go 生成器版本注释 |
+| `40439aca` | docs: 同步 IAM 与会话安全规范、AGENTS 编码规范及 TODO 清单 |
+
+### Status
+
+[OK] **Completed**
