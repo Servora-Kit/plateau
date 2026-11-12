@@ -6,7 +6,7 @@
 
 Ent schema 是应用持久化模型的唯一来源，明确 optional/nillable、immutable、default、sensitive 与唯一约束；CRUD adapter 不代替领域选择。
 
-共享软删除使用 Plateau `infra/entgo/mixin`：`SoftDeleteMixin` 提供 tombstone 字段、默认查询过滤和 Delete/DeleteOne 改写；`SkipSoftDelete` 用于显式 tombstone 读取与硬删除。`show_deleted` 对应的可见性须写入 page-token scope fingerprint。
+共享软删除使用 Plateau `infra/entgo/mixin`：`SoftDeleteMixin` 提供 tombstone 字段、默认查询过滤和 Delete/DeleteOne 改写，不拦截 `Update`/`UpdateOneID`；常规写路径必须在查询锁或更新条件中显式限定 `DeleteTimeIsNil()`，防止误改 tombstone。`SkipSoftDelete` 仅在局部查询或硬删除语句中使用，不在上层调用链透传。`show_deleted` 对应的可见性须写入固定 page-token scope fingerprint。
 
 跨实体不变量或并发锁定由 data Repo 的事务保护，确保失败或 panic 回滚、成功提交；不自动为简单单实体操作增加事务。存储语义应在所选 dialect 的真实环境验证，见 [测试](testing.md)。
 

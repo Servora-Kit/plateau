@@ -1,3 +1,7 @@
+## 编码规范
+
+- 永远不能因为单元测试需要而定义没必要的私有方法和变量
+
 ## 本地端口
 
 - 从 `10000` 起，每个应用固定分配 10 个端口：`+0` HTTP、`+1` gRPC、`+2` Web，`+3～+9` 预留；IAM、Admin 使用前两个段，Example/Test 固定使用 `10080`/`10090` 段。新增基础服务从 `10020–10079` 中尚未占用的段登记，不因 Example/Test 编号较大而从 `10100` 继续分配，也不重排已有编号。
@@ -5,13 +9,11 @@
 - Web 的 dev 与 preview/start 默认共用 Web 端口，不同时启动。改动 IAM 公开入口时，同步 `IAM_PUBLIC_ORIGIN`、Web 端口和后端代理地址。
 
 | 应用 | 端口段 | HTTP | gRPC | Web |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | IAM | 10000–10009 | 10000 | 10001 | 10002 |
 | Admin | 10010–10019 | 10010（预留） | 10011（预留） | 10012 |
 | Example | 10080–10089 | 10080 | 10081 | 10082 |
 | Test | 10090–10099 | 10090（预留） | 10091 | 10092 |
-
-Audit/CMS 暂不列入上表；现有 Audit 的本地监听和宿主映射占用 `10020/10021`，因此 `10020–10029` 段不可重复分配。Admin 后端尚未建立，表中的 HTTP/gRPC 仅预留，不表示已有服务监听。
 
 ## 目录结构
 
@@ -77,6 +79,7 @@ This project is managed by Trellis. The working knowledge you need lives under `
 If a Trellis command is available on your platform (e.g. `/trellis:finish-work`, `/trellis:continue`), prefer it over manual steps. Not every platform exposes every command.
 
 If you're using Codex or another agent-capable tool, additional project-scoped helpers may live in:
+
 - `.agents/skills/` — reusable Trellis skills
 - `.codex/agents/` — optional custom subagents
 

@@ -20,4 +20,6 @@
 
 `LoadAndSave` 调用 SCS 生命周期并记录 manager 专属装载标记；保存失败中断成功响应正文。应用不能绕过装载检查把缺少接线当作普通未登录，OP/RP 会话职责由消费应用拥有。
 
+[session.NewFilter](../../../../security/session/filter.go) 校验公开入口裸 origin，按应用声明的 `JSONPrefixes`、`SameOriginPaths` 与 `CrossOriginPaths` 分流防护和 `LoadAndSave`：JSON 路由前缀在装载会话前拦截非 `application/json` 写请求（415）与跨源请求（403）；应用自有同源路径在装载会话前拦截非安全跨源请求（403）；标准跨站协议路径仅装载会话；其余路径透传不触碰会话存储。
+
 检查入口：`go test ./security/password ./security/jwt ./security/session`。

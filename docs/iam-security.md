@@ -1,6 +1,6 @@
 # IAM 认证与服务调用
 
-IAM HTTP 提供登录、注销、账户与 OIDC 协议入口；UserService 六个管理操作只注册到 gRPC。浏览器使用 SCS Cookie，内部管理调用使用服务访问令牌和 OpenFGA 授权。
+IAM HTTP 提供登录、注销、账户与 OIDC 协议入口；UserService 管理操作只注册到 gRPC。浏览器使用 SCS Cookie，内部管理调用使用服务访问令牌和 OpenFGA 授权。
 
 ## 运行配置
 
@@ -33,13 +33,14 @@ Cookie 默认 Secure、HttpOnly、host-only、Path=/、SameSite=Lax。IAM 保留
 
 ## 显式授权
 
-部署模型使用 `manifests/openfga/fga.mod`。IAM 关系为 `service:<client_id> manage_users iam:global`；Admin 示例中的 `user:<id> admin admin:global` 只表达 Admin 自己的用户权限。客户端注册不会产生权限。
+部署模型使用 `manifests/openfga/fga.mod`。IAM 关系包含 `service:<client_id> manage_users iam:global` 与独立的永久删除关系 `service:<client_id> expunge_users iam:global`（不从 `manage_users` 派生）；Admin 示例中的 `user:<id> admin admin:global` 只表达 Admin 自己的用户权限。客户端注册不会产生权限。
 
 ```bash
 rtk proxy just openfga-model-validate
 rtk proxy just openfga-model-test
 rtk proxy just openfga-model-apply
 rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin manage_users iam:global
+rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin expunge_users iam:global
 ```
 
 Just 默认加载项目 `.env` 并覆盖同名环境变量。使用独立测试 store 时，必须同时指定 `--dotenv-path` 和 `ENV_FILE`，确保模型写入与输出文件指向同一环境：

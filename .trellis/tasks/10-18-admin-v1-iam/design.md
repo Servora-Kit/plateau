@@ -127,12 +127,12 @@ message UndeleteUserRequest { string name = 1; }
 - 两个请求只接受 `users/{user}` 资源名，不添加 etag、allow_missing；返回变更后的 User，继续通过服务身份与 `manage_users` 授权。
 - 操作在身份锁内检查当前删除状态并写入，不校验操作者页面版本。User.etag/update_time 仍随资源变更更新。
 - DeleteUser 对不存在或已经软删除目标返回 NOT_FOUND；UndeleteUser 对不存在或已永久删除目标返回 NOT_FOUND，对未删除目标返回 ALREADY_EXISTS。
-- UserRepo 新增 SoftDelete、Undelete、Expunge；管理入口经 UserUsecase，自助入口经 AccountUsecase，调用同一包内 deleteUser 命令和 SoftDelete 事务。管理删除不传凭据 proof，自助删除传已验密码快照、LoginID 和最初读取的 User.etag；不反向注入 UserUsecase。接口定义及锁函数见 [生命周期调用设计 §3–4](research/lifecycle-implementation-design.md)。
+- UserRepo 新增 SoftDelete、Undelete、Expunge；管理入口经 UserUsecase.DeleteUser 调用 `SoftDelete(ctx, userID, nil, now)`，自助入口经 AccountUsecase.DeleteAccount 调用 `SoftDelete(ctx, userID, &DeleteAccountProof{LoginID, PasswordHash}, now)`；不反向注入 UserUsecase。接口定义及锁函数见 [生命周期调用设计 §3–4](research/lifecycle-implementation-design.md)。
 
 ### 4.2 删除、恢复与关联状态事务
 
 - 普通 lockUser 仅锁未删除记录；lockUserIncludingDeleted 在函数内部局部使用 SkipSoftDelete，仅用于 Undelete、Expunge。用户关联写入统一先锁 User 再读取关联记录；不得把管理查询 context 传给认证读取。
-- SoftDelete 锁内复验未删除，自助入口再复验账号资格、User.etag、LoginID 归属及未撤销、密码行 ID/hash；写 delete_time 和新 etag/update_time，保持 purge_time 为空。保留 status、密码认证器和邮箱验证事实。
+- SoftDelete 锁内复验未删除，自助入口再复验账号资格、LoginID 归属及未撤销、当前密码哈希一致；写 delete_time 和新 etag/update_time，保持 purge_time 为空。保留 status、密码认证器和邮箱验证事实。
 - 同一事务撤销 IAM 登录、OAuth 用户会话和 human access/refresh；将未消费的邮箱验证／重置令牌标记为 consumed；删除目标身份已绑定的授权码和授权请求。恢复只清删除标记及 deleted_by，更新 etag/update_time，不清任何 revoked_time 或 consumed_time。
 - 用 tx.Client() 投影事务内的变更后 User；删除返回资源时局部包含删除记录，不在提交后调用默认 Get 造成 NOT_FOUND，也不返回另一请求恢复后的状态。
 - 全部步骤使用同一事务，任一步失败回滚。恢复、Expunge 共享用户行锁，先恢复则 Expunge 拒绝未删除目标，先 Expunge 则恢复返回 NOT_FOUND。
@@ -227,7 +227,7 @@ login_identifier 的唯一键释放只在整个事务提交后生效；中途失
 
 ### 8.6 一次性令牌与 OIDC 写入
 
-- 两类 token Create 增加 expectedUserEtag，在用户锁内比对并复验对应资格；阻止删除前准备的请求在 Delete→Undelete 后晚建有效 token。公开重发／申请 reset 的未知目标、资格变化仍返回原有空成功；管理发信返回具体领域失败。SMTP 在 token 事务提交后执行，不持锁等待网络。
+- 两类 token Create 在用户锁内复验对应资格（未删除、待验证／ACTIVE）后再落库；公开重发／申请 reset 的未知目标、资格变化仍返回原有空成功，管理发信返回具体领域失败。SMTP 在 token 事务提交后执行，不持锁等待网络。
 - VerificationTokenRepo.Consume 与 UserRepo.ActivateEmail 合并为 ConsumeAndActivate(ctx,tokenHash,now)：先定位 userID，再锁 User 重读 token，条件消费、验证标识、激活用户及更新版本同一事务；当 `lockUser` 因目标不存在或已软删除返回 `ErrNotFound` 时（含 PasswordResetTokenRepo 的 Peek 与 ConsumeAndReplacePassword），统一转换为各自的无效令牌领域错误（映射 INVALID_TOKEN／400），不将原始 `ErrNotFound` 泄漏为 500 或 401。删除旧的独立 ActivateEmail 生产路径，避免消费与激活分别提交。
 - OAuthRepo 增加 CompleteAuthorizationRequest(ctx,requestID,userID,loginID,now)、SaveAuthorizationCode(ctx,requestID,codeID,codeHash,now,expires)。OIDC adapter 委托现有 Repo，User 锁内检查未删除、ACTIVE、邮箱验证、无动作和有效登录，再绑定请求或保存授权码；auth_time 从登录记录取值。
 - 未绑定身份的授权请求可以独立创建；晚到的绑定、code、refresh 发行必须复验当前身份和登录。现有 OAuthRepo.Issue 的 human 分支及 `OIDCStorage.populateUserinfo`（`/userinfo` 与 token introspection）同步补齐未删除、ACTIVE、主邮箱已验证与 `required_actions` 为空检查，service grant 保持独立。SessionUsecase.Resolve 对有动作的普通身份返回无效凭据，不能把它映射成依赖故障。
@@ -237,7 +237,7 @@ login_identifier 的唯一键释放只在整个事务提交后生效；中途失
 
 AccountService 继续仅注册 HTTP；管理 gRPC 只注册 UserService。新 ChangeInitialPassword 的认证注解为 PUBLIC，由密码校验完成本人认证；DeleteAccount 为 REQUIRED，使用普通 session。两者沿用 AUTHZ_MODE_NONE。
 
-`NewHTTPServer` 注入运行配置并在启动时解析规范化 IAM public origin（配置缺失或非法则启动失败）；新增两个 POST 在 `browserSessionFilter` 中经 `mime.ParseMediaType` 校验媒体类型为 `application/json`（不匹配返回 415 Unsupported Media Type），存在 `Origin` 头时对照配置的 IAM public origin 校验（不匹配返回 403 Forbidden）；没有 `Origin` 的直接请求仍执行各自密码／登录校验。只在这两个 HTTP 入口加过滤，不改既有端点，不开放跨源带凭据调用。SCS 当前提供 HttpOnly/Secure/SameSite cookie 与 LoadAndSave，没有独立的 CSRF token 机制，不引入新的认证会话模型。
+`NewHTTPServer` 注入运行配置并在启动时通过 `security/session.NewFilter` 解析规范化 IAM public origin（配置缺失或非法则启动失败），按三类路径分流：`/v1/iam/*` 写请求在装载 SCS 会话前校验媒体类型为 `application/json`（415）并拒绝跨站 `Sec-Fetch-Site` 或异源 `Origin`（403）；`/authorize/callback` 归入同源路径且仅接受 `GET`（405）；OIDC `/authorize`、`/end_session` 作为跨站协议入口仅装载 SCS 会话；其余端点透传不读写会话存储。
 
 ## 9. Proto 字段、映射与表结构升级
 
@@ -262,21 +262,18 @@ data 返回可检查的领域错误和原始 cause，不生成公共响应；biz
 
 ### 10.1 管理 gRPC
 
-| 情形 | reason | gRPC code |
-| --- | --- | --- |
-| 资源名或请求格式不符 | 现有 CRUD 参数错误 | InvalidArgument |
-| 不存在、已删除的普通管理目标或重复 Delete | USER_ERROR_REASON_NOT_FOUND | NotFound |
-| 邮箱冲突、Undelete 的目标未删除 | USER_ERROR_REASON_ALREADY_EXISTS | AlreadyExists |
-| 未软删除即 Expunge、账号不满足管理发信或设密条件 | USER_ERROR_REASON_INVALID_STATE | FailedPrecondition |
-| 现有资料／状态变更的 etag 不符 | USER_ERROR_REASON_ETAG_MISMATCH | Aborted |
-| 验证邮件发送失败 | USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED（新增值 5，HTTP 503） | Unavailable |
-| 缺少有效服务身份／缺少相应权限 | 现有 SecurityErrorReason | Unauthenticated／PermissionDenied |
-| 未知数据库或内部失败 | 安全的内部 reason/message | Internal |
+| 情形 | reason | HTTP code | Kratos 默认转换后的 gRPC code |
+| --- | --- | --- | --- |
+| 资源名或请求格式不符 | 现有 CRUD 参数错误 | 400 | InvalidArgument |
+| 不存在、已删除的普通管理目标或重复 Delete | USER_ERROR_REASON_NOT_FOUND | 404 | NotFound |
+| 邮箱冲突、Undelete 的目标未删除 | USER_ERROR_REASON_ALREADY_EXISTS | 409 | Aborted |
+| 未软删除即 Expunge、账号不满足管理发信或设密条件 | USER_ERROR_REASON_INVALID_STATE | 409 | Aborted |
+| 现有资料／状态变更的 etag 不符 | USER_ERROR_REASON_ETAG_MISMATCH | 409 | Aborted |
+| 验证邮件发送失败 | USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED（新增值 5） | 503 | Unavailable |
+| 缺少有效服务身份／缺少相应权限 | 现有 SecurityErrorReason | 401／403 | Unauthenticated／PermissionDenied |
+| 未知数据库或内部失败 | 安全的内部 reason/message | 500 | Internal |
 
-- 保持现有 UserErrorReason 的编号和 HTTP 注解；INVALID_STATE 与 ALREADY_EXISTS 均可能带 HTTP 409，不能仅依赖 Kratos 的 HTTP→gRPC 数值转换。
-- 在 IAM `internal/server/grpc.go` 的服务 JWT/FGA middleware 之后追加应用级 `userErrorStatus`，包住 UserService 调用，按上述 User reason 生成原生 `status.Status` 并附带 `errdetails.ErrorInfo`。只转换上述 IAM 领域 reason；对已有原生 status、context 取消及其他错误保持原状，不把所有 409 改成同一个 code。
-- 使用已有 Servora WithMiddleware 接线。Kratos unary server/client interceptor 将错误原样返回，现有日志 middleware 只读取错误；无需复制框架或修改 Servora。Admin 调用端先保留 `status.Code` 和 ErrorInfo，再转为自身 Web 错误，不调用 FromError 后重新编码成 gRPC。
-
+- 保持现有 `UserErrorReason` 的编号和 `(errors.code)` HTTP 注解，不引入应用私有 `userErrorStatus` 状态码重封装中间件；遵循 Kratos v3 原生 `kerrors.Error` 生态（HTTP 409 默认映射 `codes.Aborted` 并保留 `errdetails.ErrorInfo.Reason`），调用方统一通过生成的 `userpb.IsUserErrorReason*(err)` 或 `kerrors.Reason(err)` 分支识别具体原因，不耦合 `grpc/status.Code`。
 ### 10.2 本人 HTTP
 
 | 情形 | reason／HTTP |
