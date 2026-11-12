@@ -11,30 +11,40 @@ tuples:
     relation: expunge_users
     object: iam:global
 tests:
-  - name: administrator relation implies management
+  - name: administrator relation implies access, manage_users, and expunge_users
     check:
       - user: user:alice
         object: admin:global
         assertions:
           admin: true
+          access: true
           manage_users: true
+          expunge_users: true
       - user: user:bob
         object: admin:global
         assertions:
           admin: false
+          access: false
           manage_users: false
+          expunge_users: false
       - user: user:alice
         object: admin:other
         assertions:
+          access: false
           manage_users: false
-  - name: IAM service permission does not grant Admin user permission
+          expunge_users: false
+  - name: IAM service permission does not grant Admin human permissions
     check:
       - user: service:admin
         object: admin:global
         assertions:
           admin: false
+          access: false
           manage_users: false
+          expunge_users: false
       - user: service:alice
         object: admin:global
         assertions:
+          access: false
           manage_users: false
+          expunge_users: false

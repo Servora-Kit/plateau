@@ -1,0 +1,564 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /v1/admin/auth/logout:
+        post:
+            tags:
+                - AuthService
+            description: Logout 仅销毁 Admin 本地 SCS 会话，不撤销上游 IAM 会话。
+            operationId: AuthService_Logout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LogoutRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LogoutResponse'
+    /v1/admin/auth/session:
+        get:
+            tags:
+                - AuthService
+            description: GetSession 返回当前管理员的本地会话快照与实时权限码列表。
+            operationId: AuthService_GetSession
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetSessionResponse'
+    /v1/admin/users:
+        get:
+            tags:
+                - UserService
+            description: ListUsers 分页查询 IAM 用户（支持回收站视图）。
+            operationId: UserService_ListUsers
+            parameters:
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageToken
+                  in: query
+                  schema:
+                    type: string
+                - name: filter
+                  in: query
+                  schema:
+                    type: string
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+                - name: showDeleted
+                  in: query
+                  schema:
+                    type: boolean
+                - name: includeTotal
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListUsersResponse'
+        post:
+            tags:
+                - UserService
+            description: CreateUser 创建待验证 IAM 用户并自动触发验证邮件投递。
+            operationId: UserService_CreateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateUserResponse'
+    /v1/admin/users/{user}:
+        get:
+            tags:
+                - UserService
+            description: GetUser 按规范资源名查询单个 IAM 用户。
+            operationId: UserService_GetUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+        delete:
+            tags:
+                - UserService
+            description: DeleteUser 软删除指定用户。
+            operationId: UserService_DeleteUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+        patch:
+            tags:
+                - UserService
+            description: UpdateUser 更新允许管理员编辑的 7 个用户资料字段。
+            operationId: UserService_UpdateUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+                - name: updateMask
+                  in: query
+                  schema:
+                    type: string
+                    format: field-mask
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/admin/users/{user}:disable:
+        post:
+            tags:
+                - UserService
+            description: DisableUser 封禁指定用户并撤销其活跃会话。
+            operationId: UserService_DisableUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DisableUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/admin/users/{user}:enable:
+        post:
+            tags:
+                - UserService
+            description: EnableUser 解封已封禁用户。
+            operationId: UserService_EnableUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EnableUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /v1/admin/users/{user}:expunge:
+        post:
+            tags:
+                - UserService
+            description: ExpungeUser 显式永久删除已软删除的用户。
+            operationId: UserService_ExpungeUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ExpungeUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+    /v1/admin/users/{user}:revokeSessions:
+        post:
+            tags:
+                - UserService
+            description: RevokeUserSessions 强制撤销指定用户的全部活跃会话。
+            operationId: UserService_RevokeUserSessions
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RevokeUserSessionsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RevokeUserSessionsResponse'
+    /v1/admin/users/{user}:sendVerificationEmail:
+        post:
+            tags:
+                - UserService
+            description: SendUserVerificationEmail 为待验证用户补发验证邮件。
+            operationId: UserService_SendUserVerificationEmail
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SendUserVerificationEmailRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SendUserVerificationEmailResponse'
+    /v1/admin/users/{user}:setPassword:
+        post:
+            tags:
+                - UserService
+            description: SetUserPassword 直接重置指定用户密码并撤销其活跃会话。
+            operationId: UserService_SetUserPassword
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SetUserPasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SetUserPasswordResponse'
+    /v1/admin/users/{user}:undelete:
+        post:
+            tags:
+                - UserService
+            description: UndeleteUser 恢复已软删除的用户。
+            operationId: UserService_UndeleteUser
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UndeleteUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+components:
+    schemas:
+        AdminPrincipal:
+            type: object
+            properties:
+                userId:
+                    type: string
+                email:
+                    type: string
+                name:
+                    type: string
+                picture:
+                    type: string
+                authTime:
+                    type: string
+                    format: date-time
+            description: AdminPrincipal 描述当前已登录管理员的身份快照。
+        CreateUserRequest:
+            required:
+                - user
+                - password
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+                userId:
+                    type: string
+                    description: Optional CRUD resource ID; when supplied it must be a canonical UUIDv7.
+                password:
+                    type: string
+                requirePasswordChange:
+                    type: boolean
+        CreateUserResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/User'
+                verificationEmailSent:
+                    type: boolean
+        DisableUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+                reason:
+                    type: string
+                etag:
+                    type: string
+        EnableUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+                etag:
+                    type: string
+        ExpungeUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+        GetSessionResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/AdminPrincipal'
+                permissions:
+                    type: array
+                    items:
+                        type: string
+        ListUsersResponse:
+            type: object
+            properties:
+                users:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/User'
+                nextPageToken:
+                    type: string
+                totalSize:
+                    type: string
+        LogoutRequest:
+            type: object
+            properties: {}
+        LogoutResponse:
+            type: object
+            properties: {}
+        RevokeUserSessionsRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+        RevokeUserSessionsResponse:
+            type: object
+            properties: {}
+        SendUserVerificationEmailRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+        SendUserVerificationEmailResponse:
+            type: object
+            properties: {}
+        SetUserPasswordRequest:
+            required:
+                - name
+                - newPassword
+            type: object
+            properties:
+                name:
+                    type: string
+                newPassword:
+                    type: string
+        SetUserPasswordResponse:
+            type: object
+            properties: {}
+        UndeleteUserRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+        User:
+            required:
+                - email
+            type: object
+            properties:
+                name:
+                    type: string
+                userId:
+                    readOnly: true
+                    type: string
+                    description: Stable, never-reused UUIDv7 identity identifier generated by IAM.
+                email:
+                    type: string
+                    description: Email Login Identifier; service applies trim, Unicode NFC and Unicode case folding for lookup.
+                profile:
+                    allOf:
+                        - $ref: '#/components/schemas/UserProfile'
+                    description: OIDC standard profile fields only; no Tenant, Membership, role or metadata.
+                status:
+                    readOnly: true
+                    enum:
+                        - USER_STATUS_UNSPECIFIED
+                        - USER_STATUS_PENDING_EMAIL_VERIFICATION
+                        - USER_STATUS_ACTIVE
+                        - USER_STATUS_DISABLED
+                    type: string
+                    format: enum
+                emailVerified:
+                    readOnly: true
+                    type: boolean
+                    description: True only after the one-time email verification flow succeeds.
+                emailVerifiedTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                createTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                updateTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                etag:
+                    readOnly: true
+                    type: string
+                deleteTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                purgeTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                requiredActions:
+                    readOnly: true
+                    type: array
+                    items:
+                        enum:
+                            - USER_REQUIRED_ACTION_UNSPECIFIED
+                            - USER_REQUIRED_ACTION_UPDATE_PASSWORD
+                        type: string
+                        format: enum
+            description: User is the globally unique IAM identity resource.
+        UserProfile:
+            type: object
+            properties:
+                name:
+                    type: string
+                givenName:
+                    type: string
+                familyName:
+                    type: string
+                nickname:
+                    type: string
+                preferredUsername:
+                    type: string
+                picture:
+                    type: string
+                locale:
+                    type: string
+            description: UserProfile contains the OIDC standard profile fields supported by IAM.
+tags:
+    - name: AuthService
+      description: AuthService 提供 Admin BFF 会话查询与独立本地登出接口。
+    - name: UserService
+      description: UserService 面向平台管理员提供 IAM 全局用户的编排管理接口。

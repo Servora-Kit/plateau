@@ -1,0 +1,6 @@
+session:
+  lifetime: 86400s # 24 小时
+  idle_timeout: 28800s # 8 小时
+  cookie:
+    name: admin_session
+    secure: false

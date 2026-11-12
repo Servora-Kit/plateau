@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
       POSTGRES_DB: "${POSTGRES_DB:-plateau}"
-      POSTGRES_SERVICE_DATABASES: "${POSTGRES_SERVICE_DATABASES:-plateau_iam}"
+      POSTGRES_SERVICE_DATABASES: "${POSTGRES_SERVICE_DATABASES:-plateau_iam,plateau_admin}"
       IAM_DATABASE_NAME: "${IAM_DATABASE_NAME:-plateau_iam}"
       IAM_DATABASE_ROLE: "${IAM_DATABASE_ROLE:-plateau_iam_app}"
       IAM_DATABASE_PASSWORD: "${IAM_DATABASE_PASSWORD:-plateau_iam_pwd}"
@@ -39,7 +39,7 @@ services:
       PGUSER: "${POSTGRES_USER:-postgres}"
       PGPASSWORD: "${POSTGRES_PASSWORD:-postgres}"
       PGDATABASE: postgres
-      POSTGRES_SERVICE_DATABASES: "${POSTGRES_SERVICE_DATABASES:-plateau_iam}"
+      POSTGRES_SERVICE_DATABASES: "${POSTGRES_SERVICE_DATABASES:-plateau_iam,plateau_admin}"
       IAM_DATABASE_NAME: "${IAM_DATABASE_NAME:-plateau_iam}"
       IAM_DATABASE_ROLE: "${IAM_DATABASE_ROLE:-plateau_iam_app}"
       IAM_DATABASE_PASSWORD: "${IAM_DATABASE_PASSWORD:-plateau_iam_pwd}"

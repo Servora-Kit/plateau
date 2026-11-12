@@ -8,10 +8,10 @@ set -eu
 
 validate_identifier() {
   case "$1" in
-    ''|*[!a-zA-Z0-9_]* )
-      echo "invalid PostgreSQL identifier: $1" >&2
-      exit 1
-      ;;
+  '' | *[!a-zA-Z0-9_]*)
+    echo "invalid PostgreSQL identifier: $1" >&2
+    exit 1
+    ;;
   esac
 }
 

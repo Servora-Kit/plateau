@@ -7,6 +7,7 @@ modules:
   - path: app/test/service/api/protos
 
   - path: app/iam/service/api/protos
+  - path: app/admin/service/api/protos
 
 deps:
   - buf.build/servora/servora

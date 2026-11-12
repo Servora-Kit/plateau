@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package admin.auth.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1;adminauthv1";
+
+// AuthService 提供 Admin BFF 会话查询与独立本地登出接口。
+service AuthService {
+  option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
+  option (plateau.security.authz.v1.service_default) = {
+    mode: AUTHZ_MODE_REQUIRED
+    action: "access"
+    resource_type: "admin"
+    resource_id: "global"
+  };
+
+  // GetSession 返回当前管理员的本地会话快照与实时权限码列表。
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+    option (google.api.http) = {get: "/v1/admin/auth/session"};
+  }
+
+  // Logout 仅销毁 Admin 本地 SCS 会话，不撤销上游 IAM 会话。
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/auth/logout"
+      body: "*"
+    };
+    option (plateau.security.authz.v1.rule) = {mode: AUTHZ_MODE_NONE};
+  }
+}
+
+// AdminPrincipal 描述当前已登录管理员的身份快照。
+message AdminPrincipal {
+  string user_id = 1;
+  string email = 2;
+  string name = 3;
+  string picture = 4;
+  google.protobuf.Timestamp auth_time = 5;
+}
+
+message GetSessionRequest {}
+
+message GetSessionResponse {
+  AdminPrincipal user = 1;
+  repeated string permissions = 2;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {}

@@ -1,0 +1,272 @@
+syntax = "proto3";
+
+package admin.user.v1;
+
+import "buf/validate/validate.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "iam/user/v1/user.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+import "servora/redact/v3/redact.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1;adminuserv1";
+
+// UserService 面向平台管理员提供 IAM 全局用户的编排管理接口。
+service UserService {
+  option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
+  option (plateau.security.authz.v1.service_default) = {
+    mode: AUTHZ_MODE_REQUIRED
+    action: "manage_users"
+    resource_type: "admin"
+    resource_id: "global"
+  };
+
+  // ListUsers 分页查询 IAM 用户（支持回收站视图）。
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {get: "/v1/admin/users"};
+    option (google.api.method_signature) = "page_size,page_token,filter,order_by";
+  }
+
+  // GetUser 按规范资源名查询单个 IAM 用户。
+  rpc GetUser(GetUserRequest) returns (iam.user.v1.User) {
+    option (google.api.http) = {get: "/v1/admin/{name=users/*}"};
+    option (google.api.method_signature) = "name";
+  }
+
+  // CreateUser 创建待验证 IAM 用户并自动触发验证邮件投递。
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/users"
+      body: "*"
+    };
+    option (google.api.method_signature) = "user,user_id,password";
+  }
+
+  // SendUserVerificationEmail 为待验证用户补发验证邮件。
+  rpc SendUserVerificationEmail(SendUserVerificationEmailRequest) returns (SendUserVerificationEmailResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:sendVerificationEmail"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+  }
+
+  // UpdateUser 更新允许管理员编辑的 7 个用户资料字段。
+  rpc UpdateUser(UpdateUserRequest) returns (iam.user.v1.User) {
+    option (google.api.http) = {
+      patch: "/v1/admin/{user.name=users/*}"
+      body: "user"
+    };
+    option (google.api.method_signature) = "user,update_mask";
+  }
+
+  // SetUserPassword 直接重置指定用户密码并撤销其活跃会话。
+  rpc SetUserPassword(SetUserPasswordRequest) returns (SetUserPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:setPassword"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name,new_password";
+  }
+
+  // RevokeUserSessions 强制撤销指定用户的全部活跃会话。
+  rpc RevokeUserSessions(RevokeUserSessionsRequest) returns (RevokeUserSessionsResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:revokeSessions"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+  }
+
+  // DisableUser 封禁指定用户并撤销其活跃会话。
+  rpc DisableUser(DisableUserRequest) returns (iam.user.v1.User) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:disable"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+  }
+
+  // EnableUser 解封已封禁用户。
+  rpc EnableUser(EnableUserRequest) returns (iam.user.v1.User) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:enable"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+  }
+
+  // DeleteUser 软删除指定用户。
+  rpc DeleteUser(DeleteUserRequest) returns (iam.user.v1.User) {
+    option (google.api.http) = {delete: "/v1/admin/{name=users/*}"};
+    option (google.api.method_signature) = "name";
+  }
+
+  // UndeleteUser 恢复已软删除的用户。
+  rpc UndeleteUser(UndeleteUserRequest) returns (iam.user.v1.User) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:undelete"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+  }
+
+  // ExpungeUser 显式永久删除已软删除的用户。
+  rpc ExpungeUser(ExpungeUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/admin/{name=users/*}:expunge"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+    option (plateau.security.authz.v1.rule) = {
+      mode: AUTHZ_MODE_REQUIRED
+      action: "expunge_users"
+      resource_type: "admin"
+      resource_id: "global"
+    };
+  }
+}
+
+// AdminUserErrorReason 定义 Admin 用户管理编排的公开业务错误原因。
+enum AdminUserErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  ADMIN_USER_ERROR_REASON_UNSPECIFIED = 0;
+  ADMIN_USER_ERROR_REASON_SELF_ACTION_FORBIDDEN = 1 [(servora.errors.v1.code) = 403];
+  ADMIN_USER_ERROR_REASON_TARGET_IS_ADMIN = 2 [(servora.errors.v1.code) = 403];
+  ADMIN_USER_ERROR_REASON_USER_NOT_FOUND = 3 [(servora.errors.v1.code) = 404];
+  ADMIN_USER_ERROR_REASON_USER_ALREADY_EXISTS = 4 [(servora.errors.v1.code) = 409];
+  ADMIN_USER_ERROR_REASON_INVALID_STATE = 5 [(servora.errors.v1.code) = 409];
+  ADMIN_USER_ERROR_REASON_ETAG_MISMATCH = 6 [(servora.errors.v1.code) = 409];
+  ADMIN_USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED = 7 [(servora.errors.v1.code) = 503];
+  ADMIN_USER_ERROR_REASON_DOWNSTREAM_UNAVAILABLE = 8 [(servora.errors.v1.code) = 503];
+}
+
+message ListUsersRequest {
+  int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+  string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+  string filter = 3 [(google.api.field_behavior) = OPTIONAL];
+  string order_by = 4 [(google.api.field_behavior) = OPTIONAL];
+  bool show_deleted = 5 [(google.api.field_behavior) = OPTIONAL];
+  bool include_total = 6 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message ListUsersResponse {
+  repeated iam.user.v1.User users = 1;
+  string next_page_token = 2;
+  optional int64 total_size = 3;
+}
+
+message GetUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message CreateUserRequest {
+  string user_id = 1 [
+    (google.api.field_behavior) = OPTIONAL,
+    (buf.validate.field).string.pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE
+  ];
+  iam.user.v1.User user = 2 [(google.api.field_behavior) = REQUIRED];
+  string password = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {
+      min_len: 8
+      max_len: 128
+    },
+    (servora.redact.v3.value).string = ""
+  ];
+  optional bool require_password_change = 4 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message CreateUserResponse {
+  iam.user.v1.User user = 1;
+  bool verification_email_sent = 2;
+}
+
+message SendUserVerificationEmailRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message SendUserVerificationEmailResponse {}
+
+message UpdateUserRequest {
+  iam.user.v1.User user = 1 [(google.api.field_behavior) = REQUIRED];
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message SetUserPasswordRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+  string new_password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {
+      min_len: 8
+      max_len: 128
+    },
+    (servora.redact.v3.value).string = ""
+  ];
+}
+
+message SetUserPasswordResponse {}
+
+message RevokeUserSessionsRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message RevokeUserSessionsResponse {}
+
+message DisableUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+  string reason = 2 [(google.api.field_behavior) = OPTIONAL];
+  string etag = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message EnableUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+  string etag = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message DeleteUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message UndeleteUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message ExpungeUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}

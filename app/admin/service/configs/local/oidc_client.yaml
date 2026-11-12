@@ -1,0 +1,11 @@
+oidc_client:
+  issuer: "${IAM_PUBLIC_ORIGIN:http://localhost:10002}"
+  client_id: admin
+  client_secret: "${IAM_ADMIN_CLIENT_SECRET:dev-admin-oidc-client-secret-32bytes}"
+  redirect_uri: "${ADMIN_OIDC_REDIRECT_URI:http://localhost:10012/v1/admin/auth/callback}"
+  cookie_secret: "${ADMIN_OIDC_COOKIE_SECRET:dev-admin-oidc-cookie-secret-32bytes}"
+  scopes:
+    - openid
+    - profile
+    - email
+  http_timeout: 5s

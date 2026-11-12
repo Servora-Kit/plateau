@@ -3,4 +3,6 @@ module admin
 type admin
   relations
     define admin: [user]
+    define access: admin
     define manage_users: admin
+    define expunge_users: admin

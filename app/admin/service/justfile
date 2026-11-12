@@ -1,0 +1,4 @@
+import "../../../just/service.just"
+
+# Admin uses the shared service lifecycle; keep an explicit Ent alias at the leaf.
+ent: gen-ent

@@ -1,0 +1,2 @@
+admin:
+  bootstrap_admin_email: "${IAM_BOOTSTRAP_USER_EMAIL:admin@plateau.local}"

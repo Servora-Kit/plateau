@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package admin.conf.v1;
+
+import "buf/validate/validate.proto";
+import "servora/conf/v1/annotations.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1;adminconfv1";
+
+// Admin 配置平台管理服务的冷启动种子与业务参数。
+message Admin {
+  option (servora.conf.v1.section) = true;
+
+  optional string bootstrap_admin_email = 1 [
+    (servora.conf.v1.field) = {required: true},
+    (buf.validate.field).string.email = true
+  ];
+}
