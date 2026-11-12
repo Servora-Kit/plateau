@@ -191,3 +191,29 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 6: 完成 10-18-admin-v1-backend 规划、实施、共享安全组件提炼与结项归档
+<!-- trellis-session: v=2 fp=75847045772320e2 -->
+
+**Date**: 2026-11-13
+**Task**: 完成 10-18-admin-v1-backend 规划、实施、共享安全组件提炼与结项归档
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 Admin BFF 后端与 OpenFGA 三层授权、乱序启动惰性种子与 OIDC PKCE/nonce 接入；提炼 HTTPSessionMixin、session.NewPostgres、openfga.NewDefault、security.NormalizeEmail 与共享 security/oidc；清理两仓废弃 api-linter 残留并通过 243 项单元/集成测试与 lint 门禁后归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `68ccfbf5` | feat(security): 提炼共享会话存储、默认主体映射、邮箱规范化与 OIDC 客户端 |
+| `3ecef6e1` | feat(iam): 迁移至共享安全模块并补齐用户列表邮箱过滤与总数查询 |
+| `de1f4f51` | feat(admin): 实现 Admin BFF 后端、OpenFGA 三层授权、种子同步与端到端集成测试 |
+| `666b3b2b` | docs: 清理废弃 api-linter 注释并同步平台规范、任务记录与 TODO 清单 |
+
+### Status
+
+[OK] **Completed**
