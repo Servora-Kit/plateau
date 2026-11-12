@@ -162,6 +162,9 @@ export type ListUsersRequest = {
   filter?: string;
   //
   // Behaviors: OPTIONAL
+  includeTotal?: boolean;
+  //
+  // Behaviors: OPTIONAL
   orderBy?: string;
   //
   // Behaviors: OPTIONAL
@@ -176,6 +179,7 @@ export type ListUsersRequest = {
 
 export type ListUsersResponse = {
   nextPageToken?: string;
+  totalSize?: string;
   users?: User[];
 };
 

@@ -14,7 +14,6 @@ import (
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/authz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/mail"
@@ -22,6 +21,8 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/server"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/service"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/startup"
+	"github.com/Servora-Kit/plateau/infra/openfga"
+	openfga2 "github.com/Servora-Kit/plateau/security/authz/openfga"
 	cap2 "github.com/Servora-Kit/plateau/security/cap"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
@@ -73,7 +74,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	openFgaClient, err := data.NewFGAClient(openFGA)
+	openFgaClient, err := openfga.New(openFGA)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -121,7 +122,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	authorizer, err := authz.NewOpenFGAAuthorizer(openFgaClient)
+	authorizer, err := openfga2.NewDefault(openFgaClient)
 	if err != nil {
 		cleanup5()
 		cleanup4()

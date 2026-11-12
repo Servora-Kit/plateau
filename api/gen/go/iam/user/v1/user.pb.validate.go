@@ -721,6 +721,8 @@ func (m *ListUsersRequest) validate(all bool) error {
 
 	// no validation rules for ShowDeleted
 
+	// no validation rules for IncludeTotal
+
 	if len(errors) > 0 {
 		return ListUsersRequestMultiError(errors)
 	}
@@ -856,6 +858,10 @@ func (m *ListUsersResponse) validate(all bool) error {
 	}
 
 	// no validation rules for NextPageToken
+
+	if m.TotalSize != nil {
+		// no validation rules for TotalSize
+	}
 
 	if len(errors) > 0 {
 		return ListUsersResponseMultiError(errors)

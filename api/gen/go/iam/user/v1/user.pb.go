@@ -547,6 +547,7 @@ type ListUsersRequest struct {
 	Filter        string                 `protobuf:"bytes,3,opt,name=filter,proto3" json:"filter,omitempty"`
 	OrderBy       string                 `protobuf:"bytes,4,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	ShowDeleted   bool                   `protobuf:"varint,5,opt,name=show_deleted,json=showDeleted,proto3" json:"show_deleted,omitempty"`
+	IncludeTotal  bool                   `protobuf:"varint,6,opt,name=include_total,json=includeTotal,proto3" json:"include_total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -616,10 +617,18 @@ func (x *ListUsersRequest) GetShowDeleted() bool {
 	return false
 }
 
+func (x *ListUsersRequest) GetIncludeTotal() bool {
+	if x != nil {
+		return x.IncludeTotal
+	}
+	return false
+}
+
 type ListUsersResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
 	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	TotalSize     *int64                 `protobuf:"varint,3,opt,name=total_size,json=totalSize,proto3,oneof" json:"total_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -666,6 +675,13 @@ func (x *ListUsersResponse) GetNextPageToken() string {
 		return x.NextPageToken
 	}
 	return ""
+}
+
+func (x *ListUsersResponse) GetTotalSize() int64 {
+	if x != nil && x.TotalSize != nil {
+		return *x.TotalSize
+	}
+	return 0
 }
 
 type UpdateUserRequest struct {
@@ -1353,17 +1369,21 @@ const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\x18_require_password_change\"B\n" +
 	"\x0eGetUserRequest\x120\n" +
 	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
-	"\x14iam.plateau.dev/UserR\x04name\"\xbd\x01\n" +
+	"\x14iam.plateau.dev/UserR\x04name\"\xe7\x01\n" +
 	"\x10ListUsersRequest\x12 \n" +
 	"\tpage_size\x18\x01 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
 	"\n" +
 	"page_token\x18\x02 \x01(\tB\x03\xe0A\x01R\tpageToken\x12\x1b\n" +
 	"\x06filter\x18\x03 \x01(\tB\x03\xe0A\x01R\x06filter\x12\x1e\n" +
 	"\border_by\x18\x04 \x01(\tB\x03\xe0A\x01R\aorderBy\x12&\n" +
-	"\fshow_deleted\x18\x05 \x01(\bB\x03\xe0A\x01R\vshowDeleted\"d\n" +
+	"\fshow_deleted\x18\x05 \x01(\bB\x03\xe0A\x01R\vshowDeleted\x12(\n" +
+	"\rinclude_total\x18\x06 \x01(\bB\x03\xe0A\x01R\fincludeTotal\"\x97\x01\n" +
 	"\x11ListUsersResponse\x12'\n" +
 	"\x05users\x18\x01 \x03(\v2\x11.iam.user.v1.UserR\x05users\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x81\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\"\n" +
+	"\n" +
+	"total_size\x18\x03 \x01(\x03H\x00R\ttotalSize\x88\x01\x01B\r\n" +
+	"\v_total_size\"\x81\x01\n" +
 	"\x11UpdateUserRequest\x12*\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserB\x03\xe0A\x02R\x04user\x12@\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x03\xe0A\x01R\n" +
@@ -1533,6 +1553,7 @@ func file_iam_user_v1_user_proto_init() {
 	file_iam_user_v1_user_proto_msgTypes[0].OneofWrappers = []any{}
 	file_iam_user_v1_user_proto_msgTypes[1].OneofWrappers = []any{}
 	file_iam_user_v1_user_proto_msgTypes[2].OneofWrappers = []any{}
+	file_iam_user_v1_user_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -83,7 +83,7 @@ func (s *UserService) ListUsers(ctx context.Context, request *userpb.ListUsersRe
 	}
 	query, err := s.listPreparer.PrepareList(s.plan, corecrud.ListInput{
 		Collection: "users", PageSize: request.GetPageSize(), PageToken: request.GetPageToken(),
-		Filter: request.GetFilter(), OrderBy: request.GetOrderBy(),
+		Filter: request.GetFilter(), OrderBy: request.GetOrderBy(), IncludeTotal: request.GetIncludeTotal(),
 	})
 	if err != nil {
 		return nil, err
@@ -96,7 +96,11 @@ func (s *UserService) ListUsers(ctx context.Context, request *userpb.ListUsersRe
 	if err != nil {
 		return nil, err
 	}
-	return &userpb.ListUsersResponse{Users: resources, NextPageToken: result.NextPageToken()}, nil
+	var total *int64
+	if value, ok := result.TotalSize(); ok {
+		total = &value
+	}
+	return &userpb.ListUsersResponse{Users: resources, NextPageToken: result.NextPageToken(), TotalSize: total}, nil
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, request *userpb.UpdateUserRequest) (*userpb.User, error) {

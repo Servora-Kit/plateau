@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	entsql "entgo.io/ent/dialect/sql"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
@@ -24,6 +25,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/predicate"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
 	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
+	"github.com/Servora-Kit/plateau/security"
 	entcrud "github.com/Servora-Kit/servora/contrib/db/entgo/crud"
 	corecrud "github.com/Servora-Kit/servora/core/crud"
 	crudmapper "github.com/Servora-Kit/servora/core/crud/mapper"
@@ -49,6 +51,7 @@ func NewUserRepository(data *Data) (biz.UserRepo, error) {
 	listFields, err := entcrud.NewListFields[*entmodel.User](
 		entcrud.Columns(user.ValidColumn),
 		entcrud.Bind(userpb.UserFields.UserId, user.FieldID).Filter().Order(),
+		entcrud.Custom(userpb.UserFields.Email, "email", emailFilterPredicate).Filter(),
 		entcrud.Bind(userpb.UserFields.Status, user.FieldStatus).Filter().Order(),
 		entcrud.Bind(userpb.UserFields.CreateTime, user.FieldCreateTime).Filter().Order(),
 		entcrud.Bind(userpb.UserFields.UpdateTime, user.FieldUpdateTime).Filter().Order(),
@@ -83,6 +86,57 @@ func NewUserRepository(data *Data) (biz.UserRepo, error) {
 		return nil, fmt.Errorf("build IAM User Clear helper: %w", err)
 	}
 	return &userRepository{ent: data.ent, listFields: listFields, mapper: resourceMapper, clear: clear}, nil
+}
+
+func emailFilterPredicate(operator corecrud.FilterOperator, value corecrud.FilterValue) (entcrud.SelectorPredicate, error) {
+	match, ok := value.StringMatch()
+	if !ok {
+		return nil, fmt.Errorf("email filter requires a string value")
+	}
+	canonical := security.NormalizeEmail(match.Literal())
+	if canonical == "" {
+		return nil, fmt.Errorf("email filter literal is empty")
+	}
+	kind := match.Kind()
+	if operator == corecrud.FilterOperatorHas {
+		if kind != corecrud.StringMatchExact {
+			return nil, fmt.Errorf("has operator does not accept wildcard patterns")
+		}
+		operator = corecrud.FilterOperatorEqual
+		kind = corecrud.StringMatchContains
+	}
+	switch operator {
+	case corecrud.FilterOperatorEqual, corecrud.FilterOperatorNotEqual:
+		if operator == corecrud.FilterOperatorNotEqual && kind != corecrud.StringMatchExact {
+			return nil, fmt.Errorf("!= does not support wildcard patterns")
+		}
+	default:
+		return nil, fmt.Errorf("unsupported email filter operator %q", operator)
+	}
+	return func(selector *entsql.Selector) *entsql.Predicate {
+		d := entsql.Dialect(selector.Dialect())
+		t := d.Table(loginidentifier.Table)
+		var valPred *entsql.Predicate
+		switch kind {
+		case corecrud.StringMatchExact:
+			valPred = entsql.EQ(t.C(loginidentifier.FieldCanonicalValue), canonical)
+		case corecrud.StringMatchPrefix:
+			valPred = entsql.HasPrefix(t.C(loginidentifier.FieldCanonicalValue), canonical)
+		case corecrud.StringMatchSuffix:
+			valPred = entsql.HasSuffix(t.C(loginidentifier.FieldCanonicalValue), canonical)
+		case corecrud.StringMatchContains:
+			valPred = entsql.Contains(t.C(loginidentifier.FieldCanonicalValue), canonical)
+		}
+		sub := d.Select(t.C(loginidentifier.FieldID)).From(t).Where(entsql.And(
+			entsql.ColumnsEQ(t.C(loginidentifier.FieldUserID), selector.C(user.FieldID)),
+			entsql.EQ(t.C(loginidentifier.FieldType), biz.LoginIdentifierEmail),
+			valPred,
+		))
+		if operator == corecrud.FilterOperatorNotEqual {
+			return entsql.Not(entsql.Exists(sub))
+		}
+		return entsql.Exists(sub)
+	}, nil
 }
 
 func (repo *userRepository) Create(ctx context.Context, resource *userpb.User, passwordHash, canonical string) (*userpb.User, error) {

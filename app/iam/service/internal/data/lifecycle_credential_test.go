@@ -129,6 +129,22 @@ func TestUserVisibilityPaginationRequiredActionsAndCredentialSnapshotsSQLite(t *
 	if err != nil || len(deletedOnly.Items()) != 1 || deletedOnly.Items()[0].GetUserId() != deletedID {
 		t.Fatalf("ListUsers(delete_time != null) = %#v, err=%v", deletedOnly.Items(), err)
 	}
+	qByEmail, err := preparer.PrepareList(plan, corecrud.ListInput{Collection: "users", PageSize: 10, Filter: `email = "ACTIVE@example.com"`})
+	if err != nil {
+		t.Fatal(err)
+	}
+	byEmail, err := users.ListUsers(ctx, qByEmail, false)
+	if err != nil || len(byEmail.Items()) != 1 || byEmail.Items()[0].GetUserId() != activeID {
+		t.Fatalf("ListUsers(email exact) = %#v, err=%v", byEmail.Items(), err)
+	}
+	qByEmailWild, err := preparer.PrepareList(plan, corecrud.ListInput{Collection: "users", PageSize: 10, Filter: `email = "deleted@*"`})
+	if err != nil {
+		t.Fatal(err)
+	}
+	byEmailDeleted, err := users.ListUsers(ctx, qByEmailWild, true)
+	if err != nil || len(byEmailDeleted.Items()) != 1 || byEmailDeleted.Items()[0].GetUserId() != deletedID {
+		t.Fatalf("ListUsers(email prefix, showDeleted=true) = %#v, err=%v", byEmailDeleted.Items(), err)
+	}
 
 	// Unknown persisted required_actions string must fail rather than emitting UNSPECIFIED.
 	if _, err := client.User.UpdateOneID(activeID).SetRequiredActions([]string{"BOGUS_ACTION"}).Save(ctx); err != nil {

@@ -12,13 +12,13 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	_ "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/runtime"
+	fgapkg "github.com/Servora-Kit/plateau/infra/openfga"
 	"github.com/Servora-Kit/plateau/security/cap"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	redispb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	entdriver "github.com/Servora-Kit/servora/contrib/db/entgo"
 	rediscontrib "github.com/Servora-Kit/servora/contrib/db/redis"
-	"github.com/alexedwards/scs/postgresstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/google/wire"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -27,7 +27,7 @@ import (
 )
 
 // ProviderSet provides the IAM database driver, generated client, and data layer.
-var ProviderSet = wire.NewSet(NewData, cap.New, NewCAPVerifier, NewUserRepository, NewCredentialRepository, NewSessionRepository, NewOAuthRepository, NewVerificationTokenRepo, NewPasswordResetTokenRepository, NewInitialUserCreator, NewSQLDB, NewEntDriver, NewDBClient, NewHTTPSessionManager, NewRedisClient, NewFGAClient)
+var ProviderSet = wire.NewSet(NewData, cap.New, NewCAPVerifier, NewUserRepository, NewCredentialRepository, NewSessionRepository, NewOAuthRepository, NewVerificationTokenRepo, NewPasswordResetTokenRepository, NewInitialUserCreator, NewSQLDB, NewEntDriver, NewDBClient, NewHTTPSessionManager, NewRedisClient, fgapkg.New)
 
 // Data owns the IAM Ent client and repository-scoped persistence resources.
 type Data struct {
@@ -112,14 +112,8 @@ func NewSQLDB(config *corepb.Data) (*sql.DB, func(), error) {
 
 // NewHTTPSessionManager 依赖已初始化的 Ent Schema，再启用 Store 清理流程。
 func NewHTTPSessionManager(config *sessionpb.Session, db *sql.DB, client *entmodel.Client) (*scs.SessionManager, func(), error) {
-	if db == nil || client == nil {
-		return nil, nil, fmt.Errorf("IAM session database is nil")
+	if client == nil {
+		return nil, nil, fmt.Errorf("IAM session schema client is nil")
 	}
-	store := postgresstore.New(db)
-	manager, err := sessions.New(config, store)
-	if err != nil {
-		store.StopCleanup()
-		return nil, nil, err
-	}
-	return manager, store.StopCleanup, nil
+	return sessions.NewPostgres(config, db)
 }

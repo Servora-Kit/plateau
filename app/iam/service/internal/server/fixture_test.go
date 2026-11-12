@@ -22,7 +22,7 @@ import (
 	cappb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
-	iamauthz "github.com/Servora-Kit/plateau/app/iam/service/internal/authz"
+	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
@@ -149,7 +149,7 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	sessionAuthn, err := iamauthn.NewSessionAuthenticator(sessions, manager)
 	check(t, err)
-	authorizer, err := iamauthz.NewOpenFGAAuthorizer(fga)
+	authorizer, err := openfga.NewDefault(fga)
 	check(t, err)
 	config := newProtocolConfig(t, publicOrigin)
 	storage, err := oidc.NewOIDCStorage(client, config, tokens)

@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/google/uuid"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/unicode/norm"
 )
 
 const (
@@ -14,16 +13,13 @@ const (
 	MaxPasswordBytes = 128
 )
 
-var emailCaseFolder = cases.Fold()
-
 // NormalizeEmail returns the globally comparable value and the trimmed display value.
 func NormalizeEmail(raw string) (canonical, display string, err error) {
 	display = strings.TrimSpace(raw)
 	if display == "" {
 		return "", "", fmt.Errorf("email is empty")
 	}
-	canonical = emailCaseFolder.String(norm.NFC.String(display))
-	return canonical, display, nil
+	return security.NormalizeEmail(display), display, nil
 }
 
 // NewUserID returns a time-ordered UUIDv7 identity that callers cannot supply or reuse.
