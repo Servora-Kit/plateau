@@ -42,6 +42,27 @@ func New(client *fgaclient.OpenFgaClient, mapSubject SubjectMapper) (*Authorizer
 	return &Authorizer{client: client, mapSubject: mapSubject}, nil
 }
 
+// DefaultSubject maps verified human and service Actors to Plateau's standard
+// OpenFGA subjects (`user:<id>` and `service:<id>`).
+func DefaultSubject(actor security.Actor) (string, error) {
+	if !actor.Valid() {
+		return "", fmt.Errorf("openfga authz: subject requires a valid Actor")
+	}
+	switch actor.Type {
+	case security.ActorTypeHuman:
+		return "user:" + actor.ID, nil
+	case security.ActorTypeService:
+		return "service:" + actor.ID, nil
+	default:
+		return "", fmt.Errorf("openfga authz: subject requires an authenticated Actor")
+	}
+}
+
+// NewDefault constructs an OpenFGA Authorizer bound to DefaultSubject.
+func NewDefault(client *fgaclient.OpenFgaClient) (*Authorizer, error) {
+	return New(client, DefaultSubject)
+}
+
 // Check performs one OpenFGA authorization check.
 func (authorizer *Authorizer) Check(ctx context.Context, actor security.Actor, action, resourceType, resourceID string) (bool, error) {
 	if ctx == nil {

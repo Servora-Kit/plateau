@@ -323,3 +323,39 @@ func TestCheckPreservesTransportFailure(t *testing.T) {
 		t.Fatalf("error = %v", err)
 	}
 }
+
+func TestDefaultSubjectAndNewDefault(t *testing.T) {
+	got, err := DefaultSubject(security.Actor{Type: security.ActorTypeHuman, ID: "user-1"})
+	if err != nil || got != "user:user-1" {
+		t.Fatalf("DefaultSubject(human) = %q, %v", got, err)
+	}
+	got, err = DefaultSubject(security.Actor{Type: security.ActorTypeService, ID: "admin"})
+	if err != nil || got != "service:admin" {
+		t.Fatalf("DefaultSubject(service) = %q, %v", got, err)
+	}
+	for _, actor := range []security.Actor{
+		{},
+		{Type: security.ActorTypeAnonymous},
+		{Type: security.ActorTypeHuman},
+		{Type: security.ActorTypeService},
+	} {
+		if got, err := DefaultSubject(actor); err == nil || got != "" {
+			t.Fatalf("DefaultSubject(%+v) = %q, %v; want error", actor, got, err)
+		}
+	}
+	if _, err := NewDefault(nil); err == nil {
+		t.Fatal("NewDefault(nil) succeeded")
+	}
+	client, _ := sdkClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"allowed":true}`))
+	})
+	authz, err := NewDefault(client)
+	if err != nil {
+		t.Fatalf("NewDefault() error = %v", err)
+	}
+	allowed, err := authz.Check(context.Background(), security.Actor{Type: security.ActorTypeHuman, ID: "alice"}, "access", "admin", "global")
+	if err != nil || !allowed {
+		t.Fatalf("Check() = %v, %v", allowed, err)
+	}
+}
