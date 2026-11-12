@@ -45,13 +45,18 @@ export type UserErrorReason =
   | 'USER_ERROR_REASON_ETAG_MISMATCH'
   | 'USER_ERROR_REASON_INVALID_STATE'
   | 'USER_ERROR_REASON_NOT_FOUND'
-  | 'USER_ERROR_REASON_UNSPECIFIED';
+  | 'USER_ERROR_REASON_UNSPECIFIED'
+  | 'USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED';
 // UserStatus describes the account lifecycle state.
 export type UserStatus =
   | 'USER_STATUS_ACTIVE'
   | 'USER_STATUS_DISABLED'
   | 'USER_STATUS_PENDING_EMAIL_VERIFICATION'
   | 'USER_STATUS_UNSPECIFIED';
+// UserRequiredAction identifies persistent actions the user must complete before normal access.
+export type UserRequiredAction =
+  | 'USER_REQUIRED_ACTION_UNSPECIFIED'
+  | 'USER_REQUIRED_ACTION_UPDATE_PASSWORD';
 // UserProfile contains the OIDC standard profile fields supported by IAM.
 export type UserProfile = {
   //
@@ -82,6 +87,9 @@ export type User = {
   //
   // Behaviors: OUTPUT_ONLY
   createTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  deleteTime?: wellKnownTimestamp;
   // Email Login Identifier; service applies trim, Unicode NFC and Unicode case folding for lookup.
   //
   // Behaviors: REQUIRED, IMMUTABLE
@@ -105,6 +113,12 @@ export type User = {
   profile?: UserProfile;
   //
   // Behaviors: OUTPUT_ONLY
+  purgeTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  requiredActions?: UserRequiredAction[];
+  //
+  // Behaviors: OUTPUT_ONLY
   status?: UserStatus;
   //
   // Behaviors: OUTPUT_ONLY
@@ -124,6 +138,9 @@ export type CreateUserRequest = {
   //
   // Behaviors: REQUIRED
   password?: string;
+  //
+  // Behaviors: OPTIONAL
+  requirePasswordChange?: boolean;
   //
   // Behaviors: REQUIRED
   user?: User;
@@ -152,6 +169,9 @@ export type ListUsersRequest = {
   //
   // Behaviors: OPTIONAL
   pageToken?: string;
+  //
+  // Behaviors: OPTIONAL
+  showDeleted?: boolean;
 };
 
 export type ListUsersResponse = {
@@ -226,6 +246,54 @@ export type EnableUserResponse = {
   user?: User;
 };
 
+export type SendUserVerificationEmailRequest = {
+  //
+  // Behaviors: REQUIRED
+  name?: string;
+};
+
+export type SendUserVerificationEmailResponse = {
+};
+
+export type SetUserPasswordRequest = {
+  //
+  // Behaviors: REQUIRED
+  name?: string;
+  //
+  // Behaviors: REQUIRED
+  newPassword?: string;
+};
+
+export type SetUserPasswordResponse = {
+};
+
+export type RevokeUserSessionsRequest = {
+  //
+  // Behaviors: REQUIRED
+  name?: string;
+};
+
+export type RevokeUserSessionsResponse = {
+};
+
+export type DeleteUserRequest = {
+  //
+  // Behaviors: REQUIRED
+  name?: string;
+};
+
+export type UndeleteUserRequest = {
+  //
+  // Behaviors: REQUIRED
+  name?: string;
+};
+
+export type ExpungeUserRequest = {
+  //
+  // Behaviors: REQUIRED
+  name?: string;
+};
+
 // UserService exposes administrator-facing global user management.
 export interface UserService {
 }
@@ -236,6 +304,9 @@ export function createUserServiceClient(
   return {
   };
 }
+// An empty JSON object
+type wellKnownEmpty = Record<never, never>;
+
 export class ApiClient {
   private readonly _transport: ClientTransport;
   private _userService?: UserService;

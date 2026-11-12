@@ -54,7 +54,7 @@ func (initializer *UserInitializer) Initialize(ctx context.Context) error {
 		return fmt.Errorf("normalize bootstrap user email: %w", err)
 	}
 
-	user, err := initializer.users.FindByEmail(ctx, canonicalEmail)
+	user, err := initializer.users.FindByEmailIncludingDeleted(ctx, canonicalEmail)
 	switch {
 	case err == nil:
 	case errors.Is(err, ErrNotFound):
@@ -63,7 +63,7 @@ func (initializer *UserInitializer) Initialize(ctx context.Context) error {
 			if !errors.Is(err, ErrAlreadyExists) {
 				return err
 			}
-			user, err = initializer.users.FindByEmail(ctx, canonicalEmail)
+			user, err = initializer.users.FindByEmailIncludingDeleted(ctx, canonicalEmail)
 			if err != nil {
 				return fmt.Errorf("load concurrently created bootstrap user: %w", err)
 			}
@@ -71,8 +71,13 @@ func (initializer *UserInitializer) Initialize(ctx context.Context) error {
 	default:
 		return fmt.Errorf("find bootstrap user: %w", err)
 	}
+	if user.GetDeleteTime() != nil {
+		initializer.log.WarnContext(ctx, "bootstrap user exists in soft-deleted state; skipping creation", "email", displayEmail, "user_id", user.GetUserId())
+		return nil
+	}
 	if user.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !user.GetEmailVerified() {
-		return fmt.Errorf("bootstrap user %q exists but is not active and email-verified", displayEmail)
+		initializer.log.WarnContext(ctx, "bootstrap user exists in inactive or unverified state; skipping creation", "email", displayEmail, "user_id", user.GetUserId(), "status", user.GetStatus().String(), "email_verified", user.GetEmailVerified())
+		return nil
 	}
 	return nil
 }
@@ -97,6 +102,8 @@ func (initializer *UserInitializer) create(ctx context.Context, displayEmail, ca
 	initializer.log.WarnContext(ctx, "bootstrap user created; initial password is emitted once", "email", displayEmail, "initial_password", plaintext)
 	return &userpb.User{
 		Name: "users/" + userID, UserId: userID, Email: &displayEmail,
-		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
+		Status:          userpb.UserStatus_USER_STATUS_ACTIVE,
+		EmailVerified:   true,
+		RequiredActions: []userpb.UserRequiredAction{userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD},
 	}, nil
 }

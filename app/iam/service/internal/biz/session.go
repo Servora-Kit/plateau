@@ -10,9 +10,10 @@ import (
 )
 
 var (
-	ErrSessionRevoked = errors.New("session revoked")
-	ErrUserDisabled   = errors.New("user disabled")
-	ErrUserNotActive  = errors.New("user not active")
+	ErrSessionRevoked        = errors.New("session revoked")
+	ErrUserDisabled          = errors.New("user disabled")
+	ErrUserNotActive         = errors.New("user not active")
+	ErrRequiredActionPending = errors.New("required action pending")
 )
 
 // LoginSession 是可撤销的认证事件；浏览器令牌和期限由 SCS 管理。
@@ -25,9 +26,10 @@ type LoginSession struct {
 
 // SessionRepo 的撤销方法原子更新登录及其关联 OAuth 状态。
 type SessionRepo interface {
-	Create(context.Context, string, time.Time) (*LoginSession, error)
+	Create(context.Context, PasswordCredential, string, time.Time) (*userpb.User, *LoginSession, error)
 	Find(context.Context, string) (*LoginSession, error)
 	Revoke(context.Context, string, time.Time) error
+	RevokeAll(context.Context, string, time.Time) error
 }
 
 type SessionUsecase struct {
@@ -43,11 +45,11 @@ func NewSessionUsecase(users UserRepo, sessions SessionRepo) (*SessionUsecase, e
 	return &SessionUsecase{users: users, sessions: sessions, now: time.Now}, nil
 }
 
-func (uc *SessionUsecase) Create(ctx context.Context, userID string) (*LoginSession, error) {
-	if userID == "" {
-		return nil, ErrUnauthenticated
+func (uc *SessionUsecase) Create(ctx context.Context, expected PasswordCredential, expectedUserEtag string) (*userpb.User, *LoginSession, error) {
+	if expected.UserID == "" || expected.AuthenticatorID == "" || expected.PasswordAuthenticatorID == "" || expected.PasswordHash == "" || expectedUserEtag == "" {
+		return nil, nil, ErrUnauthenticated
 	}
-	return uc.sessions.Create(ctx, userID, uc.now())
+	return uc.sessions.Create(ctx, expected, expectedUserEtag, uc.now())
 }
 
 // Resolve 只接受从已装载 SCS 数据读取的登录引用，并查询当前身份事实。
@@ -77,6 +79,9 @@ func (uc *SessionUsecase) Resolve(ctx context.Context, loginID string) (*userpb.
 	}
 	if user.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !user.GetEmailVerified() {
 		return nil, nil, ErrUserNotActive
+	}
+	if len(user.GetRequiredActions()) > 0 {
+		return nil, nil, ErrRequiredActionPending
 	}
 	return user, login, nil
 }

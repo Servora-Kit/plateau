@@ -1,9 +1,8 @@
 package server
 
 import (
+	"fmt"
 	"log/slog"
-	"net/http"
-	"strings"
 
 	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
@@ -27,7 +26,16 @@ import (
 )
 
 // NewHTTPServer creates the IAM HTTP server.
-func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metrics, captcha *cap.Cap, oidcProvider *oidc.IAMProvider, manager *scs.SessionManager, sessionAuthn *iamauthn.SessionAuthenticator, authorizer *openfga.Authorizer, authn *service.AuthnService, sessions *service.SessionService, account *service.AccountService, l *slog.Logger) *khttp.Server {
+func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, app *corepb.App, m *metrics.Metrics, captcha *cap.Cap, oidcProvider *oidc.IAMProvider, manager *scs.SessionManager, sessionAuthn *iamauthn.SessionAuthenticator, authorizer *openfga.Authorizer, authn *service.AuthnService, sessions *service.SessionService, account *service.AccountService, l *slog.Logger) (*khttp.Server, error) {
+	browserFilter, err := httpsession.NewFilter(manager, httpsession.FilterConfig{
+		PublicOrigin:     app.GetExternalUrl(),
+		JSONPrefixes:     []string{"/v1/iam/"},
+		SameOriginPaths:  []string{"/authorize/callback"},
+		CrossOriginPaths: []string{"/authorize", "/end_session"},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("http server: %w", err)
+	}
 	log := l.With("scope", "iam/server/http")
 
 	ms := middleware.NewChainBuilder(log).
@@ -40,7 +48,7 @@ func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metri
 	)
 
 	opts := []svrhttp.ServerOption{
-		svrhttp.WithFilter(browserSessionFilter(manager)),
+		svrhttp.WithFilter(browserFilter),
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
 		svrhttp.WithServices(func(s *khttp.Server) {
@@ -51,26 +59,9 @@ func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metri
 			accountpb.RegisterAccountServiceHTTPServer(s, account)
 		}),
 	}
-	if c != nil && c.Http != nil {
-		opts = append(opts, svrhttp.WithConfig(c.Http))
+	if c.GetHttp() != nil {
+		opts = append(opts, svrhttp.WithConfig(c.GetHttp()))
 	}
 
-	return svrhttp.NewServer(opts...)
-}
-
-func browserSessionFilter(manager *scs.SessionManager) khttp.FilterFunc {
-	return func(next http.Handler) http.Handler {
-		browser := httpsession.LoadAndSave(manager)(next)
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch {
-			case strings.HasPrefix(r.URL.Path, "/v1/iam/"),
-				r.URL.Path == "/authorize",
-				r.URL.Path == "/authorize/callback",
-				r.URL.Path == "/end_session":
-				browser.ServeHTTP(w, r)
-			default:
-				next.ServeHTTP(w, r)
-			}
-		})
-	}
+	return svrhttp.NewServer(opts...), nil
 }

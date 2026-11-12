@@ -11,7 +11,6 @@ import (
 	authzsecurity "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
-
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrgrpc "github.com/Servora-Kit/servora/transport/server/grpc"
@@ -37,8 +36,8 @@ func NewGRPCServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metri
 			userpb.RegisterUserServiceServer(s, users)
 		}),
 	}
-	if c != nil && c.Grpc != nil {
-		opts = append(opts, svrgrpc.WithConfig(c.Grpc))
+	if c.GetGrpc() != nil {
+		opts = append(opts, svrgrpc.WithConfig(c.GetGrpc()))
 	}
 
 	return svrgrpc.NewServer(opts...)

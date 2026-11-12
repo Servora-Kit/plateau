@@ -13,6 +13,7 @@ import (
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordauthenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordresettoken"
+	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
 	"github.com/alexedwards/scs/postgresstore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -103,6 +104,9 @@ func seedLoginState(t *testing.T, client *entmodel.Client) (*userpb.User, biz.Us
 	if err := creator.CreateInitialUser(t.Context(), "alice", "alice@example.com", "alice@example.com", "old-hash", time.Now()); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := client.User.UpdateOneID("alice").SetRequiredActions([]string{}).Save(t.Context()); err != nil {
+		t.Fatal(err)
+	}
 	person, err := users.Get(t.Context(), "alice")
 	if err != nil {
 		t.Fatal(err)
@@ -115,11 +119,15 @@ func seedLoginState(t *testing.T, client *entmodel.Client) (*userpb.User, biz.Us
 	if err != nil {
 		t.Fatal(err)
 	}
+	cred, err := passwords.FindActivePassword(t.Context(), "alice")
+	if err != nil {
+		t.Fatal(err)
+	}
 	logins := make([]*biz.LoginSession, 2)
 	for index := range logins {
-		login, err := sessions.Create(t.Context(), "alice", time.Now())
-		if err != nil {
-			t.Fatal(err)
+		_, login, err := sessions.Create(t.Context(), *cred, person.GetEtag(), time.Now())
+		if err != nil || login == nil {
+			t.Fatalf("Create() login=%#v error=%v", login, err)
 		}
 		logins[index] = login
 		_, err = client.OAuthTokenSession.Create().SetID(login.ID).
@@ -177,13 +185,13 @@ func TestPostgresSessionReplacementPreservesIdentity(t *testing.T) {
 	if _, err := logins.Find(ctx, previous[0].ID); !errors.Is(err, biz.ErrNotFound) {
 		t.Fatalf("old login survived replacement: %v", err)
 	}
-	if _, err := logins.Create(ctx, person.GetUserId(), time.Now()); err != nil {
-		t.Fatalf("new session schema is unusable: %v", err)
+	if _, login, err := logins.Create(ctx, *proof, current.GetEtag(), time.Now()); err != nil || login == nil {
+		t.Fatalf("new session schema is unusable: login=%#v err=%v", login, err)
 	}
 }
 
 func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
-	for _, operation := range []string{"password", "reset", "disable", "logout"} {
+	for _, operation := range []string{"password", "reset", "disable", "soft_delete", "logout"} {
 		t.Run(operation, func(t *testing.T) {
 			client, _ := newPostgresTestClient(t)
 			person, users, sessions, passwords, logins := seedLoginState(t, client)
@@ -196,6 +204,10 @@ func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
 				t.Fatal(err)
 			}
 			if err := reset.Create(t.Context(), "alice", "reset-proof", time.Now().Add(time.Hour)); err != nil {
+				t.Fatal(err)
+			}
+			resetProof, err := reset.Peek(t.Context(), "reset-proof", time.Now())
+			if err != nil {
 				t.Fatal(err)
 			}
 			injected := errors.New("injected OAuth revocation failure")
@@ -213,10 +225,13 @@ func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
 				case "password":
 					return passwords.ReplacePassword(t.Context(), "alice", proof.AuthenticatorID, "old-hash", "new-hash", logins[0].ID, time.Now())
 				case "reset":
-					_, err := reset.ConsumeAndReplacePassword(t.Context(), "reset-proof", "new-hash", time.Now())
+					_, err := reset.ConsumeAndReplacePassword(t.Context(), *resetProof, "new-hash", time.Now())
 					return err
 				case "disable":
 					_, err := users.UpdateStatus(t.Context(), "alice", person.GetEtag(), userpb.UserStatus_USER_STATUS_DISABLED, time.Now())
+					return err
+				case "soft_delete":
+					_, err := users.SoftDelete(t.Context(), "alice", nil, time.Now())
 					return err
 				default:
 					return sessions.Revoke(t.Context(), logins[0].ID, time.Now())
@@ -232,7 +247,7 @@ func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					wantLoginRevoked := committed && (operation == "reset" || operation == "disable" || operation == "logout" && index == 0 || operation == "password" && index == 1)
+					wantLoginRevoked := committed && (operation == "reset" || operation == "disable" || operation == "soft_delete" || operation == "logout" && index == 0 || operation == "password" && index == 1)
 					if (got.RevokedAt != nil) != wantLoginRevoked {
 						t.Fatalf("login %d revoked=%v", index, got.RevokedAt != nil)
 					}
@@ -253,12 +268,15 @@ func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
 					t.Fatal("password mutation did not follow transaction")
 				}
 				token := client.PasswordResetToken.Query().Where(passwordresettoken.TokenHashEQ("reset-proof")).OnlyX(t.Context())
-				if (token.ConsumedTime != nil) != (committed && operation == "reset") {
+				if (token.ConsumedTime != nil) != (committed && (operation == "reset" || operation == "soft_delete")) {
 					t.Fatal("reset token consumption did not follow transaction")
 				}
-				storedUser := client.User.GetX(t.Context(), "alice")
+				storedUser := client.User.GetX(entgomixin.SkipSoftDelete(t.Context()), "alice")
 				if (storedUser.Status == biz.UserStatusDisabled) != (committed && operation == "disable") {
 					t.Fatal("status mutation did not follow transaction")
+				}
+				if (storedUser.DeleteTime != nil) != (committed && operation == "soft_delete") {
+					t.Fatal("soft delete mutation did not follow transaction")
 				}
 			}
 			assertState(false)

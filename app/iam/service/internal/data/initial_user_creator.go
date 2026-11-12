@@ -27,6 +27,10 @@ func (creator *initialUserCreator) CreateInitialUser(ctx context.Context, userID
 	if now.IsZero() {
 		now = time.Now()
 	}
-	resource := &userpb.User{UserId: userID, Email: &email}
+	resource := &userpb.User{
+		UserId:          userID,
+		Email:           &email,
+		RequiredActions: []userpb.UserRequiredAction{userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD},
+	}
 	return createUserAggregate(ctx, creator.ent, resource, passwordHash, canonical, biz.UserStatusActive, &now, now)
 }

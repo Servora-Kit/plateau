@@ -14,14 +14,17 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 
 // PasswordCredential contains server-only authenticator fields absent from public Proto.
 type PasswordCredential struct {
-	UserID          string
-	AuthenticatorID string
-	PasswordHash    string
+	UserID                  string
+	AuthenticatorID         string
+	PasswordAuthenticatorID string
+	PasswordHash            string
 }
 
 type CredentialRepo interface {
 	FindActivePassword(context.Context, string) (*PasswordCredential, error)
 	ReplacePassword(context.Context, string, string, string, string, string, time.Time) error
+	SetPasswordAndRevokeSessions(context.Context, string, string, time.Time) error
+	CompleteInitialPassword(context.Context, PasswordCredential, string, string, time.Time) (*LoginSession, error)
 }
 
 type AuthenticationUsecase struct {
@@ -65,9 +68,19 @@ func (uc *AuthenticationUsecase) Login(ctx context.Context, email, plaintextPass
 	if err != nil || !match {
 		return nil, nil, ErrInvalidCredentials
 	}
-	session, err := uc.sessions.Create(ctx, user.GetUserId())
+	expected := *credential
+	lockedUser, session, err := uc.sessions.Create(ctx, expected, user.GetEtag())
 	if err != nil {
+		if errors.Is(err, ErrNotFound) ||
+			errors.Is(err, ErrMutationMiss) ||
+			errors.Is(err, ErrUserEtagMismatch) ||
+			errors.Is(err, ErrInvalidCredentials) ||
+			errors.Is(err, ErrUserNotActive) ||
+			errors.Is(err, ErrUserDisabled) ||
+			errors.Is(err, ErrUnauthenticated) {
+			return nil, nil, ErrInvalidCredentials
+		}
 		return nil, nil, fmt.Errorf("create login session: %w", err)
 	}
-	return user, session, nil
+	return lockedUser, session, nil
 }

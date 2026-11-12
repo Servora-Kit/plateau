@@ -15,6 +15,12 @@ var _authzRules = map[string]*v1.AuthzRule{
 		ResourceType: "iam",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
 	},
+	"/iam.user.v1.UserService/DeleteUser": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "manage_users",
+		ResourceType: "iam",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
 	"/iam.user.v1.UserService/DisableUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "manage_users",
@@ -27,6 +33,12 @@ var _authzRules = map[string]*v1.AuthzRule{
 		ResourceType: "iam",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
 	},
+	"/iam.user.v1.UserService/ExpungeUser": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "expunge_users",
+		ResourceType: "iam",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
 	"/iam.user.v1.UserService/GetUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "manage_users",
@@ -34,6 +46,30 @@ var _authzRules = map[string]*v1.AuthzRule{
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
 	},
 	"/iam.user.v1.UserService/ListUsers": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "manage_users",
+		ResourceType: "iam",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
+	"/iam.user.v1.UserService/RevokeUserSessions": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "manage_users",
+		ResourceType: "iam",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
+	"/iam.user.v1.UserService/SendUserVerificationEmail": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "manage_users",
+		ResourceType: "iam",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
+	"/iam.user.v1.UserService/SetUserPassword": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "manage_users",
+		ResourceType: "iam",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
+	"/iam.user.v1.UserService/UndeleteUser": {
 		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
 		Action:       "manage_users",
 		ResourceType: "iam",

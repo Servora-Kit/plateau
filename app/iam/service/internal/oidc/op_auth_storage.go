@@ -87,23 +87,13 @@ func (storage *OIDCStorage) AuthRequestByID(ctx context.Context, requestID strin
 }
 
 // CompleteAuthRequest binds a verified IAM browser session to a pending OAuth request.
-func (storage *OIDCStorage) CompleteAuthRequest(ctx context.Context, requestID, userID, iamSessionID string, authTime time.Time) error {
-	updated, err := storage.client.OIDCAuthorizationRequest.Update().
-		Where(
-			oidcauthorizationrequest.IDEQ(requestID),
-			oidcauthorizationrequest.DoneEQ(false),
-			oidcauthorizationrequest.ExpiresTimeGT(storage.now().UTC()),
-		).
-		SetSubject(userID).
-		SetIamLoginSessionID(iamSessionID).
-		SetAuthTime(authTime.UTC()).
-		SetDone(true).
-		Save(ctx)
+func (storage *OIDCStorage) CompleteAuthRequest(ctx context.Context, requestID, userID, iamSessionID string, _ time.Time) error {
+	err := storage.tokens.CompleteAuthorizationRequest(ctx, requestID, userID, iamSessionID, storage.now().UTC())
+	if errors.Is(err, biz.ErrOAuthGrantInvalid) {
+		return storageNotFoundError{cause: fmt.Errorf("OIDC authorization request is missing, expired, or ineligible: %w", err)}
+	}
 	if err != nil {
 		return fmt.Errorf("complete OIDC authorization request: %w", err)
-	}
-	if updated != 1 {
-		return storageNotFoundError{cause: fmt.Errorf("OIDC authorization request is missing, expired, or already completed")}
 	}
 	return nil
 }
@@ -134,35 +124,16 @@ func (storage *OIDCStorage) AuthRequestByCode(ctx context.Context, code string) 
 	return &authorizationRequest{entity: requestEntity, authorizationCodeID: codeEntity.ID}, nil
 }
 func (storage *OIDCStorage) SaveAuthCode(ctx context.Context, requestID, code string) error {
-	request, err := storage.client.OIDCAuthorizationRequest.Query().
-		Where(
-			oidcauthorizationrequest.IDEQ(requestID),
-			oidcauthorizationrequest.DoneEQ(true),
-			oidcauthorizationrequest.ExpiresTimeGT(storage.now().UTC()),
-		).
-		Only(ctx)
-	if entmodel.IsNotFound(err) {
-		return storageNotFoundError{cause: fmt.Errorf("completed OIDC authorization request not found")}
-	}
-	if err != nil {
-		return fmt.Errorf("query completed OIDC authorization request: %w", err)
-	}
 	id, err := newID()
 	if err != nil {
 		return err
 	}
-	if _, err := storage.client.OAuthAuthorizationCode.Create().
-		SetID(id).
-		SetAuthorizationRequestID(request.ID).
-		SetCodeHash(biz.HashOpaqueSecret(code)).
-		SetClientID(request.ClientID).
-		SetSubject(*request.Subject).
-		SetRedirectURI(request.RedirectURI).
-		SetScopes(slices.Clone(request.Scopes)).
-		SetPkceChallenge(request.PkceChallenge).
-		SetPkceChallengeMethod(request.PkceChallengeMethod).
-		SetExpiresTime(storage.now().UTC().Add(authorizationCodeTTL)).
-		Save(ctx); err != nil {
+	now := storage.now().UTC()
+	err = storage.tokens.SaveAuthorizationCode(ctx, requestID, id, biz.HashOpaqueSecret(code), now, now.Add(authorizationCodeTTL))
+	if errors.Is(err, biz.ErrOAuthGrantInvalid) {
+		return storageNotFoundError{cause: fmt.Errorf("completed OIDC authorization request not found or ineligible: %w", err)}
+	}
+	if err != nil {
 		return fmt.Errorf("save OAuth authorization code: %w", err)
 	}
 	return nil

@@ -94,3 +94,15 @@ func IsAccountErrorReasonUnauthenticated(err error) bool {
 func ErrorAccountErrorReasonUnauthenticated(format string, args ...any) *errors.Error {
 	return errors.New(401, AccountErrorReason_ACCOUNT_ERROR_REASON_UNAUTHENTICATED.String(), fmt.Sprintf(format, args...))
 }
+
+func IsAccountErrorReasonInvalidState(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == AccountErrorReason_ACCOUNT_ERROR_REASON_INVALID_STATE.String() && e.Code == 409
+}
+
+func ErrorAccountErrorReasonInvalidState(format string, args ...any) *errors.Error {
+	return errors.New(409, AccountErrorReason_ACCOUNT_ERROR_REASON_INVALID_STATE.String(), fmt.Sprintf(format, args...))
+}

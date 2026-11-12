@@ -43,6 +43,7 @@ function encodeMultiSegmentPath(value: unknown): string {
 export type AccountErrorReason =
   | 'ACCOUNT_ERROR_REASON_EMAIL_ALREADY_REGISTERED'
   | 'ACCOUNT_ERROR_REASON_INVALID_PASSWORD'
+  | 'ACCOUNT_ERROR_REASON_INVALID_STATE'
   | 'ACCOUNT_ERROR_REASON_INVALID_TOKEN'
   | 'ACCOUNT_ERROR_REASON_TOKEN_EXPIRED'
   | 'ACCOUNT_ERROR_REASON_UNAUTHENTICATED'
@@ -99,6 +100,9 @@ export type iamuserv1_User = {
   //
   // Behaviors: OUTPUT_ONLY
   createTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  deleteTime?: wellKnownTimestamp;
   // Email Login Identifier; service applies trim, Unicode NFC and Unicode case folding for lookup.
   //
   // Behaviors: REQUIRED, IMMUTABLE
@@ -122,6 +126,12 @@ export type iamuserv1_User = {
   profile?: iamuserv1_UserProfile;
   //
   // Behaviors: OUTPUT_ONLY
+  purgeTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  requiredActions?: iamuserv1_UserRequiredAction[];
+  //
+  // Behaviors: OUTPUT_ONLY
   status?: iamuserv1_UserStatus;
   //
   // Behaviors: OUTPUT_ONLY
@@ -143,6 +153,10 @@ export type iamuserv1_UserStatus =
 // Offsets other than "Z" are also accepted.
 type wellKnownTimestamp = string;
 
+// UserRequiredAction identifies persistent actions the user must complete before normal access.
+export type iamuserv1_UserRequiredAction =
+  | 'USER_REQUIRED_ACTION_UNSPECIFIED'
+  | 'USER_REQUIRED_ACTION_UPDATE_PASSWORD';
 export type VerifyEmailRequest = {
   // One-time email verification token; never accepted from a query parameter.
   //
@@ -256,6 +270,33 @@ export type RequestPasswordResetResponse = {
 export type ConfirmPasswordResetResponse = {
 };
 
+export type ChangeInitialPasswordRequest = {
+  // Current initial password is verified independently and never logged or returned.
+  //
+  // Behaviors: REQUIRED
+  currentPassword?: string;
+  // Service canonicalizes email before locating the Login Identifier.
+  //
+  // Behaviors: REQUIRED
+  email?: string;
+  //
+  // Behaviors: REQUIRED
+  newPassword?: string;
+};
+
+export type ChangeInitialPasswordResponse = {
+};
+
+export type DeleteAccountRequest = {
+  // Current password is verified before soft-deleting the authenticated user's account.
+  //
+  // Behaviors: REQUIRED
+  currentPassword?: string;
+};
+
+export type DeleteAccountResponse = {
+};
+
 // AccountService owns self-service registration, profile and recovery flows.
 export interface AccountService {
   // Register creates a pending user and sends an email-verification message.
@@ -290,6 +331,14 @@ export interface AccountService {
   ConfirmPasswordReset(
     request: ConfirmPasswordResetRequest,
   ): Promise<ConfirmPasswordResetResponse>;
+  // ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
+  ChangeInitialPassword(
+    request: ChangeInitialPasswordRequest,
+  ): Promise<ChangeInitialPasswordResponse>;
+  // DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
+  DeleteAccount(
+    request: DeleteAccountRequest,
+  ): Promise<DeleteAccountResponse>;
 }
 
 export function createAccountServiceClient(
@@ -407,6 +456,34 @@ export function createAccountServiceClient(
       return transport.unary<ConfirmPasswordResetResponse>(path, 'POST', body, {
         service: 'AccountService',
         method: 'ConfirmPasswordReset',
+      });
+    },
+    ChangeInitialPassword(request) {
+      if (request.email === undefined || request.email === null || request.email === '') {
+        throw new Error('missing required field request.email');
+      }
+      if (request.currentPassword === undefined || request.currentPassword === null || request.currentPassword === '') {
+        throw new Error('missing required field request.current_password');
+      }
+      if (request.newPassword === undefined || request.newPassword === null || request.newPassword === '') {
+        throw new Error('missing required field request.new_password');
+      }
+      const path = `v1/iam/account/change-initial-password`;
+      const body = JSON.stringify(request);
+      return transport.unary<ChangeInitialPasswordResponse>(path, 'POST', body, {
+        service: 'AccountService',
+        method: 'ChangeInitialPassword',
+      });
+    },
+    DeleteAccount(request) {
+      if (request.currentPassword === undefined || request.currentPassword === null || request.currentPassword === '') {
+        throw new Error('missing required field request.current_password');
+      }
+      const path = `v1/iam/account/delete`;
+      const body = JSON.stringify(request);
+      return transport.unary<DeleteAccountResponse>(path, 'POST', body, {
+        service: 'AccountService',
+        method: 'DeleteAccount',
       });
     },
   };

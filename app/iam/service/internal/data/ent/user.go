@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -17,6 +18,12 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
+	// DeleteTime holds the value of the "delete_time" field.
+	DeleteTime *time.Time `json:"delete_time,omitempty"`
+	// DeletedBy holds the value of the "deleted_by" field.
+	DeletedBy *string `json:"deleted_by,omitempty"`
+	// PurgeTime holds the value of the "purge_time" field.
+	PurgeTime *time.Time `json:"purge_time,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
 	// Name holds the value of the "name" field.
@@ -35,6 +42,8 @@ type User struct {
 	Locale *string `json:"locale,omitempty"`
 	// Etag holds the value of the "etag" field.
 	Etag string `json:"etag,omitempty"`
+	// RequiredActions holds the value of the "required_actions" field.
+	RequiredActions []string `json:"required_actions,omitempty"`
 	// CreateTime holds the value of the "create_time" field.
 	CreateTime time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
@@ -47,9 +56,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldStatus, user.FieldName, user.FieldGivenName, user.FieldFamilyName, user.FieldNickname, user.FieldPreferredUsername, user.FieldPicture, user.FieldLocale, user.FieldEtag:
+		case user.FieldRequiredActions:
+			values[i] = new([]byte)
+		case user.FieldID, user.FieldDeletedBy, user.FieldStatus, user.FieldName, user.FieldGivenName, user.FieldFamilyName, user.FieldNickname, user.FieldPreferredUsername, user.FieldPicture, user.FieldLocale, user.FieldEtag:
 			values[i] = new(sql.NullString)
-		case user.FieldCreateTime, user.FieldUpdateTime:
+		case user.FieldDeleteTime, user.FieldPurgeTime, user.FieldCreateTime, user.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -71,6 +82,27 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				_m.ID = value.String
+			}
+		case user.FieldDeleteTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field delete_time", values[i])
+			} else if value.Valid {
+				_m.DeleteTime = new(time.Time)
+				*_m.DeleteTime = value.Time
+			}
+		case user.FieldDeletedBy:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_by", values[i])
+			} else if value.Valid {
+				_m.DeletedBy = new(string)
+				*_m.DeletedBy = value.String
+			}
+		case user.FieldPurgeTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field purge_time", values[i])
+			} else if value.Valid {
+				_m.PurgeTime = new(time.Time)
+				*_m.PurgeTime = value.Time
 			}
 		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -133,6 +165,14 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Etag = value.String
 			}
+		case user.FieldRequiredActions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field required_actions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.RequiredActions); err != nil {
+					return fmt.Errorf("unmarshal field required_actions: %w", err)
+				}
+			}
 		case user.FieldCreateTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field create_time", values[i])
@@ -181,6 +221,21 @@ func (_m *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	if v := _m.DeleteTime; v != nil {
+		builder.WriteString("delete_time=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.DeletedBy; v != nil {
+		builder.WriteString("deleted_by=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.PurgeTime; v != nil {
+		builder.WriteString("purge_time=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
@@ -221,6 +276,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("etag=")
 	builder.WriteString(_m.Etag)
+	builder.WriteString(", ")
+	builder.WriteString("required_actions=")
+	builder.WriteString(fmt.Sprintf("%v", _m.RequiredActions))
 	builder.WriteString(", ")
 	builder.WriteString("create_time=")
 	builder.WriteString(_m.CreateTime.Format(time.ANSIC))

@@ -9,6 +9,7 @@ import (
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	sessions "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -89,7 +90,7 @@ func (s *AccountService) GetProfile(ctx context.Context, _ *accountpb.GetProfile
 }
 
 func (s *AccountService) UpdateProfile(ctx context.Context, request *accountpb.UpdateProfileRequest) (*accountpb.UpdateProfileResponse, error) {
-	if request == nil || request.GetProfile() == nil {
+	if request.GetProfile() == nil {
 		return nil, kerrors.New(400, "INVALID_ARGUMENT", "profile is required")
 	}
 	user, _, err := authn.From(ctx)
@@ -124,6 +125,48 @@ func (s *AccountService) ChangePassword(ctx context.Context, request *accountpb.
 	}
 	s.manager.SetDeadline(ctx, deadline)
 	return &accountpb.ChangePasswordResponse{}, nil
+}
+
+func (s *AccountService) ChangeInitialPassword(ctx context.Context, request *accountpb.ChangeInitialPasswordRequest) (*accountpb.ChangeInitialPasswordResponse, error) {
+	if request == nil {
+		return nil, accountError(biz.ErrUnauthenticated)
+	}
+	if !sessions.Loaded(ctx, s.manager) {
+		return nil, accountError(fmt.Errorf("HTTP session is not loaded"))
+	}
+	loginSession, err := s.account.ChangeInitialPassword(ctx, request.GetEmail(), request.GetCurrentPassword(), request.GetNewPassword())
+	if err != nil {
+		if errors.Is(err, biz.ErrInvalidCredentials) {
+			return nil, accountpb.ErrorAccountErrorReasonUnauthenticated("authentication required")
+		}
+		return nil, accountError(err)
+	}
+	if err := s.manager.RenewToken(ctx); err != nil {
+		s.manager.Remove(ctx, authn.LoginReferenceKey)
+		return nil, accountError(err)
+	}
+	s.manager.Put(ctx, authn.LoginReferenceKey, loginSession.ID)
+	return &accountpb.ChangeInitialPasswordResponse{}, nil
+}
+
+func (s *AccountService) DeleteAccount(ctx context.Context, request *accountpb.DeleteAccountRequest) (*accountpb.DeleteAccountResponse, error) {
+	if request == nil {
+		return nil, accountError(biz.ErrInvalidCredentials)
+	}
+	if !sessions.Loaded(ctx, s.manager) {
+		return nil, accountError(fmt.Errorf("HTTP session is not loaded"))
+	}
+	user, loginSession, err := authn.From(ctx)
+	if err != nil {
+		return nil, accountError(err)
+	}
+	if err := s.account.DeleteAccount(ctx, user.GetUserId(), loginSession.ID, request.GetCurrentPassword()); err != nil {
+		return nil, accountError(err)
+	}
+	if err := s.manager.Destroy(ctx); err != nil {
+		return nil, accountError(err)
+	}
+	return &accountpb.DeleteAccountResponse{}, nil
 }
 
 func mergeProfile(current, requested *userpb.UserProfile, mask *fieldmaskpb.FieldMask) (*userpb.UserProfile, error) {
@@ -172,9 +215,16 @@ func accountError(err error) error {
 		return accountpb.ErrorAccountErrorReasonInvalidPassword("password does not meet policy")
 	case errors.Is(err, biz.ErrEmailAlreadyExists):
 		return accountpb.ErrorAccountErrorReasonEmailAlreadyRegistered("email is already registered")
+	case errors.Is(err, biz.ErrAccountInvalidState):
+		return accountpb.ErrorAccountErrorReasonInvalidState("account state has changed")
 	case errors.Is(err, biz.ErrProfileEtagMismatch):
 		return kerrors.New(409, "ETAG_MISMATCH", "profile was modified by another request").WithCause(err)
-	case errors.Is(err, biz.ErrUnauthenticated), errors.Is(err, biz.ErrSessionRevoked), errors.Is(err, biz.ErrUserDisabled), errors.Is(err, biz.ErrUserNotActive):
+	case errors.Is(err, biz.ErrUnauthenticated),
+		errors.Is(err, biz.ErrNotFound),
+		errors.Is(err, biz.ErrSessionRevoked),
+		errors.Is(err, biz.ErrUserDisabled),
+		errors.Is(err, biz.ErrUserNotActive),
+		errors.Is(err, biz.ErrRequiredActionPending):
 		return accountpb.ErrorAccountErrorReasonUnauthenticated("authentication required")
 	default:
 		return kerrors.InternalServer("IAM account operation failed", "account operation failed").WithCause(err)

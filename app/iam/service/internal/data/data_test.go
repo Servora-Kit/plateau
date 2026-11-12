@@ -202,7 +202,7 @@ func TestUserAndCredentialRepositoriesCreateAndFind(t *testing.T) {
 }
 
 func TestUserRepositoryUpdateClearsOnlySelectedProfileFields(t *testing.T) {
-	client := newTestEntClient(t)
+	client, _ := newPostgresTestClient(t)
 	users, err := NewUserRepository(&Data{ent: client})
 	if err != nil {
 		t.Fatalf("NewUserRepository() error = %v", err)
@@ -261,7 +261,8 @@ func TestBootstrapUserCreatorCreatesActiveVerifiedUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByEmail() error = %v", err)
 	}
-	if admin.GetUserId() != userID || admin.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !admin.GetEmailVerified() {
+	if admin.GetUserId() != userID || admin.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !admin.GetEmailVerified() ||
+		len(admin.GetRequiredActions()) != 1 || admin.GetRequiredActions()[0] != userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD {
 		t.Fatalf("bootstrap admin = %#v", admin)
 	}
 }
@@ -277,6 +278,10 @@ func TestPasswordResetTokenConsumptionReplacesPasswordOnce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewCredentialRepository() error = %v", err)
 	}
+	verificationTokens, err := NewVerificationTokenRepo(data)
+	if err != nil {
+		t.Fatalf("NewVerificationTokenRepo() error = %v", err)
+	}
 	resetTokens, err := NewPasswordResetTokenRepository(data)
 	if err != nil {
 		t.Fatalf("NewPasswordResetTokenRepository() error = %v", err)
@@ -291,18 +296,30 @@ func TestPasswordResetTokenConsumptionReplacesPasswordOnce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
-	if err := users.ActivateEmail(t.Context(), created.GetUserId(), time.Now()); err != nil {
-		t.Fatal(err)
+	verifyHash := biz.HashOpaqueSecret("verify-token")
+	if err := verificationTokens.Create(t.Context(), created.GetUserId(), "", verifyHash, time.Now().Add(time.Hour)); err != nil {
+		t.Fatalf("Create verification token: %v", err)
+	}
+	if _, err := verificationTokens.ConsumeAndActivate(t.Context(), verifyHash, time.Now()); err != nil {
+		t.Fatalf("ConsumeAndActivate() error = %v", err)
+	}
+	activeUser, err := users.Get(t.Context(), created.GetUserId())
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
 	}
 	tokenHash := biz.HashOpaqueSecret("reset-token")
-	if err := resetTokens.Create(t.Context(), created.GetUserId(), tokenHash, time.Now().Add(time.Hour)); err != nil {
+	if err := resetTokens.Create(t.Context(), activeUser.GetUserId(), tokenHash, time.Now().Add(time.Hour)); err != nil {
 		t.Fatalf("Create reset token: %v", err)
+	}
+	proof, err := resetTokens.Peek(t.Context(), tokenHash, time.Now())
+	if err != nil {
+		t.Fatalf("Peek() error = %v", err)
 	}
 	newHash, err := password.Hash("new correct horse battery staple")
 	if err != nil {
 		t.Fatalf("hash new password: %v", err)
 	}
-	userID, err := resetTokens.ConsumeAndReplacePassword(t.Context(), tokenHash, newHash, time.Now())
+	userID, err := resetTokens.ConsumeAndReplacePassword(t.Context(), *proof, newHash, time.Now())
 	if err != nil || userID != created.GetUserId() {
 		t.Fatalf("ConsumeAndReplacePassword() user=%q error=%v", userID, err)
 	}
@@ -314,7 +331,7 @@ func TestPasswordResetTokenConsumptionReplacesPasswordOnce(t *testing.T) {
 	if err != nil || !match {
 		t.Fatalf("replacement password match=%t error=%v", match, err)
 	}
-	if _, err := resetTokens.ConsumeAndReplacePassword(t.Context(), tokenHash, oldHash, time.Now()); !errors.Is(err, biz.ErrMutationMiss) {
-		t.Fatalf("replay error = %v, want conditional mutation miss", err)
+	if _, err := resetTokens.ConsumeAndReplacePassword(t.Context(), *proof, oldHash, time.Now()); !errors.Is(err, biz.ErrInvalidToken) && !errors.Is(err, biz.ErrMutationMiss) {
+		t.Fatalf("replay error = %v, want invalid token or conditional mutation miss", err)
 	}
 }

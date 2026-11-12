@@ -87,7 +87,7 @@ func (mailer *Mailer) SendPasswordReset(ctx context.Context, to, link string, ex
 
 // NewFrom validates and converts the shared Mail sender identity.
 func NewFrom(config *mailpb.Mail) (From, error) {
-	if config == nil || config.GetFrom() == nil {
+	if config.GetFrom() == nil {
 		return From{}, fmt.Errorf("mail: from configuration is required")
 	}
 	from := From{Address: config.GetFrom().GetAddress(), Name: config.GetFrom().GetName()}

@@ -62,6 +62,9 @@ export type iamuserv1_User = {
   //
   // Behaviors: OUTPUT_ONLY
   createTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  deleteTime?: wellKnownTimestamp;
   // Email Login Identifier; service applies trim, Unicode NFC and Unicode case folding for lookup.
   //
   // Behaviors: REQUIRED, IMMUTABLE
@@ -83,6 +86,12 @@ export type iamuserv1_User = {
   //
   // Behaviors: OPTIONAL
   profile?: iamuserv1_UserProfile;
+  //
+  // Behaviors: OUTPUT_ONLY
+  purgeTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  requiredActions?: iamuserv1_UserRequiredAction[];
   //
   // Behaviors: OUTPUT_ONLY
   status?: iamuserv1_UserStatus;
@@ -131,6 +140,10 @@ export type iamuserv1_UserStatus =
 // Offsets other than "Z" are also accepted.
 type wellKnownTimestamp = string;
 
+// UserRequiredAction identifies persistent actions the user must complete before normal access.
+export type iamuserv1_UserRequiredAction =
+  | 'USER_REQUIRED_ACTION_UNSPECIFIED'
+  | 'USER_REQUIRED_ACTION_UPDATE_PASSWORD';
 // AuthnService owns email/password authentication.
 export interface AuthnService {
   // Login verifies credentials and establishes one opaque browser session.

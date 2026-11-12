@@ -62,6 +62,9 @@ var UserFields = struct {
 	CreateTime               UserFieldPath
 	UpdateTime               UserFieldPath
 	Etag                     UserFieldPath
+	DeleteTime               UserFieldPath
+	PurgeTime                UserFieldPath
+	RequiredActions          UserFieldPath
 }{
 	Name:                     UserFieldPath{path: "name"},
 	UserId:                   UserFieldPath{path: "user_id"},
@@ -80,6 +83,9 @@ var UserFields = struct {
 	CreateTime:               UserFieldPath{path: "create_time"},
 	UpdateTime:               UserFieldPath{path: "update_time"},
 	Etag:                     UserFieldPath{path: "etag"},
+	DeleteTime:               UserFieldPath{path: "delete_time"},
+	PurgeTime:                UserFieldPath{path: "purge_time"},
+	RequiredActions:          UserFieldPath{path: "required_actions"},
 }
 
 // UserName is the typed parts value for a canonical User resource name.

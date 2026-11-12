@@ -31,7 +31,6 @@ import (
 	"github.com/Servora-Kit/plateau/security/cap"
 	"github.com/Servora-Kit/plateau/security/password"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
-	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/alexedwards/scs/v2"
 	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
@@ -131,11 +130,14 @@ func newServerFixture(t *testing.T) *serverFixture {
 	t.Cleanup(closeSession)
 	captcha, err := cap.New(&cappb.CAP{SigningSecret: proto.String("test-cap-signing-secret-at-least-32-bytes"), RedisKeyPrefix: proto.String(schema + ":")}, rdb)
 	check(t, err)
-	runtime := &bootstrap.Runtime{Bootstrap: &corepb.Bootstrap{App: &corepb.App{ExternalUrl: "http://localhost:10002"}}}
+	web := httptest.NewUnstartedServer(nil)
+	t.Cleanup(web.Close)
+	publicOrigin := "http://" + web.Listener.Addr().String()
+	app := &corepb.App{ExternalUrl: publicOrigin}
 	mailer := &testMailer{}
-	accountUC, err := biz.NewAccountUsecase(users, passwords, verification, resets, captcha, mailer, runtime)
+	accountUC, err := biz.NewAccountUsecase(users, passwords, verification, resets, captcha, mailer, app)
 	check(t, err)
-	userUC, err := biz.NewUserUsecase(accountUC, users)
+	userUC, err := biz.NewUserUsecase(accountUC, users, passwords, logins)
 	check(t, err)
 	authnService, err := service.NewAuthnService(authentication, manager)
 	check(t, err)
@@ -149,9 +151,7 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	authorizer, err := iamauthz.NewOpenFGAAuthorizer(fga)
 	check(t, err)
-	web := httptest.NewUnstartedServer(nil)
-	t.Cleanup(web.Close)
-	config := newProtocolConfig(t, "http://"+web.Listener.Addr().String())
+	config := newProtocolConfig(t, publicOrigin)
 	storage, err := oidc.NewOIDCStorage(client, config, tokens)
 	check(t, err)
 	initializer, err := oidc.NewOIDCInitializer(config, storage)
@@ -165,7 +165,8 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	t.Cleanup(closeAuthn)
 	serverConfig := &corepb.Server{Http: &corepb.Server_HTTP{Listen: &corepb.Server_Listen{Timeout: durationpb.New(15 * time.Second)}}, Grpc: &corepb.Server_GRPC{Listen: &corepb.Server_Listen{Timeout: durationpb.New(15 * time.Second)}}}
-	httpServer := NewHTTPServer(serverConfig, nil, nil, captcha, provider, manager, sessionAuthn, authorizer, authnService, sessionService, accountService, logger)
+	httpServer, err := NewHTTPServer(serverConfig, nil, app, nil, captcha, provider, manager, sessionAuthn, authorizer, authnService, sessionService, accountService, logger)
+	check(t, err)
 	web.Config.Handler = httpServer
 	web.Start()
 	grpcServer := NewGRPCServer(serverConfig, nil, nil, serviceAuthn, authorizer, userService, logger)
@@ -174,7 +175,10 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	person, err := users.Create(t.Context(), &userpb.User{UserId: uuid.NewString(), Email: &email}, hash, email)
 	check(t, err)
-	check(t, users.ActivateEmail(t.Context(), person.GetUserId(), time.Now()))
+	verifyTokenHash := biz.HashOpaqueSecret("fixture-verify-" + person.GetUserId())
+	check(t, verification.Create(t.Context(), person.GetUserId(), "", verifyTokenHash, time.Now().Add(time.Hour)))
+	_, err = verification.ConsumeAndActivate(t.Context(), verifyTokenHash, time.Now())
+	check(t, err)
 	person, err = users.Get(t.Context(), person.GetUserId())
 	check(t, err)
 	return &serverFixture{db: db, ent: client, manager: manager, users: users, logins: logins, resets: resets, user: person, http: httpServer, grpc: grpcServer, web: web, fga: fga, oidc: storage, config: config, initializer: initializer, redis: rdb, capPrefix: schema + ":", mailer: mailer}

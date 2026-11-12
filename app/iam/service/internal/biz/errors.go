@@ -9,6 +9,8 @@ var (
 	ErrMutationMiss  = errors.New("conditional mutation matched no rows")
 	ErrExpired       = errors.New("stored value expired")
 
-	ErrUnauthenticated = errors.New("authentication required")
-	ErrInvalidPassword = errors.New("invalid password")
+	ErrUnauthenticated         = errors.New("authentication required")
+	ErrInvalidPassword         = errors.New("invalid password")
+	ErrAccountInvalidState     = errors.New("account state is invalid")
+	ErrVerificationEmailFailed = errors.New("verification email delivery failed")
 )

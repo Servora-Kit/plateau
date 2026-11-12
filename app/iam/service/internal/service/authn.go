@@ -38,6 +38,17 @@ func (s *AuthnService) Login(ctx context.Context, request *authnpb.LoginRequest)
 	if err != nil {
 		return nil, authnError(err)
 	}
+	if loginSession == nil {
+		if len(user.GetRequiredActions()) == 0 {
+			return nil, authnError(fmt.Errorf("login session is missing for user without required actions"))
+		}
+		if s.manager.Exists(ctx, iamauthn.LoginReferenceKey) {
+			if err := s.manager.Destroy(ctx); err != nil {
+				return nil, authnError(err)
+			}
+		}
+		return &authnpb.LoginResponse{User: user}, nil
+	}
 	if err := s.manager.RenewToken(ctx); err != nil {
 		return nil, authnError(err)
 	}

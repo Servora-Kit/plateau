@@ -89,15 +89,15 @@ func NewRedisClient(config *redispb.Redis) (*redis.Client, func(), error) {
 
 // NewSQLDB 拥有 Ent 和 SCS 共用的 pgx 连接池。
 func NewSQLDB(config *corepb.Data) (*sql.DB, func(), error) {
-	if config == nil || config.Database == nil || config.Database.GetSource() == "" {
+	if config.GetDatabase().GetSource() == "" {
 		return nil, nil, fmt.Errorf("IAM PostgreSQL configuration is required")
 	}
-	switch config.Database.GetDriver() {
+	switch config.GetDatabase().GetDriver() {
 	case "postgres", "postgresql", "pgx":
 	default:
 		return nil, nil, fmt.Errorf("IAM requires PostgreSQL")
 	}
-	db, err := sql.Open("pgx", config.Database.GetSource())
+	db, err := sql.Open("pgx", config.GetDatabase().GetSource())
 	if err != nil {
 		return nil, nil, fmt.Errorf("open IAM database: %w", err)
 	}

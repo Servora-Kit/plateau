@@ -56,13 +56,31 @@ func (storage *OIDCStorage) populateUserinfo(
 	scopes []string,
 ) error {
 	entity, err := storage.client.User.Query().
-		Where(user.IDEQ(userID), user.StatusEQ(biz.UserStatusActive)).
+		Where(user.IDEQ(userID), user.DeleteTimeIsNil(), user.StatusEQ(biz.UserStatusActive)).
 		Only(ctx)
 	if entmodel.IsNotFound(err) {
 		return storageNotFoundError{cause: fmt.Errorf("OIDC subject is not active")}
 	}
 	if err != nil {
 		return fmt.Errorf("query OIDC subject: %w", err)
+	}
+	if len(entity.RequiredActions) > 0 {
+		return storageNotFoundError{cause: fmt.Errorf("OIDC subject has pending required actions")}
+	}
+	email, err := storage.client.LoginIdentifier.Query().
+		Where(
+			loginidentifier.UserIDEQ(entity.ID),
+			loginidentifier.TypeEQ(biz.LoginIdentifierEmail),
+		).
+		Only(ctx)
+	if entmodel.IsNotFound(err) {
+		return storageNotFoundError{cause: fmt.Errorf("OIDC subject email is missing")}
+	}
+	if err != nil {
+		return fmt.Errorf("query OIDC subject email: %w", err)
+	}
+	if email.VerifiedTime == nil {
+		return storageNotFoundError{cause: fmt.Errorf("OIDC subject email is not verified")}
 	}
 	userinfo.Subject = entity.ID
 	if slices.Contains(scopes, oidc.ScopeProfile) {
@@ -92,17 +110,8 @@ func (storage *OIDCStorage) populateUserinfo(
 		userinfo.UpdatedAt = oidc.FromTime(entity.UpdateTime)
 	}
 	if slices.Contains(scopes, oidc.ScopeEmail) {
-		email, err := storage.client.LoginIdentifier.Query().
-			Where(
-				loginidentifier.UserIDEQ(entity.ID),
-				loginidentifier.TypeEQ(biz.LoginIdentifierEmail),
-			).
-			Only(ctx)
-		if err != nil {
-			return fmt.Errorf("query OIDC subject email: %w", err)
-		}
 		userinfo.Email = email.DisplayValue
-		userinfo.EmailVerified = email.VerifiedTime != nil
+		userinfo.EmailVerified = true
 	}
 	return nil
 }

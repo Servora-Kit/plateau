@@ -5,6 +5,7 @@ package user
 import (
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -13,6 +14,12 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldDeleteTime holds the string denoting the delete_time field in the database.
+	FieldDeleteTime = "delete_time"
+	// FieldDeletedBy holds the string denoting the deleted_by field in the database.
+	FieldDeletedBy = "deleted_by"
+	// FieldPurgeTime holds the string denoting the purge_time field in the database.
+	FieldPurgeTime = "purge_time"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldName holds the string denoting the name field in the database.
@@ -31,6 +38,8 @@ const (
 	FieldLocale = "locale"
 	// FieldEtag holds the string denoting the etag field in the database.
 	FieldEtag = "etag"
+	// FieldRequiredActions holds the string denoting the required_actions field in the database.
+	FieldRequiredActions = "required_actions"
 	// FieldCreateTime holds the string denoting the create_time field in the database.
 	FieldCreateTime = "create_time"
 	// FieldUpdateTime holds the string denoting the update_time field in the database.
@@ -42,6 +51,9 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldDeleteTime,
+	FieldDeletedBy,
+	FieldPurgeTime,
 	FieldStatus,
 	FieldName,
 	FieldGivenName,
@@ -51,6 +63,7 @@ var Columns = []string{
 	FieldPicture,
 	FieldLocale,
 	FieldEtag,
+	FieldRequiredActions,
 	FieldCreateTime,
 	FieldUpdateTime,
 }
@@ -65,11 +78,20 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+// Note that the variables below are initialized by the runtime
+// package on the initialization of the application. Therefore,
+// it should be imported in the main as follows:
+//
+//	import _ "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/runtime"
 var (
+	Hooks        [1]ent.Hook
+	Interceptors [1]ent.Interceptor
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// EtagValidator is a validator for the "etag" field. It is called by the builders before save.
 	EtagValidator func(string) error
+	// DefaultRequiredActions holds the default value on creation for the "required_actions" field.
+	DefaultRequiredActions []string
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
 	DefaultCreateTime func() time.Time
 	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
@@ -84,6 +106,21 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByDeleteTime orders the results by the delete_time field.
+func ByDeleteTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeleteTime, opts...).ToFunc()
+}
+
+// ByDeletedBy orders the results by the deleted_by field.
+func ByDeletedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedBy, opts...).ToFunc()
+}
+
+// ByPurgeTime orders the results by the purge_time field.
+func ByPurgeTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPurgeTime, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

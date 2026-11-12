@@ -37,9 +37,11 @@ func NewSessionAuthenticator(usecase *biz.SessionUsecase, manager *scs.SessionMa
 func resolutionError(err error) error {
 	switch {
 	case errors.Is(err, biz.ErrUnauthenticated),
+		errors.Is(err, biz.ErrNotFound),
 		errors.Is(err, biz.ErrSessionRevoked),
 		errors.Is(err, biz.ErrUserDisabled),
-		errors.Is(err, biz.ErrUserNotActive):
+		errors.Is(err, biz.ErrUserNotActive),
+		errors.Is(err, biz.ErrRequiredActionPending):
 		return fmt.Errorf("%w: %w", session.ErrInvalidCredentials, err)
 	default:
 		return fmt.Errorf("%w: %w", session.ErrDependencyUnavailable, err)

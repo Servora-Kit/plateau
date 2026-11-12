@@ -31,7 +31,7 @@ func TestIAMSessionActorMappingAndContext(t *testing.T) {
 }
 
 func TestSessionResolutionErrorClassification(t *testing.T) {
-	for _, err := range []error{biz.ErrUnauthenticated, biz.ErrSessionRevoked, biz.ErrUserDisabled, biz.ErrUserNotActive} {
+	for _, err := range []error{biz.ErrUnauthenticated, biz.ErrNotFound, biz.ErrSessionRevoked, biz.ErrUserDisabled, biz.ErrUserNotActive, biz.ErrRequiredActionPending} {
 		if mapped := resolutionError(err); !errors.Is(mapped, sessionauthn.ErrInvalidCredentials) || !errors.Is(mapped, err) {
 			t.Fatalf("domain error %v mapped to %v", err, mapped)
 		}

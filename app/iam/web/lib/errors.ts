@@ -30,6 +30,13 @@ export function isInvalidPassword(error: unknown): boolean {
   )
 }
 
+export function isAccountInvalidState(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    parseKratosError(error)?.reason === "ACCOUNT_ERROR_REASON_INVALID_STATE"
+  )
+}
+
 export function isAlreadyRegistered(error: unknown): boolean {
   return (
     error instanceof ApiError &&

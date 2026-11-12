@@ -25,6 +25,8 @@ type OAuthTokenIssue struct {
 
 // OAuthRepo serializes user issuance and revocation with identity changes.
 type OAuthRepo interface {
+	CompleteAuthorizationRequest(context.Context, string, string, string, time.Time) error
+	SaveAuthorizationCode(context.Context, string, string, string, time.Time, time.Time) error
 	Issue(context.Context, OAuthGrant, OAuthTokenIssue) error
 	RevokeSession(context.Context, string, time.Time) error
 	RevokeClient(context.Context, string, string, time.Time) error

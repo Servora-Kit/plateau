@@ -6,6 +6,25 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /v1/iam/account/change-initial-password:
+        post:
+            tags:
+                - AccountService
+            description: ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
+            operationId: AccountService_ChangeInitialPassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ChangeInitialPasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ChangeInitialPasswordResponse'
     /v1/iam/account/change-password:
         post:
             tags:
@@ -25,6 +44,25 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ChangePasswordResponse'
+    /v1/iam/account/delete:
+        post:
+            tags:
+                - AccountService
+            description: DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
+            operationId: AccountService_DeleteAccount
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DeleteAccountRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeleteAccountResponse'
     /v1/iam/account/password-reset/confirm:
         post:
             tags:
@@ -197,6 +235,24 @@ paths:
                                 $ref: '#/components/schemas/LogoutResponse'
 components:
     schemas:
+        ChangeInitialPasswordRequest:
+            required:
+                - email
+                - currentPassword
+                - newPassword
+            type: object
+            properties:
+                email:
+                    type: string
+                    description: Service canonicalizes email before locating the Login Identifier.
+                currentPassword:
+                    type: string
+                    description: Current initial password is verified independently and never logged or returned.
+                newPassword:
+                    type: string
+        ChangeInitialPasswordResponse:
+            type: object
+            properties: {}
         ChangePasswordRequest:
             required:
                 - currentPassword
@@ -223,6 +279,17 @@ components:
                 newPassword:
                     type: string
         ConfirmPasswordResetResponse:
+            type: object
+            properties: {}
+        DeleteAccountRequest:
+            required:
+                - currentPassword
+            type: object
+            properties:
+                currentPassword:
+                    type: string
+                    description: Current password is verified before soft-deleting the authenticated user's account.
+        DeleteAccountResponse:
             type: object
             properties: {}
         GetProfileResponse:
@@ -355,6 +422,23 @@ components:
                 etag:
                     readOnly: true
                     type: string
+                deleteTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                purgeTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                requiredActions:
+                    readOnly: true
+                    type: array
+                    items:
+                        enum:
+                            - USER_REQUIRED_ACTION_UNSPECIFIED
+                            - USER_REQUIRED_ACTION_UPDATE_PASSWORD
+                        type: string
+                        format: enum
             description: User is the globally unique IAM identity resource.
         UserProfile:
             type: object

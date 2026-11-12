@@ -10,6 +10,7 @@ import { useOneTimeFragment } from "@/hooks/use-one-time-url"
 import { useSensitiveValue } from "@/hooks/use-sensitive-value"
 import { useSingleFlight } from "@/hooks/use-single-flight"
 import {
+  isAccountInvalidState,
   isInvalidOneTimeToken,
   isInvalidPassword,
   requestErrorMessage,
@@ -95,7 +96,13 @@ function ResetPasswordFlow({
       return
     }
     if (isInvalidPassword(result.error)) {
-      setErrors({ password: "新密码不符合要求，请使用 8 至 128 个字符" })
+      setMessage(
+        "请使用 8 至 128 个字符的新密码；若账号要求首次改密，新密码须不同于当前密码。请重新申请重置链接。"
+      )
+      return
+    }
+    if (isAccountInvalidState(result.error)) {
+      setMessage("账号或凭据状态已变化，请重新申请重置链接。")
       return
     }
     setMessage(

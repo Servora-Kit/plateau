@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,12 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_CreateUser_FullMethodName  = "/iam.user.v1.UserService/CreateUser"
-	UserService_GetUser_FullMethodName     = "/iam.user.v1.UserService/GetUser"
-	UserService_ListUsers_FullMethodName   = "/iam.user.v1.UserService/ListUsers"
-	UserService_UpdateUser_FullMethodName  = "/iam.user.v1.UserService/UpdateUser"
-	UserService_DisableUser_FullMethodName = "/iam.user.v1.UserService/DisableUser"
-	UserService_EnableUser_FullMethodName  = "/iam.user.v1.UserService/EnableUser"
+	UserService_CreateUser_FullMethodName                = "/iam.user.v1.UserService/CreateUser"
+	UserService_GetUser_FullMethodName                   = "/iam.user.v1.UserService/GetUser"
+	UserService_ListUsers_FullMethodName                 = "/iam.user.v1.UserService/ListUsers"
+	UserService_UpdateUser_FullMethodName                = "/iam.user.v1.UserService/UpdateUser"
+	UserService_DisableUser_FullMethodName               = "/iam.user.v1.UserService/DisableUser"
+	UserService_EnableUser_FullMethodName                = "/iam.user.v1.UserService/EnableUser"
+	UserService_SendUserVerificationEmail_FullMethodName = "/iam.user.v1.UserService/SendUserVerificationEmail"
+	UserService_SetUserPassword_FullMethodName           = "/iam.user.v1.UserService/SetUserPassword"
+	UserService_RevokeUserSessions_FullMethodName        = "/iam.user.v1.UserService/RevokeUserSessions"
+	UserService_DeleteUser_FullMethodName                = "/iam.user.v1.UserService/DeleteUser"
+	UserService_UndeleteUser_FullMethodName              = "/iam.user.v1.UserService/UndeleteUser"
+	UserService_ExpungeUser_FullMethodName               = "/iam.user.v1.UserService/ExpungeUser"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -45,6 +52,18 @@ type UserServiceClient interface {
 	DisableUser(ctx context.Context, in *DisableUserRequest, opts ...grpc.CallOption) (*DisableUserResponse, error)
 	// EnableUser enables a disabled user without restoring revoked sessions.
 	EnableUser(ctx context.Context, in *EnableUserRequest, opts ...grpc.CallOption) (*EnableUserResponse, error)
+	// SendUserVerificationEmail sends a verification email for a pending user.
+	SendUserVerificationEmail(ctx context.Context, in *SendUserVerificationEmailRequest, opts ...grpc.CallOption) (*SendUserVerificationEmailResponse, error)
+	// SetUserPassword replaces a user's password and revokes every active session.
+	SetUserPassword(ctx context.Context, in *SetUserPasswordRequest, opts ...grpc.CallOption) (*SetUserPasswordResponse, error)
+	// RevokeUserSessions revokes every active IAM and OAuth session for a user.
+	RevokeUserSessions(ctx context.Context, in *RevokeUserSessionsRequest, opts ...grpc.CallOption) (*RevokeUserSessionsResponse, error)
+	// DeleteUser soft-deletes a user and revokes active sessions and pending tokens.
+	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*User, error)
+	// UndeleteUser restores a soft-deleted user without restoring revoked sessions.
+	UndeleteUser(ctx context.Context, in *UndeleteUserRequest, opts ...grpc.CallOption) (*User, error)
+	// ExpungeUser permanently deletes a soft-deleted user and all user-bound IAM records.
+	ExpungeUser(ctx context.Context, in *ExpungeUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userServiceClient struct {
@@ -115,6 +134,66 @@ func (c *userServiceClient) EnableUser(ctx context.Context, in *EnableUserReques
 	return out, nil
 }
 
+func (c *userServiceClient) SendUserVerificationEmail(ctx context.Context, in *SendUserVerificationEmailRequest, opts ...grpc.CallOption) (*SendUserVerificationEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendUserVerificationEmailResponse)
+	err := c.cc.Invoke(ctx, UserService_SendUserVerificationEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) SetUserPassword(ctx context.Context, in *SetUserPasswordRequest, opts ...grpc.CallOption) (*SetUserPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetUserPasswordResponse)
+	err := c.cc.Invoke(ctx, UserService_SetUserPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) RevokeUserSessions(ctx context.Context, in *RevokeUserSessionsRequest, opts ...grpc.CallOption) (*RevokeUserSessionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeUserSessionsResponse)
+	err := c.cc.Invoke(ctx, UserService_RevokeUserSessions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*User, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(User)
+	err := c.cc.Invoke(ctx, UserService_DeleteUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UndeleteUser(ctx context.Context, in *UndeleteUserRequest, opts ...grpc.CallOption) (*User, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(User)
+	err := c.cc.Invoke(ctx, UserService_UndeleteUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ExpungeUser(ctx context.Context, in *ExpungeUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserService_ExpungeUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -133,6 +212,18 @@ type UserServiceServer interface {
 	DisableUser(context.Context, *DisableUserRequest) (*DisableUserResponse, error)
 	// EnableUser enables a disabled user without restoring revoked sessions.
 	EnableUser(context.Context, *EnableUserRequest) (*EnableUserResponse, error)
+	// SendUserVerificationEmail sends a verification email for a pending user.
+	SendUserVerificationEmail(context.Context, *SendUserVerificationEmailRequest) (*SendUserVerificationEmailResponse, error)
+	// SetUserPassword replaces a user's password and revokes every active session.
+	SetUserPassword(context.Context, *SetUserPasswordRequest) (*SetUserPasswordResponse, error)
+	// RevokeUserSessions revokes every active IAM and OAuth session for a user.
+	RevokeUserSessions(context.Context, *RevokeUserSessionsRequest) (*RevokeUserSessionsResponse, error)
+	// DeleteUser soft-deletes a user and revokes active sessions and pending tokens.
+	DeleteUser(context.Context, *DeleteUserRequest) (*User, error)
+	// UndeleteUser restores a soft-deleted user without restoring revoked sessions.
+	UndeleteUser(context.Context, *UndeleteUserRequest) (*User, error)
+	// ExpungeUser permanently deletes a soft-deleted user and all user-bound IAM records.
+	ExpungeUser(context.Context, *ExpungeUserRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -160,6 +251,24 @@ func (UnimplementedUserServiceServer) DisableUser(context.Context, *DisableUserR
 }
 func (UnimplementedUserServiceServer) EnableUser(context.Context, *EnableUserRequest) (*EnableUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method EnableUser not implemented")
+}
+func (UnimplementedUserServiceServer) SendUserVerificationEmail(context.Context, *SendUserVerificationEmailRequest) (*SendUserVerificationEmailResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SendUserVerificationEmail not implemented")
+}
+func (UnimplementedUserServiceServer) SetUserPassword(context.Context, *SetUserPasswordRequest) (*SetUserPasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetUserPassword not implemented")
+}
+func (UnimplementedUserServiceServer) RevokeUserSessions(context.Context, *RevokeUserSessionsRequest) (*RevokeUserSessionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeUserSessions not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*User, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteUser not implemented")
+}
+func (UnimplementedUserServiceServer) UndeleteUser(context.Context, *UndeleteUserRequest) (*User, error) {
+	return nil, status.Error(codes.Unimplemented, "method UndeleteUser not implemented")
+}
+func (UnimplementedUserServiceServer) ExpungeUser(context.Context, *ExpungeUserRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExpungeUser not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -290,6 +399,114 @@ func _UserService_EnableUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_SendUserVerificationEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendUserVerificationEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SendUserVerificationEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SendUserVerificationEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SendUserVerificationEmail(ctx, req.(*SendUserVerificationEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_SetUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SetUserPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SetUserPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SetUserPassword(ctx, req.(*SetUserPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_RevokeUserSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeUserSessionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).RevokeUserSessions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_RevokeUserSessions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).RevokeUserSessions(ctx, req.(*RevokeUserSessionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeleteUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UndeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UndeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UndeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UndeleteUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UndeleteUser(ctx, req.(*UndeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ExpungeUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExpungeUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ExpungeUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ExpungeUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ExpungeUser(ctx, req.(*ExpungeUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -320,6 +537,30 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EnableUser",
 			Handler:    _UserService_EnableUser_Handler,
+		},
+		{
+			MethodName: "SendUserVerificationEmail",
+			Handler:    _UserService_SendUserVerificationEmail_Handler,
+		},
+		{
+			MethodName: "SetUserPassword",
+			Handler:    _UserService_SetUserPassword_Handler,
+		},
+		{
+			MethodName: "RevokeUserSessions",
+			Handler:    _UserService_RevokeUserSessions_Handler,
+		},
+		{
+			MethodName: "DeleteUser",
+			Handler:    _UserService_DeleteUser_Handler,
+		},
+		{
+			MethodName: "UndeleteUser",
+			Handler:    _UserService_UndeleteUser_Handler,
+		},
+		{
+			MethodName: "ExpungeUser",
+			Handler:    _UserService_ExpungeUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

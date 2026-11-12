@@ -20,6 +20,48 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetDeleteTime sets the "delete_time" field.
+func (_c *UserCreate) SetDeleteTime(v time.Time) *UserCreate {
+	_c.mutation.SetDeleteTime(v)
+	return _c
+}
+
+// SetNillableDeleteTime sets the "delete_time" field if the given value is not nil.
+func (_c *UserCreate) SetNillableDeleteTime(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetDeleteTime(*v)
+	}
+	return _c
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (_c *UserCreate) SetDeletedBy(v string) *UserCreate {
+	_c.mutation.SetDeletedBy(v)
+	return _c
+}
+
+// SetNillableDeletedBy sets the "deleted_by" field if the given value is not nil.
+func (_c *UserCreate) SetNillableDeletedBy(v *string) *UserCreate {
+	if v != nil {
+		_c.SetDeletedBy(*v)
+	}
+	return _c
+}
+
+// SetPurgeTime sets the "purge_time" field.
+func (_c *UserCreate) SetPurgeTime(v time.Time) *UserCreate {
+	_c.mutation.SetPurgeTime(v)
+	return _c
+}
+
+// SetNillablePurgeTime sets the "purge_time" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePurgeTime(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetPurgeTime(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
 func (_c *UserCreate) SetStatus(v string) *UserCreate {
 	_c.mutation.SetStatus(v)
@@ -138,6 +180,12 @@ func (_c *UserCreate) SetEtag(v string) *UserCreate {
 	return _c
 }
 
+// SetRequiredActions sets the "required_actions" field.
+func (_c *UserCreate) SetRequiredActions(v []string) *UserCreate {
+	_c.mutation.SetRequiredActions(v)
+	return _c
+}
+
 // SetCreateTime sets the "create_time" field.
 func (_c *UserCreate) SetCreateTime(v time.Time) *UserCreate {
 	_c.mutation.SetCreateTime(v)
@@ -179,7 +227,9 @@ func (_c *UserCreate) Mutation() *UserMutation {
 
 // Save creates the User in the database.
 func (_c *UserCreate) Save(ctx context.Context) (*User, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -206,19 +256,30 @@ func (_c *UserCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *UserCreate) defaults() {
+func (_c *UserCreate) defaults() error {
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.RequiredActions(); !ok {
+		v := user.DefaultRequiredActions
+		_c.mutation.SetRequiredActions(v)
+	}
 	if _, ok := _c.mutation.CreateTime(); !ok {
+		if user.DefaultCreateTime == nil {
+			return fmt.Errorf("ent: uninitialized user.DefaultCreateTime (forgotten import ent/runtime?)")
+		}
 		v := user.DefaultCreateTime()
 		_c.mutation.SetCreateTime(v)
 	}
 	if _, ok := _c.mutation.UpdateTime(); !ok {
+		if user.DefaultUpdateTime == nil {
+			return fmt.Errorf("ent: uninitialized user.DefaultUpdateTime (forgotten import ent/runtime?)")
+		}
 		v := user.DefaultUpdateTime()
 		_c.mutation.SetUpdateTime(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -233,6 +294,9 @@ func (_c *UserCreate) check() error {
 		if err := user.EtagValidator(v); err != nil {
 			return &ValidationError{Name: "etag", err: fmt.Errorf(`ent: validator failed for field "User.etag": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.RequiredActions(); !ok {
+		return &ValidationError{Name: "required_actions", err: errors.New(`ent: missing required field "User.required_actions"`)}
 	}
 	if _, ok := _c.mutation.CreateTime(); !ok {
 		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "User.create_time"`)}
@@ -275,6 +339,18 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
+	if value, ok := _c.mutation.DeleteTime(); ok {
+		_spec.SetField(user.FieldDeleteTime, field.TypeTime, value)
+		_node.DeleteTime = &value
+	}
+	if value, ok := _c.mutation.DeletedBy(); ok {
+		_spec.SetField(user.FieldDeletedBy, field.TypeString, value)
+		_node.DeletedBy = &value
+	}
+	if value, ok := _c.mutation.PurgeTime(); ok {
+		_spec.SetField(user.FieldPurgeTime, field.TypeTime, value)
+		_node.PurgeTime = &value
+	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
 		_node.Status = value
@@ -310,6 +386,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Etag(); ok {
 		_spec.SetField(user.FieldEtag, field.TypeString, value)
 		_node.Etag = value
+	}
+	if value, ok := _c.mutation.RequiredActions(); ok {
+		_spec.SetField(user.FieldRequiredActions, field.TypeJSON, value)
+		_node.RequiredActions = value
 	}
 	if value, ok := _c.mutation.CreateTime(); ok {
 		_spec.SetField(user.FieldCreateTime, field.TypeTime, value)

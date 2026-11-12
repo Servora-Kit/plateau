@@ -55,6 +55,9 @@ export const UserFields = {
   createTime: "create_time",
   updateTime: "update_time",
   etag: "etag",
+  deleteTime: "delete_time",
+  purgeTime: "purge_time",
+  requiredActions: "required_actions",
 } as const;
 
 export const UserUpdateFields = {

@@ -27,6 +27,7 @@ func (creator *fakeBootstrapCreator) CreateInitialUser(_ context.Context, userID
 	creator.users.user = &userpb.User{
 		Name: "users/" + userID, UserId: userID, Email: &email,
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
+		RequiredActions: []userpb.UserRequiredAction{userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD},
 	}
 	return nil
 }
@@ -72,17 +73,47 @@ func TestUserBootstrapCreatesOnceAndReusesIdentity(t *testing.T) {
 	}
 }
 
-func TestUserBootstrapRejectsInactiveExistingUser(t *testing.T) {
-	users := &fakeAccountUsers{user: &userpb.User{UserId: "user-1", Status: userpb.UserStatus_USER_STATUS_DISABLED}}
-	creator := &fakeBootstrapCreator{users: users}
-	bootstrap, err := NewUserInitializer(&iamconfpb.IAM{BootstrapUserEmail: proto.String("alice@example.com")}, users, creator, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := bootstrap.Initialize(t.Context()); err == nil {
-		t.Fatal("inactive existing user accepted")
-	}
-	if creator.calls != 0 {
-		t.Fatal("existing user was replaced")
+func TestUserBootstrapWarnsAndAllowsInactiveOrSoftDeletedExistingUser(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		user *userpb.User
+	}{
+		{
+			name: "disabled",
+			user: &userpb.User{UserId: "user-1", Status: userpb.UserStatus_USER_STATUS_DISABLED},
+		},
+		{
+			name: "pending verification",
+			user: &userpb.User{UserId: "user-1", Status: userpb.UserStatus_USER_STATUS_PENDING_EMAIL_VERIFICATION},
+		},
+		{
+			name: "soft deleted",
+			user: &userpb.User{
+				UserId:        "user-1",
+				Status:        userpb.UserStatus_USER_STATUS_ACTIVE,
+				EmailVerified: true,
+				DeleteTime:    timestamppbFromUnix(1_700_000_000),
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var output bytes.Buffer
+			logger := slog.New(slog.NewJSONHandler(&output, nil))
+			users := &fakeAccountUsers{anyEmailUser: tc.user}
+			creator := &fakeBootstrapCreator{users: users}
+			bootstrap, err := NewUserInitializer(&iamconfpb.IAM{BootstrapUserEmail: proto.String("alice@example.com")}, users, creator, logger)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := bootstrap.Initialize(t.Context()); err != nil {
+				t.Fatalf("Initialize() error = %v, want startup allowed", err)
+			}
+			if creator.calls != 0 {
+				t.Fatal("existing user was replaced")
+			}
+			if !strings.Contains(output.String(), "WARN") {
+				t.Fatalf("expected warning log, got %s", output.String())
+			}
+		})
 	}
 }

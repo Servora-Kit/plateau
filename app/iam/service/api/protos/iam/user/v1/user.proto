@@ -5,6 +5,7 @@ package iam.user.v1;
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "plateau/security/authn/v1/annotations.proto";
@@ -54,6 +55,42 @@ service UserService {
   rpc EnableUser(EnableUserRequest) returns (EnableUserResponse) {
     option (google.api.method_signature) = "name";
   }
+
+  // SendUserVerificationEmail sends a verification email for a pending user.
+  rpc SendUserVerificationEmail(SendUserVerificationEmailRequest) returns (SendUserVerificationEmailResponse) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // SetUserPassword replaces a user's password and revokes every active session.
+  rpc SetUserPassword(SetUserPasswordRequest) returns (SetUserPasswordResponse) {
+    option (google.api.method_signature) = "name,new_password";
+  }
+
+  // RevokeUserSessions revokes every active IAM and OAuth session for a user.
+  rpc RevokeUserSessions(RevokeUserSessionsRequest) returns (RevokeUserSessionsResponse) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // DeleteUser soft-deletes a user and revokes active sessions and pending tokens.
+  rpc DeleteUser(DeleteUserRequest) returns (User) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // UndeleteUser restores a soft-deleted user without restoring revoked sessions.
+  rpc UndeleteUser(UndeleteUserRequest) returns (User) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // ExpungeUser permanently deletes a soft-deleted user and all user-bound IAM records.
+  rpc ExpungeUser(ExpungeUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.method_signature) = "name";
+    option (plateau.security.authz.v1.rule) = {
+      mode: AUTHZ_MODE_REQUIRED
+      action: "expunge_users"
+      resource_type: "iam"
+      resource_id: "global"
+    };
+  }
 }
 
 // UserErrorReason contains administrator-visible user-management failures.
@@ -65,6 +102,7 @@ enum UserErrorReason {
   USER_ERROR_REASON_ALREADY_EXISTS = 2 [(servora.errors.v1.code) = 409];
   USER_ERROR_REASON_INVALID_STATE = 3 [(servora.errors.v1.code) = 409];
   USER_ERROR_REASON_ETAG_MISMATCH = 4 [(servora.errors.v1.code) = 409];
+  USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED = 5 [(servora.errors.v1.code) = 503];
 }
 
 // UserStatus describes the account lifecycle state.
@@ -73,6 +111,12 @@ enum UserStatus {
   USER_STATUS_PENDING_EMAIL_VERIFICATION = 1;
   USER_STATUS_ACTIVE = 2;
   USER_STATUS_DISABLED = 3;
+}
+
+// UserRequiredAction identifies persistent actions the user must complete before normal access.
+enum UserRequiredAction {
+  USER_REQUIRED_ACTION_UNSPECIFIED = 0;
+  USER_REQUIRED_ACTION_UPDATE_PASSWORD = 1;
 }
 
 // UserProfile contains the OIDC standard profile fields supported by IAM.
@@ -112,6 +156,9 @@ message User {
   google.protobuf.Timestamp create_time = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
   google.protobuf.Timestamp update_time = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
   string etag = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp delete_time = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp purge_time = 12 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated UserRequiredAction required_actions = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 message CreateUserRequest {
@@ -127,6 +174,7 @@ message CreateUserRequest {
     (buf.validate.field).string = {min_len: 8, max_len: 128},
     (servora.redact.v3.value).string = ""
   ];
+  optional bool require_password_change = 4 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message GetUserRequest {
@@ -141,6 +189,7 @@ message ListUsersRequest {
   string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
   string filter = 3 [(google.api.field_behavior) = OPTIONAL];
   string order_by = 4 [(google.api.field_behavior) = OPTIONAL];
+  bool show_deleted = 5 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message ListUsersResponse {
@@ -177,4 +226,57 @@ message DisableUserResponse {
 
 message EnableUserResponse {
   User user = 1;
+}
+
+message SendUserVerificationEmailRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message SendUserVerificationEmailResponse {}
+
+message SetUserPasswordRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+  string new_password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
+}
+
+message SetUserPasswordResponse {}
+
+message RevokeUserSessionsRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message RevokeUserSessionsResponse {}
+
+message DeleteUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message UndeleteUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
+}
+
+message ExpungeUserRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/User"}
+  ];
 }

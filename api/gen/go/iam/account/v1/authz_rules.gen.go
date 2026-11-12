@@ -9,10 +9,16 @@ import (
 
 // _authzRules is the immutable backing store for AuthzRules.
 var _authzRules = map[string]*v1.AuthzRule{
+	"/iam.account.v1.AccountService/ChangeInitialPassword": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
 	"/iam.account.v1.AccountService/ChangePassword": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
 	"/iam.account.v1.AccountService/ConfirmPasswordReset": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/iam.account.v1.AccountService/DeleteAccount": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
 	"/iam.account.v1.AccountService/GetProfile": {

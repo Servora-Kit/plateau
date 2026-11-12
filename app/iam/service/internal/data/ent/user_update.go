@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/predicate"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
@@ -26,6 +27,66 @@ type UserUpdate struct {
 // Where appends a list predicates to the UserUpdate builder.
 func (_u *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetDeleteTime sets the "delete_time" field.
+func (_u *UserUpdate) SetDeleteTime(v time.Time) *UserUpdate {
+	_u.mutation.SetDeleteTime(v)
+	return _u
+}
+
+// SetNillableDeleteTime sets the "delete_time" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableDeleteTime(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetDeleteTime(*v)
+	}
+	return _u
+}
+
+// ClearDeleteTime clears the value of the "delete_time" field.
+func (_u *UserUpdate) ClearDeleteTime() *UserUpdate {
+	_u.mutation.ClearDeleteTime()
+	return _u
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (_u *UserUpdate) SetDeletedBy(v string) *UserUpdate {
+	_u.mutation.SetDeletedBy(v)
+	return _u
+}
+
+// SetNillableDeletedBy sets the "deleted_by" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableDeletedBy(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetDeletedBy(*v)
+	}
+	return _u
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (_u *UserUpdate) ClearDeletedBy() *UserUpdate {
+	_u.mutation.ClearDeletedBy()
+	return _u
+}
+
+// SetPurgeTime sets the "purge_time" field.
+func (_u *UserUpdate) SetPurgeTime(v time.Time) *UserUpdate {
+	_u.mutation.SetPurgeTime(v)
+	return _u
+}
+
+// SetNillablePurgeTime sets the "purge_time" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePurgeTime(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetPurgeTime(*v)
+	}
+	return _u
+}
+
+// ClearPurgeTime clears the value of the "purge_time" field.
+func (_u *UserUpdate) ClearPurgeTime() *UserUpdate {
+	_u.mutation.ClearPurgeTime()
 	return _u
 }
 
@@ -197,6 +258,18 @@ func (_u *UserUpdate) SetNillableEtag(v *string) *UserUpdate {
 	return _u
 }
 
+// SetRequiredActions sets the "required_actions" field.
+func (_u *UserUpdate) SetRequiredActions(v []string) *UserUpdate {
+	_u.mutation.SetRequiredActions(v)
+	return _u
+}
+
+// AppendRequiredActions appends value to the "required_actions" field.
+func (_u *UserUpdate) AppendRequiredActions(v []string) *UserUpdate {
+	_u.mutation.AppendRequiredActions(v)
+	return _u
+}
+
 // SetUpdateTime sets the "update_time" field.
 func (_u *UserUpdate) SetUpdateTime(v time.Time) *UserUpdate {
 	_u.mutation.SetUpdateTime(v)
@@ -210,7 +283,9 @@ func (_u *UserUpdate) Mutation() *UserMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -237,11 +312,15 @@ func (_u *UserUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *UserUpdate) defaults() {
+func (_u *UserUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdateTime(); !ok {
+		if user.UpdateDefaultUpdateTime == nil {
+			return fmt.Errorf("ent: uninitialized user.UpdateDefaultUpdateTime (forgotten import ent/runtime?)")
+		}
 		v := user.UpdateDefaultUpdateTime()
 		_u.mutation.SetUpdateTime(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -271,6 +350,24 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.DeleteTime(); ok {
+		_spec.SetField(user.FieldDeleteTime, field.TypeTime, value)
+	}
+	if _u.mutation.DeleteTimeCleared() {
+		_spec.ClearField(user.FieldDeleteTime, field.TypeTime)
+	}
+	if value, ok := _u.mutation.DeletedBy(); ok {
+		_spec.SetField(user.FieldDeletedBy, field.TypeString, value)
+	}
+	if _u.mutation.DeletedByCleared() {
+		_spec.ClearField(user.FieldDeletedBy, field.TypeString)
+	}
+	if value, ok := _u.mutation.PurgeTime(); ok {
+		_spec.SetField(user.FieldPurgeTime, field.TypeTime, value)
+	}
+	if _u.mutation.PurgeTimeCleared() {
+		_spec.ClearField(user.FieldPurgeTime, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
@@ -320,6 +417,14 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Etag(); ok {
 		_spec.SetField(user.FieldEtag, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.RequiredActions(); ok {
+		_spec.SetField(user.FieldRequiredActions, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedRequiredActions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, user.FieldRequiredActions, value)
+		})
+	}
 	if value, ok := _u.mutation.UpdateTime(); ok {
 		_spec.SetField(user.FieldUpdateTime, field.TypeTime, value)
 	}
@@ -343,6 +448,66 @@ type UserUpdateOne struct {
 	hooks     []Hook
 	mutation  *UserMutation
 	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetDeleteTime sets the "delete_time" field.
+func (_u *UserUpdateOne) SetDeleteTime(v time.Time) *UserUpdateOne {
+	_u.mutation.SetDeleteTime(v)
+	return _u
+}
+
+// SetNillableDeleteTime sets the "delete_time" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableDeleteTime(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetDeleteTime(*v)
+	}
+	return _u
+}
+
+// ClearDeleteTime clears the value of the "delete_time" field.
+func (_u *UserUpdateOne) ClearDeleteTime() *UserUpdateOne {
+	_u.mutation.ClearDeleteTime()
+	return _u
+}
+
+// SetDeletedBy sets the "deleted_by" field.
+func (_u *UserUpdateOne) SetDeletedBy(v string) *UserUpdateOne {
+	_u.mutation.SetDeletedBy(v)
+	return _u
+}
+
+// SetNillableDeletedBy sets the "deleted_by" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableDeletedBy(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetDeletedBy(*v)
+	}
+	return _u
+}
+
+// ClearDeletedBy clears the value of the "deleted_by" field.
+func (_u *UserUpdateOne) ClearDeletedBy() *UserUpdateOne {
+	_u.mutation.ClearDeletedBy()
+	return _u
+}
+
+// SetPurgeTime sets the "purge_time" field.
+func (_u *UserUpdateOne) SetPurgeTime(v time.Time) *UserUpdateOne {
+	_u.mutation.SetPurgeTime(v)
+	return _u
+}
+
+// SetNillablePurgeTime sets the "purge_time" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePurgeTime(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetPurgeTime(*v)
+	}
+	return _u
+}
+
+// ClearPurgeTime clears the value of the "purge_time" field.
+func (_u *UserUpdateOne) ClearPurgeTime() *UserUpdateOne {
+	_u.mutation.ClearPurgeTime()
+	return _u
 }
 
 // SetStatus sets the "status" field.
@@ -513,6 +678,18 @@ func (_u *UserUpdateOne) SetNillableEtag(v *string) *UserUpdateOne {
 	return _u
 }
 
+// SetRequiredActions sets the "required_actions" field.
+func (_u *UserUpdateOne) SetRequiredActions(v []string) *UserUpdateOne {
+	_u.mutation.SetRequiredActions(v)
+	return _u
+}
+
+// AppendRequiredActions appends value to the "required_actions" field.
+func (_u *UserUpdateOne) AppendRequiredActions(v []string) *UserUpdateOne {
+	_u.mutation.AppendRequiredActions(v)
+	return _u
+}
+
 // SetUpdateTime sets the "update_time" field.
 func (_u *UserUpdateOne) SetUpdateTime(v time.Time) *UserUpdateOne {
 	_u.mutation.SetUpdateTime(v)
@@ -539,7 +716,9 @@ func (_u *UserUpdateOne) Select(field string, fields ...string) *UserUpdateOne {
 
 // Save executes the query and returns the updated User entity.
 func (_u *UserUpdateOne) Save(ctx context.Context) (*User, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -566,11 +745,15 @@ func (_u *UserUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *UserUpdateOne) defaults() {
+func (_u *UserUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdateTime(); !ok {
+		if user.UpdateDefaultUpdateTime == nil {
+			return fmt.Errorf("ent: uninitialized user.UpdateDefaultUpdateTime (forgotten import ent/runtime?)")
+		}
 		v := user.UpdateDefaultUpdateTime()
 		_u.mutation.SetUpdateTime(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -617,6 +800,24 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.DeleteTime(); ok {
+		_spec.SetField(user.FieldDeleteTime, field.TypeTime, value)
+	}
+	if _u.mutation.DeleteTimeCleared() {
+		_spec.ClearField(user.FieldDeleteTime, field.TypeTime)
+	}
+	if value, ok := _u.mutation.DeletedBy(); ok {
+		_spec.SetField(user.FieldDeletedBy, field.TypeString, value)
+	}
+	if _u.mutation.DeletedByCleared() {
+		_spec.ClearField(user.FieldDeletedBy, field.TypeString)
+	}
+	if value, ok := _u.mutation.PurgeTime(); ok {
+		_spec.SetField(user.FieldPurgeTime, field.TypeTime, value)
+	}
+	if _u.mutation.PurgeTimeCleared() {
+		_spec.ClearField(user.FieldPurgeTime, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
@@ -665,6 +866,14 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Etag(); ok {
 		_spec.SetField(user.FieldEtag, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RequiredActions(); ok {
+		_spec.SetField(user.FieldRequiredActions, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedRequiredActions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, user.FieldRequiredActions, value)
+		})
 	}
 	if value, ok := _u.mutation.UpdateTime(); ok {
 		_spec.SetField(user.FieldUpdateTime, field.TypeTime, value)

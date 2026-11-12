@@ -427,9 +427,38 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed Login Identifier: %v", err)
 	}
-	login, err := sessionRepo.Create(ctx, userID, now)
+	authID, err := newID()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("generate Authenticator ID: %v", err)
+	}
+	if _, err := client.Authenticator.Create().
+		SetID(authID).
+		SetUserID(userID).
+		SetType(biz.AuthenticatorPassword).
+		SetState(biz.AuthenticatorActive).
+		Save(ctx); err != nil {
+		t.Fatalf("seed Authenticator: %v", err)
+	}
+	passAuthID, err := newID()
+	if err != nil {
+		t.Fatalf("generate Password Authenticator ID: %v", err)
+	}
+	if _, err := client.PasswordAuthenticator.Create().
+		SetID(passAuthID).
+		SetAuthenticatorID(authID).
+		SetPasswordHash("password-hash").
+		SetChangedTime(now).
+		Save(ctx); err != nil {
+		t.Fatalf("seed Password Authenticator: %v", err)
+	}
+	_, login, err := sessionRepo.Create(ctx, biz.PasswordCredential{
+		UserID:                  userID,
+		AuthenticatorID:         authID,
+		PasswordAuthenticatorID: passAuthID,
+		PasswordHash:            "password-hash",
+	}, "test-etag", now)
+	if err != nil || login == nil {
+		t.Fatalf("create IAM login session: login=%#v err=%v", login, err)
 	}
 	manager, cleanupSession, err := data.NewHTTPSessionManager(&sessionconfig.Session{Cookie: &sessionconfig.Cookie{Name: proto.String("__Host-iam_session")}}, database, client)
 	if err != nil {

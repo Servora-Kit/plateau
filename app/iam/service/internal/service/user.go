@@ -11,6 +11,7 @@ import (
 	crudpb "github.com/Servora-Kit/servora/api/gen/go/servora/crud/v1"
 	corecrud "github.com/Servora-Kit/servora/core/crud"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // UserService exposes administrator-only global user management.
@@ -37,7 +38,7 @@ func NewUserService(usecase *biz.UserUsecase) (*UserService, error) {
 }
 
 func (s *UserService) CreateUser(ctx context.Context, request *userpb.CreateUserRequest) (*userpb.User, error) {
-	if request == nil || request.GetUser() == nil {
+	if request.GetUser() == nil {
 		return nil, kerrors.New(400, "INVALID_ARGUMENT", "user is required")
 	}
 	userID := strings.TrimSpace(request.GetUserId())
@@ -56,7 +57,8 @@ func (s *UserService) CreateUser(ctx context.Context, request *userpb.CreateUser
 	if err != nil {
 		return nil, err
 	}
-	resource, err := s.usecase.CreateUser(ctx, name, prepared, request.GetPassword())
+	requirePasswordChange := request.RequirePasswordChange == nil || request.GetRequirePasswordChange()
+	resource, err := s.usecase.CreateUser(ctx, name, prepared, request.GetPassword(), requirePasswordChange)
 	if err != nil {
 		return nil, userError(err)
 	}
@@ -86,7 +88,7 @@ func (s *UserService) ListUsers(ctx context.Context, request *userpb.ListUsersRe
 	if err != nil {
 		return nil, err
 	}
-	result, err := s.usecase.ListUsers(ctx, query)
+	result, err := s.usecase.ListUsers(ctx, query, request.GetShowDeleted())
 	if err != nil {
 		return nil, userError(err)
 	}
@@ -98,7 +100,7 @@ func (s *UserService) ListUsers(ctx context.Context, request *userpb.ListUsersRe
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, request *userpb.UpdateUserRequest) (*userpb.User, error) {
-	if request == nil || request.GetUser() == nil {
+	if request.GetUser() == nil {
 		return nil, kerrors.New(400, "INVALID_ARGUMENT", "user is required")
 	}
 	name, err := s.parseUserName(request.GetUser().GetName())
@@ -117,7 +119,7 @@ func (s *UserService) UpdateUser(ctx context.Context, request *userpb.UpdateUser
 }
 
 func (s *UserService) DisableUser(ctx context.Context, request *userpb.DisableUserRequest) (*userpb.DisableUserResponse, error) {
-	name, err := s.parseUserName(requestName(request))
+	name, err := s.parseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +135,7 @@ func (s *UserService) DisableUser(ctx context.Context, request *userpb.DisableUs
 }
 
 func (s *UserService) EnableUser(ctx context.Context, request *userpb.EnableUserRequest) (*userpb.EnableUserResponse, error) {
-	name, err := s.parseUserName(enableRequestName(request))
+	name, err := s.parseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -148,6 +150,74 @@ func (s *UserService) EnableUser(ctx context.Context, request *userpb.EnableUser
 	return &userpb.EnableUserResponse{User: resource}, nil
 }
 
+func (s *UserService) SendUserVerificationEmail(ctx context.Context, request *userpb.SendUserVerificationEmailRequest) (*userpb.SendUserVerificationEmailResponse, error) {
+	name, err := s.parseUserName(request.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.usecase.SendUserVerificationEmail(ctx, name); err != nil {
+		return nil, userError(err)
+	}
+	return &userpb.SendUserVerificationEmailResponse{}, nil
+}
+
+func (s *UserService) SetUserPassword(ctx context.Context, request *userpb.SetUserPasswordRequest) (*userpb.SetUserPasswordResponse, error) {
+	name, err := s.parseUserName(request.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.usecase.SetUserPassword(ctx, name, request.GetNewPassword()); err != nil {
+		return nil, userError(err)
+	}
+	return &userpb.SetUserPasswordResponse{}, nil
+}
+
+func (s *UserService) RevokeUserSessions(ctx context.Context, request *userpb.RevokeUserSessionsRequest) (*userpb.RevokeUserSessionsResponse, error) {
+	name, err := s.parseUserName(request.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.usecase.RevokeUserSessions(ctx, name); err != nil {
+		return nil, userError(err)
+	}
+	return &userpb.RevokeUserSessionsResponse{}, nil
+}
+
+func (s *UserService) DeleteUser(ctx context.Context, request *userpb.DeleteUserRequest) (*userpb.User, error) {
+	name, err := s.parseUserName(request.GetName())
+	if err != nil {
+		return nil, err
+	}
+	resource, err := s.usecase.DeleteUser(ctx, name)
+	if err != nil {
+		return nil, userError(err)
+	}
+	return s.plan.ToResponse(resource)
+}
+
+func (s *UserService) UndeleteUser(ctx context.Context, request *userpb.UndeleteUserRequest) (*userpb.User, error) {
+	name, err := s.parseUserName(request.GetName())
+	if err != nil {
+		return nil, err
+	}
+	resource, err := s.usecase.UndeleteUser(ctx, name)
+	if err != nil {
+		return nil, userError(err)
+	}
+	return s.plan.ToResponse(resource)
+}
+
+func (s *UserService) ExpungeUser(ctx context.Context, request *userpb.ExpungeUserRequest) (*emptypb.Empty, error) {
+	name, err := s.parseUserName(request.GetName())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.usecase.ExpungeUser(ctx, name); err != nil {
+		return nil, userError(err)
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func (s *UserService) parseUserName(value string) (userpb.UserName, error) {
 	parsed, err := s.plan.ParseName(value)
 	if err != nil {
@@ -160,33 +230,25 @@ func (s *UserService) parseUserName(value string) (userpb.UserName, error) {
 	return userpb.NewUserName(userID), nil
 }
 
-func requestName(request *userpb.DisableUserRequest) string {
-	if request == nil {
-		return ""
-	}
-	return request.GetName()
-}
-
-func enableRequestName(request *userpb.EnableUserRequest) string {
-	if request == nil {
-		return ""
-	}
-	return request.GetName()
-}
-
 func userError(err error) error {
 	switch {
 	case errors.Is(err, biz.ErrNotFound):
 		return userpb.ErrorUserErrorReasonNotFound("user not found").WithCause(err)
 	case errors.Is(err, biz.ErrEmailAlreadyExists):
 		return userpb.ErrorUserErrorReasonAlreadyExists("email is already registered").WithCause(err)
+	case errors.Is(err, biz.ErrAlreadyExists):
+		return userpb.ErrorUserErrorReasonAlreadyExists("user is not deleted").WithCause(err)
 	case errors.Is(err, biz.ErrUserInvalidState):
 		return userpb.ErrorUserErrorReasonInvalidState("user lifecycle state is invalid").WithCause(err)
 	case errors.Is(err, biz.ErrUserEtagMismatch):
 		return userpb.ErrorUserErrorReasonEtagMismatch("user etag does not match").WithCause(err)
+	case errors.Is(err, biz.ErrVerificationEmailFailed):
+		return userpb.ErrorUserErrorReasonVerificationEmailFailed("verification email delivery failed").WithCause(err)
 	case errors.Is(err, biz.ErrInvalidPassword):
 		return kerrors.New(400, "INVALID_ARGUMENT", "password does not meet policy").WithCause(err)
-	default:
-		return kerrors.InternalServer("IAM user operation failed", "user operation failed").WithCause(err)
 	}
+	if _, ok := errors.AsType[*kerrors.Error](err); ok {
+		return err
+	}
+	return kerrors.InternalServer("IAM user operation failed", "user operation failed").WithCause(err)
 }

@@ -4,31 +4,55 @@ tuples:
   - user: service:admin
     relation: manage_users
     object: iam:global
+  - user: service:admin
+    relation: expunge_users
+    object: iam:global
+  - user: service:manage_only
+    relation: manage_users
+    object: iam:global
+  - user: service:expunge_only
+    relation: expunge_users
+    object: iam:global
   - user: user:alice
     relation: admin
     object: admin:global
 tests:
-  - name: explicit service grant
+  - name: explicit service grant and relation independence
     check:
       - user: service:admin
         object: iam:global
         assertions:
           manage_users: true
+          expunge_users: true
+      - user: service:manage_only
+        object: iam:global
+        assertions:
+          manage_users: true
+          expunge_users: false
+      - user: service:expunge_only
+        object: iam:global
+        assertions:
+          manage_users: false
+          expunge_users: true
       - user: service:unregistered
         object: iam:global
         assertions:
           manage_users: false
+          expunge_users: false
       - user: service:admin
         object: iam:other
         assertions:
           manage_users: false
+          expunge_users: false
   - name: human identity cannot substitute a service
     check:
       - user: user:admin
         object: iam:global
         assertions:
           manage_users: false
+          expunge_users: false
       - user: user:alice
         object: iam:global
         assertions:
           manage_users: false
+          expunge_users: false

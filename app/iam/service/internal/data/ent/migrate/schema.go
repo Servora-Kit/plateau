@@ -438,6 +438,9 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
+		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_by", Type: field.TypeString, Nullable: true},
+		{Name: "purge_time", Type: field.TypeTime, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "pending_verification"},
 		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "given_name", Type: field.TypeString, Nullable: true},
@@ -447,6 +450,7 @@ var (
 		{Name: "picture", Type: field.TypeString, Nullable: true},
 		{Name: "locale", Type: field.TypeString, Nullable: true},
 		{Name: "etag", Type: field.TypeString},
+		{Name: "required_actions", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 	}
@@ -457,14 +461,24 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "user_status",
+				Name:    "user_delete_time",
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[1]},
 			},
 			{
+				Name:    "user_purge_time",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[3]},
+			},
+			{
+				Name:    "user_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[4]},
+			},
+			{
 				Name:    "user_create_time",
 				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[10]},
+				Columns: []*schema.Column{UsersColumns[14]},
 			},
 		},
 	}

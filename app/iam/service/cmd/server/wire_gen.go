@@ -213,7 +213,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		return nil, nil, err
 	}
 	mailSender := mail.NewMailSender(mailer)
-	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, runtime)
+	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, app)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -222,7 +222,16 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	userUsecase, err := biz.NewUserUsecase(accountUsecase, userRepo)
+	sessionRepo, err := data.NewSessionRepository(dataData)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userUsecase, err := biz.NewUserUsecase(accountUsecase, userRepo, credentialRepo, sessionRepo)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -241,15 +250,6 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		return nil, nil, err
 	}
 	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, authorizer, userService, logger)
-	sessionRepo, err := data.NewSessionRepository(dataData)
-	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo)
 	if err != nil {
 		cleanup5()
@@ -328,7 +328,16 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, capCap, iamProvider, sessionManager, v, authorizer, authnService, sessionService, accountService, logger)
+	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, capCap, iamProvider, sessionManager, v, authorizer, authnService, sessionService, accountService, logger)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	initialUserCreator, err := data.NewInitialUserCreator(dataData)
 	if err != nil {
 		cleanup6()

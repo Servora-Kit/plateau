@@ -7,6 +7,9 @@ tuples:
   - user: service:admin
     relation: manage_users
     object: iam:global
+  - user: service:admin
+    relation: expunge_users
+    object: iam:global
 tests:
   - name: administrator relation implies management
     check:
@@ -29,6 +32,7 @@ tests:
       - user: service:admin
         object: admin:global
         assertions:
+          admin: false
           manage_users: false
       - user: service:alice
         object: admin:global

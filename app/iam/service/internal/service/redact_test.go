@@ -6,6 +6,7 @@ import (
 
 	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 )
 
 func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {
@@ -27,6 +28,22 @@ func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {
 		{name: "password reset token", redact: func() string {
 			return (&accountpb.ConfirmPasswordResetRequest{Token: "reset-secret", NewPassword: "reset-password"}).Redact()
 		}, secrets: []string{"reset-secret", "reset-password"}},
+		{name: "initial password change", redact: func() string {
+			return (&accountpb.ChangeInitialPasswordRequest{
+				Email:           "person@example.com",
+				CurrentPassword: "initial-password-secret",
+				NewPassword:     "new-password-secret",
+			}).Redact()
+		}, secrets: []string{"initial-password-secret", "new-password-secret"}},
+		{name: "account self-delete password", redact: func() string {
+			return (&accountpb.DeleteAccountRequest{CurrentPassword: "delete-password-secret"}).Redact()
+		}, secrets: []string{"delete-password-secret"}},
+		{name: "admin create user password", redact: func() string {
+			return (&userpb.CreateUserRequest{Password: "admin-create-secret"}).Redact()
+		}, secrets: []string{"admin-create-secret"}},
+		{name: "admin set user password", redact: func() string {
+			return (&userpb.SetUserPasswordRequest{Name: "users/user-1", NewPassword: "admin-set-secret"}).Redact()
+		}, secrets: []string{"admin-set-secret"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

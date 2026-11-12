@@ -70,3 +70,15 @@ func IsUserErrorReasonEtagMismatch(err error) bool {
 func ErrorUserErrorReasonEtagMismatch(format string, args ...any) *errors.Error {
 	return errors.New(409, UserErrorReason_USER_ERROR_REASON_ETAG_MISMATCH.String(), fmt.Sprintf(format, args...))
 }
+
+func IsUserErrorReasonVerificationEmailFailed(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == UserErrorReason_USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED.String() && e.Code == 503
+}
+
+func ErrorUserErrorReasonVerificationEmailFailed(format string, args ...any) *errors.Error {
+	return errors.New(503, UserErrorReason_USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED.String(), fmt.Sprintf(format, args...))
+}

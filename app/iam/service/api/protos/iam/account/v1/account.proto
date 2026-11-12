@@ -93,6 +93,26 @@ service AccountService {
     option (google.api.method_signature) = "token,new_password";
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
   }
+
+  // ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
+  rpc ChangeInitialPassword(ChangeInitialPasswordRequest) returns (ChangeInitialPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/change-initial-password"
+      body: "*"
+    };
+    option (google.api.method_signature) = "email,current_password,new_password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+  }
+
+  // DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/delete"
+      body: "*"
+    };
+    option (google.api.method_signature) = "current_password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+  }
 }
 
 // AccountErrorReason contains account lifecycle and recovery failures.
@@ -106,6 +126,7 @@ enum AccountErrorReason {
   ACCOUNT_ERROR_REASON_EMAIL_ALREADY_REGISTERED = 4 [(servora.errors.v1.code) = 409];
   ACCOUNT_ERROR_REASON_USER_DISABLED = 5 [(servora.errors.v1.code) = 403];
   ACCOUNT_ERROR_REASON_UNAUTHENTICATED = 6 [(servora.errors.v1.code) = 401];
+  ACCOUNT_ERROR_REASON_INVALID_STATE = 7 [(servora.errors.v1.code) = 409];
 }
 
 message RegisterRequest {
@@ -209,3 +230,32 @@ message ChangePasswordResponse {}
 message RequestPasswordResetResponse {}
 
 message ConfirmPasswordResetResponse {}
+
+message ChangeInitialPasswordRequest {
+  // Service canonicalizes email before locating the Login Identifier.
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  // Current initial password is verified independently and never logged or returned.
+  string current_password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
+  string new_password = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
+}
+
+message ChangeInitialPasswordResponse {}
+
+message DeleteAccountRequest {
+  // Current password is verified before soft-deleting the authenticated user's account.
+  string current_password = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (servora.redact.v3.value).string = ""
+  ];
+}
+
+message DeleteAccountResponse {}

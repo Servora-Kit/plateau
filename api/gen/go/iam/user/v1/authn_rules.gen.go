@@ -12,16 +12,34 @@ var _authnRules = map[string]*v1.AuthnRule{
 	"/iam.user.v1.UserService/CreateUser": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
+	"/iam.user.v1.UserService/DeleteUser": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
 	"/iam.user.v1.UserService/DisableUser": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
 	"/iam.user.v1.UserService/EnableUser": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
+	"/iam.user.v1.UserService/ExpungeUser": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
 	"/iam.user.v1.UserService/GetUser": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
 	"/iam.user.v1.UserService/ListUsers": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
+	"/iam.user.v1.UserService/RevokeUserSessions": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
+	"/iam.user.v1.UserService/SendUserVerificationEmail": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
+	"/iam.user.v1.UserService/SetUserPassword": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
+	"/iam.user.v1.UserService/UndeleteUser": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
 	"/iam.user.v1.UserService/UpdateUser": {

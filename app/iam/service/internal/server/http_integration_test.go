@@ -11,7 +11,6 @@ import (
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
-	"github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 )
 
@@ -91,9 +90,14 @@ func TestHTTPSessionLifecycle(t *testing.T) {
 
 type failingStore struct {
 	scs.Store
+	reads          int
 	commit, remove bool
 }
 
+func (s *failingStore) Find(token string) ([]byte, bool, error) {
+	s.reads++
+	return s.Store.Find(token)
+}
 func (s *failingStore) Commit(token string, data []byte, expiry time.Time) error {
 	if s.commit {
 		return errors.New("injected session save failure")
@@ -185,27 +189,88 @@ func TestHTTPResetAndDisableInvalidateAllLogins(t *testing.T) {
 	}
 }
 
-func TestHTTPBrowserFilterScope(t *testing.T) {
+func TestHTTPBrowserFilterScopeAndWriteGuards(t *testing.T) {
 	f := newServerFixture(t)
 	cookie := f.login(t, testPassword, nil)
-	for _, path := range []string{"/v1/iam/account/profile", "/authorize", "/authorize/callback", "/end_session", "/oauth/token", "/userinfo", "/oauth/introspect", "/oauth/revoke", "/.well-known/openid-configuration", "/keys", "/cap/challenge", "/healthz"} {
-		want := strings.HasPrefix(path, "/v1/iam/") || path == "/authorize" || path == "/authorize/callback" || path == "/end_session"
-		h := browserSessionFilter(f.manager)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if session.Loaded(r.Context(), f.manager) != want {
-				t.Errorf("wrong session filter scope: %s", path)
-			}
-			w.WriteHeader(204)
-		}))
-		r := httptest.NewRequest("GET", f.web.URL+path, nil)
+	store := &failingStore{Store: f.manager.Store}
+	f.manager.Store = store
+
+	// 1. Real f.http rejects non-JSON and cross-origin writes on /v1/iam/* BEFORE touching session store or DB.
+	for _, targetPath := range []string{
+		"/v1/iam/authn/login",
+		"/v1/iam/account/change-initial-password",
+		"/v1/iam/account/delete",
+		"/v1/iam/sessions/current:logout",
+	} {
+		store.reads = 0
+		r := httptest.NewRequest(http.MethodPost, f.web.URL+targetPath, strings.NewReader("currentPassword="+testPassword))
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		r.AddCookie(cookie)
 		w := httptest.NewRecorder()
-		h.ServeHTTP(w, r)
-		if !want && len(w.Result().Cookies()) != 0 {
-			t.Errorf("protocol endpoint renewed browser cookie: %s", path)
+		f.http.ServeHTTP(w, r)
+		if w.Code != http.StatusUnsupportedMediaType || store.reads != 0 || len(w.Result().Cookies()) != 0 {
+			t.Fatalf("%s form POST: status=%d reads=%d cookies=%v", targetPath, w.Code, store.reads, w.Result().Cookies())
+		}
+
+		r = httptest.NewRequest(http.MethodPost, f.web.URL+targetPath, strings.NewReader(`{"currentPassword":"`+testPassword+`","email":"alice@example.com","password":"`+testPassword+`"}`))
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Origin", "https://evil.example")
+		r.AddCookie(cookie)
+		w = httptest.NewRecorder()
+		f.http.ServeHTTP(w, r)
+		if w.Code != http.StatusForbidden || store.reads != 0 || len(w.Result().Cookies()) != 0 {
+			t.Fatalf("%s cross-origin POST: status=%d reads=%d cookies=%v", targetPath, w.Code, store.reads, w.Result().Cookies())
+		}
+	}
+	if w := f.request("GET", "/v1/iam/account/profile", "", cookie); w.Code != http.StatusOK {
+		t.Fatalf("rejected cross-origin writes mutated active session or account: %d %s", w.Code, w.Body)
+	}
+
+	// 2. /authorize/callback rejects cross-origin POST before session load, and rejects same-origin POST with 405.
+	store.reads = 0
+	r := httptest.NewRequest(http.MethodPost, f.web.URL+"/authorize/callback?id=req-1", strings.NewReader("id=req-1"))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Set("Origin", "https://evil.example")
+	r.AddCookie(cookie)
+	w := httptest.NewRecorder()
+	f.http.ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden || store.reads != 0 {
+		t.Fatalf("cross-origin callback POST: status=%d reads=%d", w.Code, store.reads)
+	}
+
+	r = httptest.NewRequest(http.MethodPost, f.web.URL+"/authorize/callback?id=req-1", strings.NewReader("id=req-1"))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Set("Origin", f.web.URL)
+	r.AddCookie(cookie)
+	w = httptest.NewRecorder()
+	f.http.ServeHTTP(w, r)
+	if w.Code != http.StatusMethodNotAllowed || w.Header().Get("Allow") != http.MethodGet || store.reads != 1 {
+		t.Fatalf("same-origin callback POST: status=%d allow=%q reads=%d", w.Code, w.Header().Get("Allow"), store.reads)
+	}
+
+	// 3. Session routes load session on real f.http; non-session protocol/challenge routes never touch SCS store.
+	for _, path := range []string{"/v1/iam/account/profile", "/authorize", "/authorize/callback", "/end_session"} {
+		store.reads = 0
+		req := httptest.NewRequest(http.MethodGet, f.web.URL+path, nil)
+		req.AddCookie(cookie)
+		rec := httptest.NewRecorder()
+		f.http.ServeHTTP(rec, req)
+		if store.reads != 1 {
+			t.Fatalf("session route %s did not load session store: reads=%d status=%d", path, store.reads, rec.Code)
+		}
+	}
+	for _, path := range []string{"/oauth/token", "/userinfo", "/oauth/introspect", "/revoke", "/.well-known/openid-configuration", "/keys", "/cap/challenge"} {
+		store.reads = 0
+		req := httptest.NewRequest(http.MethodGet, f.web.URL+path, nil)
+		req.AddCookie(cookie)
+		rec := httptest.NewRecorder()
+		f.http.ServeHTTP(rec, req)
+		if store.reads != 0 || len(rec.Result().Cookies()) != 0 {
+			t.Fatalf("non-session route %s touched browser session: reads=%d cookies=%v", path, store.reads, rec.Result().Cookies())
 		}
 	}
 	for _, path := range []string{"/v1/iam/users", "/v1/iam/users/" + f.user.GetUserId()} {
-		if w := f.request("GET", path, "", cookie); w.Code != 404 {
+		if w := f.request("GET", path, "", cookie); w.Code != http.StatusNotFound {
 			t.Fatalf("UserService HTTP still exposed: %s %d", path, w.Code)
 		}
 	}

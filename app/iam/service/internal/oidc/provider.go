@@ -194,6 +194,11 @@ func (provider *IAMProvider) serveDiscovery(response http.ResponseWriter) {
 }
 
 func (provider *IAMProvider) completeAuthorization(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		response.Header().Set("Allow", http.MethodGet)
+		http.Error(response, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
 	if !httpsession.Loaded(request.Context(), provider.manager) {
 		http.Error(response, "browser session is unavailable", http.StatusInternalServerError)
 		return

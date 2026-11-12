@@ -7,3 +7,4 @@ type service
 type iam
   relations
     define manage_users: [service]
+    define expunge_users: [service]
