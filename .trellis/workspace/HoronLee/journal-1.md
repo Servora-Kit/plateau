@@ -217,3 +217,27 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 7: 完成 11-13-servora-crud-optimize 跨仓 CRUD 优化与结项归档
+<!-- trellis-session: v=2 fp=5d614e2c7f8f4e5b -->
+
+**Date**: 2026-11-13
+**Task**: 完成 11-13-servora-crud-optimize 跨仓 CRUD 优化与结项归档
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+在 servora 实现 ResourceMapper 嵌套点路径映射与单行强类型 WithFlatten 同名拍平，并让 protoc-gen-servora-crud 生成结构化 INVALID_RESOURCE_NAME 错误；清理 plateau 三个服务的重复样板与 TODO 清单并通过全量测试后归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c962aa50` | refactor(crud): 接入 WithFlatten 与结构化资源名解析并清理三服务样板 |
+| `d15a5cb3` | docs: 同步 Servora CRUD 规范、任务记录与 TODO 清单 |
+
+### Status
+
+[OK] **Completed**
