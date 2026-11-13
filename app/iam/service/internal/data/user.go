@@ -187,16 +187,9 @@ func newUserResourceMapper() (*crudmapper.ResourceMapper[*userpb.User, entmodel.
 			},
 		),
 		crudmapper.WithFieldMapping("ID", userpb.UserFields.UserId),
+		crudmapper.WithFlatten(userpb.UserFields.Profile),
 		crudmapper.WithResourceName(func(value *entmodel.User) (string, error) {
 			return userpb.NewUserName(value.ID).Format()
-		}),
-		crudmapper.WithPostToDTOHook(func(value *entmodel.User, resource *userpb.User) error {
-			resource.Profile = &userpb.UserProfile{
-				Name: value.Name, GivenName: value.GivenName, FamilyName: value.FamilyName,
-				Nickname: value.Nickname, PreferredUsername: value.PreferredUsername,
-				Picture: value.Picture, Locale: value.Locale,
-			}
-			return nil
 		}),
 	)
 	if err != nil {

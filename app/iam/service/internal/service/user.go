@@ -8,7 +8,6 @@ import (
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
-	crudpb "github.com/Servora-Kit/servora/api/gen/go/servora/crud/v1"
 	corecrud "github.com/Servora-Kit/servora/core/crud"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -51,7 +50,7 @@ func (s *UserService) CreateUser(ctx context.Context, request *userpb.CreateUser
 	}
 	name := userpb.NewUserName(userID)
 	if err := name.Validate(); err != nil {
-		return nil, crudpb.ErrorCrudErrorReasonInvalidResourceName("user_id: %v", err)
+		return nil, err
 	}
 	prepared, err := s.plan.PrepareCreate(request.GetUser())
 	if err != nil {
@@ -66,7 +65,7 @@ func (s *UserService) CreateUser(ctx context.Context, request *userpb.CreateUser
 }
 
 func (s *UserService) GetUser(ctx context.Context, request *userpb.GetUserRequest) (*userpb.User, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +106,7 @@ func (s *UserService) UpdateUser(ctx context.Context, request *userpb.UpdateUser
 	if request.GetUser() == nil {
 		return nil, kerrors.New(400, "INVALID_ARGUMENT", "user is required")
 	}
-	name, err := s.parseUserName(request.GetUser().GetName())
+	name, err := userpb.ParseUserName(request.GetUser().GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +122,7 @@ func (s *UserService) UpdateUser(ctx context.Context, request *userpb.UpdateUser
 }
 
 func (s *UserService) DisableUser(ctx context.Context, request *userpb.DisableUserRequest) (*userpb.DisableUserResponse, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +138,7 @@ func (s *UserService) DisableUser(ctx context.Context, request *userpb.DisableUs
 }
 
 func (s *UserService) EnableUser(ctx context.Context, request *userpb.EnableUserRequest) (*userpb.EnableUserResponse, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +154,7 @@ func (s *UserService) EnableUser(ctx context.Context, request *userpb.EnableUser
 }
 
 func (s *UserService) SendUserVerificationEmail(ctx context.Context, request *userpb.SendUserVerificationEmailRequest) (*userpb.SendUserVerificationEmailResponse, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +165,7 @@ func (s *UserService) SendUserVerificationEmail(ctx context.Context, request *us
 }
 
 func (s *UserService) SetUserPassword(ctx context.Context, request *userpb.SetUserPasswordRequest) (*userpb.SetUserPasswordResponse, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +176,7 @@ func (s *UserService) SetUserPassword(ctx context.Context, request *userpb.SetUs
 }
 
 func (s *UserService) RevokeUserSessions(ctx context.Context, request *userpb.RevokeUserSessionsRequest) (*userpb.RevokeUserSessionsResponse, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +187,7 @@ func (s *UserService) RevokeUserSessions(ctx context.Context, request *userpb.Re
 }
 
 func (s *UserService) DeleteUser(ctx context.Context, request *userpb.DeleteUserRequest) (*userpb.User, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +199,7 @@ func (s *UserService) DeleteUser(ctx context.Context, request *userpb.DeleteUser
 }
 
 func (s *UserService) UndeleteUser(ctx context.Context, request *userpb.UndeleteUserRequest) (*userpb.User, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +211,7 @@ func (s *UserService) UndeleteUser(ctx context.Context, request *userpb.Undelete
 }
 
 func (s *UserService) ExpungeUser(ctx context.Context, request *userpb.ExpungeUserRequest) (*emptypb.Empty, error) {
-	name, err := s.parseUserName(request.GetName())
+	name, err := userpb.ParseUserName(request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -220,18 +219,6 @@ func (s *UserService) ExpungeUser(ctx context.Context, request *userpb.ExpungeUs
 		return nil, userError(err)
 	}
 	return &emptypb.Empty{}, nil
-}
-
-func (s *UserService) parseUserName(value string) (userpb.UserName, error) {
-	parsed, err := s.plan.ParseName(value)
-	if err != nil {
-		return userpb.UserName{}, err
-	}
-	userID, ok := parsed.Variable("user")
-	if !ok {
-		return userpb.UserName{}, crudpb.ErrorCrudErrorReasonInvalidResourceName("name: user variable is missing")
-	}
-	return userpb.NewUserName(userID), nil
 }
 
 func userError(err error) error {

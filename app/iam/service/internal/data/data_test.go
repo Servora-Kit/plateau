@@ -191,6 +191,9 @@ func TestUserAndCredentialRepositoriesCreateAndFind(t *testing.T) {
 	if found.GetUserId() != created.GetUserId() || found.GetEmail() != "Person@Example.com" {
 		t.Fatalf("FindByEmail() = %#v, want display email and stable ID", found)
 	}
+	if found.Profile != nil {
+		t.Fatalf("FindByEmail().Profile = %#v, want nil when all profile columns are null", found.Profile)
+	}
 	credential, err := credentials.FindActivePassword(t.Context(), created.GetUserId())
 	if err != nil {
 		t.Fatalf("FindActivePassword() error = %v", err)
@@ -238,6 +241,20 @@ func TestUserRepositoryUpdateClearsOnlySelectedProfileFields(t *testing.T) {
 	}
 	if updated.GetProfile().Nickname != nil {
 		t.Fatalf("profile.nickname = %q, want absent", updated.GetProfile().GetNickname())
+	}
+
+	clearedAll, err := users.UpdateUser(
+		t.Context(),
+		userpb.NewUserName(created.GetUserId()),
+		&userpb.User{},
+		&fieldmaskpb.FieldMask{Paths: []string{userpb.UserFields.ProfileName.String()}},
+		updated.GetEtag(),
+	)
+	if err != nil {
+		t.Fatalf("UpdateUser(clear all profile fields) error = %v", err)
+	}
+	if clearedAll.Profile != nil {
+		t.Fatalf("clearedAll.Profile = %#v, want nil when all profile fields are cleared", clearedAll.Profile)
 	}
 }
 

@@ -4,6 +4,7 @@ package userpb
 
 import (
 	fmt "fmt"
+	v1 "github.com/Servora-Kit/servora/api/gen/go/servora/crud/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	strings "strings"
 )
@@ -113,13 +114,13 @@ func ParseUserName(value string) (UserName, error) {
 			}
 		}
 	}
-	return UserName{}, fmt.Errorf("invalid User resource name %q", value)
+	return UserName{}, v1.ErrorCrudErrorReasonInvalidResourceName("invalid User resource name %q", value)
 }
 
 // Validate checks the selected pattern and all variable segments.
 func (name UserName) Validate() error {
 	if name.User == "" || strings.Contains(name.User, "/") {
-		return fmt.Errorf("User resource name variable user must be non-empty and contain no slash")
+		return v1.ErrorCrudErrorReasonInvalidResourceName("User resource name variable user must be non-empty and contain no slash")
 	}
 	return nil
 }

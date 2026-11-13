@@ -100,7 +100,7 @@ func (service *UserService) CreateUser(
 	}
 	name := examplev1.NewUserName(scope.TenantID(), request.GetUserId())
 	if err := name.Validate(); err != nil {
-		return nil, crudpb.ErrorCrudErrorReasonInvalidResourceName("user_id: %v", err)
+		return nil, err
 	}
 	prepared, err := service.plan.PrepareCreate(request.GetUser())
 	if err != nil {
@@ -198,7 +198,7 @@ func (service *UserService) userScope(parent string) (biz.UserScope, error) {
 func (service *UserService) parseUserName(value string) (examplev1.UserName, error) {
 	name, err := examplev1.ParseUserName(value)
 	if err != nil {
-		return examplev1.UserName{}, crudpb.ErrorCrudErrorReasonInvalidResourceName("name: %v", err)
+		return examplev1.UserName{}, err
 	}
 	if name.User == "-" {
 		return examplev1.UserName{}, crudpb.ErrorCrudErrorReasonInvalidResourceName("name must identify one User")
