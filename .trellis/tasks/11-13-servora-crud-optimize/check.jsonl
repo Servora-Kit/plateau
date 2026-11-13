@@ -1,0 +1,6 @@
+{"file":".trellis/tasks/11-13-servora-crud-optimize/prd.md","reason":"逐条核对 AC-1 至 AC-3"}
+{"file":".trellis/tasks/11-13-servora-crud-optimize/design.md","reason":"核对嵌套子消息 nil 语义、深拷贝隔离与错误原因"}
+{"file":".trellis/tasks/11-13-servora-crud-optimize/implement.md","reason":"核对本机插件重装、两仓重生成与样板清理完整性"}
+{"file":".trellis/spec/servora/framework/crud.md","reason":"ResourceMapper 不可变构造与无别名拷贝契约"}
+{"file":".trellis/spec/servora/cmd/plugins.md","reason":"生成代码纯净度与错误定位要求"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"服务侧 CRUD 调用一致性核查"}

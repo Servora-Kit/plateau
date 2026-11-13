@@ -8,15 +8,6 @@
   - 业务日志使用 `InfoContext`、`ErrorContext` 等传递请求 context；仅传 context 不会让当前 stdout/file handler 自动添加字段。
   - 验证同一请求跨服务日志的 Trace ID 一致、Span ID 对应当前操作，以及无 span、并发请求、`With`/`WithGroup` 场景；与已有 OTel 日志后端的关联能力区分。
 
-## Servora CRUD 生态
-
-- [ ] 在 Servora `core/crud/mapper` 支持嵌套 Message 的点路径字段映射（如 `Profile.Name`）。
-  - 当前 `crudmapper.WithFieldMapping` 拒绝含 `.` 的 `FieldPath`（`core/crud/mapper/mapper.go`），导致 `plateau` 的 `app/iam`、`app/example` 等服务需重复手写 `WithPostToDTOHook` 与嵌套字段局部更新逻辑。
-  - 支持声明式嵌套路径双向映射，明确子 Message 字段全为空时的置空与初始化语义，并与 `contrib/db/entgo/crud.ClearHelper` 的嵌套掩码清理对齐；升级后移除 `plateau` 各服务的手写转换样板。
-- [ ] 让 `protoc-gen-servora-crud` 生成的 `Parse<Resource>Name` 直接返回结构化 `CRUD_ERROR_REASON_INVALID_RESOURCE_NAME`（400）错误。
-  - 当前生成函数（`cmd/protoc-gen-servora-crud/generate_go.go`）在格式不合法时仅返回裸 `fmt.Errorf`，迫使各服务 `service` 层额外编写私有 `parse<Resource>Name` 调用 `plan.ParseName` 包装错误。比如：./app/admin/service/internal/service/user.go中的func (s *UserService) parseUserName(raw string) (string, string, error)，所以修复之后要顺便删除所有类似方法并且简化原调用方行为
-  - 统一由生成的 `Parse<Resource>Name` 返回（或委托 `Plan()` 产出）带 `CRUD_ERROR_REASON_INVALID_RESOURCE_NAME` 原因的结构化错误；发版并重新生成后清理 `plateau` 各服务的重复包装函数。
-
 ## 平台安全认证（`security/authn`）
 
 - [ ] 讨论并提炼 `security/authn/jwt` 与 `security/authn/session` 的平台公共身份解析组件（IAM 专属查表会话认证仍留在 `app/iam/service/internal/authn`）：

@@ -10,7 +10,7 @@
 
 `ListQuery` 保存 collection、page size/token、skip、filter、order 和 include-total。`PrepareList` 校验页大小/skip、token 解码及 filter/order 的语法与资源限制，不决定查询 scope 或最终排序。adapter 在数据库访问前以 resource type、collection、filter、`FinalOrder` 和 opaque scope fingerprint 构造 context fingerprint；`ValidatePageTokenPayload` 校验 token version、query fingerprint、cursor 数量和类型，禁止跨查询、排序或 scope 复用。
 
-`core/crud/mapper` 是 ORM 无关的 PO→资源 PB 单向读投影。`NewResourceMapper` 验证并冻结同名/显式字段映射、converter、canonical name formatter 和 post hook；`TryToDTO` 返回错误，`ToDTO`/`ToDTOs` 遇映射错误 panic。写入 setter、mutation、clear 与业务校验由 repository 负责。
+`core/crud/mapper` 是 ORM 无关的 PO→资源 PB 单向读投影。`NewResourceMapper` 验证并冻结同名字段、单层/多层子消息同名拍平 `WithFlatten`、顶层与单值嵌套子消息路径的 `WithFieldMapping`（拒绝列表、字典、WKT 遍历、歧义同名及父子路径重叠；子消息下映射源全为空时保持指针为 `nil`，至少一项存在时按需初始化）、converter、canonical name formatter 和 post hook；`TryToDTO` 返回错误，`ToDTO`/`ToDTOs` 遇映射错误 panic。写入 setter、mutation、clear 与业务校验由 repository 负责。
 
 Ent adapter 将已解析 `ListQuery` 绑定到调用方建立的 Ent builder；`ListFields` 只开放 repository 显式声明的字段，禁止扫描 schema 自动暴露字段。adapter 不开启、提交或传播事务，不计算授权或 scope。`ClearHelper.Apply` 在 Ent `Save` 前消费规范化 mutable leaf mask：仅 singular、`HasPresence()==true` 且 `Has(field)==false` 时执行同名 `ClearField` 或 override，无 presence 字段报错。nested clear 必须显式配置；present 值和 list/map empty replacement 留给 repository setter。
 

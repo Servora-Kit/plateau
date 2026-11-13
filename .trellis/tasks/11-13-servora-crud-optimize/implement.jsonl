@@ -1,0 +1,7 @@
+{"file":".trellis/tasks/11-13-servora-crud-optimize/prd.md","reason":"任务需求与 AC-1~AC-3 验收标准"}
+{"file":".trellis/tasks/11-13-servora-crud-optimize/design.md","reason":"嵌套映射按需初始化与 ParseName 结构化错误设计"}
+{"file":".trellis/tasks/11-13-servora-crud-optimize/implement.md","reason":"两仓实施顺序与验证命令"}
+{"file":".trellis/spec/servora/framework/crud.md","reason":"Servora CRUD 与 ResourceMapper 内部契约"}
+{"file":".trellis/spec/servora/cmd/plugins.md","reason":"protoc-gen-servora-crud 插件边界与无 core/crud 依赖约束"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"Plateau 服务侧消费 CRUD 生成物与 Mapper 规范"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"Servora 与 Plateau 跨仓协同迭代规则"}
