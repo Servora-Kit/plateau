@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
@@ -55,38 +56,38 @@ func TestUserErrorMatrixMapping(t *testing.T) {
 			wantReason: "INVALID_ARGUMENT",
 		},
 		{
-			name:       "not found maps to 404 USER_NOT_FOUND",
-			err:        biz.ErrUserNotFound,
+			name:       "downstream IAM not found maps to 404 USER_NOT_FOUND",
+			err:        userpb.ErrorUserErrorReasonNotFound("not found"),
 			wantCode:   404,
 			wantReason: adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_USER_NOT_FOUND.String(),
 		},
 		{
-			name:       "already exists maps to 409 USER_ALREADY_EXISTS",
-			err:        biz.ErrUserAlreadyExists,
+			name:       "downstream IAM already exists maps to 409 USER_ALREADY_EXISTS",
+			err:        userpb.ErrorUserErrorReasonAlreadyExists("exists"),
 			wantCode:   409,
 			wantReason: adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_USER_ALREADY_EXISTS.String(),
 		},
 		{
-			name:       "invalid state maps to 409 INVALID_STATE",
-			err:        biz.ErrUserInvalidState,
+			name:       "downstream IAM invalid state maps to 409 INVALID_STATE",
+			err:        userpb.ErrorUserErrorReasonInvalidState("bad state"),
 			wantCode:   409,
 			wantReason: adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_INVALID_STATE.String(),
 		},
 		{
-			name:       "etag mismatch maps to 409 ETAG_MISMATCH",
-			err:        biz.ErrUserEtagMismatch,
+			name:       "downstream IAM etag mismatch maps to 409 ETAG_MISMATCH",
+			err:        userpb.ErrorUserErrorReasonEtagMismatch("stale etag"),
 			wantCode:   409,
 			wantReason: adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_ETAG_MISMATCH.String(),
 		},
 		{
-			name:       "verification email failed maps to 503 VERIFICATION_EMAIL_FAILED",
-			err:        biz.ErrVerificationEmailFailed,
+			name:       "downstream IAM verification email failed maps to 503 VERIFICATION_EMAIL_FAILED",
+			err:        userpb.ErrorUserErrorReasonVerificationEmailFailed("smtp error"),
 			wantCode:   503,
 			wantReason: adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED.String(),
 		},
 		{
-			name:       "downstream unavailable maps to 503 DOWNSTREAM_UNAVAILABLE",
-			err:        biz.ErrDownstreamUnavailable,
+			name:       "downstream 401/403 service credential failure isolates to 503 DOWNSTREAM_UNAVAILABLE",
+			err:        securityerrorspb.ErrorSecurityErrorReasonPermissionDenied("service:admin denied"),
 			wantCode:   503,
 			wantReason: adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_DOWNSTREAM_UNAVAILABLE.String(),
 		},
@@ -100,7 +101,7 @@ func TestUserErrorMatrixMapping(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mapped := userError(tc.err)
+			mapped := userError(context.Background(), tc.err)
 			se := kerrors.FromError(mapped)
 			if se == nil {
 				t.Fatalf("userError(%v) returned non-Kratos error: %v", tc.err, mapped)

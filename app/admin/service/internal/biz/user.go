@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -100,7 +99,7 @@ func (uc *UserUsecase) CreateUser(ctx context.Context, req *adminuserpb.CreateUs
 		Name: created.GetName(),
 	}); err != nil {
 		reason := adminuserpb.AdminUserErrorReason_ADMIN_USER_ERROR_REASON_DOWNSTREAM_UNAVAILABLE.String()
-		if errors.Is(err, ErrVerificationEmailFailed) || userpb.IsUserErrorReasonVerificationEmailFailed(err) {
+		if userpb.IsUserErrorReasonVerificationEmailFailed(err) {
 			reason = userpb.UserErrorReason_USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED.String()
 		}
 		uc.log.WarnContext(ctx, "verification email delivery failed after user creation", "user_name", created.GetName(), "reason", reason)
@@ -204,10 +203,7 @@ func (uc *UserUsecase) ensureTargetNotProtected(ctx context.Context, targetUserI
 		AdminResourceID,
 	)
 	if err != nil {
-		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-			return err
-		}
-		return errors.Join(ErrDownstreamUnavailable, err)
+		return err
 	}
 	if isAdmin {
 		return ErrTargetIsAdmin

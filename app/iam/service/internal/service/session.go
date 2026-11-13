@@ -45,7 +45,7 @@ func (s *SessionService) Logout(ctx context.Context, _ *sessionpb.LogoutRequest)
 
 func sessionError(err error) error {
 	if errors.Is(err, biz.ErrSessionRevoked) || errors.Is(err, biz.ErrUnauthenticated) {
-		return sessionpb.ErrorSessionErrorReasonRevoked("session is not active")
+		return sessionpb.ErrorSessionErrorReasonRevoked("session is not active").WithCause(err)
 	}
 	return kerrors.InternalServer("IAM session operation failed", "session operation failed").WithCause(err)
 }

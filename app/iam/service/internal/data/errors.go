@@ -12,7 +12,7 @@ func translateEntError(err error) error {
 		return nil
 	}
 	if entmodel.IsNotFound(err) {
-		return biz.ErrNotFound
+		return errors.Join(biz.ErrNotFound, err)
 	}
 	if entmodel.IsConstraintError(err) {
 		return errors.Join(biz.ErrAlreadyExists, err)

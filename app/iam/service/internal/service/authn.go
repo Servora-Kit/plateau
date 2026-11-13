@@ -58,7 +58,7 @@ func (s *AuthnService) Login(ctx context.Context, request *authnpb.LoginRequest)
 
 func authnError(err error) error {
 	if errors.Is(err, biz.ErrInvalidCredentials) {
-		return authnpb.ErrorAuthnErrorReasonInvalidCredentials("credentials rejected")
+		return authnpb.ErrorAuthnErrorReasonInvalidCredentials("credentials rejected").WithCause(err)
 	}
 	return kerrors.InternalServer("IAM authentication failed", "authentication failed").WithCause(err)
 }

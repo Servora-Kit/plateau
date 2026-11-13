@@ -190,15 +190,15 @@ func TestUserUsecaseProtectionCreateAndUpdateRules(t *testing.T) {
 		t.Fatalf("fellow admin expunge err = %v, want ErrTargetIsAdmin", err)
 	}
 
-	// OpenFGA outage during protection check fails closed with ErrDownstreamUnavailable.
+	// OpenFGA outage during protection check fails closed by propagating the error.
 	failFGA = true
-	if _, err := uc.DeleteUser(ctx, userpb.NewUserName("normal-user")); !errors.Is(err, ErrDownstreamUnavailable) {
-		t.Fatalf("OpenFGA failure err = %v, want ErrDownstreamUnavailable", err)
+	if _, err := uc.DeleteUser(ctx, userpb.NewUserName("normal-user")); err == nil {
+		t.Fatal("expected OpenFGA failure to fail closed")
 	}
 	failFGA = false
 
 	// CreateUser preserves tri-state require_password_change and degrades gracefully on email failure.
-	emailErr = ErrVerificationEmailFailed
+	emailErr = userpb.ErrorUserErrorReasonVerificationEmailFailed("smtp down")
 	created, sent, err := uc.CreateUser(ctx, &adminuserpb.CreateUserRequest{
 		User:                  &userpb.User{Email: proto.String("u@example.com")},
 		Password:              "StrongPass!123",

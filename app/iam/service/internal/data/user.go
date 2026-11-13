@@ -304,11 +304,7 @@ func (repo *userRepository) FindByEmailIncludingDeleted(ctx context.Context, can
 	if err != nil {
 		return nil, translateEntError(err)
 	}
-	resources, err := repo.toResourcesWithClient(skipCtx, repo.ent, []*entmodel.User{entity})
-	if err != nil {
-		return nil, err
-	}
-	return resources[0], nil
+	return repo.projectUser(skipCtx, repo.ent, entity)
 }
 
 func (repo *userRepository) Get(ctx context.Context, id string) (*userpb.User, error) {
@@ -316,11 +312,7 @@ func (repo *userRepository) Get(ctx context.Context, id string) (*userpb.User, e
 	if err != nil {
 		return nil, translateEntError(err)
 	}
-	resources, err := repo.toResources(ctx, []*entmodel.User{entity})
-	if err != nil {
-		return nil, err
-	}
-	return resources[0], nil
+	return repo.projectUser(ctx, repo.ent, entity)
 }
 
 func (repo *userRepository) GetUser(ctx context.Context, name userpb.UserName) (*userpb.User, error) {
@@ -329,11 +321,7 @@ func (repo *userRepository) GetUser(ctx context.Context, name userpb.UserName) (
 	if err != nil {
 		return nil, translateEntError(err)
 	}
-	resources, err := repo.toResourcesWithClient(skipCtx, repo.ent, []*entmodel.User{entity})
-	if err != nil {
-		return nil, err
-	}
-	return resources[0], nil
+	return repo.projectUser(skipCtx, repo.ent, entity)
 }
 
 func (repo *userRepository) ListUsers(ctx context.Context, query corecrud.ListQuery, showDeleted bool) (corecrud.ListResult[*userpb.User], error) {
@@ -347,7 +335,7 @@ func (repo *userRepository) ListUsers(ctx context.Context, query corecrud.ListQu
 	if err != nil {
 		return corecrud.ListResult[*userpb.User]{}, translateEntError(err)
 	}
-	resources, err := repo.toResourcesWithClient(listCtx, repo.ent, result.Items())
+	resources, err := projectUsersWithClient(listCtx, repo.ent, repo.mapper, result.Items())
 	if err != nil {
 		return corecrud.ListResult[*userpb.User]{}, err
 	}
@@ -432,12 +420,9 @@ func (repo *userRepository) UpdateStatus(ctx context.Context, userID, expectedEt
 				return err
 			}
 		}
-		resources, err := repo.toResourcesWithClient(ctx, tx.Client(), []*entmodel.User{updated})
-		if err != nil {
-			return err
-		}
-		projected = resources[0]
-		return nil
+		var projErr error
+		projected, projErr = repo.projectUser(ctx, tx.Client(), updated)
+		return projErr
 	})
 	if err != nil {
 		return nil, err
@@ -449,7 +434,15 @@ func (repo *userRepository) UpdateProfile(ctx context.Context, userID, expectedE
 	if userID == "" || expectedEtag == "" {
 		return nil, fmt.Errorf("update User profile requires user ID and expected etag")
 	}
-	return repo.updateProfileFields(ctx, userID, expectedEtag, &userpb.User{Profile: profile}, userProfileWriteMask())
+	return repo.updateProfileFields(ctx, userID, expectedEtag, &userpb.User{Profile: profile}, &fieldmaskpb.FieldMask{Paths: []string{
+		userpb.UserFields.ProfileName.String(),
+		userpb.UserFields.ProfileGivenName.String(),
+		userpb.UserFields.ProfileFamilyName.String(),
+		userpb.UserFields.ProfileNickname.String(),
+		userpb.UserFields.ProfilePreferredUsername.String(),
+		userpb.UserFields.ProfilePicture.String(),
+		userpb.UserFields.ProfileLocale.String(),
+	}})
 }
 
 func (repo *userRepository) updateProfileFields(ctx context.Context, userID, expectedEtag string, resource *userpb.User, mask *fieldmaskpb.FieldMask) (*userpb.User, error) {
@@ -507,29 +500,14 @@ func (repo *userRepository) updateProfileFields(ctx context.Context, userID, exp
 			}
 			return translateEntError(err)
 		}
-		resources, err := repo.toResourcesWithClient(ctx, tx.Client(), []*entmodel.User{updated})
-		if err != nil {
-			return err
-		}
-		projected = resources[0]
-		return nil
+		var projErr error
+		projected, projErr = repo.projectUser(ctx, tx.Client(), updated)
+		return projErr
 	})
 	if err != nil {
 		return nil, err
 	}
 	return projected, nil
-}
-
-func userProfileWriteMask() *fieldmaskpb.FieldMask {
-	return &fieldmaskpb.FieldMask{Paths: []string{
-		userpb.UserFields.ProfileName.String(),
-		userpb.UserFields.ProfileGivenName.String(),
-		userpb.UserFields.ProfileFamilyName.String(),
-		userpb.UserFields.ProfileNickname.String(),
-		userpb.UserFields.ProfilePreferredUsername.String(),
-		userpb.UserFields.ProfilePicture.String(),
-		userpb.UserFields.ProfileLocale.String(),
-	}}
 }
 
 func (repo *userRepository) SoftDelete(ctx context.Context, userID string, proof *biz.DeleteAccountProof, now time.Time) (*userpb.User, error) {
@@ -623,11 +601,7 @@ func (repo *userRepository) SoftDelete(ctx context.Context, userID string, proof
 		if err != nil {
 			return translateEntError(err)
 		}
-		requestIDs, codeIDs, err := collectIdentityBoundOIDCIDs(ctx, tx, userID, loginIDs, tokenSessionIDs)
-		if err != nil {
-			return err
-		}
-		if err := deleteIdentityBoundOIDCArtifacts(ctx, tx, requestIDs, codeIDs); err != nil {
+		if err := deleteIdentityBoundOIDCArtifacts(ctx, tx, userID, loginIDs, tokenSessionIDs); err != nil {
 			return err
 		}
 		skipCtx := entgomixin.SkipSoftDelete(ctx)
@@ -635,12 +609,9 @@ func (repo *userRepository) SoftDelete(ctx context.Context, userID string, proof
 		if err != nil {
 			return translateEntError(err)
 		}
-		resources, err := repo.toResourcesWithClient(skipCtx, tx.Client(), []*entmodel.User{updated})
-		if err != nil {
-			return err
-		}
-		projected = resources[0]
-		return nil
+		var projErr error
+		projected, projErr = repo.projectUser(skipCtx, tx.Client(), updated)
+		return projErr
 	})
 	if err != nil {
 		return nil, err
@@ -686,12 +657,9 @@ func (repo *userRepository) Undelete(ctx context.Context, userID string, now tim
 		if err != nil {
 			return translateEntError(err)
 		}
-		resources, err := repo.toResourcesWithClient(ctx, tx.Client(), []*entmodel.User{updated})
-		if err != nil {
-			return err
-		}
-		projected = resources[0]
-		return nil
+		var projErr error
+		projected, projErr = repo.projectUser(ctx, tx.Client(), updated)
+		return projErr
 	})
 	if err != nil {
 		return nil, err
@@ -723,10 +691,6 @@ func (repo *userRepository) Expunge(ctx context.Context, userID string) error {
 		if err != nil {
 			return translateEntError(err)
 		}
-		requestIDs, codeIDs, err := collectIdentityBoundOIDCIDs(ctx, tx, userID, loginIDs, tokenSessionIDs)
-		if err != nil {
-			return err
-		}
 
 		// 1. oauth_refresh_tokens
 		if len(tokenSessionIDs) > 0 {
@@ -749,7 +713,7 @@ func (repo *userRepository) Expunge(ctx context.Context, userID string) error {
 			return translateEntError(err)
 		}
 		// 3. oauth_authorization_codes & 4. oidc_authorization_requests
-		if err := deleteIdentityBoundOIDCArtifacts(ctx, tx, requestIDs, codeIDs); err != nil {
+		if err := deleteIdentityBoundOIDCArtifacts(ctx, tx, userID, loginIDs, tokenSessionIDs); err != nil {
 			return err
 		}
 		// 5. oauth_token_sessions
@@ -798,7 +762,7 @@ func (repo *userRepository) Expunge(ctx context.Context, userID string) error {
 	})
 }
 
-func collectIdentityBoundOIDCIDs(ctx context.Context, tx *entmodel.Tx, userID string, loginIDs, tokenSessionIDs []string) ([]string, []string, error) {
+func deleteIdentityBoundOIDCArtifacts(ctx context.Context, tx *entmodel.Tx, userID string, loginIDs, tokenSessionIDs []string) error {
 	reqPred := oidcauthorizationrequest.SubjectEQ(userID)
 	if len(loginIDs) > 0 {
 		reqPred = oidcauthorizationrequest.Or(
@@ -808,7 +772,7 @@ func collectIdentityBoundOIDCIDs(ctx context.Context, tx *entmodel.Tx, userID st
 	}
 	requestIDs, err := tx.OIDCAuthorizationRequest.Query().Where(reqPred).IDs(ctx)
 	if err != nil {
-		return nil, nil, translateEntError(err)
+		return translateEntError(err)
 	}
 
 	codePreds := make([]predicate.OAuthAuthorizationCode, 0, 3)
@@ -825,7 +789,7 @@ func collectIdentityBoundOIDCIDs(ctx context.Context, tx *entmodel.Tx, userID st
 	}
 	codes, err := tx.OAuthAuthorizationCode.Query().Where(codeWhere).All(ctx)
 	if err != nil {
-		return nil, nil, translateEntError(err)
+		return translateEntError(err)
 	}
 	codeIDs := make([]string, 0, len(codes))
 	for _, code := range codes {
@@ -834,23 +798,20 @@ func collectIdentityBoundOIDCIDs(ctx context.Context, tx *entmodel.Tx, userID st
 			requestIDs = append(requestIDs, code.AuthorizationRequestID)
 		}
 	}
-	return requestIDs, codeIDs, nil
-}
 
-func deleteIdentityBoundOIDCArtifacts(ctx context.Context, tx *entmodel.Tx, requestIDs, codeIDs []string) error {
-	codePreds := make([]predicate.OAuthAuthorizationCode, 0, 2)
+	delCodePreds := make([]predicate.OAuthAuthorizationCode, 0, 2)
 	if len(codeIDs) > 0 {
-		codePreds = append(codePreds, oauthauthorizationcode.IDIn(codeIDs...))
+		delCodePreds = append(delCodePreds, oauthauthorizationcode.IDIn(codeIDs...))
 	}
 	if len(requestIDs) > 0 {
-		codePreds = append(codePreds, oauthauthorizationcode.AuthorizationRequestIDIn(requestIDs...))
+		delCodePreds = append(delCodePreds, oauthauthorizationcode.AuthorizationRequestIDIn(requestIDs...))
 	}
-	if len(codePreds) > 0 {
-		codeWhere := codePreds[0]
-		if len(codePreds) > 1 {
-			codeWhere = oauthauthorizationcode.Or(codePreds...)
+	if len(delCodePreds) > 0 {
+		delWhere := delCodePreds[0]
+		if len(delCodePreds) > 1 {
+			delWhere = oauthauthorizationcode.Or(delCodePreds...)
 		}
-		if _, err := tx.OAuthAuthorizationCode.Delete().Where(codeWhere).Exec(ctx); err != nil {
+		if _, err := tx.OAuthAuthorizationCode.Delete().Where(delWhere).Exec(ctx); err != nil {
 			return translateEntError(err)
 		}
 	}
@@ -862,12 +823,12 @@ func deleteIdentityBoundOIDCArtifacts(ctx context.Context, tx *entmodel.Tx, requ
 	return nil
 }
 
-func (repo *userRepository) toResources(ctx context.Context, entities []*entmodel.User) ([]*userpb.User, error) {
-	return repo.toResourcesWithClient(ctx, repo.ent, entities)
-}
-
-func (repo *userRepository) toResourcesWithClient(ctx context.Context, client *entmodel.Client, entities []*entmodel.User) ([]*userpb.User, error) {
-	return projectUsersWithClient(ctx, client, repo.mapper, entities)
+func (repo *userRepository) projectUser(ctx context.Context, client *entmodel.Client, entity *entmodel.User) (*userpb.User, error) {
+	resources, err := projectUsersWithClient(ctx, client, repo.mapper, []*entmodel.User{entity})
+	if err != nil {
+		return nil, err
+	}
+	return resources[0], nil
 }
 
 func projectUsersWithClient(ctx context.Context, client *entmodel.Client, mapper *crudmapper.ResourceMapper[*userpb.User, entmodel.User], entities []*entmodel.User) ([]*userpb.User, error) {

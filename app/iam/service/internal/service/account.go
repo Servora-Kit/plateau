@@ -206,17 +206,17 @@ func mergeProfile(current, requested *userpb.UserProfile, mask *fieldmaskpb.Fiel
 func accountError(err error) error {
 	switch {
 	case errors.Is(err, biz.ErrInvalidToken):
-		return accountpb.ErrorAccountErrorReasonInvalidToken("token is invalid")
+		return accountpb.ErrorAccountErrorReasonInvalidToken("token is invalid").WithCause(err)
 	case errors.Is(err, biz.ErrTokenExpired):
-		return accountpb.ErrorAccountErrorReasonTokenExpired("token is expired")
+		return accountpb.ErrorAccountErrorReasonTokenExpired("token is expired").WithCause(err)
 	case errors.Is(err, biz.ErrInvalidCredentials):
-		return accountpb.ErrorAccountErrorReasonInvalidPassword("password verification failed")
+		return accountpb.ErrorAccountErrorReasonInvalidPassword("password verification failed").WithCause(err)
 	case errors.Is(err, biz.ErrInvalidPassword):
-		return accountpb.ErrorAccountErrorReasonInvalidPassword("password does not meet policy")
+		return accountpb.ErrorAccountErrorReasonInvalidPassword("password does not meet policy").WithCause(err)
 	case errors.Is(err, biz.ErrEmailAlreadyExists):
-		return accountpb.ErrorAccountErrorReasonEmailAlreadyRegistered("email is already registered")
+		return accountpb.ErrorAccountErrorReasonEmailAlreadyRegistered("email is already registered").WithCause(err)
 	case errors.Is(err, biz.ErrAccountInvalidState):
-		return accountpb.ErrorAccountErrorReasonInvalidState("account state has changed")
+		return accountpb.ErrorAccountErrorReasonInvalidState("account state has changed").WithCause(err)
 	case errors.Is(err, biz.ErrProfileEtagMismatch):
 		return kerrors.New(409, "ETAG_MISMATCH", "profile was modified by another request").WithCause(err)
 	case errors.Is(err, biz.ErrUnauthenticated),
@@ -225,7 +225,7 @@ func accountError(err error) error {
 		errors.Is(err, biz.ErrUserDisabled),
 		errors.Is(err, biz.ErrUserNotActive),
 		errors.Is(err, biz.ErrRequiredActionPending):
-		return accountpb.ErrorAccountErrorReasonUnauthenticated("authentication required")
+		return accountpb.ErrorAccountErrorReasonUnauthenticated("authentication required").WithCause(err)
 	default:
 		return kerrors.InternalServer("IAM account operation failed", "account operation failed").WithCause(err)
 	}

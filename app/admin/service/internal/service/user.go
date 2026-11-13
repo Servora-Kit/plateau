@@ -31,7 +31,7 @@ func NewUserService(uc *biz.UserUsecase) (*UserService, error) {
 func (s *UserService) ListUsers(ctx context.Context, req *adminuserpb.ListUsersRequest) (*adminuserpb.ListUsersResponse, error) {
 	resp, err := s.uc.ListUsers(ctx, req)
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return resp, nil
 }
@@ -43,7 +43,7 @@ func (s *UserService) GetUser(ctx context.Context, req *adminuserpb.GetUserReque
 	}
 	user, err := s.uc.GetUser(ctx, name)
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return user, nil
 }
@@ -54,7 +54,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *adminuserpb.CreateUse
 	}
 	user, sent, err := s.uc.CreateUser(ctx, req)
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return &adminuserpb.CreateUserResponse{
 		User:                  user,
@@ -68,7 +68,7 @@ func (s *UserService) SendUserVerificationEmail(ctx context.Context, req *adminu
 		return nil, err
 	}
 	if err := s.uc.SendUserVerificationEmail(ctx, name); err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return &adminuserpb.SendUserVerificationEmailResponse{}, nil
 }
@@ -83,7 +83,7 @@ func (s *UserService) UpdateUser(ctx context.Context, req *adminuserpb.UpdateUse
 	}
 	user, err := s.uc.UpdateUser(ctx, name, req.GetUser(), req.GetUpdateMask())
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return user, nil
 }
@@ -94,7 +94,7 @@ func (s *UserService) SetUserPassword(ctx context.Context, req *adminuserpb.SetU
 		return nil, err
 	}
 	if err := s.uc.SetUserPassword(ctx, name, req.GetNewPassword()); err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return &adminuserpb.SetUserPasswordResponse{}, nil
 }
@@ -105,7 +105,7 @@ func (s *UserService) RevokeUserSessions(ctx context.Context, req *adminuserpb.R
 		return nil, err
 	}
 	if err := s.uc.RevokeUserSessions(ctx, name); err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return &adminuserpb.RevokeUserSessionsResponse{}, nil
 }
@@ -117,7 +117,7 @@ func (s *UserService) DisableUser(ctx context.Context, req *adminuserpb.DisableU
 	}
 	user, err := s.uc.DisableUser(ctx, name, req.GetReason(), req.GetEtag())
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return user, nil
 }
@@ -129,7 +129,7 @@ func (s *UserService) EnableUser(ctx context.Context, req *adminuserpb.EnableUse
 	}
 	user, err := s.uc.EnableUser(ctx, name, req.GetEtag())
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return user, nil
 }
@@ -141,7 +141,7 @@ func (s *UserService) DeleteUser(ctx context.Context, req *adminuserpb.DeleteUse
 	}
 	user, err := s.uc.DeleteUser(ctx, name)
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return user, nil
 }
@@ -153,7 +153,7 @@ func (s *UserService) UndeleteUser(ctx context.Context, req *adminuserpb.Undelet
 	}
 	user, err := s.uc.UndeleteUser(ctx, name)
 	if err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return user, nil
 }
@@ -164,16 +164,22 @@ func (s *UserService) ExpungeUser(ctx context.Context, req *adminuserpb.ExpungeU
 		return nil, err
 	}
 	if err := s.uc.ExpungeUser(ctx, name); err != nil {
-		return nil, userError(err)
+		return nil, userError(ctx, err)
 	}
 	return &emptypb.Empty{}, nil
 }
 
-func userError(err error) error {
+func userError(ctx context.Context, err error) error {
+	var ctxErr error
+	if ctx != nil {
+		ctxErr = ctx.Err()
+	}
+	se := kerrors.FromError(err)
+
 	switch {
-	case errors.Is(err, context.Canceled):
+	case errors.Is(ctxErr, context.Canceled), errors.Is(err, context.Canceled), se != nil && se.Code == 499:
 		return kerrors.ClientClosed("CLIENT_CLOSED", "client closed request").WithCause(err)
-	case errors.Is(err, context.DeadlineExceeded):
+	case errors.Is(ctxErr, context.DeadlineExceeded), errors.Is(err, context.DeadlineExceeded), se != nil && se.Code == 504:
 		return kerrors.GatewayTimeout("GATEWAY_TIMEOUT", "request deadline exceeded").WithCause(err)
 	case errors.Is(err, biz.ErrUnauthenticated):
 		return securityerrorspb.ErrorSecurityErrorReasonUnauthenticated("authentication required").WithCause(err)
@@ -183,21 +189,21 @@ func userError(err error) error {
 		return adminuserpb.ErrorAdminUserErrorReasonTargetIsAdmin("cannot disable or delete an administrator account").WithCause(err)
 	case errors.Is(err, biz.ErrInvalidUpdateMask):
 		return kerrors.BadRequest("INVALID_ARGUMENT", "update_mask must be non-empty and contain only editable profile fields").WithCause(err)
-	case errors.Is(err, biz.ErrUserNotFound):
+	case userpb.IsUserErrorReasonNotFound(err):
 		return adminuserpb.ErrorAdminUserErrorReasonUserNotFound("user not found").WithCause(err)
-	case errors.Is(err, biz.ErrUserAlreadyExists):
+	case userpb.IsUserErrorReasonAlreadyExists(err):
 		return adminuserpb.ErrorAdminUserErrorReasonUserAlreadyExists("user already exists or email is already registered").WithCause(err)
-	case errors.Is(err, biz.ErrUserInvalidState):
+	case userpb.IsUserErrorReasonInvalidState(err):
 		return adminuserpb.ErrorAdminUserErrorReasonInvalidState("user lifecycle state does not allow this operation").WithCause(err)
-	case errors.Is(err, biz.ErrUserEtagMismatch):
+	case userpb.IsUserErrorReasonEtagMismatch(err):
 		return adminuserpb.ErrorAdminUserErrorReasonEtagMismatch("user etag does not match").WithCause(err)
-	case errors.Is(err, biz.ErrVerificationEmailFailed):
+	case userpb.IsUserErrorReasonVerificationEmailFailed(err):
 		return adminuserpb.ErrorAdminUserErrorReasonVerificationEmailFailed("verification email delivery failed").WithCause(err)
-	case errors.Is(err, biz.ErrDownstreamUnavailable):
+	case se != nil && strings.HasPrefix(se.Reason, "CRUD_ERROR_REASON_"):
+		return kerrors.BadRequest(se.Reason, "invalid request parameters").WithCause(err)
+	case se != nil && se.Code == 400:
+		return kerrors.BadRequest("INVALID_ARGUMENT", "invalid request argument").WithCause(err)
+	default:
 		return adminuserpb.ErrorAdminUserErrorReasonDownstreamUnavailable("downstream identity service is temporarily unavailable").WithCause(err)
 	}
-	if _, ok := errors.AsType[*kerrors.Error](err); ok {
-		return err
-	}
-	return adminuserpb.ErrorAdminUserErrorReasonDownstreamUnavailable("downstream identity service is temporarily unavailable").WithCause(err)
 }
