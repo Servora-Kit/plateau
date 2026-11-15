@@ -104,8 +104,7 @@ func NewServiceTokenMiddleware(config *oidcv1.OIDCClient, opts ...Option) (middl
 }
 
 func sanitizeTokenError(err error) error {
-	var retrieveErr *oauth2.RetrieveError
-	if errors.As(err, &retrieveErr) && retrieveErr.Response != nil {
+	if retrieveErr, ok := errors.AsType[*oauth2.RetrieveError](err); ok && retrieveErr != nil && retrieveErr.Response != nil {
 		return fmt.Errorf("%w: token endpoint returned status %d", ErrTokenSourceUnavailable, retrieveErr.Response.StatusCode)
 	}
 	return fmt.Errorf("%w: token request failed", ErrTokenSourceUnavailable)

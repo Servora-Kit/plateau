@@ -3,7 +3,7 @@ syntax = "proto3";
 package admin.auth.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
+import "iam/user/v1/user.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 
@@ -34,19 +34,10 @@ service AuthService {
   }
 }
 
-// AdminPrincipal 描述当前已登录管理员的身份快照。
-message AdminPrincipal {
-  string user_id = 1;
-  string email = 2;
-  string name = 3;
-  string picture = 4;
-  google.protobuf.Timestamp auth_time = 5;
-}
-
 message GetSessionRequest {}
 
 message GetSessionResponse {
-  AdminPrincipal user = 1;
+  iam.user.v1.User user = 1;
   repeated string permissions = 2;
 }
 

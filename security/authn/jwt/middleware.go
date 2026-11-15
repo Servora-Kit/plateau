@@ -14,6 +14,11 @@ import (
 	jwtlib "github.com/golang-jwt/jwt/v5"
 )
 
+// ServerFor constructs JWT-specific route authentication middleware for a self-mapping ActorClaims struct type T.
+func ServerFor[T any, P ActorClaims[T]](authenticator *Authenticator, opts ...authnruntime.Option) middleware.Middleware {
+	return Server(authenticator, func() P { return P(new(T)) }, P.Actor, opts...)
+}
+
 // Server constructs JWT-specific route authentication middleware.
 func Server[T jwtlib.Claims](authenticator *Authenticator, newClaims func() T, mapActor func(T) (security.Actor, error), opts ...authnruntime.Option) middleware.Middleware {
 	if !validAuthenticator(authenticator) {

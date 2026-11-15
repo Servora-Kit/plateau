@@ -45,7 +45,7 @@ func (storage *OIDCStorage) GetPrivateClaimsFromRequest(_ context.Context, reque
 	if _, ok := request.(*serviceTokenRequest); ok {
 		return map[string]any{"token_use": "access", "actor_type": "service"}, nil
 	}
-	return map[string]any{}, nil
+	return map[string]any{"token_use": "access", "actor_type": "human"}, nil
 }
 
 var _ op.ClientCredentialsStorage = (*OIDCStorage)(nil)

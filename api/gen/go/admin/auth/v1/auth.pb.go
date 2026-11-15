@@ -7,12 +7,12 @@
 package adminauthv1
 
 import (
+	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -25,83 +25,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// AdminPrincipal 描述当前已登录管理员的身份快照。
-type AdminPrincipal struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Picture       string                 `protobuf:"bytes,4,opt,name=picture,proto3" json:"picture,omitempty"`
-	AuthTime      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=auth_time,json=authTime,proto3" json:"auth_time,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AdminPrincipal) Reset() {
-	*x = AdminPrincipal{}
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AdminPrincipal) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AdminPrincipal) ProtoMessage() {}
-
-func (x *AdminPrincipal) ProtoReflect() protoreflect.Message {
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AdminPrincipal.ProtoReflect.Descriptor instead.
-func (*AdminPrincipal) Descriptor() ([]byte, []int) {
-	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *AdminPrincipal) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *AdminPrincipal) GetEmail() string {
-	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *AdminPrincipal) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *AdminPrincipal) GetPicture() string {
-	if x != nil {
-		return x.Picture
-	}
-	return ""
-}
-
-func (x *AdminPrincipal) GetAuthTime() *timestamppb.Timestamp {
-	if x != nil {
-		return x.AuthTime
-	}
-	return nil
-}
-
 type GetSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -110,7 +33,7 @@ type GetSessionRequest struct {
 
 func (x *GetSessionRequest) Reset() {
 	*x = GetSessionRequest{}
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[1]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -122,7 +45,7 @@ func (x *GetSessionRequest) String() string {
 func (*GetSessionRequest) ProtoMessage() {}
 
 func (x *GetSessionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[1]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -135,12 +58,12 @@ func (x *GetSessionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSessionRequest.ProtoReflect.Descriptor instead.
 func (*GetSessionRequest) Descriptor() ([]byte, []int) {
-	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{1}
+	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{0}
 }
 
 type GetSessionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *AdminPrincipal        `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	User          *v1.User               `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	Permissions   []string               `protobuf:"bytes,2,rep,name=permissions,proto3" json:"permissions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -148,7 +71,7 @@ type GetSessionResponse struct {
 
 func (x *GetSessionResponse) Reset() {
 	*x = GetSessionResponse{}
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[2]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -160,7 +83,7 @@ func (x *GetSessionResponse) String() string {
 func (*GetSessionResponse) ProtoMessage() {}
 
 func (x *GetSessionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[2]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -173,10 +96,10 @@ func (x *GetSessionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSessionResponse.ProtoReflect.Descriptor instead.
 func (*GetSessionResponse) Descriptor() ([]byte, []int) {
-	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{2}
+	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetSessionResponse) GetUser() *AdminPrincipal {
+func (x *GetSessionResponse) GetUser() *v1.User {
 	if x != nil {
 		return x.User
 	}
@@ -198,7 +121,7 @@ type LogoutRequest struct {
 
 func (x *LogoutRequest) Reset() {
 	*x = LogoutRequest{}
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[3]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -210,7 +133,7 @@ func (x *LogoutRequest) String() string {
 func (*LogoutRequest) ProtoMessage() {}
 
 func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[3]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -223,7 +146,7 @@ func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
 func (*LogoutRequest) Descriptor() ([]byte, []int) {
-	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{2}
 }
 
 type LogoutResponse struct {
@@ -234,7 +157,7 @@ type LogoutResponse struct {
 
 func (x *LogoutResponse) Reset() {
 	*x = LogoutResponse{}
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[4]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -246,7 +169,7 @@ func (x *LogoutResponse) String() string {
 func (*LogoutResponse) ProtoMessage() {}
 
 func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admin_auth_v1_auth_proto_msgTypes[4]
+	mi := &file_admin_auth_v1_auth_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -259,23 +182,17 @@ func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
 func (*LogoutResponse) Descriptor() ([]byte, []int) {
-	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{4}
+	return file_admin_auth_v1_auth_proto_rawDescGZIP(), []int{3}
 }
 
 var File_admin_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_admin_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x18admin/auth/v1/auth.proto\x12\radmin.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\"\xa6\x01\n" +
-	"\x0eAdminPrincipal\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x18\n" +
-	"\apicture\x18\x04 \x01(\tR\apicture\x127\n" +
-	"\tauth_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\bauthTime\"\x13\n" +
-	"\x11GetSessionRequest\"i\n" +
-	"\x12GetSessionResponse\x121\n" +
-	"\x04user\x18\x01 \x01(\v2\x1d.admin.auth.v1.AdminPrincipalR\x04user\x12 \n" +
+	"\x18admin/auth/v1/auth.proto\x12\radmin.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\"\x13\n" +
+	"\x11GetSessionRequest\"]\n" +
+	"\x12GetSessionResponse\x12%\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\x12 \n" +
 	"\vpermissions\x18\x02 \x03(\tR\vpermissions\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
 	"\x0eLogoutResponse2\x94\x02\n" +
@@ -296,27 +213,25 @@ func file_admin_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_admin_auth_v1_auth_proto_rawDescData
 }
 
-var file_admin_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_admin_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_admin_auth_v1_auth_proto_goTypes = []any{
-	(*AdminPrincipal)(nil),        // 0: admin.auth.v1.AdminPrincipal
-	(*GetSessionRequest)(nil),     // 1: admin.auth.v1.GetSessionRequest
-	(*GetSessionResponse)(nil),    // 2: admin.auth.v1.GetSessionResponse
-	(*LogoutRequest)(nil),         // 3: admin.auth.v1.LogoutRequest
-	(*LogoutResponse)(nil),        // 4: admin.auth.v1.LogoutResponse
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*GetSessionRequest)(nil),  // 0: admin.auth.v1.GetSessionRequest
+	(*GetSessionResponse)(nil), // 1: admin.auth.v1.GetSessionResponse
+	(*LogoutRequest)(nil),      // 2: admin.auth.v1.LogoutRequest
+	(*LogoutResponse)(nil),     // 3: admin.auth.v1.LogoutResponse
+	(*v1.User)(nil),            // 4: iam.user.v1.User
 }
 var file_admin_auth_v1_auth_proto_depIdxs = []int32{
-	5, // 0: admin.auth.v1.AdminPrincipal.auth_time:type_name -> google.protobuf.Timestamp
-	0, // 1: admin.auth.v1.GetSessionResponse.user:type_name -> admin.auth.v1.AdminPrincipal
-	1, // 2: admin.auth.v1.AuthService.GetSession:input_type -> admin.auth.v1.GetSessionRequest
-	3, // 3: admin.auth.v1.AuthService.Logout:input_type -> admin.auth.v1.LogoutRequest
-	2, // 4: admin.auth.v1.AuthService.GetSession:output_type -> admin.auth.v1.GetSessionResponse
-	4, // 5: admin.auth.v1.AuthService.Logout:output_type -> admin.auth.v1.LogoutResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: admin.auth.v1.GetSessionResponse.user:type_name -> iam.user.v1.User
+	0, // 1: admin.auth.v1.AuthService.GetSession:input_type -> admin.auth.v1.GetSessionRequest
+	2, // 2: admin.auth.v1.AuthService.Logout:input_type -> admin.auth.v1.LogoutRequest
+	1, // 3: admin.auth.v1.AuthService.GetSession:output_type -> admin.auth.v1.GetSessionResponse
+	3, // 4: admin.auth.v1.AuthService.Logout:output_type -> admin.auth.v1.LogoutResponse
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_admin_auth_v1_auth_proto_init() }
@@ -330,7 +245,7 @@ func file_admin_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admin_auth_v1_auth_proto_rawDesc), len(file_admin_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

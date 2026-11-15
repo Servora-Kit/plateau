@@ -35,11 +35,11 @@ import (
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
-	adminauthn "github.com/Servora-Kit/plateau/app/admin/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/startup"
+	authnsession "github.com/Servora-Kit/plateau/security/authn/session"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/alexedwards/scs/v2"
@@ -612,7 +612,7 @@ func buildAdminInstance(
 	if err != nil {
 		t.Fatal(err)
 	}
-	sessionAuthn, err := adminauthn.NewSessionAuthenticator(sessionMgr)
+	sessionAuthn, err := authnsession.NewUserAuthenticator(sessionMgr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -879,7 +879,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 		t.Fatalf("handshake cookie was not deleted on callback: %+v", cbCookies)
 	}
 
-	// Verify GetSession returns AdminPrincipal & BatchCheck permissions ["access", "manage_users", "expunge_users"].
+	// Verify GetSession returns iam.user.v1.User & BatchCheck permissions ["access", "manage_users", "expunge_users"].
 	sessRes, sessRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/auth/session", adminOrigin, "", adminCookie)
 	if sessRes.StatusCode != http.StatusOK {
 		t.Fatalf("GetSession status=%d body=%s", sessRes.StatusCode, string(sessRaw))
@@ -889,7 +889,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	adminUserID := sessionPayload.GetUser().GetUserId()
-	if adminUserID == "" || sessionPayload.GetUser().GetEmail() != adminBootstrapEml {
+	if adminUserID == "" || sessionPayload.GetUser().GetName() != "users/"+adminUserID || sessionPayload.GetUser().GetEmail() != adminBootstrapEml || !sessionPayload.GetUser().GetEmailVerified() {
 		t.Fatalf("unexpected GetSession user: %+v", sessionPayload.GetUser())
 	}
 	wantPerms := []string{"access", "manage_users", "expunge_users"}

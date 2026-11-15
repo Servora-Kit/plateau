@@ -20,6 +20,7 @@ import (
 	"testing/synctest"
 	"time"
 
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	oidcv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-kratos/kratos/v3/transport"
@@ -77,11 +78,13 @@ type mockOP struct {
 	signer           jose.Signer
 	jwk              jose.JSONWebKey
 	discoveryHits    atomic.Int32
+	userinfoHits     atomic.Int32
 	lastChallenge    string
 	lastChallengeAlg string
 	lastNonce        string
 	overrideNonce    string
 	userinfoSub      string
+	idTokenExtra     map[string]any
 }
 
 func newMockOP(t *testing.T) *mockOP {
@@ -160,6 +163,9 @@ func newMockOP(t *testing.T) *mockOP {
 			"nonce":     nonce,
 			"at_hash":   atHash,
 		}
+		for k, v := range op.idTokenExtra {
+			claims[k] = v
+		}
 		payload, _ := json.Marshal(claims)
 		jws, err := op.signer.Sign(payload)
 		if err != nil {
@@ -181,13 +187,19 @@ func newMockOP(t *testing.T) *mockOP {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		op.userinfoHits.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"sub":            op.userinfoSub,
-			"email":          "admin@plateau.local",
-			"email_verified": true,
-			"name":           "Platform Admin",
-			"picture":        "https://cdn.plateau.local/avatar.png",
+			"sub":                op.userinfoSub,
+			"email":              "admin@plateau.local",
+			"email_verified":     true,
+			"name":               "Platform Admin",
+			"given_name":         "Platform",
+			"family_name":        "Admin",
+			"nickname":           "Plat",
+			"preferred_username": "padmin",
+			"picture":            "https://cdn.plateau.local/avatar.png",
+			"locale":             "zh-CN",
 		})
 	})
 
@@ -198,9 +210,9 @@ func newMockOP(t *testing.T) *mockOP {
 
 func TestRelyingPartyValidationAndLazyDiscovery(t *testing.T) {
 	if _, err := NewRelyingParty(&oidcv1.OIDCClient{
-		Issuer:       proto.String("https://iam.example.com"),
-		ClientId:     proto.String("admin"),
-		ClientSecret: proto.String(testClientSecret),
+		Issuer:       new("https://iam.example.com"),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
 		RedirectUri:  "https://admin.example.com/v1/admin/auth/callback",
 		CookieSecret: "too-short",
 	}); err == nil {
@@ -213,9 +225,9 @@ func TestRelyingPartyValidationAndLazyDiscovery(t *testing.T) {
 		return nil, errors.New("unexpected startup network call")
 	})}
 	relyingParty, err := NewRelyingParty(&oidcv1.OIDCClient{
-		Issuer:       proto.String("https://iam.example.com"),
-		ClientId:     proto.String("admin"),
-		ClientSecret: proto.String(testClientSecret),
+		Issuer:       new("https://iam.example.com"),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
 		RedirectUri:  "https://admin.example.com/v1/admin/auth/callback",
 		CookieSecret: testCookieSecret,
 	}, WithHTTPClient(client))
@@ -233,9 +245,9 @@ func TestRelyingPartyValidationAndLazyDiscovery(t *testing.T) {
 func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 	op := newMockOP(t)
 	rpClient, err := NewRelyingParty(&oidcv1.OIDCClient{
-		Issuer:       proto.String(op.server.URL),
-		ClientId:     proto.String("admin"),
-		ClientSecret: proto.String(testClientSecret),
+		Issuer:       new(op.server.URL),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
 		RedirectUri:  "http://localhost:10012/v1/admin/auth/callback",
 		CookieSecret: testCookieSecret,
 	})
@@ -274,15 +286,15 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 		cbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc.Query().Get("state")), nil)
 		cbReq.AddCookie(cookie)
 		cbRec := httptest.NewRecorder()
-		id, returnTo, err := rpClient.CompleteLogin(cbRec, cbReq)
+		user, returnTo, err := rpClient.CompleteLogin(cbRec, cbReq)
 		if err != nil {
 			t.Fatalf("CompleteLogin() error = %v", err)
 		}
 		if returnTo != "/dashboard" {
 			t.Fatalf("unsafe return_to %q resolved to %q, want /dashboard", unsafeReturnTo, returnTo)
 		}
-		if id.Subject != "user-123" || id.Email != "admin@plateau.local" || !id.EmailVerified || id.Name != "Platform Admin" {
-			t.Fatalf("unexpected identity: %+v", id)
+		if user.GetUserId() != "user-123" || user.GetEmail() != "admin@plateau.local" || !user.GetEmailVerified() || user.GetProfile().GetName() != "Platform Admin" {
+			t.Fatalf("unexpected user: %+v", user)
 		}
 		// Handshake cookie must be deleted immediately on callback.
 		cleared := cbRec.Result().Cookies()
@@ -338,6 +350,142 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 	}
 }
 
+func TestCompleteLoginUserAndProfileExtraction(t *testing.T) {
+	op := newMockOP(t)
+
+	// Case 0: openid-only scope with minimal ID token leaves Email and Profile nil without calling /userinfo.
+	minimalRP, err := NewRelyingParty(&oidcv1.OIDCClient{
+		Issuer:       new(op.server.URL),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
+		RedirectUri:  "http://localhost:10012/v1/admin/auth/callback",
+		CookieSecret: testCookieSecret,
+		Scopes:       []string{oidc.ScopeOpenID},
+	})
+	if err != nil {
+		t.Fatalf("NewRelyingParty(minimal) error = %v", err)
+	}
+	minLoginRec := httptest.NewRecorder()
+	if err := minimalRP.BeginLogin(minLoginRec, httptest.NewRequest(http.MethodGet, "/v1/admin/auth/login", nil), "/"); err != nil {
+		t.Fatal(err)
+	}
+	minCookie := minLoginRec.Result().Cookies()[0]
+	minLoc, _ := url.Parse(minLoginRec.Header().Get("Location"))
+	op.lastChallenge = minLoc.Query().Get("code_challenge")
+	op.lastNonce = minLoc.Query().Get("nonce")
+
+	minCbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(minLoc.Query().Get("state")), nil)
+	minCbReq.AddCookie(minCookie)
+	minimalUser, _, err := minimalRP.CompleteLogin(httptest.NewRecorder(), minCbReq)
+	if err != nil {
+		t.Fatalf("CompleteLogin(minimal) error = %v", err)
+	}
+	if op.userinfoHits.Load() != 0 {
+		t.Fatalf("minimal openid login hit /userinfo %d times, want 0", op.userinfoHits.Load())
+	}
+	if minimalUser.GetName() != "users/user-123" || minimalUser.GetUserId() != "user-123" || minimalUser.Email != nil || minimalUser.GetProfile() != nil {
+		t.Fatalf("unexpected minimal User: %+v", minimalUser)
+	}
+
+	// Case 1: /userinfo fallback populates all 7 UserProfile fields when absent from ID token.
+	rpClient, err := NewRelyingParty(&oidcv1.OIDCClient{
+		Issuer:       new(op.server.URL),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
+		RedirectUri:  "http://localhost:10012/v1/admin/auth/callback",
+		CookieSecret: testCookieSecret,
+	})
+	if err != nil {
+		t.Fatalf("NewRelyingParty() error = %v", err)
+	}
+
+	loginRec := httptest.NewRecorder()
+	if err := rpClient.BeginLogin(loginRec, httptest.NewRequest(http.MethodGet, "/v1/admin/auth/login", nil), "/"); err != nil {
+		t.Fatal(err)
+	}
+	cookie := loginRec.Result().Cookies()[0]
+	loc, _ := url.Parse(loginRec.Header().Get("Location"))
+	op.lastChallenge = loc.Query().Get("code_challenge")
+	op.lastNonce = loc.Query().Get("nonce")
+
+	cbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc.Query().Get("state")), nil)
+	cbReq.AddCookie(cookie)
+	userFromUserinfo, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), cbReq)
+	if err != nil {
+		t.Fatalf("CompleteLogin(userinfo fallback) error = %v", err)
+	}
+	if op.userinfoHits.Load() != 1 {
+		t.Fatalf("userinfoHits = %d, want 1", op.userinfoHits.Load())
+	}
+	wantUser := &userpb.User{
+		Name:          "users/user-123",
+		UserId:        "user-123",
+		Email:         new("admin@plateau.local"),
+		EmailVerified: true,
+		Profile: &userpb.UserProfile{
+			Name:              new("Platform Admin"),
+			GivenName:         new("Platform"),
+			FamilyName:        new("Admin"),
+			Nickname:          new("Plat"),
+			PreferredUsername: new("padmin"),
+			Picture:           new("https://cdn.plateau.local/avatar.png"),
+			Locale:            new("zh-CN"),
+		},
+	}
+	if !proto.Equal(userFromUserinfo, wantUser) {
+		t.Fatalf("User from userinfo = %+v, want %+v", userFromUserinfo, wantUser)
+	}
+
+	// Case 2: All 7 UserProfile fields + email present directly in ID token -> zero /userinfo call needed.
+	op.idTokenExtra = map[string]any{
+		"email":              "direct@plateau.local",
+		"email_verified":     true,
+		"name":               "Direct User",
+		"given_name":         "Direct",
+		"family_name":        "User",
+		"nickname":           "Dir",
+		"preferred_username": "duser",
+		"picture":            "https://cdn.plateau.local/direct.png",
+		"locale":             "en-US",
+	}
+	loginRec2 := httptest.NewRecorder()
+	if err := rpClient.BeginLogin(loginRec2, httptest.NewRequest(http.MethodGet, "/v1/admin/auth/login", nil), "/"); err != nil {
+		t.Fatal(err)
+	}
+	cookie2 := loginRec2.Result().Cookies()[0]
+	loc2, _ := url.Parse(loginRec2.Header().Get("Location"))
+	op.lastChallenge = loc2.Query().Get("code_challenge")
+	op.lastNonce = loc2.Query().Get("nonce")
+
+	cbReq2 := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc2.Query().Get("state")), nil)
+	cbReq2.AddCookie(cookie2)
+	userFromIDToken, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), cbReq2)
+	if err != nil {
+		t.Fatalf("CompleteLogin(id_token claims) error = %v", err)
+	}
+	if op.userinfoHits.Load() != 1 {
+		t.Fatalf("expected no extra /userinfo hit when ID token already carries email+profile, got %d", op.userinfoHits.Load())
+	}
+	wantDirect := &userpb.User{
+		Name:          "users/user-123",
+		UserId:        "user-123",
+		Email:         new("direct@plateau.local"),
+		EmailVerified: true,
+		Profile: &userpb.UserProfile{
+			Name:              new("Direct User"),
+			GivenName:         new("Direct"),
+			FamilyName:        new("User"),
+			Nickname:          new("Dir"),
+			PreferredUsername: new("duser"),
+			Picture:           new("https://cdn.plateau.local/direct.png"),
+			Locale:            new("en-US"),
+		},
+	}
+	if !proto.Equal(userFromIDToken, wantDirect) {
+		t.Fatalf("User from ID token = %+v, want %+v", userFromIDToken, wantDirect)
+	}
+}
+
 func TestServiceTokenMiddlewareSingleflightCancelAndSecretRedaction(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var exchanges atomic.Int32
@@ -360,9 +508,9 @@ func TestServiceTokenMiddlewareSingleflightCancelAndSecretRedaction(t *testing.T
 		})}
 
 		mw, cleanup, err := NewServiceTokenMiddleware(&oidcv1.OIDCClient{
-			Issuer:       proto.String("https://iam.example.com"),
-			ClientId:     proto.String("admin"),
-			ClientSecret: proto.String(testClientSecret),
+			Issuer:       new("https://iam.example.com"),
+			ClientId:     new("admin"),
+			ClientSecret: new(testClientSecret),
 			HttpTimeout:  durationpb.New(5 * time.Second),
 		}, WithHTTPClient(client))
 		if err != nil {
@@ -414,9 +562,9 @@ func TestServiceTokenMiddlewareSingleflightCancelAndSecretRedaction(t *testing.T
 		return nil, errors.New("aborted")
 	})}
 	mwHang, cleanupHang, err := NewServiceTokenMiddleware(&oidcv1.OIDCClient{
-		Issuer:       proto.String("https://iam.example.com"),
-		ClientId:     proto.String("admin"),
-		ClientSecret: proto.String(testClientSecret),
+		Issuer:       new("https://iam.example.com"),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
 		HttpTimeout:  durationpb.New(5 * time.Second),
 	}, WithHTTPClient(hangingClient))
 	if err != nil {
@@ -441,9 +589,9 @@ func TestServiceTokenMiddlewareSingleflightCancelAndSecretRedaction(t *testing.T
 		}, nil
 	})}
 	mwBad, cleanupBad, err := NewServiceTokenMiddleware(&oidcv1.OIDCClient{
-		Issuer:       proto.String("https://iam.example.com"),
-		ClientId:     proto.String("admin"),
-		ClientSecret: proto.String(testClientSecret),
+		Issuer:       new("https://iam.example.com"),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
 	}, WithHTTPClient(badClient))
 	if err != nil {
 		t.Fatal(err)

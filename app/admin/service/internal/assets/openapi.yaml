@@ -345,21 +345,6 @@ paths:
                                 $ref: '#/components/schemas/User'
 components:
     schemas:
-        AdminPrincipal:
-            type: object
-            properties:
-                userId:
-                    type: string
-                email:
-                    type: string
-                name:
-                    type: string
-                picture:
-                    type: string
-                authTime:
-                    type: string
-                    format: date-time
-            description: AdminPrincipal 描述当前已登录管理员的身份快照。
         CreateUserRequest:
             required:
                 - user
@@ -413,7 +398,7 @@ components:
             type: object
             properties:
                 user:
-                    $ref: '#/components/schemas/AdminPrincipal'
+                    $ref: '#/components/schemas/User'
                 permissions:
                     type: array
                     items:

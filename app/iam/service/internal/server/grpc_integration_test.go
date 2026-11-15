@@ -14,7 +14,6 @@ import (
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
-	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	jwtsecurity "github.com/Servora-Kit/plateau/security/authn/jwt"
 	jwtlib "github.com/golang-jwt/jwt/v5"
 	fgaclient "github.com/openfga/go-sdk/client"
@@ -50,7 +49,7 @@ func TestServiceOAuthHTTPAndGRPC(t *testing.T) {
 	var httpCalls atomic.Int32
 	receiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		httpCalls.Add(1)
-		actor, err := jwtsecurity.Authenticate(r.Context(), verifier, r.Header.Get("Authorization"), iamauthn.NewServiceClaims, iamauthn.ServiceActor)
+		actor, err := jwtsecurity.AuthenticateFor[jwtsecurity.ServiceClaims](r.Context(), verifier, r.Header.Get("Authorization"))
 		if err != nil || actor.ID != "admin" {
 			w.WriteHeader(401)
 			return
@@ -167,7 +166,7 @@ func TestServiceOAuthHTTPAndGRPC(t *testing.T) {
 	if _, err := config.TokenSource(tokenCtx).Token(); err == nil {
 		t.Fatal("removed client acquired token")
 	}
-	_, err = jwtsecurity.Authenticate(ctx, verifier, "Bearer "+token.AccessToken, iamauthn.NewServiceClaims, iamauthn.ServiceActor)
+	_, err = jwtsecurity.AuthenticateFor[jwtsecurity.ServiceClaims](ctx, verifier, "Bearer "+token.AccessToken)
 	check(t, err)
 	call(codes.PermissionDenied)
 }

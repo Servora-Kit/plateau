@@ -11,13 +11,13 @@ import (
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
-	"github.com/Servora-Kit/plateau/app/admin/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/server"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/startup"
 	"github.com/Servora-Kit/plateau/infra/openfga"
+	"github.com/Servora-Kit/plateau/security/authn/session"
 	openfga2 "github.com/Servora-Kit/plateau/security/authz/openfga"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/registry"
@@ -31,7 +31,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *oidcv1.OIDCClient, openFGA *openfgaconfpb.OpenFGA, session *sessionv1.Session) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *oidcv1.OIDCClient, openFGA *openfgaconfpb.OpenFGA, sessionv1Session *sessionv1.Session) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -61,14 +61,14 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	sessionManager, cleanup4, err := data.NewHTTPSessionManager(session, db, client)
+	sessionManager, cleanup4, err := data.NewHTTPSessionManager(sessionv1Session, db, client)
 	if err != nil {
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	v, err := authn.NewSessionAuthenticator(sessionManager)
+	v, err := session.NewUserAuthenticator(sessionManager)
 	if err != nil {
 		cleanup4()
 		cleanup3()

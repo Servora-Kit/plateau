@@ -62,7 +62,7 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(cleanup)
-	claims := new(iamauthn.ServiceClaims)
+	claims := new(authnjwt.ServiceClaims)
 	parsed, err := verifier.VerifySignature(t.Context(), payload.AccessToken, claims)
 	if err != nil {
 		t.Fatal(err)
@@ -73,7 +73,7 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 	if claims.ExpiresAt.Sub(claims.IssuedAt.Time) != 5*time.Minute {
 		t.Fatal("wrong machine TTL")
 	}
-	actor, err := authnjwt.Authenticate(t.Context(), authenticator, "Bearer "+payload.AccessToken, iamauthn.NewServiceClaims, iamauthn.ServiceActor)
+	actor, err := authnjwt.AuthenticateFor[authnjwt.ServiceClaims](t.Context(), authenticator, "Bearer "+payload.AccessToken)
 	if err != nil || actor.ID != "admin" {
 		t.Fatalf("service actor=%v error=%v", actor, err)
 	}
@@ -96,7 +96,7 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 		if err := json.Unmarshal(next.Body.Bytes(), &body); err != nil {
 			t.Fatal(err)
 		}
-		mapped := new(iamauthn.ServiceClaims)
+		mapped := new(authnjwt.ServiceClaims)
 		if _, err := verifier.VerifySignature(t.Context(), body.AccessToken, mapped); err != nil {
 			t.Fatal(err)
 		}
@@ -117,7 +117,7 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOAuthError(t, requestToken("admin", machine.GetClientSecret(), url.Values{"grant_type": {"client_credentials"}}), http.StatusUnauthorized, "invalid_client")
-	if _, err := authnjwt.Authenticate(t.Context(), authenticator, "Bearer "+payload.AccessToken, iamauthn.NewServiceClaims, iamauthn.ServiceActor); err != nil {
+	if _, err := authnjwt.AuthenticateFor[authnjwt.ServiceClaims](t.Context(), authenticator, "Bearer "+payload.AccessToken); err != nil {
 		t.Fatalf("disabled client prematurely invalidated issued token: %v", err)
 	}
 	future := jwtlib.NewValidator(jwtlib.WithTimeFunc(func() time.Time { return claims.ExpiresAt.Add(time.Second) }), jwtlib.WithExpirationRequired())
@@ -196,7 +196,7 @@ func TestServiceClaimsAndOverlappingSigningKeys(t *testing.T) {
 	} {
 		c := claims()
 		mutate(c)
-		if _, err := authnjwt.Authenticate(t.Context(), authenticator, "Bearer "+sign(f.storage.signingPrivate, c), iamauthn.NewServiceClaims, iamauthn.ServiceActor); err == nil {
+		if _, err := authnjwt.AuthenticateFor[authnjwt.ServiceClaims](t.Context(), authenticator, "Bearer "+sign(f.storage.signingPrivate, c)); err == nil {
 			t.Fatal("invalid service claims accepted")
 		}
 	}
@@ -219,14 +219,14 @@ func TestServiceClaimsAndOverlappingSigningKeys(t *testing.T) {
 		t.Fatalf("overlap key count=%d error=%v", len(keys), err)
 	}
 	for _, token := range []string{oldToken, newToken} {
-		if _, err := authnjwt.Authenticate(t.Context(), authenticator, "Bearer "+token, iamauthn.NewServiceClaims, iamauthn.ServiceActor); err != nil {
+		if _, err := authnjwt.AuthenticateFor[authnjwt.ServiceClaims](t.Context(), authenticator, "Bearer "+token); err != nil {
 			t.Fatalf("overlapping key rejected: %v", err)
 		}
 	}
 	if _, err := f.client.OIDCSigningKey.UpdateOneID(f.storage.signingPrivate.id).SetRevokedTime(time.Now()).Save(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := authnjwt.Authenticate(t.Context(), authenticator, "Bearer "+oldToken, iamauthn.NewServiceClaims, iamauthn.ServiceActor); err == nil {
+	if _, err := authnjwt.AuthenticateFor[authnjwt.ServiceClaims](t.Context(), authenticator, "Bearer "+oldToken); err == nil {
 		t.Fatal("retired key accepted")
 	}
 }

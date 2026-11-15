@@ -88,6 +88,18 @@ func New(ctx context.Context, config *jwtconfpb.JwtAuthnConfig, opts ...Option) 
 	}, cleanup, nil
 }
 
+// ActorClaims constrains pointer claim types *T that satisfy jwt.Claims and map themselves to a Plateau Actor.
+type ActorClaims[T any] interface {
+	*T
+	jwt.Claims
+	Actor() (security.Actor, error)
+}
+
+// AuthenticateFor validates one Authorization header using a self-mapping ActorClaims struct type T.
+func AuthenticateFor[T any, P ActorClaims[T]](ctx context.Context, authenticator *Authenticator, authorization string) (security.Actor, error) {
+	return Authenticate(ctx, authenticator, authorization, func() P { return P(new(T)) }, P.Actor)
+}
+
 // Authenticate validates one Authorization header and maps fresh verified claims to one stable Actor.
 func Authenticate[T jwt.Claims](ctx context.Context, authenticator *Authenticator, authorization string, newClaims func() T, mapActor func(T) (security.Actor, error)) (security.Actor, error) {
 	if ctx == nil {

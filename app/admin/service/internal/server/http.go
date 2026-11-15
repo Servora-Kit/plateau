@@ -6,7 +6,6 @@ import (
 
 	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
 	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
-	adminauthn "github.com/Servora-Kit/plateau/app/admin/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	authnsecurity "github.com/Servora-Kit/plateau/security/authn"
 	"github.com/Servora-Kit/plateau/security/authn/session"
@@ -28,7 +27,7 @@ func NewHTTPServer(
 	app *corepb.App,
 	m *metrics.Metrics,
 	manager *scs.SessionManager,
-	sessionAuthn *adminauthn.SessionAuthenticator,
+	sessionAuthn *session.UserAuthenticator,
 	authorizer *openfga.Authorizer,
 	authSvc *service.AuthService,
 	userSvc *service.UserService,

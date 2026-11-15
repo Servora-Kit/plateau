@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	oidcv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/zitadel/oidc/v3/pkg/client/rp"
 	httphelper "github.com/zitadel/oidc/v3/pkg/http"
@@ -45,17 +46,6 @@ func nonceFromContext(ctx context.Context) string {
 	}
 	val, _ := ctx.Value(nonceContextKey{}).(string)
 	return val
-}
-
-// VerifiedIdentity holds the verified OIDC claims established after a successful
-// Authorization Code + PKCE S256 + nonce exchange.
-type VerifiedIdentity struct {
-	Subject       string
-	Email         string
-	EmailVerified bool
-	Name          string
-	Picture       string
-	AuthTime      time.Time
 }
 
 type handshakeState struct {
@@ -212,8 +202,8 @@ func (p *RelyingParty) BeginLogin(w http.ResponseWriter, r *http.Request, defaul
 
 // CompleteLogin consumes and deletes the one-time handshake cookie, validates
 // state, exchanges the authorization code with PKCE S256, verifies ID token
-// signature/iss/aud/exp/nonce/at_hash, and enriches profile/email claims.
-func (p *RelyingParty) CompleteLogin(w http.ResponseWriter, r *http.Request) (*VerifiedIdentity, string, error) {
+// signature/iss/aud/exp/nonce/at_hash, and returns the verified IAM User snapshot.
+func (p *RelyingParty) CompleteLogin(w http.ResponseWriter, r *http.Request) (*userpb.User, string, error) {
 	if r == nil || w == nil {
 		return nil, "", fmt.Errorf("oidc: request and response writer are required")
 	}
@@ -257,27 +247,39 @@ func (p *RelyingParty) CompleteLogin(w http.ResponseWriter, r *http.Request) (*V
 	}
 
 	idClaims := tokens.IDTokenClaims
-	if idClaims.GetSubject() == "" || subtle.ConstantTimeCompare([]byte(idClaims.GetNonce()), []byte(hs.Nonce)) != 1 {
+	subject := idClaims.GetSubject()
+	if subject == "" || subtle.ConstantTimeCompare([]byte(idClaims.GetNonce()), []byte(hs.Nonce)) != 1 {
 		return nil, "", fmt.Errorf("%w: invalid subject or nonce claim", ErrHandshakeInvalid)
 	}
 
-	identity := &VerifiedIdentity{
-		Subject:       idClaims.GetSubject(),
-		Email:         idClaims.Email,
-		EmailVerified: bool(idClaims.EmailVerified),
-		Name:          idClaims.Name,
-		Picture:       idClaims.Picture,
-		AuthTime:      idClaims.GetAuthTime(),
+	email := idClaims.Email
+	emailVerified := bool(idClaims.EmailVerified)
+	name := idClaims.Name
+	givenName := idClaims.GivenName
+	familyName := idClaims.FamilyName
+	nickname := idClaims.Nickname
+	preferredUsername := idClaims.PreferredUsername
+	picture := idClaims.Picture
+	var locale string
+	if idClaims.Locale != nil && !idClaims.Locale.Tag().IsRoot() {
+		locale = idClaims.Locale.String()
 	}
 
-	needsUserinfo := (slices.Contains(p.scopes, oidc.ScopeEmail) && identity.Email == "") ||
-		(slices.Contains(p.scopes, oidc.ScopeProfile) && identity.Name == "" && identity.Picture == "")
+	needsUserinfo := (slices.Contains(p.scopes, oidc.ScopeEmail) && email == "") ||
+		(slices.Contains(p.scopes, oidc.ScopeProfile) &&
+			name == "" &&
+			givenName == "" &&
+			familyName == "" &&
+			nickname == "" &&
+			preferredUsername == "" &&
+			picture == "" &&
+			locale == "")
 	if needsUserinfo && relyingParty.UserinfoEndpoint() != "" && tokens.AccessToken != "" {
 		tokenType := tokens.TokenType
 		if tokenType == "" {
 			tokenType = oidc.BearerToken
 		}
-		info, err := rp.Userinfo[*oidc.UserInfo](r.Context(), tokens.AccessToken, tokenType, identity.Subject, relyingParty)
+		info, err := rp.Userinfo[*oidc.UserInfo](r.Context(), tokens.AccessToken, tokenType, subject, relyingParty)
 		if err != nil {
 			if ctxErr := r.Context().Err(); ctxErr != nil {
 				return nil, "", ctxErr
@@ -288,20 +290,77 @@ func (p *RelyingParty) CompleteLogin(w http.ResponseWriter, r *http.Request) (*V
 			return nil, "", classifyExchangeError(err)
 		}
 		if info != nil {
-			if identity.Email == "" {
-				identity.Email = info.Email
-				identity.EmailVerified = bool(info.EmailVerified)
+			if email == "" {
+				email = info.Email
+				emailVerified = bool(info.EmailVerified)
 			}
-			if identity.Name == "" {
-				identity.Name = info.Name
+			if name == "" {
+				name = info.Name
 			}
-			if identity.Picture == "" {
-				identity.Picture = info.Picture
+			if givenName == "" {
+				givenName = info.GivenName
+			}
+			if familyName == "" {
+				familyName = info.FamilyName
+			}
+			if nickname == "" {
+				nickname = info.Nickname
+			}
+			if preferredUsername == "" {
+				preferredUsername = info.PreferredUsername
+			}
+			if picture == "" {
+				picture = info.Picture
+			}
+			if locale == "" && info.Locale != nil && !info.Locale.Tag().IsRoot() {
+				locale = info.Locale.String()
 			}
 		}
 	}
 
-	return identity, sanitizeReturnTo(hs.ReturnTo, "/"), nil
+	u := &userpb.User{
+		Name:          "users/" + subject,
+		UserId:        subject,
+		EmailVerified: emailVerified,
+	}
+	if email != "" {
+		u.Email = new(email)
+	}
+	var profile userpb.UserProfile
+	hasProfile := false
+	if name != "" {
+		profile.Name = new(name)
+		hasProfile = true
+	}
+	if givenName != "" {
+		profile.GivenName = new(givenName)
+		hasProfile = true
+	}
+	if familyName != "" {
+		profile.FamilyName = new(familyName)
+		hasProfile = true
+	}
+	if nickname != "" {
+		profile.Nickname = new(nickname)
+		hasProfile = true
+	}
+	if preferredUsername != "" {
+		profile.PreferredUsername = new(preferredUsername)
+		hasProfile = true
+	}
+	if picture != "" {
+		profile.Picture = new(picture)
+		hasProfile = true
+	}
+	if locale != "" {
+		profile.Locale = new(locale)
+		hasProfile = true
+	}
+	if hasProfile {
+		u.Profile = &profile
+	}
+
+	return u, sanitizeReturnTo(hs.ReturnTo, "/"), nil
 }
 
 func (p *RelyingParty) discover(ctx context.Context) (rp.RelyingParty, error) {
@@ -350,12 +409,10 @@ func (p *RelyingParty) discover(ctx context.Context) (rp.RelyingParty, error) {
 }
 
 func classifyExchangeError(err error) error {
-	var retrieveErr *oauth2.RetrieveError
-	if errors.As(err, &retrieveErr) && retrieveErr.Response != nil && retrieveErr.Response.StatusCode >= http.StatusInternalServerError {
+	if retrieveErr, ok := errors.AsType[*oauth2.RetrieveError](err); ok && retrieveErr != nil && retrieveErr.Response != nil && retrieveErr.Response.StatusCode >= http.StatusInternalServerError {
 		return fmt.Errorf("%w: upstream token endpoint returned %d", ErrProviderUnavailable, retrieveErr.Response.StatusCode)
 	}
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
+	if _, ok := errors.AsType[*url.Error](err); ok {
 		return fmt.Errorf("%w: upstream provider request failed", ErrProviderUnavailable)
 	}
 	return fmt.Errorf("%w: code exchange or token verification failed", ErrHandshakeInvalid)

@@ -10,15 +10,13 @@ import (
 	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
-	adminauthn "github.com/Servora-Kit/plateau/app/admin/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/authn/session"
 	securityoidc "github.com/Servora-Kit/plateau/security/oidc"
 	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -89,7 +87,7 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identity, returnTo, err := s.oidcRP.CompleteLogin(w, r)
+	user, returnTo, err := s.oidcRP.CompleteLogin(w, r)
 	if err != nil {
 		_ = s.manager.Destroy(r.Context())
 		if errors.Is(err, securityoidc.ErrProviderUnavailable) {
@@ -107,7 +105,7 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	allowed, err := s.uc.CheckAccess(r.Context(), identity.Subject)
+	allowed, err := s.uc.CheckAccess(r.Context(), user.GetUserId())
 	if err != nil {
 		_ = s.manager.Destroy(r.Context())
 		s.log.ErrorContext(r.Context(), "OpenFGA access check failed during callback", "err", err)
@@ -120,17 +118,7 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var authTime *timestamppb.Timestamp
-	if !identity.AuthTime.IsZero() {
-		authTime = timestamppb.New(identity.AuthTime)
-	}
-	if err := adminauthn.SavePrincipal(r.Context(), s.manager, &adminauthpb.AdminPrincipal{
-		UserId:   identity.Subject,
-		Email:    identity.Email,
-		Name:     identity.Name,
-		Picture:  identity.Picture,
-		AuthTime: authTime,
-	}); err != nil {
+	if err := session.SaveUser(r.Context(), s.manager, user); err != nil {
 		_ = s.manager.Destroy(r.Context())
 		s.log.ErrorContext(r.Context(), "persist admin session failed during callback", "err", err)
 		http.Redirect(w, r, webLoginPath+"?error=service_unavailable", http.StatusFound)
@@ -141,7 +129,7 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *AuthService) GetSession(ctx context.Context, _ *adminauthpb.GetSessionRequest) (*adminauthpb.GetSessionResponse, error) {
-	principal, ok := adminauthn.PrincipalFrom(ctx)
+	user, ok := session.UserFrom(ctx)
 	actor, actorOK := security.ActorFrom(ctx)
 	if !ok || !actorOK || !actor.Valid() {
 		return nil, securityerrorspb.ErrorSecurityErrorReasonUnauthenticated("authentication required")
@@ -159,7 +147,7 @@ func (s *AuthService) GetSession(ctx context.Context, _ *adminauthpb.GetSessionR
 	}
 
 	return &adminauthpb.GetSessionResponse{
-		User:        proto.Clone(principal).(*adminauthpb.AdminPrincipal),
+		User:        user,
 		Permissions: perms,
 	}, nil
 }

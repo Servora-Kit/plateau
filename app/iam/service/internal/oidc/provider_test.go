@@ -23,12 +23,15 @@ import (
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 	oidcconfv1 "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	sessionconfig "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/security"
+	authnjwt "github.com/Servora-Kit/plateau/security/authn/jwt"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	"github.com/alicebob/miniredis/v2"
@@ -37,6 +40,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	fgaclient "github.com/openfga/go-sdk/client"
 	goredis "github.com/redis/go-redis/v9"
+	jwtlib "github.com/golang-jwt/jwt/v5"
 	oidcprotocol "github.com/zitadel/oidc/v3/pkg/oidc"
 	"google.golang.org/protobuf/proto"
 )
@@ -195,6 +199,35 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	assertRS256JWT(t, tokens.IDToken)
 	if tokens.RefreshToken == "" {
 		t.Fatal("offline_access exchange did not issue a refresh token")
+	}
+	jwtVerifier, err := NewJWTVerifier(fixture.storage)
+	if err != nil {
+		t.Fatalf("NewJWTVerifier: %v", err)
+	}
+	humanAuthn, closeHumanAuthn, err := authnjwt.New(ctx, &jwtpb.JwtAuthnConfig{
+		Issuer:   testIssuer,
+		Audience: testClientID,
+	}, authnjwt.WithVerifier(jwtVerifier))
+	if err != nil {
+		t.Fatalf("authnjwt.New: %v", err)
+	}
+	t.Cleanup(closeHumanAuthn)
+	humanActor, err := authnjwt.AuthenticateFor[authnjwt.HumanClaims](ctx, humanAuthn, "Bearer "+tokens.AccessToken)
+	if err != nil || humanActor != (security.Actor{Type: security.ActorTypeHuman, ID: fixture.userID}) {
+		t.Fatalf("AuthenticateFor[HumanClaims](access_token) = %+v, err = %v", humanActor, err)
+	}
+	if _, err := authnjwt.AuthenticateFor[authnjwt.ServiceClaims](ctx, humanAuthn, "Bearer "+tokens.AccessToken); err == nil {
+		t.Fatal("human access_token was unexpectedly accepted by ServiceClaims")
+	}
+	idClaimsMap := jwtlib.MapClaims{}
+	if _, err := jwtVerifier.VerifySignature(ctx, tokens.IDToken, &idClaimsMap); err != nil {
+		t.Fatalf("verify id_token signature: %v", err)
+	}
+	if _, hasTokenUse := idClaimsMap["token_use"]; hasTokenUse {
+		t.Fatalf("id_token unexpectedly carried token_use claim: %+v", idClaimsMap)
+	}
+	if _, err := authnjwt.AuthenticateFor[authnjwt.HumanClaims](ctx, humanAuthn, "Bearer "+tokens.IDToken); err == nil {
+		t.Fatal("id_token without token_use=access was unexpectedly accepted by HumanClaims")
 	}
 
 	replayedCode := exchangeTokenRaw(fixture.provider, url.Values{
