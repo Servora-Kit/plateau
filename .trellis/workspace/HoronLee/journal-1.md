@@ -241,3 +241,28 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 8: 完成 11-14-security-authn-refactor 平台认证重构与结项归档
+<!-- trellis-session: v=2 fp=66f9d6fd20f5f681 -->
+
+**Date**: 2026-11-15
+**Task**: 完成 11-14-security-authn-refactor 平台认证重构与结项归档
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+重构 security/authn/jwt（ActorClaims 泛型约束与 AccessClaims/ServiceClaims/HumanClaims）、security/authn/session（直接基于 *userpb.User 的 SaveUser/NewUserAuthenticator/UserFrom）与 security/oidc（移除 VerifiedIdentity，CompleteLogin 直出 *userpb.User）；删除 AdminPrincipal 与 Admin 私有 authn 包，通过全量测试与 lint 门禁后归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f76995b6` | refactor(security): 统一平台认证组件与 OIDC 用户契约 |
+| `39779e5b` | chore(api): 同步 Proto 描述符生成产物 |
+| `b4199888` | docs: 同步认证架构规范、任务记录与 TODO 清单 |
+
+### Status
+
+[OK] **Completed**

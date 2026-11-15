@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 7
-- **Last Active**: 2026-11-13
+- **Total Sessions**: 8
+- **Last Active**: 2026-11-15
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~243 | Active |
+| `journal-1.md` | ~268 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 8 | 2026-11-15 | 完成 11-14-security-authn-refactor 平台认证重构与结项归档 | `f76995b6`, `39779e5b`, `b4199888` | `main` |
 | 7 | 2026-11-13 | 完成 11-13-servora-crud-optimize 跨仓 CRUD 优化与结项归档 | `c962aa50`, `d15a5cb3` | `main` |
 | 6 | 2026-11-13 | 完成 10-18-admin-v1-backend 规划、实施、共享安全组件提炼与结项归档 | `68ccfbf5`, `3ecef6e1`, `de1f4f51`, `666b3b2b` | `main` |
 | 5 | 2026-11-12 | 完成 10-18-admin-v1-iam 实现、会话过滤公共化与结项归档 | `1b44d10a`, `23075871`, `f3a2bc18`, `40439aca` | `main` |
