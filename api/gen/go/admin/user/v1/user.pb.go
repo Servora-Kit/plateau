@@ -954,67 +954,67 @@ var File_admin_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_admin_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x18admin/user/v1/user.proto\x12\radmin.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xe7\x01\n" +
-	"\x10ListUsersRequest\x12 \n" +
-	"\tpage_size\x18\x01 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
+	"\x18admin/user/v1/user.proto\x12\radmin.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xed\x01\n" +
+	"\x10ListUsersRequest\x12!\n" +
+	"\tpage_size\x18\x01 \x01(\x05B\x04\xe2A\x01\x01R\bpageSize\x12#\n" +
 	"\n" +
-	"page_token\x18\x02 \x01(\tB\x03\xe0A\x01R\tpageToken\x12\x1b\n" +
-	"\x06filter\x18\x03 \x01(\tB\x03\xe0A\x01R\x06filter\x12\x1e\n" +
-	"\border_by\x18\x04 \x01(\tB\x03\xe0A\x01R\aorderBy\x12&\n" +
-	"\fshow_deleted\x18\x05 \x01(\bB\x03\xe0A\x01R\vshowDeleted\x12(\n" +
-	"\rinclude_total\x18\x06 \x01(\bB\x03\xe0A\x01R\fincludeTotal\"\x97\x01\n" +
+	"page_token\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\tpageToken\x12\x1c\n" +
+	"\x06filter\x18\x03 \x01(\tB\x04\xe2A\x01\x01R\x06filter\x12\x1f\n" +
+	"\border_by\x18\x04 \x01(\tB\x04\xe2A\x01\x01R\aorderBy\x12'\n" +
+	"\fshow_deleted\x18\x05 \x01(\bB\x04\xe2A\x01\x01R\vshowDeleted\x12)\n" +
+	"\rinclude_total\x18\x06 \x01(\bB\x04\xe2A\x01\x01R\fincludeTotal\"\x97\x01\n" +
 	"\x11ListUsersResponse\x12'\n" +
 	"\x05users\x18\x01 \x03(\v2\x11.iam.user.v1.UserR\x05users\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\"\n" +
 	"\n" +
 	"total_size\x18\x03 \x01(\x03H\x00R\ttotalSize\x88\x01\x01B\r\n" +
-	"\v_total_size\"B\n" +
-	"\x0eGetUserRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
-	"\x14iam.plateau.dev/UserR\x04name\"\xbb\x02\n" +
-	"\x11CreateUserRequest\x12k\n" +
-	"\auser_id\x18\x01 \x01(\tBR\xe0A\x01\xbaHL\xd8\x01\x01rG2E^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$R\x06userId\x12*\n" +
-	"\x04user\x18\x02 \x01(\v2\x11.iam.user.v1.UserB\x03\xe0A\x02R\x04user\x12/\n" +
-	"\bpassword\x18\x03 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x12@\n" +
-	"\x17require_password_change\x18\x04 \x01(\bB\x03\xe0A\x01H\x00R\x15requirePasswordChange\x88\x01\x01B\x1a\n" +
+	"\v_total_size\"C\n" +
+	"\x0eGetUserRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
+	"\x14iam.plateau.dev/UserR\x04name\"\xbf\x02\n" +
+	"\x11CreateUserRequest\x12l\n" +
+	"\auser_id\x18\x01 \x01(\tBS\xe2A\x01\x01\xbaHL\xd8\x01\x01rG2E^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$R\x06userId\x12+\n" +
+	"\x04user\x18\x02 \x01(\v2\x11.iam.user.v1.UserB\x04\xe2A\x01\x02R\x04user\x120\n" +
+	"\bpassword\x18\x03 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x12A\n" +
+	"\x17require_password_change\x18\x04 \x01(\bB\x04\xe2A\x01\x01H\x00R\x15requirePasswordChange\x88\x01\x01B\x1a\n" +
 	"\x18_require_password_change\"s\n" +
 	"\x12CreateUserResponse\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\x126\n" +
-	"\x17verification_email_sent\x18\x02 \x01(\bR\x15verificationEmailSent\"T\n" +
-	" SendUserVerificationEmailRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
+	"\x17verification_email_sent\x18\x02 \x01(\bR\x15verificationEmailSent\"U\n" +
+	" SendUserVerificationEmailRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
 	"\x14iam.plateau.dev/UserR\x04name\"#\n" +
-	"!SendUserVerificationEmailResponse\"\x81\x01\n" +
-	"\x11UpdateUserRequest\x12*\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserB\x03\xe0A\x02R\x04user\x12@\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x03\xe0A\x01R\n" +
-	"updateMask\"\x82\x01\n" +
-	"\x16SetUserPasswordRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
-	"\x14iam.plateau.dev/UserR\x04name\x126\n" +
-	"\fnew_password\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"\x19\n" +
-	"\x17SetUserPasswordResponse\"M\n" +
-	"\x19RevokeUserSessionsRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
+	"!SendUserVerificationEmailResponse\"\x83\x01\n" +
+	"\x11UpdateUserRequest\x12+\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserB\x04\xe2A\x01\x02R\x04user\x12A\n" +
+	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x04\xe2A\x01\x01R\n" +
+	"updateMask\"\x84\x01\n" +
+	"\x16SetUserPasswordRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
+	"\x14iam.plateau.dev/UserR\x04name\x127\n" +
+	"\fnew_password\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"\x19\n" +
+	"\x17SetUserPasswordResponse\"N\n" +
+	"\x19RevokeUserSessionsRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
 	"\x14iam.plateau.dev/UserR\x04name\"\x1c\n" +
-	"\x1aRevokeUserSessionsResponse\"|\n" +
-	"\x12DisableUserRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
-	"\x14iam.plateau.dev/UserR\x04name\x12\x1b\n" +
-	"\x06reason\x18\x02 \x01(\tB\x03\xe0A\x01R\x06reason\x12\x17\n" +
-	"\x04etag\x18\x03 \x01(\tB\x03\xe0A\x01R\x04etag\"^\n" +
-	"\x11EnableUserRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
-	"\x14iam.plateau.dev/UserR\x04name\x12\x17\n" +
-	"\x04etag\x18\x02 \x01(\tB\x03\xe0A\x01R\x04etag\"E\n" +
-	"\x11DeleteUserRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
+	"\x1aRevokeUserSessionsResponse\"\x7f\n" +
+	"\x12DisableUserRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
+	"\x14iam.plateau.dev/UserR\x04name\x12\x1c\n" +
+	"\x06reason\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x06reason\x12\x18\n" +
+	"\x04etag\x18\x03 \x01(\tB\x04\xe2A\x01\x01R\x04etag\"`\n" +
+	"\x11EnableUserRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
+	"\x14iam.plateau.dev/UserR\x04name\x12\x18\n" +
+	"\x04etag\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x04etag\"F\n" +
+	"\x11DeleteUserRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
+	"\x14iam.plateau.dev/UserR\x04name\"H\n" +
+	"\x13UndeleteUserRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
 	"\x14iam.plateau.dev/UserR\x04name\"G\n" +
-	"\x13UndeleteUserRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
-	"\x14iam.plateau.dev/UserR\x04name\"F\n" +
-	"\x12ExpungeUserRequest\x120\n" +
-	"\x04name\x18\x01 \x01(\tB\x1c\xe0A\x02\xfaA\x16\n" +
+	"\x12ExpungeUserRequest\x121\n" +
+	"\x04name\x18\x01 \x01(\tB\x1d\xe2A\x01\x02\xfaA\x16\n" +
 	"\x14iam.plateau.dev/UserR\x04name*\xfc\x03\n" +
 	"\x14AdminUserErrorReason\x12'\n" +
 	"#ADMIN_USER_ERROR_REASON_UNSPECIFIED\x10\x00\x128\n" +

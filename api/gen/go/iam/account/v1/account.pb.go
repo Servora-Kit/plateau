@@ -1014,35 +1014,40 @@ var File_iam_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_iam_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"\x1ciam/account/v1/account.proto\x12\x0eiam.account.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\"\xbe\x01\n" +
-	"\x0fRegisterRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12/\n" +
-	"\bpassword\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x127\n" +
-	"\aprofile\x18\x03 \x01(\v2\x18.iam.user.v1.UserProfileB\x03\xe0A\x01R\aprofile\x12&\n" +
-	"\tcap_token\x18\x04 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\bcapToken\"9\n" +
+	"\x1ciam/account/v1/account.proto\x12\x0eiam.account.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\"\xc2\x01\n" +
+	"\x0fRegisterRequest\x12\x1a\n" +
+	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x120\n" +
+	"\bpassword\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x128\n" +
+	"\aprofile\x18\x03 \x01(\v2\x18.iam.user.v1.UserProfileB\x04\xe2A\x01\x01R\aprofile\x12'\n" +
+	"\tcap_token\x18\x04 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\bcapToken\"9\n" +
 	"\x10RegisterResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"5\n" +
-	"\x12VerifyEmailRequest\x12\x1f\n" +
-	"\x05token\x18\x01 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\x05token\"<\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"6\n" +
+	"\x12VerifyEmailRequest\x12 \n" +
+	"\x05token\x18\x01 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\x05token\"<\n" +
 	"\x13VerifyEmailResponse\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"c\n" +
-	"\x1eResendVerificationEmailRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12&\n" +
-	"\tcap_token\x18\x02 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\bcapToken\"\x13\n" +
-	"\x11GetProfileRequest\"\x91\x01\n" +
-	"\x14UpdateProfileRequest\x127\n" +
-	"\aprofile\x18\x01 \x01(\v2\x18.iam.user.v1.UserProfileB\x03\xe0A\x02R\aprofile\x12@\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x03\xe0A\x01R\n" +
-	"updateMask\"\x8f\x01\n" +
-	"\x15ChangePasswordRequest\x12>\n" +
-	"\x10current_password\x18\x01 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\x126\n" +
-	"\fnew_password\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"`\n" +
-	"\x1bRequestPasswordResetRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12&\n" +
-	"\tcap_token\x18\x02 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\bcapToken\"v\n" +
-	"\x1bConfirmPasswordResetRequest\x12\x1f\n" +
-	"\x05token\x18\x01 \x01(\tB\t\xe0A\x02ڶ\x1a\x02z\x00R\x05token\x126\n" +
-	"\fnew_password\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"!\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"e\n" +
+	"\x1eResendVerificationEmailRequest\x12\x1a\n" +
+	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x12'\n" +
+	"\tcap_token\x18\x02 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\bcapToken\"\x13\n" +
+	"\x11GetProfileRequest\"\x93\x01\n" +
+	"\x14UpdateProfileRequest\x128\n" +
+	"\aprofile\x18\x01 \x01(\v2\x18.iam.user.v1.UserProfileB\x04\xe2A\x01\x02R\aprofile\x12A\n" +
+	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x04\xe2A\x01\x01R\n" +
+	"updateMask\"\x91\x01\n" +
+	"\x15ChangePasswordRequest\x12?\n" +
+	"\x10current_password\x18\x01 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\x127\n" +
+	"\fnew_password\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"b\n" +
+	"\x1bRequestPasswordResetRequest\x12\x1a\n" +
+	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x12'\n" +
+	"\tcap_token\x18\x02 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\bcapToken\"x\n" +
+	"\x1bConfirmPasswordResetRequest\x12 \n" +
+	"\x05token\x18\x01 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\x05token\x127\n" +
+	"\fnew_password\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"!\n" +
 	"\x1fResendVerificationEmailResponse\";\n" +
 	"\x12GetProfileResponse\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\">\n" +
@@ -1050,14 +1055,14 @@ const file_iam_account_v1_account_proto_rawDesc = "" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\"\x18\n" +
 	"\x16ChangePasswordResponse\"\x1e\n" +
 	"\x1cRequestPasswordResetResponse\"\x1e\n" +
-	"\x1cConfirmPasswordResetResponse\"\xb1\x01\n" +
-	"\x1cChangeInitialPasswordRequest\x12\x19\n" +
-	"\x05email\x18\x01 \x01(\tB\x03\xe0A\x02R\x05email\x12>\n" +
-	"\x10current_password\x18\x02 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\x126\n" +
-	"\fnew_password\x18\x03 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"\x1f\n" +
-	"\x1dChangeInitialPasswordResponse\"V\n" +
-	"\x14DeleteAccountRequest\x12>\n" +
-	"\x10current_password\x18\x01 \x01(\tB\x13\xe0A\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\"\x17\n" +
+	"\x1cConfirmPasswordResetResponse\"\xb4\x01\n" +
+	"\x1cChangeInitialPasswordRequest\x12\x1a\n" +
+	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x12?\n" +
+	"\x10current_password\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\x127\n" +
+	"\fnew_password\x18\x03 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\vnewPassword\"\x1f\n" +
+	"\x1dChangeInitialPasswordResponse\"W\n" +
+	"\x14DeleteAccountRequest\x12?\n" +
+	"\x10current_password\x18\x01 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\"\x17\n" +
 	"\x15DeleteAccountResponse*\x9a\x03\n" +
 	"\x12AccountErrorReason\x12$\n" +
 	" ACCOUNT_ERROR_REASON_UNSPECIFIED\x10\x00\x12-\n" +

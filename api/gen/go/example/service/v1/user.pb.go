@@ -678,65 +678,65 @@ var File_example_service_v1_user_proto protoreflect.FileDescriptor
 
 const file_example_service_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x1dexample/service/v1/user.proto\x12\x12example.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eservora/errors/v1/errors.proto\"\xb0\x05\n" +
-	"\x04User\x12\x17\n" +
-	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12+\n" +
-	"\fdisplay_name\x18\x02 \x01(\tB\x03\xe0A\x01H\x00R\vdisplayName\x88\x01\x01\x12\x1e\n" +
-	"\x05email\x18\x03 \x01(\tB\x03\xe0A\x02H\x01R\x05email\x88\x01\x01\x12,\n" +
-	"\vtenant_plan\x18\x04 \x01(\tB\x06\xe0A\x01\xe0A\x05H\x02R\n" +
-	"tenantPlan\x88\x01\x01\x12$\n" +
-	"\bnickname\x18\x05 \x01(\tB\x03\xe0A\x01H\x03R\bnickname\x88\x01\x01\x12:\n" +
-	"\x12temporary_password\x18\x06 \x01(\tB\x06\xe0A\x01\xe0A\x04H\x04R\x11temporaryPassword\x88\x01\x01\x12\x12\n" +
-	"\x04etag\x18\a \x01(\tR\x04etag\x12@\n" +
-	"\vcreate_time\x18d \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
-	"createTime\x12@\n" +
-	"\vupdate_time\x18e \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
-	"updateTime\x12@\n" +
-	"\vdelete_time\x18f \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
-	"deleteTime\x12>\n" +
+	"\x1dexample/service/v1/user.proto\x12\x12example.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eservora/errors/v1/errors.proto\"\xb6\x05\n" +
+	"\x04User\x12\x18\n" +
+	"\x04name\x18\x01 \x01(\tB\x04\xe2A\x01\bR\x04name\x12,\n" +
+	"\fdisplay_name\x18\x02 \x01(\tB\x04\xe2A\x01\x01H\x00R\vdisplayName\x88\x01\x01\x12\x1f\n" +
+	"\x05email\x18\x03 \x01(\tB\x04\xe2A\x01\x02H\x01R\x05email\x88\x01\x01\x12+\n" +
+	"\vtenant_plan\x18\x04 \x01(\tB\x05\xe2A\x02\x01\x05H\x02R\n" +
+	"tenantPlan\x88\x01\x01\x12%\n" +
+	"\bnickname\x18\x05 \x01(\tB\x04\xe2A\x01\x01H\x03R\bnickname\x88\x01\x01\x129\n" +
+	"\x12temporary_password\x18\x06 \x01(\tB\x05\xe2A\x02\x01\x04H\x04R\x11temporaryPassword\x88\x01\x01\x12\x12\n" +
+	"\x04etag\x18\a \x01(\tR\x04etag\x12A\n" +
+	"\vcreate_time\x18d \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\n" +
+	"createTime\x12A\n" +
+	"\vupdate_time\x18e \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\n" +
+	"updateTime\x12A\n" +
+	"\vdelete_time\x18f \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\n" +
+	"deleteTime\x12?\n" +
 	"\n" +
-	"purge_time\x18g \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tpurgeTime:I\xeaAF\n" +
+	"purge_time\x18g \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\tpurgeTime:I\xeaAF\n" +
 	"\x18example.servora.dev/User\x12\x1dtenants/{tenant}/users/{user}*\x05users2\x04userB\x0f\n" +
 	"\r_display_nameB\b\n" +
 	"\x06_emailB\x0e\n" +
 	"\f_tenant_planB\v\n" +
 	"\t_nicknameB\x15\n" +
-	"\x13_temporary_password\"F\n" +
-	"\x0eGetUserRequest\x124\n" +
-	"\x04name\x18\x01 \x01(\tB \xe0A\x02\xfaA\x1a\n" +
-	"\x18example.servora.dev/UserR\x04name\"\xba\x02\n" +
-	"\x10ListUsersRequest\x128\n" +
-	"\x06parent\x18\x01 \x01(\tB \xe0A\x02\xfaA\x1a\x12\x18example.servora.dev/UserR\x06parent\x12 \n" +
-	"\tpage_size\x18\x02 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
+	"\x13_temporary_password\"G\n" +
+	"\x0eGetUserRequest\x125\n" +
+	"\x04name\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\n" +
+	"\x18example.servora.dev/UserR\x04name\"\xc2\x02\n" +
+	"\x10ListUsersRequest\x129\n" +
+	"\x06parent\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\x12\x18example.servora.dev/UserR\x06parent\x12!\n" +
+	"\tpage_size\x18\x02 \x01(\x05B\x04\xe2A\x01\x01R\bpageSize\x12#\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tB\x03\xe0A\x01R\tpageToken\x12\x17\n" +
-	"\x04skip\x18\x04 \x01(\x03B\x03\xe0A\x01R\x04skip\x12\x1b\n" +
-	"\x06filter\x18\x05 \x01(\tB\x03\xe0A\x01R\x06filter\x12\x1e\n" +
-	"\border_by\x18\x06 \x01(\tB\x03\xe0A\x01R\aorderBy\x12(\n" +
-	"\rinclude_total\x18\a \x01(\bB\x03\xe0A\x01R\fincludeTotal\x12&\n" +
-	"\fshow_deleted\x18\b \x01(\bB\x03\xe0A\x01R\vshowDeleted\"\x9e\x01\n" +
+	"page_token\x18\x03 \x01(\tB\x04\xe2A\x01\x01R\tpageToken\x12\x18\n" +
+	"\x04skip\x18\x04 \x01(\x03B\x04\xe2A\x01\x01R\x04skip\x12\x1c\n" +
+	"\x06filter\x18\x05 \x01(\tB\x04\xe2A\x01\x01R\x06filter\x12\x1f\n" +
+	"\border_by\x18\x06 \x01(\tB\x04\xe2A\x01\x01R\aorderBy\x12)\n" +
+	"\rinclude_total\x18\a \x01(\bB\x04\xe2A\x01\x01R\fincludeTotal\x12'\n" +
+	"\fshow_deleted\x18\b \x01(\bB\x04\xe2A\x01\x01R\vshowDeleted\"\x9e\x01\n" +
 	"\x11ListUsersResponse\x12.\n" +
 	"\x05users\x18\x01 \x03(\v2\x18.example.service.v1.UserR\x05users\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\"\n" +
 	"\n" +
 	"total_size\x18\x03 \x01(\x03H\x00R\ttotalSize\x88\x01\x01B\r\n" +
-	"\v_total_size\"\x9e\x01\n" +
-	"\x11CreateUserRequest\x128\n" +
-	"\x06parent\x18\x01 \x01(\tB \xe0A\x02\xfaA\x1a\x12\x18example.servora.dev/UserR\x06parent\x12\x1c\n" +
-	"\auser_id\x18\x02 \x01(\tB\x03\xe0A\x02R\x06userId\x121\n" +
-	"\x04user\x18\x03 \x01(\v2\x18.example.service.v1.UserB\x03\xe0A\x02R\x04user\"\xb2\x01\n" +
-	"\x11UpdateUserRequest\x121\n" +
-	"\x04user\x18\x01 \x01(\v2\x18.example.service.v1.UserB\x03\xe0A\x02R\x04user\x12@\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x03\xe0A\x01R\n" +
-	"updateMask\x12(\n" +
-	"\rallow_missing\x18\x03 \x01(\bB\x03\xe0A\x01R\fallowMissing\"\x8c\x01\n" +
-	"\x11DeleteUserRequest\x124\n" +
-	"\x04name\x18\x01 \x01(\tB \xe0A\x02\xfaA\x1a\n" +
-	"\x18example.servora.dev/UserR\x04name\x12\x17\n" +
-	"\x04etag\x18\x02 \x01(\tB\x03\xe0A\x01R\x04etag\x12(\n" +
-	"\rallow_missing\x18\x03 \x01(\bB\x03\xe0A\x01R\fallowMissing\"K\n" +
-	"\x13UndeleteUserRequest\x124\n" +
-	"\x04name\x18\x01 \x01(\tB \xe0A\x02\xfaA\x1a\n" +
+	"\v_total_size\"\xa1\x01\n" +
+	"\x11CreateUserRequest\x129\n" +
+	"\x06parent\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\x12\x18example.servora.dev/UserR\x06parent\x12\x1d\n" +
+	"\auser_id\x18\x02 \x01(\tB\x04\xe2A\x01\x02R\x06userId\x122\n" +
+	"\x04user\x18\x03 \x01(\v2\x18.example.service.v1.UserB\x04\xe2A\x01\x02R\x04user\"\xb5\x01\n" +
+	"\x11UpdateUserRequest\x122\n" +
+	"\x04user\x18\x01 \x01(\v2\x18.example.service.v1.UserB\x04\xe2A\x01\x02R\x04user\x12A\n" +
+	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x04\xe2A\x01\x01R\n" +
+	"updateMask\x12)\n" +
+	"\rallow_missing\x18\x03 \x01(\bB\x04\xe2A\x01\x01R\fallowMissing\"\x8f\x01\n" +
+	"\x11DeleteUserRequest\x125\n" +
+	"\x04name\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\n" +
+	"\x18example.servora.dev/UserR\x04name\x12\x18\n" +
+	"\x04etag\x18\x02 \x01(\tB\x04\xe2A\x01\x01R\x04etag\x12)\n" +
+	"\rallow_missing\x18\x03 \x01(\bB\x04\xe2A\x01\x01R\fallowMissing\"L\n" +
+	"\x13UndeleteUserRequest\x125\n" +
+	"\x04name\x18\x01 \x01(\tB!\xe2A\x01\x02\xfaA\x1a\n" +
 	"\x18example.servora.dev/UserR\x04name*\xbc\x01\n" +
 	"\x0fUserErrorReason\x12!\n" +
 	"\x1dUSER_ERROR_REASON_UNSPECIFIED\x10\x00\x12&\n" +
