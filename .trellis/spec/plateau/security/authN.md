@@ -1,6 +1,6 @@
 # AuthN：认证实现与路由规则
 
-适用于 `security/authn` 及微服务的认证适配。共享包提供具体 JWT／Session Authenticator，不另建一个包揽所有认证形态的通用 provider。业务身份如何映射 [Actor](actor.md) 由消费应用决定。
+适用于 `security/authn` 及微服务的认证适配。共享包按认证机制提供具体 `jwt` 与 `session` 实现及轻量泛型扩展点，底层协议包（`security/oidc`、`security/jwt`、`security/session`）绝不反向依赖 `security/authn/*`。
 
 ## 规则与默认拒绝
 
@@ -15,11 +15,16 @@
 
 [JWT Authenticator](../../../../security/authn/jwt/authn.go) 固定一个 issuer/audience。构造时注入 verifier、静态 verification_keys、显式 JWKS 只能选择一种；没有显式来源时走 issuer discovery。构造返回的 cleanup 用于自有刷新资源，交给应用启动装配。
 
-每次认证必须从工厂得到一个已初始化、非 nil 的 claims 指针，不能并发复用 claims。流程为解析 Bearer → 验签 → `typ=JWT` → issuer/audience/exp/iat 校验 → 映射非匿名 Actor。底层 [JWT verifier](credentials.md) 只负责签名，不能代替 AuthN 的 claims policy。
+每次认证必须从工厂得到一个已初始化、非 nil 的 claims 指针，不能并发复用 claims。流程为解析 Bearer → 验签 → `typ=JWT` → issuer/audience/exp/iat 及 `ClaimsValidator` 校验 → 映射非匿名 Actor。底层 [JWT verifier](credentials.md) 只负责签名，不能代替 AuthN 的 claims policy。
+
+- 声明结构体实现 `ActorClaims[T]`（`*T` 同时满足 `jwt.Claims` 与 `Actor() (security.Actor, error)`）后，直接通过 `jwt.AuthenticateFor[T]` / `jwt.ServerFor[T]` 装配，无需重复编写工厂与映射回调。
+- [claims.go](../../../../security/authn/jwt/claims.go) 提供公共内嵌底座 `AccessClaims`（强制 `token_use=access`、`iat != nil`、`jti != ""`）以及开箱即用的 `ServiceClaims`（`actor_type=service` 且 `sub == client_id != ""`）与 `HumanClaims`（`actor_type=human` 且 `sub != ""`）；扩展业务私有声明时直接内嵌 `HumanClaims`、`ServiceClaims` 或 `AccessClaims`。
 
 ## Session profile
 
-先在 HTTP 边界装配 `security/session.LoadAndSave(manager)`，再由同一个 manager 构造 Session Authenticator。Resolver 读取应用身份，ActorMapper 转换身份；可选 ContextExtender 只附加可信状态。缺失加载标记与已加载的匿名会话是不同情况，不能拿另一 manager 的 context 充数，也不能假装这套 HTTP session 生命周期自动覆盖 gRPC。
+先在 HTTP 边界装配 `security/session.LoadAndSave(manager)`（或 `security/session.NewFilter`），再由同一个 manager 构造 Session Authenticator。Resolver 读取应用身份，ActorMapper 转换身份；可选 ContextExtender 只附加可信状态。缺失加载标记与已加载的匿名会话是不同情况，不能拿另一 manager 的 context 充数，也不能假装这套 HTTP session 生命周期自动覆盖 gRPC。
+
+- 常规浏览器服务直接使用 [user.go](../../../../security/authn/session/user.go) 导出的 `SaveUser`、`NewUserAuthenticator`、`UserFrom`（承载 `*iam.user.v1.User`，由 `security/oidc.RelyingParty.CompleteLogin` 直接返回）：`SaveUser` 校验已加载会话与非空 `user_id` 后执行 `proto.Marshal` + `manager.RenewToken` + `manager.Put`；`NewUserAuthenticator` 将反序列化后的快照写入请求 `context.Context`，`UserFrom` 按需返回 `proto.Clone` 防篡改副本。无需自建私有 `internal/authn` 包；仅需服务端实时查表吊销的 IdP 会话（如 IAM）或自定义会话结构才直接使用底层泛型 `session.New[T]`。
 
 ## 错误与检查
 

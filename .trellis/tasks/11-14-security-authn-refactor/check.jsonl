@@ -1,0 +1,11 @@
+{"file":".trellis/tasks/11-14-security-authn-refactor/prd.md","reason":"逐项核对 AC-1 至 AC-5"}
+{"file":".trellis/tasks/11-14-security-authn-refactor/design.md","reason":"核对依赖方向无反向耦合与泛型签名"}
+{"file":".trellis/tasks/11-14-security-authn-refactor/implement.md","reason":"核对删除项、生成产物与验证覆盖"}
+{"file":".trellis/spec/plateau/security/authN.md","reason":"核对 security/authn 规范同步"}
+{"file":".trellis/spec/plateau/security/credentials.md","reason":"核对会话轮换与脱敏"}
+{"file":".trellis/spec/admin/backend.md","reason":"核对 Admin 规范同步"}
+{"file":".trellis/spec/iam/oidc.md","reason":"核对人机 Access Token 声明与 ID Token 隔离"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核对 AdminPrincipal 移除后契约干净度"}
+{"file":".trellis/spec/api/proto/generation.md","reason":"核对 Go/TS/OpenAPI 生成物一致性"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"核对代码分层与包职责"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"核对单测与集成测试质量"}
