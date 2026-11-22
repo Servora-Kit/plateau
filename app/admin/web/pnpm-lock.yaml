@@ -206,6 +206,9 @@ catalogs:
     '@pnpm/workspace.read-manifest':
       specifier: ^1000.3.1
       version: 1000.3.1
+    '@servora/proto-utils':
+      specifier: ^0.1.11
+      version: 0.1.11
     '@stylistic/stylelint-plugin':
       specifier: ^5.2.1
       version: 5.3.0
@@ -663,8 +666,8 @@ importers:
         specifier: link:../../../../../web/packages/client
         version: link:../../../../../web/packages/client
       '@servora/proto-utils':
-        specifier: link:../../../../../../servora/web/packages/proto-utils
-        version: link:../../../../../../servora/web/packages/proto-utils
+        specifier: 'catalog:'
+        version: 0.1.11
       '@vben/access':
         specifier: workspace:*
         version: link:../../packages/effects/access
@@ -4227,6 +4230,9 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
+  '@servora/proto-utils@0.1.11':
+    resolution: {integrity: sha512-R16wmGtbCSVUI/BCr6/hQJYlUEYsaQrEuc11Z8gMR4Z1Up1wRxGVdq5x5pPk0NM3FRpQkk+LVJm8ZWkh7kjqpw==}
+
   '@simonwep/pickr@1.8.2':
     resolution: {integrity: sha512-/l5w8BIkrpP6n1xsetx9MWPWlU6OblN5YgZZphxan0Tq4BByTCETL6lyIeY8lagalS2Nbt4F2W034KHLIiunKA==}
 
@@ -6271,6 +6277,7 @@ packages:
   glob@11.1.0:
     resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@13.0.6:
@@ -11449,6 +11456,8 @@ snapshots:
     optional: true
 
   '@sec-ant/readable-stream@0.4.1': {}
+
+  '@servora/proto-utils@0.1.11': {}
 
   '@simonwep/pickr@1.8.2':
     dependencies:

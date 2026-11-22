@@ -6,9 +6,6 @@ packages:
   - "web/packages/*"
   - "!app/admin/web"
 
-overrides:
-  "@servora/proto-utils": "link:../servora/web/packages/proto-utils"
-
 minimumReleaseAgeExclude:
   - "@servora/proto-utils"
 

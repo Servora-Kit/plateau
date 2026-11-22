@@ -48,6 +48,7 @@ catalog:
   '@lucide/vue': ^1.34.0
   '@manypkg/get-packages': ^3.1.0
   '@pnpm/workspace.read-manifest': ^1000.3.1
+  '@servora/proto-utils': ^0.1.11
   '@stylistic/stylelint-plugin': ^5.2.1
   '@tailwindcss/typography': ^0.5.20
   '@tailwindcss/vite': ^4.3.3

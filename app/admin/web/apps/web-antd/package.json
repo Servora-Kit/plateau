@@ -15,7 +15,7 @@
   "dependencies": {
     "@plateau/api": "link:../../../../../api/gen",
     "@plateau/client": "link:../../../../../web/packages/client",
-    "@servora/proto-utils": "link:../../../../../../servora/web/packages/proto-utils",
+    "@servora/proto-utils": "catalog:",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
