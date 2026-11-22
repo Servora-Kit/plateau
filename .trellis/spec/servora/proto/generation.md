@@ -4,4 +4,4 @@
 
 `api/gen/go` 是根 Go module 内的生成 package，禁止手改。日常 `just gen` 不 clean；删除/重命名 Proto 或移除 plugin 时使用 `just gen-fresh` 清理重建。
 
-[`buf.typescript.gen.yaml`](../../../../../servora/buf.typescript.gen.yaml) 会 clean 并把 TypeScript HTTP、error 和 CRUD companion 写入 `web/packages/proto-utils/src/gen`，该目录同样不可手改。生成 shape 变化时，检查 plugin 测试、生成 diff 和下游 conformance/web 测试；Proto 或生成物的发布顺序见 [`../servora/AGENTS.md`](../../../../../servora/AGENTS.md)，本规范不授权发布。
+[`buf.typescript.gen.yaml`](../../../../../servora/buf.typescript.gen.yaml) 会 clean 并把 TypeScript HTTP、error 和 CRUD companion 写入 `web/packages/proto-utils/src/gen`，该目录同样不可手改；`protoc-gen-typescript-http` 按文件实际需要从 `@servora/proto-utils/transport` 导入传输类型与路径编码函数，不内联重复运行时。生成 shape 变化时，检查 plugin 测试、生成 diff 和下游 conformance/web 测试；Proto 或生成物的发布顺序见 [`../servora/AGENTS.md`](../../../../../servora/AGENTS.md)，本规范不授权发布。

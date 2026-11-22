@@ -1,6 +1,6 @@
 # HTTP 请求
 
-`createHttpClient` 的实现位于 [`http-client.ts`](../../../../web/packages/client/src/http-client.ts)，底层使用 `ofetch`，失败向调用方归一为 `@servora/proto-utils/errors` 的 `ApiError`。业务页面应保留自身的错误分支和文案，不应只把异常字符串直接展示。
+`createHttpClient` 的实现位于 [`http.ts`](../../../../web/packages/client/src/http.ts)，底层使用 `ofetch`，将 `body: null` 归一为空报文发送且仅对无请求体的 `GET`/`HEAD` 省略默认 `Content-Type`；失败向调用方归一为 `@servora/proto-utils/errors` 的 `ApiError`。业务页面应保留自身的错误分支和文案，不应只把异常字符串直接展示。
 
 ## 地址与凭据
 

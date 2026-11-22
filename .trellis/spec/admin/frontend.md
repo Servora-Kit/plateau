@@ -1,7 +1,9 @@
 # 管理界面与工程边界
 
-适用于 `app/admin/web`，采用 Vben 的 Ant Design Vue 版本，承担平台资源查询、管理表单和操作反馈；应用范围见 [架构](architecture.md)。
+适用于 `app/admin/web`（唯一应用为 `apps/web-antd`，基于 Vben 5、Ant Design Vue、Pinia 与 VxeTable），承担平台总览与 IAM 全局用户管理界面；应用范围见 [架构](architecture.md)。
 
-- 保留独立 workspace 和 lockfile，在本目录安装依赖；根 pnpm workspace 排除该目录，不合并内部依赖。
-- 浏览器通过管理后端操作，服务调用凭据仅由后端持有，见 [后端](backend.md)。
-- 演示登录、菜单权限和按钮可见性不替代真实认证、应用会话或服务端授权。
+- 保留独立 pnpm workspace 和 lockfile，根与父级 `pnpm-workspace.yaml` 均排除 `app/admin/web`；`apps/web-antd` 通过 `link:` 引用 `@plateau/api`、`@plateau/client` 与 `@servora/proto-utils`，Vite `resolve.dedupe` 固定 `['@servora/proto-utils']`。
+- 本地开发与预览固定监听 `10012`（`strictPort: true`），Vite 仅将 `/v1` 同源代理至 Admin HTTP 服务（默认 `http://127.0.0.1:10010`），Cookie 按 `same-origin` 自动携带；浏览器不直连 IAM 管理接口，服务调用凭据仅由后端持有（见 [后端](backend.md)）。
+- API 客户端在 `src/api/client.ts` 以 `createHttpClient({ service: 'admin', retry: 0 })` + `createTransport` 统一装配，不使用前端请求自动重试；结构化错误经 `resolveAdminApiError` 按 HTTP 状态与业务 reason 分流，下游 `503` 保持本地会话不清除，不透出内部 `cause`。
+- 当前管理员身份与权限码（`access`、`manage_users`、`expunge_users`）仅驻留内存 Pinia Store，不写入 `localStorage` / `sessionStorage`；前端路由守卫、菜单和按钮显隐不替代服务端认证、本地会话或授权校验。
+- 修改源码后执行 `just web::admin::lint`、`just web::admin::test` 与 `just web::admin::build`。

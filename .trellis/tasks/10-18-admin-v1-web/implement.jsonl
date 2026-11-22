@@ -1,0 +1,13 @@
+{"file":".trellis/tasks/10-18-admin-v1-web/prd.md","reason":"Admin Web 业务需求、工程协同项与 AC-W1~AC-W8 验收标准"}
+{"file":".trellis/tasks/10-18-admin-v1-web/design.md","reason":"跨仓传输契约、@plateau/client 修复、Vben 瘦身、会话守卫、双视图页面与错误矩阵合同"}
+{"file":".trellis/tasks/10-18-admin-v1-web/implement.md","reason":"五阶段实施清单、验证门禁与风险检查点"}
+{"file":".trellis/spec/admin/architecture.md","reason":"Admin 管理编排定位与身份所有权规则"}
+{"file":".trellis/spec/admin/frontend.md","reason":"app/admin/web 独立 workspace 约定与前端职责"}
+{"file":".trellis/spec/admin/backend.md","reason":"Admin BFF 会话、OIDC 回调与下游服务故障隔离规则"}
+{"file":".trellis/spec/web/client/architecture.md","reason":"@plateau/client 集中式 createHttpClient 与 createTransport 装配规则"}
+{"file":".trellis/spec/web/client/http.md","reason":"同源相对路径、AbortSignal 取消、超时与 ApiError 分类约定"}
+{"file":".trellis/spec/servora/web/proto-utils.md","reason":"@servora/proto-utils 子路径导出、CRUD 掩码/过滤构造与 Kratos 错误解析规范"}
+{"file":".trellis/spec/example/requests.md","reason":"生成客户端、FieldMask、AIP-160 过滤与游标分页消费范式"}
+{"file":".trellis/spec/plateau/security/credentials.md","reason":"security/session.NewFilter 对 /v1/admin/ 非安全方法的 Content-Type 与同源防护约定"}
+{"file":"app/admin/service/api/protos/admin/auth/v1/auth.proto","reason":"Admin AuthService (GetSession, Logout) 权威接口契约"}
+{"file":"app/admin/service/api/protos/admin/user/v1/user.proto","reason":"Admin UserService 12 个管理 RPC、CreateUserResponse 与 AdminUserErrorReason 契约"}

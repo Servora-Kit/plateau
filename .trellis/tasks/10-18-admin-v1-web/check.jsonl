@@ -1,0 +1,9 @@
+{"file":".trellis/tasks/10-04-admin-v1/prd.md","reason":"核对父任务跨服务业务规则与排除项"}
+{"file":".trellis/tasks/10-18-admin-v1-web/prd.md","reason":"逐条核对 AC-W1 至 AC-W8 与 E1 至 E4 交付要求"}
+{"file":".trellis/tasks/10-18-admin-v1-web/design.md","reason":"核对传输契约提取、无体写请求头修复、Vben 瘦身、双视图交互及错误脱敏矩阵"}
+{"file":".trellis/tasks/10-18-admin-v1-web/implement.md","reason":"核对静态检查、单测、生产构建与真实浏览器端到端验收覆盖"}
+{"file":".trellis/spec/admin/frontend.md","reason":"核查独立 workspace、无演示登录/伪控件与权限前端不越权"}
+{"file":".trellis/spec/admin/backend.md","reason":"核查本地会话独立性与 503 下游故障不误判为登录失效"}
+{"file":".trellis/spec/web/client/http.md","reason":"核查 retry: 0、同源代理、取消/超时分类与安全错误反馈"}
+{"file":".trellis/spec/servora/web/proto-utils.md","reason":"核查 @servora/proto-utils/transport 纯契约职责与构建检查"}
+{"file":".trellis/spec/plateau/security/credentials.md","reason":"核查 Cookie 凭据安全、同源写防护及敏感字段零日志泄漏"}

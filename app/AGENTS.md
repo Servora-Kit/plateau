@@ -8,9 +8,10 @@
 `app/` 存放可运行服务，所有 Go 后端都属于仓库根 module；服务目录仍分别承载独立二进制与部署单元。当前包含：
 
 - `app/iam/service/` + `app/iam/web/`：主要业务实践（账号/会话/OIDC/AuthZ）
+- `app/admin/service/` + `app/admin/web/`：平台管理应用（OIDC 本地会话 BFF 与 Vben 管理前端）
 - `app/example/service/` + `app/example/web/`：最小 CRUD 参考模板（`example.servora.dev/User`），新增平台级微服务的推荐起点
 - `app/audit/service/`：审计微服务，不再更新和做参考，等待后期重构
-- `app/test/web/`：Next.js 构建验证入口
+- `app/test/service/` + `app/test/web/`：跨协议与 Next.js 构建验证入口
 
 各服务目录可包含：
 
