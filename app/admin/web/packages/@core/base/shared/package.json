@@ -1,22 +1,11 @@
 {
   "name": "@vben-core/shared",
-  "version": "5.8.0",
-  "homepage": "https://github.com/vbenjs/vue-vben-admin",
-  "bugs": "https://github.com/vbenjs/vue-vben-admin/issues",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vbenjs/vue-vben-admin.git",
-    "directory": "packages/@vben-core/base/shared"
-  },
-  "license": "MIT",
+  "private": true,
   "type": "module",
   "scripts": {
     "build": "pnpm exec tsdown",
     "stub": "pnpm run build"
   },
-  "files": [
-    "dist"
-  ],
   "sideEffects": false,
   "exports": {
     "./constants": {
@@ -54,34 +43,6 @@
       "development": "./src/global-state.ts",
       "production": "./src/global-state.ts",
       "default": "./dist/global-state.mjs"
-    }
-  },
-  "publishConfig": {
-    "exports": {
-      "./constants": {
-        "types": "./dist/constants/index.d.ts",
-        "default": "./dist/constants/index.mjs"
-      },
-      "./utils": {
-        "types": "./dist/utils/index.d.ts",
-        "default": "./dist/utils/index.mjs"
-      },
-      "./color": {
-        "types": "./dist/color/index.d.ts",
-        "default": "./dist/color/index.mjs"
-      },
-      "./cache": {
-        "types": "./dist/cache/index.d.ts",
-        "default": "./dist/cache/index.mjs"
-      },
-      "./store": {
-        "types": "./dist/store.d.ts",
-        "default": "./dist/store.mjs"
-      },
-      "./global-state": {
-        "types": "./dist/global-state.d.ts",
-        "default": "./dist/global-state.mjs"
-      }
     }
   },
   "dependencies": {

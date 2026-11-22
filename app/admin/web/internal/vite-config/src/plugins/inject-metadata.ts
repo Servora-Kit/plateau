@@ -97,9 +97,11 @@ async function viteMetadataPlugin(
             devDependencies,
             homepage,
             license,
-            version,
+            version: version ?? '0.0.0',
           }),
-          'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
+          'import.meta.env.VITE_APP_VERSION': JSON.stringify(
+            version ?? '0.0.0',
+          ),
         },
       };
     },

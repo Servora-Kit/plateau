@@ -16,7 +16,10 @@ export async function pnpm(): Promise<Linter.Config[]> {
         pnpm: pluginPnpm,
       },
       rules: {
-        'pnpm/json-enforce-catalog': 'error',
+        'pnpm/json-enforce-catalog': [
+          'error',
+          { allowedProtocols: ['workspace', 'link', 'file'] },
+        ],
         'pnpm/json-prefer-workspace-settings': 'error',
         'pnpm/json-valid-catalog': ['error', { autofix: false }],
       },

@@ -11,16 +11,11 @@
     "scripts/*/src/**/*.ts",
     "scripts/*/src/**/*.json"
   ],
-  "globalEnv": ["NODE_ENV"],
+  "globalEnv": ["NODE_ENV", "VITE_ADMIN_BACKEND_ORIGIN"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [
-        "dist/**",
-        "dist.zip",
-        ".vitepress/dist.zip",
-        ".vitepress/dist/**"
-      ]
+      "outputs": ["dist/**", "dist.zip"]
     },
     "preview": {
       "dependsOn": ["^build"],
@@ -30,11 +25,6 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "@vben/backend-mock#build": {
-      "dependsOn": ["^build"],
-      "outputs": [".nitro/**", ".output/**"]
-    },
-    "test:e2e": {},
     "dev": {
       "dependsOn": [],
       "outputs": [],

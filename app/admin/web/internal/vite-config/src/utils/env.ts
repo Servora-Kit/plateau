@@ -82,7 +82,6 @@ async function loadAndConvertEnv(
     VITE_COMPRESS,
     VITE_DEVTOOLS,
     VITE_INJECT_APP_LOADING,
-    VITE_NITRO_MOCK,
     VITE_PORT,
     VITE_PWA,
     VITE_VISUALIZER,
@@ -93,14 +92,13 @@ async function loadAndConvertEnv(
     .filter((item) => item === 'brotli' || item === 'gzip');
 
   return {
-    appTitle: getString(VITE_APP_TITLE, 'Vben Admin'),
+    appTitle: getString(VITE_APP_TITLE, 'Plateau Admin'),
     archiver: getBoolean(VITE_ARCHIVER),
     base: getString(VITE_BASE, '/'),
     compress: compressTypes.length > 0,
     compressTypes,
     devtools: getBoolean(VITE_DEVTOOLS),
     injectAppLoading: getBoolean(VITE_INJECT_APP_LOADING),
-    nitroMock: getBoolean(VITE_NITRO_MOCK),
     port: getNumber(VITE_PORT, 5173),
     pwa: getBoolean(VITE_PWA),
     visualizer: getBoolean(VITE_VISUALIZER),

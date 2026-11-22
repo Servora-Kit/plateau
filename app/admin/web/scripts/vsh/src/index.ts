@@ -2,7 +2,6 @@ import { colors, consola } from '@vben/node-utils';
 
 import { cac } from 'cac';
 
-import { version } from '../package.json';
 import { defineCheckCircularCommand } from './check-circular';
 import { defineCheckDepCommand } from './check-dep';
 import { defineCodeWorkspaceCommand } from './code-workspace';
@@ -35,7 +34,6 @@ async function main(): Promise<void> {
     // Set up CLI
     vsh.usage('vsh <command> [options]');
     vsh.help();
-    vsh.version(version);
 
     // Parse arguments without auto-running to detect unknown commands
     // Note: cac v7 removed EventEmitter; use matchedCommand after parse instead
