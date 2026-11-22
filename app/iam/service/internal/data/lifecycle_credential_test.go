@@ -145,6 +145,22 @@ func TestUserVisibilityPaginationRequiredActionsAndCredentialSnapshotsSQLite(t *
 	if err != nil || len(byEmailDeleted.Items()) != 1 || byEmailDeleted.Items()[0].GetUserId() != deletedID {
 		t.Fatalf("ListUsers(email prefix, showDeleted=true) = %#v, err=%v", byEmailDeleted.Items(), err)
 	}
+	qByPending, err := preparer.PrepareList(plan, corecrud.ListInput{Collection: "users", PageSize: 10, Filter: "status = USER_STATUS_PENDING_EMAIL_VERIFICATION"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	byPending, err := users.ListUsers(ctx, qByPending, false)
+	if err != nil || len(byPending.Items()) != 1 || byPending.Items()[0].GetUserId() != activeID {
+		t.Fatalf("ListUsers(status = USER_STATUS_PENDING_EMAIL_VERIFICATION) = %#v, err=%v", byPending.Items(), err)
+	}
+	qByActive, err := preparer.PrepareList(plan, corecrud.ListInput{Collection: "users", PageSize: 10, Filter: "status = USER_STATUS_ACTIVE"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	byActive, err := users.ListUsers(ctx, qByActive, false)
+	if err != nil || len(byActive.Items()) != 0 {
+		t.Fatalf("ListUsers(status = USER_STATUS_ACTIVE) = %#v, err=%v", byActive.Items(), err)
+	}
 
 	// Unknown persisted required_actions string must fail rather than emitting UNSPECIFIED.
 	if _, err := client.User.UpdateOneID(activeID).SetRequiredActions([]string{"BOGUS_ACTION"}).Save(ctx); err != nil {

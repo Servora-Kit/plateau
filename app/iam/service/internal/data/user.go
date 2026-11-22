@@ -52,7 +52,9 @@ func NewUserRepository(data *Data) (biz.UserRepo, error) {
 		entcrud.Columns(user.ValidColumn),
 		entcrud.Bind(userpb.UserFields.UserId, user.FieldID).Filter().Order(),
 		entcrud.Custom(userpb.UserFields.Email, "email", emailFilterPredicate).Filter(),
-		entcrud.Bind(userpb.UserFields.Status, user.FieldStatus).Filter().Order(),
+		entcrud.Bind(userpb.UserFields.Status, user.FieldStatus).Filter().Order().
+			WithQueryConverter(statusQueryConverter).
+			WithCursorConverter(statusCursorConverter),
 		entcrud.Bind(userpb.UserFields.CreateTime, user.FieldCreateTime).Filter().Order(),
 		entcrud.Bind(userpb.UserFields.UpdateTime, user.FieldUpdateTime).Filter().Order(),
 		entcrud.Bind(userpb.UserFields.DeleteTime, user.FieldDeleteTime).Filter().Order().Nullable(),
@@ -86,6 +88,40 @@ func NewUserRepository(data *Data) (biz.UserRepo, error) {
 		return nil, fmt.Errorf("build IAM User Clear helper: %w", err)
 	}
 	return &userRepository{ent: data.ent, listFields: listFields, mapper: resourceMapper, clear: clear}, nil
+}
+
+func statusQueryConverter(value corecrud.FilterValue) (any, error) {
+	num, ok := value.EnumNumber()
+	if !ok {
+		return nil, fmt.Errorf("status filter requires UserStatus enum value")
+	}
+	switch userpb.UserStatus(num) {
+	case userpb.UserStatus_USER_STATUS_PENDING_EMAIL_VERIFICATION:
+		return biz.UserStatusPendingVerification, nil
+	case userpb.UserStatus_USER_STATUS_ACTIVE:
+		return biz.UserStatusActive, nil
+	case userpb.UserStatus_USER_STATUS_DISABLED:
+		return biz.UserStatusDisabled, nil
+	default:
+		return nil, fmt.Errorf("unsupported user status filter %v", userpb.UserStatus(num))
+	}
+}
+
+func statusCursorConverter(raw any) (any, error) {
+	stored, ok := raw.(string)
+	if !ok {
+		return nil, fmt.Errorf("status cursor value is %T, want string", raw)
+	}
+	switch stored {
+	case biz.UserStatusPendingVerification:
+		return int64(userpb.UserStatus_USER_STATUS_PENDING_EMAIL_VERIFICATION), nil
+	case biz.UserStatusActive:
+		return int64(userpb.UserStatus_USER_STATUS_ACTIVE), nil
+	case biz.UserStatusDisabled:
+		return int64(userpb.UserStatus_USER_STATUS_DISABLED), nil
+	default:
+		return nil, fmt.Errorf("unknown stored user status %q", stored)
+	}
 }
 
 func emailFilterPredicate(operator corecrud.FilterOperator, value corecrud.FilterValue) (entcrud.SelectorPredicate, error) {
