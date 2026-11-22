@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 10
 - **Last Active**: 2026-11-22
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~295 | Active |
+| `journal-1.md` | ~319 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 10 | 2026-11-22 | 发布 servora v0.10.1、升级正式依赖并归档 10-04-admin-v1 | `ad592a4c`, `0fe8005d` | `main` |
 | 9 | 2026-11-22 | 完成 Admin Web 交付、跨仓传输契约统一与端到端验收 | `ff9d7f3`, `40b4389`, `ac43b6d`, `4d29ca1`, `d323c7f` | `main` |
 | 8 | 2026-11-15 | 完成 11-14-security-authn-refactor 平台认证重构与结项归档 | `f76995b6`, `39779e5b`, `b4199888` | `main` |
 | 7 | 2026-11-13 | 完成 11-13-servora-crud-optimize 跨仓 CRUD 优化与结项归档 | `c962aa50`, `d15a5cb3` | `main` |

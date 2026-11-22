@@ -293,3 +293,27 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 10: 发布 servora v0.10.1、升级正式依赖并归档 10-04-admin-v1
+<!-- trellis-session: v=2 fp=6beae7a700c4e0a0 -->
+
+**Date**: 2026-11-22
+**Task**: 发布 servora v0.10.1、升级正式依赖并归档 10-04-admin-v1
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+修复 IAM Web 已登录用户访问公开认证入口时的自动跳转；发布 @servora/proto-utils v0.1.11 与 servora v0.10.1，移除 Plateau 本地 link 覆盖并升级至正式版本，通过 GOWORK=off 独立全量验证后归档父任务 10-04-admin-v1。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ad592a4c` | fix(iam-web): 已登录访问公开认证入口时自动跳转账户中心 |
+| `0fe8005d` | chore(deps): 升级 servora v0.10.1 与 @servora/proto-utils v0.1.11 |
+
+### Status
+
+[OK] **Completed**
