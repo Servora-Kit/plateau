@@ -266,3 +266,30 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 9: 完成 Admin Web 交付、跨仓传输契约统一与端到端验收
+<!-- trellis-session: v=2 fp=e25127bb225e164a -->
+
+**Date**: 2026-11-22
+**Task**: 完成 Admin Web 交付、跨仓传输契约统一与端到端验收
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+提取 @servora/proto-utils/transport 并改造 protoc-gen-typescript-http 按需导入（servora 打标 v0.10.0）；统一 @plateau/client 传输类型与非安全方法 Content-Type；裁剪 Vben 冗余模块并实现 Admin Web OIDC 登录、轻量总览与 IAM 用户全生命周期管理界面；修复 IAM 用户状态枚举筛选转换与表格多行高度截断，完成真实浏览器全链路验收与规范更新。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ff9d7f3` | fix(iam,admin): 修复用户状态枚举筛选转换与管理端 OpenAPI 路径 |
+| `40b4389` | feat(web): 统一生成客户端传输契约并对齐非安全方法请求头 |
+| `ac43b6d` | chore(admin-web): 裁剪无关演示应用、Mock 与冗余插件 |
+| `4d29ca1` | feat(admin-web): 实现 OIDC 登录、轻量总览与 IAM 用户管理界面 |
+| `d323c7f` | docs: 同步前端传输规范、AGENTS 与子任务记录 |
+
+### Status
+
+[OK] **Completed**
