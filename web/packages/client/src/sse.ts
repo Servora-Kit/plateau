@@ -20,16 +20,22 @@ export interface SSEOptions {
 }
 
 class FatalSSEError extends Error {
-  constructor(readonly streamError: Error) {
+  readonly streamError: Error;
+
+  constructor(streamError: Error) {
     super(streamError.message, { cause: streamError });
     this.name = "FatalSSEError";
+    this.streamError = streamError;
   }
 }
 
 class RetryableSSEError extends Error {
-  constructor(readonly streamError: Error) {
+  readonly streamError: Error;
+
+  constructor(streamError: Error) {
     super(streamError.message, { cause: streamError });
     this.name = "RetryableSSEError";
+    this.streamError = streamError;
   }
 }
 

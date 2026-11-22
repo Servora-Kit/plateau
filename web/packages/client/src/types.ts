@@ -1,18 +1,9 @@
-export interface TransportMeta {
-  service: string;
-  method: string;
-}
-
-export interface ServerStream<T> {
-  onEvent(listener: (data: T) => void): () => void;
-  onError(handler: (error: Error) => void): void;
-  close(): void;
-}
-
-export interface DuplexStream<TIn, TOut> extends ServerStream<TOut> {
-  send(data: TIn): void;
-  closeSend(): void;
-}
+export type {
+  ClientTransport,
+  DuplexStream,
+  ServerStream,
+  TransportMeta,
+} from "@servora/proto-utils/transport";
 
 export interface StreamClient {
   readonly baseURL: string;

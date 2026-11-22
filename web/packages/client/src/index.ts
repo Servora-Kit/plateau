@@ -1,19 +1,29 @@
-import type { HttpClient, HttpRequestOptions } from "./http-client.ts";
+import type { HttpClient, HttpRequestOptions } from "./http.ts";
 import { createServerStream, type SSEOptions } from "./sse.ts";
 import { createDuplexStream, type WebSocketOptions } from "./websocket.ts";
-import type { TransportMeta } from "./types.ts";
+import type {
+  ClientTransport,
+  DuplexStream,
+  ServerStream,
+  TransportMeta,
+} from "./types.ts";
 
-export { createHttpClient } from "./http-client.ts";
+export { createHttpClient } from "./http.ts";
 export type {
   HttpClient,
   HttpClientOptions,
   HttpRequestOptions,
-} from "./http-client.ts";
+} from "./http.ts";
 export { createServerStream } from "./sse.ts";
 export { createDuplexStream } from "./websocket.ts";
 export type { SSEOptions } from "./sse.ts";
 export type { WebSocketOptions } from "./websocket.ts";
-export type { TransportMeta, ServerStream, DuplexStream } from "./types.ts";
+export type {
+  ClientTransport,
+  DuplexStream,
+  ServerStream,
+  TransportMeta,
+} from "./types.ts";
 
 export interface TransportOptions {
   signal?: AbortSignal;
@@ -22,10 +32,15 @@ export interface TransportOptions {
   websocket?: WebSocketOptions;
 }
 
+function isSafeHttpMethod(method: string): boolean {
+  const upper = method.toUpperCase();
+  return upper === "GET" || upper === "HEAD" || upper === "OPTIONS";
+}
+
 export function createTransport(
   client: HttpClient,
   options: TransportOptions = {},
-) {
+): ClientTransport {
   return {
     unary<T>(
       path: string,
@@ -35,7 +50,9 @@ export function createTransport(
     ): Promise<T> {
       const headers = new Headers(options.http?.headers);
       headers.set("accept", "application/json");
-      if (body !== null) headers.set("content-type", "application/json");
+      if (body !== null || !isSafeHttpMethod(method)) {
+        headers.set("content-type", "application/json");
+      }
       return client.request<T>(path, {
         ...options.http,
         signal: options.http?.signal ?? options.signal,
@@ -46,7 +63,7 @@ export function createTransport(
         operation: meta,
       });
     },
-    serverStream<T>(path: string, meta: TransportMeta) {
+    serverStream<T>(path: string, meta: TransportMeta): ServerStream<T> {
       return createServerStream<T>(client, path, meta, {
         signal: options.signal,
         ...options.sse,
@@ -56,7 +73,7 @@ export function createTransport(
       path: string,
       meta: TransportMeta,
       encode?: (data: TIn) => unknown,
-    ) {
+    ): DuplexStream<TIn, TOut> {
       return createDuplexStream<TIn, TOut>(
         client,
         path,

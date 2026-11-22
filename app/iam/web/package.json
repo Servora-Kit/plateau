@@ -1,8 +1,7 @@
 {
   "name": "@plateau/iam-web",
-  "version": "0.1.0",
-  "type": "module",
   "private": true,
+  "type": "module",
   "scripts": {
     "predev": "node scripts/sync-cap-assets.mjs",
     "dev": "next dev --port 10002",

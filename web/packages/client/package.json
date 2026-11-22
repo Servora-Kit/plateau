@@ -1,12 +1,10 @@
 {
   "name": "@plateau/client",
-  "version": "0.0.1",
+  "private": true,
   "type": "module",
   "sideEffects": false,
-  "files": ["src"],
   "exports": {
-    ".": "./src/index.ts",
-    "./http": "./src/http.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

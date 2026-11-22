@@ -3,7 +3,7 @@ import { createServer, type RequestListener } from "node:http";
 import { test } from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
 import { ApiError } from "@servora/proto-utils/errors";
-import { createHttpClient } from "../src/http-client.ts";
+import { createHttpClient, createTransport } from "../src/index.ts";
 
 async function serve(handler: RequestListener) {
   const server = createServer(handler);
@@ -169,4 +169,92 @@ test("嵌套页面的无前导斜杠 API 路径仍从站点根目录解析", asy
     }),
     { registered: true },
   );
+});
+
+test("createTransport 为无请求体非安全方法附带 JSON Content-Type 且发送空报文，GET 不附带", async () => {
+  const captured: Array<{
+    method?: string;
+    url?: string;
+    contentType?: string;
+    accept?: string;
+    rawBody: string;
+  }> = [];
+  const server = await serve((request, response) => {
+    const chunks: Buffer[] = [];
+    request.on("data", (chunk: Buffer) => chunks.push(chunk));
+    request.on("end", () => {
+      captured.push({
+        method: request.method,
+        url: request.url,
+        contentType: request.headers["content-type"],
+        accept: request.headers.accept,
+        rawBody: Buffer.concat(chunks).toString("utf8"),
+      });
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end("{}");
+    });
+  });
+  try {
+    const client = createHttpClient({
+      service: "admin",
+      baseURL: server.baseURL,
+      retry: 0,
+    });
+    const transport = createTransport(client);
+    await transport.unary("/v1/admin/auth/session", "GET", null, {
+      service: "AuthService",
+      method: "GetSession",
+    });
+    await transport.unary("/v1/admin/users/u_001", "DELETE", null, {
+      service: "UserService",
+      method: "DeleteUser",
+    });
+    await transport.unary("/v1/admin/users/u_001:revokeSessions", "POST", null, {
+      service: "UserService",
+      method: "RevokeUserSessions",
+    });
+
+    const clientWithDefaultCT = createHttpClient({
+      service: "admin",
+      baseURL: server.baseURL,
+      headers: { "Content-Type": "application/json" },
+    });
+    await clientWithDefaultCT.request("/v1/admin/check", {
+      method: "GET",
+      body: null,
+    });
+
+    assert.deepEqual(captured, [
+      {
+        method: "GET",
+        url: "/v1/admin/auth/session",
+        contentType: undefined,
+        accept: "application/json",
+        rawBody: "",
+      },
+      {
+        method: "DELETE",
+        url: "/v1/admin/users/u_001",
+        contentType: "application/json",
+        accept: "application/json",
+        rawBody: "",
+      },
+      {
+        method: "POST",
+        url: "/v1/admin/users/u_001:revokeSessions",
+        contentType: "application/json",
+        accept: "application/json",
+        rawBody: "",
+      },
+      {
+        method: "GET",
+        url: "/v1/admin/check",
+        contentType: undefined,
+        accept: "*/*",
+        rawBody: "",
+      },
+    ]);
+  } finally {
+    server.close();
+  }
 });
