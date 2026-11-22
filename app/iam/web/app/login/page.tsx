@@ -11,6 +11,7 @@ import {
 } from "@/components/form-controls"
 import { StatusMessage } from "@/components/status-message"
 import { Button } from "@/components/ui/button"
+import { useGuestSession } from "@/hooks/use-guest-session"
 import { useOneTimeRequestId } from "@/hooks/use-one-time-url"
 import { useSensitiveValue } from "@/hooks/use-sensitive-value"
 import { useSingleFlight } from "@/hooks/use-single-flight"
@@ -25,16 +26,20 @@ import { validateEmail, validatePassword } from "@/lib/validation"
 
 function navigateAfterAuth(requestId: string | null) {
   if (requestId) {
-    window.location.assign(
+    window.location.replace(
       `/authorize/callback?id=${encodeURIComponent(requestId)}`
     )
   } else {
-    window.location.assign("/account/")
+    window.location.replace("/account/")
   }
 }
 
 export default function LoginPage() {
   const requestId = useOneTimeRequestId()
+  const guestSession = useGuestSession({
+    enabled: requestId.ready,
+    requestId: requestId.value,
+  })
   const password = useSensitiveValue()
   const initialCurrentPassword = useSensitiveValue()
   const initialNewPassword = useSensitiveValue()
@@ -191,7 +196,7 @@ export default function LoginPage() {
     setStep("login")
   }
 
-  if (!requestId.ready) {
+  if (!requestId.ready || !guestSession.ready) {
     return (
       <AuthShell title="登录" description="正在准备安全登录…">
         <p className="text-sm text-muted-foreground" role="status">

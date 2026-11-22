@@ -4,9 +4,12 @@ import { createSessionServiceClient } from "@plateau/api/iam/session/v1"
 import { createHttpClient, createTransport } from "@plateau/client"
 
 export function createIamApi(signal?: AbortSignal) {
-  const transport = createTransport(createHttpClient({ service: "iam" }), {
-    signal,
-  })
+  const transport = createTransport(
+    createHttpClient({ service: "iam", cache: "no-store" }),
+    {
+      signal,
+    }
+  )
 
   return {
     account: createAccountServiceClient(transport),

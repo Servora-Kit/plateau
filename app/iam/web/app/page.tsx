@@ -1,8 +1,23 @@
+"use client"
+
 import Link from "next/link"
 
 import { AuthShell } from "@/components/auth-shell"
+import { useGuestSession } from "@/hooks/use-guest-session"
 
 export default function Page() {
+  const guestSession = useGuestSession()
+
+  if (!guestSession.ready) {
+    return (
+      <AuthShell title="Plateau 账户" description="正在确认登录状态…">
+        <p className="text-sm text-muted-foreground" role="status">
+          请稍候
+        </p>
+      </AuthShell>
+    )
+  }
+
   return (
     <AuthShell
       title="Plateau 账户"

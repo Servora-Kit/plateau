@@ -14,6 +14,7 @@ import {
   TextField,
 } from "@/components/form-controls"
 import { StatusMessage } from "@/components/status-message"
+import { useGuestSession } from "@/hooks/use-guest-session"
 import { useSensitiveValue } from "@/hooks/use-sensitive-value"
 import { useSingleFlight } from "@/hooks/use-single-flight"
 import {
@@ -25,6 +26,7 @@ import { createIamApi } from "@/lib/iam-api"
 import { validateEmail, validatePassword } from "@/lib/validation"
 
 export default function RegisterPage() {
+  const guestSession = useGuestSession()
   const password = useSensitiveValue()
   const confirmation = useSensitiveValue()
   const { pending, run } = useSingleFlight()
@@ -92,6 +94,16 @@ export default function RegisterPage() {
     }
     setMessage(
       requestErrorMessage(result.error, "注册请求未完成，请重新验证后重试")
+    )
+  }
+
+  if (!guestSession.ready) {
+    return (
+      <AuthShell title="创建账户" description="正在确认登录状态…">
+        <p className="text-sm text-muted-foreground" role="status">
+          请稍候
+        </p>
+      </AuthShell>
     )
   }
 
