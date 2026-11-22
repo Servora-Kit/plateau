@@ -1,19 +1,6 @@
 {
   "name": "@vben/web-antd",
-  "version": "5.8.0",
-  "homepage": "https://vben.pro",
-  "bugs": "https://github.com/vbenjs/vue-vben-admin/issues",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vbenjs/vue-vben-admin.git",
-    "directory": "apps/web-antd"
-  },
-  "license": "MIT",
-  "author": {
-    "name": "vben",
-    "email": "ann.vben@gmail.com",
-    "url": "https://github.com/anncwb"
-  },
+  "private": true,
   "type": "module",
   "scripts": {
     "build": "pnpm vite build --mode production",
@@ -26,6 +13,9 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@plateau/api": "link:../../../../../api/gen",
+    "@plateau/client": "link:../../../../../web/packages/client",
+    "@servora/proto-utils": "link:../../../../../../servora/web/packages/proto-utils",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -35,7 +25,6 @@
     "@vben/locales": "workspace:*",
     "@vben/plugins": "workspace:*",
     "@vben/preferences": "workspace:*",
-    "@vben/request": "workspace:*",
     "@vben/stores": "workspace:*",
     "@vben/styles": "workspace:*",
     "@vben/types": "workspace:*",

@@ -6,29 +6,51 @@ PNPM := env("PNPM", "pnpm")
 [unix]
 [working-directory(COMPONENT_DIR)]
 dev *args:
-    @"{{ PNPM }}" run dev:antd {{ args }}
+    @"{{ PNPM }}" run dev {{ args }}
 
 [windows]
 [working-directory(COMPONENT_DIR)]
 dev *args:
-    @& "{{ PNPM }}" run dev:antd {{ args }}
+    @& "{{ PNPM }}" run dev {{ args }}
 
 [unix]
 [working-directory(COMPONENT_DIR)]
 build:
-    @"{{ PNPM }}" run build:antd
+    @"{{ PNPM }}" run build
 
 [windows]
 [working-directory(COMPONENT_DIR)]
 build:
-    @& "{{ PNPM }}" run build:antd
+    @& "{{ PNPM }}" run build
+
+lint: _lint check
 
 [unix]
 [working-directory(COMPONENT_DIR)]
-lint:
+_lint:
     @"{{ PNPM }}" run lint
 
 [windows]
 [working-directory(COMPONENT_DIR)]
-lint:
+_lint:
     @& "{{ PNPM }}" run lint
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+check:
+    @"{{ PNPM }}" run check
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+check:
+    @& "{{ PNPM }}" run check
+
+[unix]
+[working-directory(COMPONENT_DIR)]
+test:
+    @"{{ PNPM }}" run test:unit
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+test:
+    @& "{{ PNPM }}" run test:unit

@@ -1,15 +1,11 @@
 {
   "auth": {
-    "login": "登录",
-    "register": "注册",
-    "codeLogin": "验证码登录",
-    "qrcodeLogin": "二维码登录",
-    "forgetPassword": "忘记密码",
-    "profile": "个人中心"
+    "login": "管理员登录"
   },
-  "dashboard": {
-    "title": "概览",
-    "analytics": "分析页",
-    "workspace": "工作台"
+  "overview": {
+    "title": "总览"
+  },
+  "users": {
+    "title": "用户管理"
   }
 }
