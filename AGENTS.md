@@ -22,7 +22,7 @@
   - `gen/package.json` 管理共享 TS 包依赖与 exports
 - `app/` 平台微服务，均在 `app/{ServiceName}/` 下（服务结构见 [app/AGENTS.md](app/AGENTS.md)）
 - `cmd/` 平台级命令工具
-  - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/` AuthN/AuthZ 代码生成插件；插件从当前 checkout 的 `cmd/` 本地安装
+  - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/` AuthN/AuthZ 代码生成插件；与其余 protoc 插件统一在根 `go.mod` `tool` 声明，由 buf 模板经 `go tool` 调用
 - `internal/codegen/` 共享代码生成实现
 - `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
 - `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`entgo/mixin/` 软删除便利层；通用 Ent driver 与 CRUD adapter 归 Servora 的 `contrib/db/entgo/`
@@ -31,6 +31,8 @@
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）
 - `docs/adr/` 架构决策记录
 - `justfile` 项目级 Just 命令入口
+- `mise.toml` 固定 CLI 工具版本（buf、golangci-lint、just、fga、prek、node、pnpm、air）；Go 版本以 `go.mod` 为准
+- `prek.toml` 根 Git 钩子配置（`pre-commit` / `pre-push` / `commit-msg`）；`app/admin/web/prek.toml` 为 Vben 子项目钩子配置
 - `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 独立 workspace 和 lockfile，并通过 `link:` 引用 `@plateau/api`、`@plateau/client`
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
 - `buf.yaml` buf 总配置，依赖以及 lint 规则
@@ -44,10 +46,14 @@
 ## 命令
 
 ```bash
-just init
+just init              # mise install + prek install + pnpm install --frozen-lockfile
 just gen
+just gen-check         # GOWORK=off 下校验生成产物无漂移
 just wire
+just test              # go test -race -count=1 ./...
 just lint
+just fmt-proto-check
+just breaking          # 对比 BUF_BREAKING_AGAINST（默认 .git#ref=origin/main）
 just api-ts-check
 just openfga-model-validate
 just openfga-model-test

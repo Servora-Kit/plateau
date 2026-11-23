@@ -19,7 +19,7 @@
 
 `api/gen/go` 属于仓库根 Go module，import path 继续以 `github.com/Servora-Kit/plateau/api/gen/go` 开头。TS `@plateau/api` 直接通过 wildcard exports 暴露 ts 源：service index、`*.errors`、`*.crud`；当前 tsconfig 是 `noEmit: true`，并不构建 dist。依赖和锁文件由根 pnpm workspace 维护。
 
-Plateau AuthN/AuthZ 插件从当前 checkout 本地安装；Servora 插件由 Just 配置安装对应版本。父级 `go.work` 的源码联调不能证明本机生成器二进制来自同一版本；变更框架生成器时明确实际调用来源，并同时检查生成契约。
+所有 protoc 插件（含 Plateau AuthN/AuthZ 与 Servora 插件）及 Wire/Ent 均由根 `go.mod` 的 `tool` 声明固定，buf 模板通过 `local: ["go", "tool", "protoc-gen-*"]` 调用；Servora 插件版本随 `go.mod` 中的 `github.com/Servora-Kit/servora` 自动同步，不再单独安装插件或维护 `SERVORA_VERSION`。父级 `go.work` 仅用于本机跨仓源码联调，`just gen` 沿用当前 Go 环境；`just gen-check`（pre-push 与 CI）固定在 `GOWORK=off` 下执行，用于验证仓库独立可复现性。
 
 `@plateau/api` 消费 `@servora/proto-utils`，手写 transport 属于 [web/client](../../web/client/index.md)。Go/TS 生成目录不设独立 spec package。
 
@@ -27,6 +27,6 @@ Plateau AuthN/AuthZ 插件从当前 checkout 本地安装；Servora 插件由 Ju
 
 ## 验证
 
-Proto 修改后运行生成（`just gen`）、Buf lint（`just lint-proto`）、API TS 检查（`just api-ts-check`）及受影响消费者检查。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
+Proto 修改后运行生成（`just gen`）、生成一致性校验（`just gen-check`）、Buf lint（`just lint-proto`）、Proto 格式检查（`just fmt-proto-check`）、破坏性变更检查（`just breaking`）、API TS 检查（`just api-ts-check`）及受影响消费者检查。`just gen-check` 在 `GOWORK=off` 下重新生成并对生成路径（`api/gen/{go,ts}`、`**/wire_gen.go`、`app/*/service/internal/data/ent`、`app/*/service/**/openapi.yaml`）检查 `git diff --exit-code` 与未跟踪文件。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
 
-入口：[根 justfile](../../../../justfile)、[服务命令](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)。
+入口：[根 justfile](../../../../justfile)、[服务命令](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)、[go.mod](../../../../go.mod)。

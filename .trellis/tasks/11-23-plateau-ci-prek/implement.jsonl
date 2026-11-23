@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "GOWORK=off 门禁、just 命令与 go tool 约定"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "仓库目录与 workspace 结构"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "buf 生成路径、插件与生成入口"}
+{"file": ".trellis/tasks/11-23-plateau-ci-prek/research/ci-references.md", "reason": "外部 CI 与 prek 调研结论"}

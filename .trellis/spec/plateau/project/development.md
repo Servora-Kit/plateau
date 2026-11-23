@@ -18,26 +18,40 @@
 
 | 入口 | 用途 |
 | --- | --- |
-| `just init` | 安装 CLI／插件及冻结锁文件的 pnpm 依赖，会产生本地安装副作用 |
-| `just gen` | 根 API 生成后执行各服务 OpenAPI、Wire、Ent；修改 Proto 后使用 |
+| `just init` | 依次执行 `mise install`、`prek install`、`pnpm install --frozen-lockfile`，完成工具链、Git 钩子与根 pnpm 依赖准备 |
+| `just gen` | 根 API 生成后执行各服务 OpenAPI、Wire、Ent；修改 Proto 后使用（沿用当前 Go 环境，支持父级 `go.work` 联调） |
+| `just gen-check` | 在 `GOWORK=off` 下运行 `just gen`，并对生成路径校验 `git diff --exit-code` 与未跟踪文件 |
 | `just wire` | 各服务 Wire 装配刷新 |
+| `just test` | 在根 module 运行 `go test -race -count=1 ./...` |
 | `just lint` | API TS typecheck、Buf lint、从根 module 执行的全仓 Go lint；不等于全仓 Go 测试 |
+| `just fmt-proto-check` | `buf format -d --exit-code` 检查 Proto 格式 |
+| `just breaking` | `buf breaking --against` 检查破坏性变更（默认对比 `.git#ref=origin/main`，可用 `BUF_BREAKING_AGAINST` 覆盖） |
 | `just api-ts-check` | 共享生成 TS 契约检查 |
 | `just web::<应用>::dev`／`build`／`lint` | 应用 Web 开发、构建与 lint；其他工具使用所属 package 的 pnpm script |
 | `just openfga-model-validate`／`test` | 本地 model 与场景检查 |
 | `just openfga-model-apply` | 修改 model 后的应用步骤，会写外部 model／环境配置，需在明确目标环境执行 |
 
-根插件安装中 Plateau AuthN/AuthZ 必须来自当前 checkout。Servora 工具版本由当前 Just 变量配置；不能因为父级 workspace 引用源码就假定已安装的插件也已同步。服务 Wire/Ent 生成器由根 `go.mod` 的 `tool` 声明固定，并通过 `go tool` 执行。生成路径与入口详见 [generation](../../api/proto/generation.md)。
+## 工具版本与单一来源
 
-开发或审查时先选择受影响模块和检查命令；记录实际执行与未执行项。基础设施 provider 的业务日志由 data/bootstrap 边界决定，不在构造函数中重复记录成功或失败。
+- Go 版本由根 `go.mod` 的 `go` 指令管理；CI 通过 `actions/setup-go` 读取 `go.mod`。
+- `buf`、`golangci-lint`、`just`、`fga`（`aqua:openfga/cli`）、`prek`、`node`、`pnpm`、`air` 由根 `mise.toml` 固定版本；本地通过 `mise install`、CI 通过 `jdx/mise-action` 使用同一份版本。
+- 所有 protoc 插件（含 Plateau AuthN/AuthZ 与 Servora 插件）及 Wire/Ent 均在根 `go.mod` 的 `tool` 块声明并通过 `go tool` 执行；不再使用 `just plugin`/`just cli` 安装，Servora 插件版本随 `go.mod` 中的 `github.com/Servora-Kit/servora` 同步。生成路径与入口详见 [generation](../../api/proto/generation.md)。
+- 依赖与工具版本由 Renovate 跟踪更新。
 
-## Go module 与门禁
+## 本地钩子分层（prek）
+
+根 `prek.toml` 与子项目 `app/admin/web/prek.toml` 共同构成 workspace 钩子配置，全局排除生成产物与锁文件：
+
+- `pre-commit`：通用文件卫生（内置 Rust 钩子）、`gofmt`、`buf format`、`just --fmt --check --unstable`；`app/admin/web` 仅对暂存文件执行 `oxlint`/`oxfmt`/`eslint`/`stylelint` 自动修复，不跑全量类型检查。
+- `pre-push`：在 `GOWORK=off` 下运行 `just lint-go`、`just lint-proto`、`just breaking`、`just gen-check`；`app/admin/web` 运行 `pnpm check:type`。push 前工作区应保持干净，临时绕过可使用 `PREK_SKIP`。
+- `commit-msg`：校验 Conventional Commits（允许 `feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`，描述允许中文；放行 `Merge`、`Revert`、`fixup!`、`squash!`）。
+
+## Go module 与 CI 门禁
 
 - 根 `go.mod`、`go.sum` 统一管理共享代码和服务，不在生成目录或应用目录新增 Go module，也不提交 `go.work`。
-- Wire/Ent 工具版本由根 `tool` 声明维护，通过 `go tool` 执行；本机工作区不能替代仓库依赖和生成器版本验证。
 - 受影响代码须通过 `GOWORK=off` 的构建、lint 和测试；根门禁覆盖全仓，服务级检查只提供定向反馈，不能互相替代。
-- 依赖变更执行 `go mod tidy` 并确认结果稳定；父级工作区通过而独立检查失败时，不视为验收通过。
-- 验证记录留在任务或变更说明，不写入规范。
+- 依赖变更执行 `GOWORK=off go mod tidy` 并确认结果稳定；父级工作区通过而独立检查失败时，不视为验收通过。
+- CI 门禁在 `GOWORK=off` 下按路径分流运行各领域检查，并由聚合检查 `ci-ok` 作为唯一必过检查；工作流与门禁配置不硬编码服务名或 Web 包名。
+- 开发或审查时先选择受影响模块和检查命令；基础设施 provider 的业务日志由 data/bootstrap 边界决定，不在构造函数中重复记录成功或失败。验证记录留在任务或变更说明，不写入规范。
 
-入口：[根命令](../../../../justfile)、[服务注册](../../../../just/services.just)、[服务命令](../../../../just/service.just)。
-
+入口：[根命令](../../../../justfile)、[工具版本](../../../../mise.toml)、[本地钩子](../../../../prek.toml)、[服务注册](../../../../just/services.just)、[服务命令](../../../../just/service.just)。
