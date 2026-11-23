@@ -33,7 +33,7 @@
 
 ## 工具版本与单一来源
 
-- Go 版本由根 `go.mod` 管理：`go` 指令保持与父级 `go.work` 兼容的最低版本；需要标准库安全补丁时用 `toolchain` 指令固定补丁版本，CI 通过 `actions/setup-go` 读取 `go.mod`。
+- Go 版本由根 `go.mod` 管理：`go` 指令表示最低支持版本，不为补丁版本抬高，避免强制依赖方和本地 `go.work` 跟着升级；需要标准库安全补丁时用 `toolchain` 指令固定补丁版本，CI 通过 `actions/setup-go` 读取 `go.mod`。
 - `buf`、`golangci-lint`、`just`、`fga`（`aqua:openfga/cli`）、`prek`、`node`、`pnpm`、`air` 由根 `mise.toml` 固定版本；本地通过 `mise install`、CI 通过 `jdx/mise-action` 使用同一份版本。
 - 所有 protoc 插件（含 Plateau AuthN/AuthZ 与 Servora 插件）及 Wire/Ent 均在根 `go.mod` 的 `tool` 块声明并通过 `go tool` 执行；不再使用 `just plugin`/`just cli` 安装，Servora 插件版本随 `go.mod` 中的 `github.com/Servora-Kit/servora` 同步。生成路径与入口详见 [generation](../../api/proto/generation.md)。
 - 依赖与工具版本由 Renovate 跟踪更新。
