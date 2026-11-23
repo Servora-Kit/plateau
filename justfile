@@ -14,7 +14,6 @@ COMPOSE := env("COMPOSE", "docker compose")
 COMPOSE_FILES := env("COMPOSE_FILES", "-f docker-compose.yaml")
 COMPOSE_SERVICES := env("COMPOSE_SERVICES", "")
 ENV_FILE := env("ENV_FILE", join(ROOT_DIR, ".env"))
-# 不能命名为 FGA_API_URL：`set export` 会把空默认值导出给所有 recipe，覆盖服务配置里的 ${FGA_API_URL:默认值}。
 OPENFGA_API_URL := env("FGA_API_URL", "")
 OPENFGA_MODEL := env("OPENFGA_MODEL", "manifests/openfga/fga.mod")
 OPENFGA_TESTS := env("OPENFGA_TESTS", "manifests/openfga/*.fga.yaml")
