@@ -18,12 +18,22 @@
   },
   "packageRules": [
     {
-      "description": "Track Go version updates in go.mod",
+      "description": "Keep the go directive as the minimum version; patch releases go through the toolchain directive",
       "matchManagers": [
         "gomod"
       ],
-      "matchDepNames": [
-        "go"
+      "matchDepTypes": [
+        "golang"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Bump the go directive on minor releases",
+      "matchManagers": [
+        "gomod"
       ],
       "matchDepTypes": [
         "golang"
@@ -38,6 +48,20 @@
       "matchDepTypes": [
         "tool"
       ],
+      "groupName": "go-tools"
+    },
+    {
+      "description": "Track protoc plugin modules that go.mod only requires indirectly for tool directives",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchPackageNames": [
+        "google.golang.org/grpc/cmd/protoc-gen-go-grpc",
+        "github.com/go-kratos/kratos/cmd/protoc-gen-go-http/**",
+        "github.com/google/gnostic",
+        "github.com/envoyproxy/protoc-gen-validate"
+      ],
+      "enabled": true,
       "groupName": "go-tools"
     },
     {
