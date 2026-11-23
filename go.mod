@@ -107,7 +107,7 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
-	github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3 v3.0.0-20261026152050-dd0fb7df1e32 // indirect
+	github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3 v3.0.0-20261123032133-56cfd65deee9 // indirect
 	github.com/go-kratos/kratos/contrib/config/consul/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/config/nacos/v3 v3.0.0-20260621094049-2726761cdd77 // indirect
 	github.com/go-kratos/kratos/contrib/encoding/json/v3 v3.0.0-20260626125723-668db92c2c00 // indirect
