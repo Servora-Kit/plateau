@@ -1,0 +1,97 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard"
+  ],
+  "timezone": "Asia/Shanghai",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "automerge": false,
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+  "mise": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Track Go version updates in go.mod",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchDepNames": [
+        "go"
+      ],
+      "matchDepTypes": [
+        "golang"
+      ],
+      "rangeStrategy": "bump"
+    },
+    {
+      "description": "Group Go tool directive dependencies",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchDepTypes": [
+        "tool"
+      ],
+      "groupName": "go-tools"
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github-actions"
+    },
+    {
+      "description": "Group mise tool version updates",
+      "matchManagers": [
+        "mise"
+      ],
+      "groupName": "mise"
+    },
+    {
+      "description": "Group root pnpm workspace dependencies",
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "root-web"
+    },
+    {
+      "description": "Group Vben admin web workspace dependencies on a monthly schedule",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchFileNames": [
+        "app/admin/web/**"
+      ],
+      "groupName": "admin-web",
+      "schedule": [
+        "before 6am on the first day of the month"
+      ]
+    },
+    {
+      "description": "Group Docker Compose image updates without pinning latest digests",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "pinDigests": false,
+      "groupName": "compose-images"
+    },
+    {
+      "description": "Group Servora Go modules, protoc tools, and npm packages together",
+      "matchPackageNames": [
+        "github.com/Servora-Kit/**",
+        "@servora/*"
+      ],
+      "groupName": "servora",
+      "schedule": [
+        "before 6am on monday"
+      ]
+    }
+  ]
+}
