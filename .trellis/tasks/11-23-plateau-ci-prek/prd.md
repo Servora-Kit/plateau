@@ -31,18 +31,18 @@
 
 ## Acceptance Criteria
 
-- [ ] 干净 clone 后执行 `just init`，即可装齐固定版本的工具、git 钩子和 pnpm 依赖，不需要再执行 `just plugin`（R1、R2、R3）
-- [ ] 仓库里不再出现 `SERVORA_VERSION`、`@latest` 插件安装；升级 go.mod 中的 servora 后，`just gen` 自动使用对应版本的插件（R2）
-- [ ] 干净工作区上连续两次 `GOWORK=off just gen-check` 都通过；手动改动一个生成文件后会失败，并指出文件（R2、R4）
-- [ ] 暂存一个格式错误的 Go/proto/justfile 文件时，`git commit` 被 pre-commit 拦截；提交不符合 `type(scope): 描述` 的 message 时，被 commit-msg 拦截；`Merge`/`Revert` 提交放行（R3）
-- [ ] 只改 admin web 的 TS 文件时，pre-commit 只对暂存文件跑 oxlint/oxfmt/eslint/stylelint，不跑全量类型检查（R3）
-- [ ] `prek run --hook-stage pre-push --all-files` 依次执行 golangci-lint、buf lint、buf breaking、gen-check 并全部通过（R3）
-- [ ] PR 上 `ci.yml` 全部变绿；只改 Web 时 go/proto/gen/integration 被跳过且 `ci-ok` 仍为绿；只改 proto 时 web 相关 job 被跳过（R4）
-- [ ] integration job 日志中 IAM、Admin 集成测试实际执行，没有被 Skip（R4、D4）
-- [ ] workflow 通过 `actionlint`（R4）
-- [ ] Renovate 在仓库上生成 Dependency Dashboard，并按分组提交第一批 PR（R5，需要用户先安装 App）
-- [ ] workflow 和 prek 配置中搜不到 `example`、`test` 等服务名（R-DYN）
-- [ ] `AGENTS.md`、`development.md`、`generation.md` 已同步新的命令、版本来源和门禁说明
+- [x] 干净 clone 后执行 `just init`，即可装齐固定版本的工具、git 钩子和 pnpm 依赖，不需要再执行 `just plugin`（R1、R2、R3）
+- [x] 仓库里不再出现 `SERVORA_VERSION`、`@latest` 插件安装；升级 go.mod 中的 servora 后，`just gen` 自动使用对应版本的插件（R2）
+- [x] 干净工作区上连续两次 `GOWORK=off just gen-check` 都通过；手动改动一个生成文件后会失败，并指出文件（R2、R4）
+- [x] 暂存一个格式错误的 Go/proto/justfile 文件时，`git commit` 被 pre-commit 拦截；提交不符合 `type(scope): 描述` 的 message 时，被 commit-msg 拦截；`Merge`/`Revert` 提交放行（R3）
+- [x] 只改 admin web 的 TS 文件时，pre-commit 只对暂存文件跑 oxlint/oxfmt/eslint/stylelint，不跑全量类型检查（R3）
+- [x] `prek run --hook-stage pre-push --all-files` 依次执行 golangci-lint、buf lint、buf breaking、gen-check 并全部通过（R3）
+- [x] PR 上 `ci.yml` 全部变绿；只改 Web 时（PR #3）实测 go/proto/gen/integration 被跳过且 `ci-ok` 仍为绿，且失败时 `ci-ok` 拦截合并（R4；只改 proto 路径分流由同一 `changes` 规则配置，未单独开 PR 复测）
+- [x] integration job 日志中 IAM、Admin 集成测试实际执行，没有被 Skip（R4、D4）
+- [x] workflow 通过 `actionlint`（R4）
+- [x] Renovate 在仓库上生成 Dependency Dashboard（Issue #2），并按分组提交首批 PR（PR #3，`CLEAN`）（R5）
+- [x] workflow 和 prek 配置中搜不到 `example`、`test` 等服务名（R-DYN）
+- [x] `AGENTS.md`、`development.md`、`generation.md` 已同步新的命令、版本来源和门禁说明
 
 ## Decisions
 

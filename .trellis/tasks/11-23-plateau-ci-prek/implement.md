@@ -25,7 +25,7 @@
 5. CI
    - [x] `.github/workflows/ci.yml`（changes、prek、go、proto、gen、integration、web、admin-web、ci-ok）
    - [x] `.github/workflows/security.yml`（govulncheck）
-   - [x] `renovate.json`
+   - [x] `renovate.json5`（启用 `minimumReleaseAgePackageManagerSync` 对齐各 workspace 的 `pnpm-workspace.yaml` 冷却策略）
 6. 文档与规范
    - [x] `AGENTS.md` 命令段（init/mise/prek/新 recipe）
    - [x] `.trellis/spec/plateau/project/development.md`：工具版本来源、钩子分层、CI 门禁与 `ci-ok`
@@ -41,8 +41,8 @@
 - [x] 集成测试本地实跑：PASS 80 / FAIL 0 / SKIP 1（`TestBrowserHarness` 需手动开启），IAM 与 Admin 集成测试实际执行
 - [x] 根 Web lint/typecheck/build、admin web lint/check/test:unit/build 本地通过
 - [x] 远端 CI 实跑：push main 的 run `45127566826` 全部 job 通过（含 ci-ok）；Security run `45126297753` 通过。前两轮修复了 just 导出空 `FGA_API_URL`、admin prek.toml 格式、3 个 govulncheck 漏洞、Vben 时区用例对 UTC 的假设
-- [ ] PR 事件下的路径分流（等第一个 PR 时观察）
-- [ ] Renovate Dependency Dashboard：仓库 Issues 已于 2026-11-23 开启；plateau 需在 developer.mend.io 切换为 Interactive 模式（Silent 不提 PR、不建 Issue），之后等下一次扫描
+- [x] PR 事件下的路径分流与 `ci-ok` 拦截：PR #3（`fix(deps): update root-web`，仅改 `app/iam/web/package.json` 与根 `pnpm-lock.yaml`）实测 `changes`/`prek`/`web`/`admin-web` 运行、`go`/`proto`/`gen`/`integration` 跳过；`web`/`admin-web` 失败时 `ci-ok` 变红并触发分支保护拦截（`BLOCKED`），修复后全绿且 `mergeStateStatus: CLEAN`
+- [x] Renovate Dependency Dashboard 与首个分组 PR：仓库 Issues 已开启、plateau 切为 Interactive 模式；已生成 Issue #2（无配置警告）并提交分组 PR #3（`2934177e`，`renovate/stability-days: SUCCESS`，自动将未满 24h 的 `lucide-react@1.78.0` 退回已满冷却期的 `1.77.0`）；同步清理了 `app/iam/web` 遗留的孤立 `pnpm-workspace.yaml`/`pnpm-lock.yaml`
 - [x] main 分支保护：必过检查 `ci-ok`（GitHub Actions app_id 15368），`strict=false`，管理员可绕过，禁止 force push 与删除
 
 ## 验证
