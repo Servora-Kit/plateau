@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "平台目录归属与模块注册约束"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "端口、Just 命令、Go module 与独立门禁约定"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "Buf 共享生成链与输出目录规则"}
+{"file": ".trellis/spec/web/client/websocket.md", "reason": "WebSocket 双向流契约与夹具验证约束"}
+{"file": ".trellis/tasks/11-23-cleanup-example-test/research/coupling-inventory.md", "reason": "example 与 test 全仓耦合点盘点与行号锚点"}
