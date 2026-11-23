@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	examplepb "github.com/Servora-Kit/plateau/api/gen/go/example/service/v1"
 	httptransport "github.com/go-kratos/kratos/v3/transport/http"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -158,7 +157,7 @@ func runWebSocketFixture(ctx httptransport.Context, fail bool) error {
 
 	var inputs []map[string]any
 	for {
-		input := new(examplepb.DeleteUserRequest)
+		input := new(structpb.Struct)
 		err = stream.Recv(input)
 		if errors.Is(err, io.EOF) {
 			break
@@ -166,10 +165,11 @@ func runWebSocketFixture(ctx httptransport.Context, fail bool) error {
 		if err != nil {
 			return stream.Close(err)
 		}
+		fields := input.GetFields()
 		inputs = append(inputs, map[string]any{
-			"name":         input.GetName(),
-			"etag":         input.GetEtag(),
-			"allowMissing": input.GetAllowMissing(),
+			"name":         fields["name"].GetStringValue(),
+			"etag":         fields["etag"].GetStringValue(),
+			"allowMissing": fields["allowMissing"].GetBoolValue(),
 		})
 		if fail {
 			return stream.Close(errors.New("夹具远端错误"))

@@ -176,12 +176,8 @@ packages:
   # frontend.md / backend.md 分别维护两端入口，专题按需要独立成文。
   iam:
     path: app/iam
-  example:
-    path: app/example
   audit:
     path: app/audit
-  test:
-    path: app/test
   # Admin 目前只有设计规范；登记不代表源码和运行能力已实现。
   admin:
     path: app/admin

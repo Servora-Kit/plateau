@@ -9,9 +9,7 @@
 
 - `app/iam/service/` + `app/iam/web/`：主要业务实践（账号/会话/OIDC/AuthZ）
 - `app/admin/service/` + `app/admin/web/`：平台管理应用（OIDC 本地会话 BFF 与 Vben 管理前端）
-- `app/example/service/` + `app/example/web/`：最小 CRUD 参考模板（`example.servora.dev/User`），新增平台级微服务的推荐起点
 - `app/audit/service/`：审计微服务，不再更新和做参考，等待后期重构
-- `app/test/service/` + `app/test/web/`：跨协议与 Next.js 构建验证入口
 
 各服务目录可包含：
 
@@ -31,10 +29,7 @@
 ├── api/                       本微服务 proto 接口定义和私有配置文件 proto 定义
 │   ├── protos/{DomainName}/service/   该微服务各个领域的 Proto API 定义
 │   ├── protos/{ConfigName}/conf.proto 该微服务自己的业务配置 proto
-│   ├── buf.openapi.gen.yaml   该服务的 OpenAPI buf 生成配置
-│   └── buf.typescript.gen.yaml 可选的服务级模板；仅在服务 leaf 执行 `just api-ts` 时使用，
-│                               按模板自己的 `out` 生成到服务 Web。仓库根 `buf.typescript.gen.yaml`
-│                               为 `buf.yaml` 中全部模块生成共享 HTTP client，两者互不清理
+│   └── buf.openapi.gen.yaml   该服务的 OpenAPI buf 生成配置
 ├── cmd/                       启动入口，一般只包含 server/
 ├── configs/                   运行时配置
 │   ├── local/                 本地开发环境（数据库、消息队列指向 127.0.0.1）
@@ -67,7 +62,7 @@
 - 业务分层：`service -> biz <- data`；service 只适配接口，biz 定义 Use Case/Repo，data 实现存储。
 - 服务 leaf 的 `just gen` 会执行 `api + openapi + wire + gen-ent`
 - 服务 leaf 的 `just build` 会先执行 `just gen`，再编译当前服务
-- 服务 leaf 的 `just api` 会回到仓库根目录生成统一 Go API；若存在 `api/buf.typescript.gen.yaml`，再生成当前服务的 TypeScript API
+- 服务 leaf 的 `just api` 会回到仓库根目录生成统一 Go API；TypeScript API 统一由仓库根 `just api-ts`（`buf.typescript.gen.yaml`）生成至 `api/gen/ts`
 - 服务 leaf 的 `just openapi` 读取本目录 `api/buf.openapi.gen.yaml`
 - root `just build` 使用隐藏 build helper，避免生成完成后重复生成
 - Wire 与 Ent CLI 由根 `go.mod` 的 `tool` 声明固定版本，服务生成入口通过 `go tool wire`／`go tool ent` 调用
@@ -76,10 +71,11 @@
 
 ```bash
 just service::iam::run        # IAM 服务
-just service::example::run    # 本地 User CRUD HTTP/gRPC 服务
-just web::example::dev        # Vite 请求控制台
-just gen                       # 生成平台 API/Wire/Ent
-just lint                      # 全项目只读质量检查
+just service::admin::run      # Admin 服务
+just web::iam::dev            # IAM 前端开发服务
+just web::admin::dev          # Admin 前端开发服务
+just gen                      # 生成平台 API/Wire/Ent
+just lint                     # 全项目只读质量检查
 ```
 
 ## 配置约定

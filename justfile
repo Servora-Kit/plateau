@@ -134,7 +134,7 @@ lint-proto:
 
 clean: _clean-api-dist-files service::clean
 
-compose-build: (_compose-build-image "example") (_compose-build-image "audit")
+compose-build: (_compose-build-image "audit")
 
 _compose-build-image service:
     @docker build --build-arg SERVICE_NAME={{ service }} --build-arg VERSION={{ VERSION }} -t servora-{{ service }}:{{ DOCKER_TAG_VERSION }} .

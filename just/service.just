@@ -13,7 +13,6 @@ GOFLAGS := env("GOFLAGS", "")
 LDFLAGS := env("LDFLAGS", "-X main.Version=" + VERSION + " -X main.Name=" + SERVICE_NAME + ".service")
 JUST := just_executable()
 OPENAPI_TEMPLATE := join(COMPONENT_DIR, "api/buf.openapi.gen.yaml")
-TYPESCRIPT_TEMPLATE := join(COMPONENT_DIR, "api/buf.typescript.gen.yaml")
 ENT_GENERATOR := join(COMPONENT_DIR, "internal/data/generate.go")
 CMD_DIR := join(COMPONENT_DIR, "cmd")
 SERVER_DIR := join(CMD_DIR, "server")
@@ -43,11 +42,7 @@ _root-api-go:
 _root-api-go:
     @& "{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" api-go
 
-api: _root-api-go api-ts
-
-[working-directory(ROOT_DIR)]
-api-ts:
-    @{{ if path_exists(TYPESCRIPT_TEMPLATE) { "buf generate --template \"" + join(SERVICE_MODULE, "api/buf.typescript.gen.yaml") + "\"" } else { "echo No TypeScript API template found for " + SERVICE_NAME + ", skipping" } }}
+api: _root-api-go
 
 [working-directory(ROOT_DIR)]
 openapi:

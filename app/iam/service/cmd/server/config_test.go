@@ -17,7 +17,6 @@ import (
 func TestDevelopmentConfigScan(t *testing.T) {
 	for _, environment := range []string{"local", "docker"} {
 		t.Run(environment, func(t *testing.T) {
-			t.Setenv("IAM_TEST_WEB_CLIENT_SECRET", "test-web-secret-at-least-32-bytes")
 			t.Setenv("IAM_ADMIN_CLIENT_SECRET", "admin-secret-at-least-32-bytes")
 			t.Setenv("IAM_CAP_SIGNING_SECRET", "cap-signing-secret-at-least-32-bytes")
 			t.Setenv("IAM_BOOTSTRAP_USER_EMAIL", "seed@example.com")

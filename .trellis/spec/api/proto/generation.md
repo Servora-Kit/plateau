@@ -4,7 +4,7 @@
 
 ## 现有流程
 
-根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。所有注册在根 `buf.yaml` 的平台与应用模块（含 `iam`、`admin`、`example`、`test`、`audit`）统一生成至共享目录，不再为单个服务重复维护独立的 `buf.typescript.gen.yaml` 产物。
+根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。所有注册在根 `buf.yaml` 的平台与应用模块（含 `iam`、`admin`、`audit`）统一生成至共享目录，不再为单个服务重复维护独立的 `buf.typescript.gen.yaml` 产物。
 
 | 源／模板 | 输出与维护方 |
 | --- | --- |

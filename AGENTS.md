@@ -4,7 +4,7 @@
 
 ## 本地端口
 
-- 从 `10000` 起，每个应用固定分配 10 个端口：`+0` HTTP、`+1` gRPC、`+2` Web，`+3～+9` 预留；IAM、Admin 使用前两个段，Example/Test 固定使用 `10080`/`10090` 段。新增基础服务从 `10020–10079` 中尚未占用的段登记，不因 Example/Test 编号较大而从 `10100` 继续分配，也不重排已有编号。
+- 从 `10000` 起，每个应用固定分配 10 个端口：`+0` HTTP、`+1` gRPC、`+2` Web，`+3～+9` 预留；IAM、Admin 使用前两个段。新增服务从 `10020` 起按 10 端口段顺序登记，不重排已有编号。
 - 此约定用于本地监听和 Docker 宿主机映射；容器内部端口、共享中间件端口和生产公开端口不受影响。同一应用的原生运行与容器映射不可同时占用相同端口。
 - Web 的 dev 与 preview/start 默认共用 Web 端口，不同时启动。改动 IAM 或 Admin 公开入口时，同步 `IAM_PUBLIC_ORIGIN` / `ADMIN_PUBLIC_ORIGIN`、Web 端口和后端代理地址。
 
@@ -12,8 +12,6 @@
 | --- | --- | --- | --- | --- |
 | IAM | 10000–10009 | 10000 | 10001 | 10002 |
 | Admin | 10010–10019 | 10010 | 10011（预留） | 10012 |
-| Example | 10080–10089 | 10080 | 10081 | 10082 |
-| Test | 10090–10099 | 10090（预留） | 10091 | 10092 |
 
 ## 目录结构
 
@@ -39,7 +37,7 @@
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
 - `buf.typescript.gen.yaml` 项目级统一 TypeScript HTTP、error reason 与 CRUD helper 生成配置
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
-- `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与五个 Go 后端的依赖
+- `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与各服务 Go 后端的依赖
 - 本机共同父目录的 `../go.work` 与 `../pnpm-workspace.yaml` 纳入 `./plateau`、`./servora`（排除 `plateau/app/admin/web`），用于跨仓源码联调与 LSP；仓库自身不跟踪父级工作区文件，Go 独立构建门禁使用 `GOWORK=off`
 - `docker-compose.yaml` 本地基础设施编排；`docker-compose.apps.yaml` 应用容器编排
 
@@ -54,15 +52,13 @@ just api-ts-check
 just openfga-model-validate
 just openfga-model-test
 just openfga-model-apply
-just web::example::dev
 just web::iam::dev
-just web::test::dev
 just web::admin::dev
 just web::build
 just web::lint
 ```
 
-`api/gen`、平台原生 Web 与 `web/packages/*` 共用根 pnpm workspace 和 lockfile；Vben Admin 在 `app/admin/web` 中独立安装依赖。新增平台服务参考 `app/example`。
+`api/gen`、平台原生 Web 与 `web/packages/*` 共用根 pnpm workspace 和 lockfile；Vben Admin 在 `app/admin/web` 中独立安装依赖。新增平台服务参考 `app/iam`、`app/admin` 与 [app/AGENTS.md](app/AGENTS.md)。
 
 <!-- TRELLIS:START -->
 # Trellis Instructions
