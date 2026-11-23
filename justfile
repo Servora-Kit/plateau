@@ -4,11 +4,11 @@ mod service 'just/services.just'
 mod web 'just/webs.just'
 
 ROOT_DIR := justfile_directory()
+JUST := just_executable()
 BUF_GO_GEN_TEMPLATE := env("BUF_GO_GEN_TEMPLATE", "buf.go.gen.yaml")
 BUF_TS_GEN_TEMPLATE := env("BUF_TS_GEN_TEMPLATE", "buf.typescript.gen.yaml")
+BUF_BREAKING_AGAINST := env("BUF_BREAKING_AGAINST", ".git#ref=origin/main")
 API_TS_PACKAGE := env("API_TS_PACKAGE", "@plateau/api")
-SERVORA_PKG := env("SERVORA_PKG", "github.com/Servora-Kit/servora")
-SERVORA_VERSION := env("SERVORA_VERSION", "v0.10.1")
 PNPM := env("PNPM", "pnpm")
 COMPOSE := env("COMPOSE", "docker compose")
 COMPOSE_FILES := env("COMPOSE_FILES", "-f docker-compose.yaml")
@@ -36,37 +36,16 @@ env:
     @echo "COMPOSE_FILES: {{ COMPOSE_FILES }}"
 
 [unix]
-init: plugin cli
+init:
+    @mise install
+    @prek install
     @"{{ PNPM }}" install --frozen-lockfile
 
 [windows]
-init: plugin cli
+init:
+    @mise install
+    @prek install
     @& "{{ PNPM }}" install --frozen-lockfile
-
-plugin:
-    @echo "==> Installing protoc plugins..."
-    @go install google.golang.org/protobuf/cmd/protoc-gen-go@{{ env("PROTOC_GEN_GO_VERSION", "latest") }}
-    @go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@{{ env("PROTOC_GEN_GO_GRPC_VERSION", "latest") }}
-    @go install github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3@{{ env("PROTOC_GEN_GO_HTTP_VERSION", "latest") }}
-    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-typescript-http@{{ SERVORA_VERSION }}
-    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-go-errors@{{ SERVORA_VERSION }}
-    @go install github.com/google/gnostic/cmd/protoc-gen-openapi@{{ env("PROTOC_GEN_OPENAPI_VERSION", "latest") }}
-    @go install github.com/envoyproxy/protoc-gen-validate@{{ env("PROTOC_GEN_VALIDATE_VERSION", "latest") }}
-    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-redact@{{ SERVORA_VERSION }}
-    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-audit@{{ SERVORA_VERSION }}
-    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-conf@{{ SERVORA_VERSION }}
-    @go install {{ SERVORA_PKG }}/cmd/protoc-gen-servora-crud@{{ SERVORA_VERSION }}
-    @go install ./cmd/protoc-gen-plateau-authz
-    @go install ./cmd/protoc-gen-plateau-authn
-
-cli:
-    @echo "==> Installing CLI tools..."
-    @go install github.com/google/gnostic@{{ env("GNOSTIC_VERSION", "latest") }}
-    @go install github.com/bufbuild/buf/cmd/buf@{{ env("BUF_VERSION", "latest") }}
-    @go install github.com/golangci/golangci-lint/cmd/golangci-lint@{{ env("GOLANGCI_LINT_VERSION", "latest") }}
-    @go install github.com/google/wire/cmd/wire@{{ env("WIRE_VERSION", "latest") }}
-    @go install entgo.io/ent/cmd/ent@{{ env("ENT_VERSION", "latest") }}
-    @go install github.com/air-verse/air@{{ env("AIR_VERSION", "latest") }}
 
 api: api-go api-ts
 
@@ -103,6 +82,60 @@ gen: api service::_gen
 gen-fresh: gen-clean gen
 
 [unix]
+[working-directory(ROOT_DIR)]
+gen-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    GOWORK=off "{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" gen
+    paths=(
+        'api/gen/go'
+        'api/gen/ts'
+        ':(glob)**/wire_gen.go'
+        ':(glob)app/*/service/internal/data/ent'
+        ':(glob)app/*/service/**/openapi.yaml'
+    )
+    status=0
+    if ! git diff --exit-code --stat -- "${paths[@]}"; then
+        echo "Generated files are out of date (tracked diffs above)." >&2
+        status=1
+    fi
+    untracked=$(git ls-files --others --exclude-standard -- "${paths[@]}")
+    if [ -n "$untracked" ]; then
+        echo "Untracked generated files detected:" >&2
+        printf '%s\n' "$untracked" >&2
+        status=1
+    fi
+    exit "$status"
+
+[script("powershell.exe", "-NoLogo", "-NoProfile", "-Command")]
+[windows]
+[working-directory(ROOT_DIR)]
+gen-check:
+    $ErrorActionPreference = "Stop"
+    $env:GOWORK = "off"
+    & "{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" gen
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $paths = @(
+        "api/gen/go",
+        "api/gen/ts",
+        ":(glob)**/wire_gen.go",
+        ":(glob)app/*/service/internal/data/ent",
+        ":(glob)app/*/service/**/openapi.yaml"
+    )
+    $failed = $false
+    git diff --exit-code --stat -- @paths
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Generated files are out of date (tracked diffs above)."
+        $failed = $true
+    }
+    $untracked = git ls-files --others --exclude-standard -- @paths
+    if ($untracked) {
+        Write-Error ("Untracked generated files detected:`n" + ($untracked -join "`n"))
+        $failed = $true
+    }
+    if ($failed) { exit 1 }
+
+[unix]
 _gen-clean-files:
     rm -rf -- "{{ join(ROOT_DIR, "api/gen/go") }}" "{{ join(ROOT_DIR, "api/gen/ts") }}" "{{ join(ROOT_DIR, "api/gen/dist") }}"
 
@@ -125,12 +158,24 @@ build: gen service::_build web::build
 lint: api-ts-check lint-proto lint-go
 
 [working-directory(ROOT_DIR)]
-lint-go:
-    @golangci-lint run ./...
+test *args:
+    @go test -race -count=1 {{ args }} ./...
 
 [working-directory(ROOT_DIR)]
-lint-proto:
-    @buf lint
+lint-go *args:
+    @golangci-lint run {{ args }} ./...
+
+[working-directory(ROOT_DIR)]
+lint-proto *args:
+    @buf lint {{ args }}
+
+[working-directory(ROOT_DIR)]
+fmt-proto-check *args:
+    @buf format -d --exit-code {{ args }}
+
+[working-directory(ROOT_DIR)]
+breaking *args:
+    @buf breaking --against "{{ BUF_BREAKING_AGAINST }}" {{ args }}
 
 clean: _clean-api-dist-files service::clean
 

@@ -53,7 +53,7 @@ services:
       - plateau-network
 
   openfga-migrate:
-    image: openfga/openfga:latest
+    image: openfga/openfga:v1.23.0
     restart: "no"
     depends_on:
       postgres:
@@ -68,7 +68,7 @@ services:
       - plateau-network
 
   openfga:
-    image: openfga/openfga:latest
+    image: openfga/openfga:v1.23.0
     restart: unless-stopped
     depends_on:
       postgres:

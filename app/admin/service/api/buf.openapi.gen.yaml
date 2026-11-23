@@ -16,7 +16,7 @@ inputs:
           - app/admin/service/api/protos/admin/user/v1
 
 plugins:
-    - local: protoc-gen-openapi
+    - local: ["go", "tool", "protoc-gen-openapi"]
       strategy: all
       out: app/admin/service/internal/assets
       opt:

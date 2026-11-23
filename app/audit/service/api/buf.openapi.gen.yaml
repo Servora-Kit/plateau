@@ -22,7 +22,7 @@ inputs:
           - app/audit/service/api/protos/audit/service/v1
 
 plugins:
-    - local: protoc-gen-openapi
+    - local: ["go", "tool", "protoc-gen-openapi"]
       out: app/audit/service/internal/assets
       opt:
           - naming=json
