@@ -6,6 +6,9 @@ packages:
   - "web/packages/*"
   - "!app/admin/web"
 
+# Explicit 1-day cooldown (matches pnpm v12 default) so Renovate syncs it unambiguously
+# without relying on a root package.json to infer the pnpm major version.
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - "@servora/proto-utils"
 
