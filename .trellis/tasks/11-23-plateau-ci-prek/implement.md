@@ -42,7 +42,8 @@
 - [x] 根 Web lint/typecheck/build、admin web lint/check/test:unit/build 本地通过
 - [x] 远端 CI 实跑：push main 的 run `45127566826` 全部 job 通过（含 ci-ok）；Security run `45126297753` 通过。前两轮修复了 just 导出空 `FGA_API_URL`、admin prek.toml 格式、3 个 govulncheck 漏洞、Vben 时区用例对 UTC 的假设
 - [ ] PR 事件下的路径分流（等第一个 PR 时观察）
-- [ ] Renovate Dependency Dashboard（需安装 App）
+- [ ] Renovate Dependency Dashboard：App 已安装（Renovate Only + Silent），仓库 Issues 已于 2026-11-23 开启，等 Renovate 下一次扫描生成面板
+- [x] main 分支保护：必过检查 `ci-ok`（GitHub Actions app_id 15368），`strict=false`，管理员可绕过，禁止 force push 与删除
 
 ## 验证
 
