@@ -351,3 +351,45 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 12: 完成 Plateau GitHub CI、prek 本地钩子与 Renovate 接入
+<!-- trellis-session: v=2 fp=74405e9afd32ac8a -->
+
+**Date**: 2026-11-23
+**Task**: 完成 Plateau GitHub CI、prek 本地钩子与 Renovate 接入
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+引入 mise.toml 与 go.mod tool 固定工具链及 protoc 插件，配置三层 prek 钩子并移除 admin-web 失效的 lefthook/commitlint，新增 ci.yml（路径分流、集成测试、ci-ok 聚合门禁）、security.yml（govulncheck）与 renovate.json5；配置 main 分支保护（必过 ci-ok），清理 app/iam/web 遗留孤立 pnpm workspace，并通过 minimumReleaseAgePackageManagerSync 与根 pnpm-workspace.yaml 对齐 pnpm v12 冷却策略，PR #3（fix(deps): update root-web）验收全部通过（CLEAN）并归档任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `62e7cea1` | style: 按 gofmt、buf format 与文件卫生规则统一现有代码格式 |
+| `0b35caef` | build: 以 go.mod tool 固定 protoc 插件并用 mise 统一工具版本 |
+| `f3461d20` | build: 引入 prek 本地钩子并移除 admin-web 失效的 lefthook 与 commitlint |
+| `b4c95506` | ci: 新增 GitHub CI 门禁、govulncheck 扫描与 Renovate 依赖更新 |
+| `a2f90344` | docs: 同步 CI、工具版本与本地钩子规范及任务记录 |
+| `cbf8099e` | fix(admin-web): 按 oxfmt 格式化 prek.toml 并纳入 toml 格式检查 |
+| `8ad628a3` | fix(just): 避免 set export 用空 FGA_API_URL 覆盖服务配置默认值 |
+| `a1b93701` | fix(deps): 升级 brotli、klauspost/compress 并固定 go1.27.4 toolchain 修复 govulncheck 告警 |
+| `85389519` | chore(just): 移除 OPENFGA_API_URL 上的说明注释 |
+| `154be221` | docs(spec): 记录 toolchain 补丁、just set export 与 prek 配置暂存约定 |
+| `feeba1bb` | docs(spec): go 指令约定不再假设存在父级 go.work |
+| `7bdc0d5b` | docs: AGENTS.md 跨仓联调说明改为通用写法，不绑定本机目录布局 |
+| `bc1e1a45` | ci(admin-web): 单元测试固定 TZ，适配 Vben 时区用例对 UTC runner 的假设 |
+| `083f6c01` | docs(task): 记录 plateau-ci-prek 远端 CI 验证结果 |
+| `bdb838da` | docs(task): 记录 main 分支保护与 Renovate 面板前置条件 |
+| `680f7ba0` | docs(task): 更正 Renovate 模式说明，plateau 需切换为 Interactive |
+| `ac69102e` | ci(renovate): go 指令不再接收补丁升级，protoc 插件模块归入 go-tools 分组 |
+| `1687788c` | chore(iam-web): 删除脚手架遗留的独立 pnpm workspace 与 lockfile |
+| `8b72e1a8` | ci(renovate): 改用 renovate.json5 并同步 pnpm 供应链冷却策略 |
+| `e37d659e` | docs(task): 补全 plateau-ci-prek 的 PR 路径分流与 Renovate 最终验收记录 |
+
+### Status
+
+[OK] **Completed**
