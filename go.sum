@@ -202,8 +202,8 @@ github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-kit/kit v0.9.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-kit/log v0.1.0/go.mod h1:zbhenjAZHb184qTLMA9ZjW7ThYL0H2mk7Q6pNt4vbaY=
-github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3 v3.0.0-20261026152050-dd0fb7df1e32 h1:+bij2/Qha5b+O5GhUxbYQhNFZn8GwZwYFLPEsg1ZZns=
-github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3 v3.0.0-20261026152050-dd0fb7df1e32/go.mod h1:RGZtB27P0RHKnUjghZEjoZM3HqN1lzNWT7FEXoXVTp8=
+github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3 v3.0.0-20261123032133-56cfd65deee9 h1:tfzkgqqeHeorBjRHDtNnfXdyV0DwX71jJJd48QIBjc4=
+github.com/go-kratos/kratos/cmd/protoc-gen-go-http/v3 v3.0.0-20261123032133-56cfd65deee9/go.mod h1:RGZtB27P0RHKnUjghZEjoZM3HqN1lzNWT7FEXoXVTp8=
 github.com/go-kratos/kratos/contrib/config/consul/v3 v3.0.0-20260621094049-2726761cdd77 h1:j59WWUYR1q1toclv1HLF5zDeLrkDUwLOyhFER3uLGLs=
 github.com/go-kratos/kratos/contrib/config/consul/v3 v3.0.0-20260621094049-2726761cdd77/go.mod h1:jDURyzpBy212T1r4+//OgrbZdkLsaosxbx3reX2+yT0=
 github.com/go-kratos/kratos/contrib/config/nacos/v3 v3.0.0-20260621094049-2726761cdd77 h1:o8b+D5dNejbcJZSTkNq+6wZNzDJcKAWeQizTLf+WBWY=
