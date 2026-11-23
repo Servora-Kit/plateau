@@ -1,9 +1,9 @@
 click_house:
   addrs:
     - clickhouse:9000
-  database: servora_audit
-  username: servora
-  password: servora_ch_pwd
+  database: "${CLICKHOUSE_DB:audit}"
+  username: "${CLICKHOUSE_USER:clickhouse}"
+  password: "${CLICKHOUSE_PASSWORD:clickhouse}"
   dial_timeout: 10s
   read_timeout: 30s
   max_open_conns: 10

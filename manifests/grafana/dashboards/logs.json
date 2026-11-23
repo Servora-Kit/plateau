@@ -98,7 +98,7 @@
   "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["servora", "logs"],
+  "tags": ["logs"],
   "templating": {
     "list": []
   },
@@ -108,8 +108,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "servora Logs",
-  "uid": "servora-logs",
+  "title": "Logs",
+  "uid": "logs",
   "version": 1,
   "weekStart": ""
 }

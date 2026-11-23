@@ -221,10 +221,7 @@ jobs:
       - uses: jdx/mise-action@v5
 
       - name: Start compose dependencies
-        run: |
-          docker compose up -d --wait postgres redis
-          docker compose run --rm --no-deps postgres-provision
-          docker compose up -d --wait openfga
+        run: docker compose up -d --wait postgres redis openfga
 
       - name: Validate and test OpenFGA model
         run: just openfga-model-test

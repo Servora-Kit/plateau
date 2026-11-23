@@ -5,15 +5,6 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
-  filelog/audit:
-    include:
-      - /var/log/audit/audit.service.log
-    start_at: end
-    include_file_path: true
-    operators:
-      - type: json_parser
-    resource:
-      service.name: audit.service
 
 processors:
   batch:
@@ -52,6 +43,6 @@ service:
       processors: [batch]
       exporters: [otlp_grpc/jaeger]
     logs:
-      receivers: [filelog/audit]
+      receivers: [otlp]
       processors: [attributes/log_hints, batch]
       exporters: [otlp_http/loki]

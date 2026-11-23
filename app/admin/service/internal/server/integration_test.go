@@ -51,11 +51,11 @@ import (
 )
 
 const (
-	defaultIAMDSN     = "postgres://postgres:postgres@127.0.0.1:5432/plateau_iam?sslmode=disable"
-	defaultAdminDSN   = "postgres://postgres:postgres@127.0.0.1:5432/plateau_admin?sslmode=disable"
+	defaultIAMDSN     = "postgres://postgres:postgres@127.0.0.1:5432/iam?sslmode=disable"
+	defaultAdminDSN   = "postgres://postgres:postgres@127.0.0.1:5432/admin?sslmode=disable"
 	defaultFGAURL     = "http://127.0.0.1:18080"
 	defaultRedisAddr  = "127.0.0.1:6379"
-	defaultRedisPass  = "servora_redis_pwd"
+	defaultRedisPass  = "redis"
 	adminBootstrapEml = "admin@plateau.local"
 	adminNewPassword  = "AdminPermanentPass!2026"
 	oidcClientSecret  = "integration-admin-oidc-secret-32b"

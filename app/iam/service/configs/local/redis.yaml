@@ -1,7 +1,7 @@
 redis:
   network: tcp
   addr: "${IAM_REDIS_ADDR:localhost:6379}"
-  password: "${IAM_REDIS_PASSWORD:servora_redis_pwd}"
+  password: "${IAM_REDIS_PASSWORD:redis}"
   db: 0
   dial_timeout: 5s
   read_timeout: 3s

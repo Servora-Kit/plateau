@@ -13,7 +13,7 @@ server:
 data:
   database:
     driver: postgresql
-    source: "${IAM_DATABASE_SOURCE:postgres://plateau_iam_app:plateau_iam_pwd@localhost:5432/plateau_iam?sslmode=disable}"
+    source: "${IAM_DATABASE_SOURCE:postgres://iam:iam@localhost:5432/iam?sslmode=disable}"
 
 app:
   name: iam.service

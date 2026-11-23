@@ -98,7 +98,7 @@ func newServerFixture(t *testing.T) *serverFixture {
 	client, closeEnt, err := data.NewDBClient(driver)
 	check(t, err)
 	t.Cleanup(closeEnt)
-	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", Password: "servora_redis_pwd"})
+	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379", Password: "redis"})
 	t.Cleanup(func() { _ = rdb.Close() })
 	check(t, rdb.Ping(t.Context()).Err())
 	fgaURL := os.Getenv("IAM_TEST_FGA_URL")

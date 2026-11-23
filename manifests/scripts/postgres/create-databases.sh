@@ -2,8 +2,8 @@
 set -eu
 
 : "${POSTGRES_SERVICE_DATABASES:?POSTGRES_SERVICE_DATABASES is required}"
-: "${IAM_DATABASE_NAME:=plateau_iam}"
-: "${IAM_DATABASE_ROLE:=plateau_iam_app}"
+: "${IAM_DATABASE_NAME:=iam}"
+: "${IAM_DATABASE_ROLE:=iam}"
 : "${IAM_DATABASE_PASSWORD:?IAM_DATABASE_PASSWORD is required}"
 
 validate_identifier() {

@@ -84,7 +84,6 @@ just lint                     # 全项目只读质量检查
 
 - `configs/local/`：**本地开发环境**。数据库、消息队列地址指向 `127.0.0.1`。
   - 使用 `just service::<name>::dev` 或 `just service::<name>::run` 启动时，服务读取此目录。
-- `configs/docker/`：**容器化环境**。数据库地址指向 Docker Compose network 中的服务名（如 `kafka:9092`）。
-  - 当通过 `docker-compose.apps.yaml` 启动容器时，服务读取此目录。
+- `configs/docker/`：**容器化环境**。数据库、缓存、消息队列地址指向容器网络中的服务名（如 `postgres:5432`、`redis:6379`、`kafka:9092`）。
 
 在 `configs/` 中定义的 `.yaml` 在代码中通过 `conf.Bootstrap` 结构体映射，使用 Protobuf 结构定义在各自的 `api/` 目录下。

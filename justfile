@@ -22,8 +22,6 @@ OPENFGA_SCRIPT_WINDOWS := env("OPENFGA_SCRIPT_WINDOWS", join(ROOT_DIR, "manifest
 VERSION_ENV := env("VERSION", "")
 VERSION := if VERSION_ENV != "" { VERSION_ENV } else { `git describe --tags --always --dirty` }
 GOVERSION := `go version`
-DOCKER_TAG_VERSION_RAW := replace_regex(replace_regex(replace_regex(VERSION, "[^A-Za-z0-9_.-]+", "-"), "^[.-]+", ""), "[.-]+$", "")
-DOCKER_TAG_VERSION := if DOCKER_TAG_VERSION_RAW == "" { "dev" } else { DOCKER_TAG_VERSION_RAW }
 
 help:
     @just --list --list-submodules
@@ -178,12 +176,6 @@ breaking *args:
     @buf breaking --against "{{ BUF_BREAKING_AGAINST }}" {{ args }}
 
 clean: _clean-api-dist-files service::clean
-
-compose-build: (_compose-build-image "audit")
-
-_compose-build-image service:
-    @docker build --build-arg SERVICE_NAME={{ service }} --build-arg VERSION={{ VERSION }} -t servora-{{ service }}:{{ DOCKER_TAG_VERSION }} .
-    @docker tag servora-{{ service }}:{{ DOCKER_TAG_VERSION }} servora-{{ service }}:latest
 
 compose-up:
     @{{ COMPOSE }} {{ COMPOSE_FILES }} up -d {{ COMPOSE_SERVICES }}

@@ -41,7 +41,7 @@
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
 - `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与各服务 Go 后端的依赖
 - 跨仓源码联调（如与 Servora）可在本地共同父目录自建 `go.work` / `pnpm-workspace.yaml`，不提交到仓库；父级 pnpm workspace 需排除 `plateau/app/admin/web`。仓库门禁以 `GOWORK=off` 的独立检查为准，联调通过不代表门禁通过
-- `docker-compose.yaml` 本地基础设施编排；`docker-compose.apps.yaml` 应用容器编排
+- `docker-compose.yaml` 本地基础设施编排
 
 ## 命令
 

@@ -10,7 +10,7 @@ server:
 data:
   database:
     driver: postgresql
-    source: "${ADMIN_DATABASE_SOURCE:postgres://postgres:postgres@postgres:5432/plateau_admin?sslmode=disable}"
+    source: "${ADMIN_DATABASE_SOURCE:postgres://postgres:postgres@postgres:5432/admin?sslmode=disable}"
   client:
     services:
       - name: iam.service

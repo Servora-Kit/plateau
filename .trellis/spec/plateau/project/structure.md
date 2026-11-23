@@ -21,7 +21,7 @@
 - `pnpm-workspace.yaml`、`pnpm-lock.yaml`：根依赖 workspace 和共享锁文件；独立第三方 workspace 保留自己的依赖边界。
 - `buf.yaml`：模块、依赖、lint 和 breaking 配置；`buf.go.gen.yaml`、`buf.typescript.gen.yaml`：统一生成模板。`buf.es.gen.yaml` 当前停用，只作参考。
 - `go.mod`、`go.sum`：统一管理共享代码与所有服务后端；父级 `go.work` 仅用于本机跨仓联调，仓库不跟踪它。
-- `docker-compose.yaml`：本地基础设施；`docker-compose.apps.yaml`：应用容器编排。
+- `docker-compose.yaml`：本地基础设施编排。
 - `.trellis/`：规范、任务和工作记录；应用 spec 按 `spec/<应用>/{index,architecture,frontend,backend}.md` 及实际专题组织，文件按需建立，规则见 [规范索引](../../index.md)。一个应用 package 可以同时包含 Go 与前端源码，不要求等同单个 Go/Node 包。
 
 ## 新增目录时检查

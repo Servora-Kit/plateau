@@ -113,7 +113,7 @@
   "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["servora", "traces"],
+  "tags": ["traces"],
   "templating": {
     "list": [
       {
@@ -169,8 +169,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "servora Traces",
-  "uid": "servora-traces",
+  "title": "Traces",
+  "uid": "traces",
   "version": 1,
   "weekStart": ""
 }

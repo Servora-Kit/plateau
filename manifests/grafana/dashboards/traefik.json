@@ -1153,7 +1153,6 @@
  "schemaVersion": 20,
  "style": "dark",
  "tags": [
- "servora",
  "traefik",
  "load-balancer",
  "prometheus"
@@ -1309,8 +1308,8 @@
  ]
  },
  "timezone": "",
- "title": "Traefik - Servora",
- "uid": "traefik-servora",
+ "title": "Traefik",
+ "uid": "traefik",
  "version": 1,
- "description": "Traefik 指标看板（Servora 容器化环境），基于 Grafana.com 11462"
+ "description": "Traefik 指标看板，基于 Grafana.com 11462"
 }
