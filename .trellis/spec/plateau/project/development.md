@@ -33,10 +33,11 @@
 
 ## 工具版本与单一来源
 
-- Go 版本由根 `go.mod` 的 `go` 指令管理；CI 通过 `actions/setup-go` 读取 `go.mod`。
+- Go 版本由根 `go.mod` 管理：`go` 指令保持与父级 `go.work` 兼容的最低版本；需要标准库安全补丁时用 `toolchain` 指令固定补丁版本，CI 通过 `actions/setup-go` 读取 `go.mod`。
 - `buf`、`golangci-lint`、`just`、`fga`（`aqua:openfga/cli`）、`prek`、`node`、`pnpm`、`air` 由根 `mise.toml` 固定版本；本地通过 `mise install`、CI 通过 `jdx/mise-action` 使用同一份版本。
 - 所有 protoc 插件（含 Plateau AuthN/AuthZ 与 Servora 插件）及 Wire/Ent 均在根 `go.mod` 的 `tool` 块声明并通过 `go tool` 执行；不再使用 `just plugin`/`just cli` 安装，Servora 插件版本随 `go.mod` 中的 `github.com/Servora-Kit/servora` 同步。生成路径与入口详见 [generation](../../api/proto/generation.md)。
 - 依赖与工具版本由 Renovate 跟踪更新。
+- 根 justfile 启用了 `set export`，所有 Just 变量都会导出给 recipe 及其子进程；读取外部环境变量的 Just 变量不能与服务配置、测试使用的环境变量同名，否则空默认值会覆盖配置里的 `${VAR:默认值}`。
 
 ## 本地钩子分层（prek）
 
@@ -45,6 +46,7 @@
 - `pre-commit`：通用文件卫生（内置 Rust 钩子）、`gofmt`、`buf format`、`just --fmt --check --unstable`；`app/admin/web` 仅对暂存文件执行 `oxlint`/`oxfmt`/`eslint`/`stylelint` 自动修复，不跑全量类型检查。
 - `pre-push`：在 `GOWORK=off` 下运行 `just lint-go`、`just lint-proto`、`just breaking`、`just gen-check`；`app/admin/web` 运行 `pnpm check:type`。push 前工作区应保持干净，临时绕过可使用 `PREK_SKIP`。
 - `commit-msg`：校验 Conventional Commits（允许 `feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`，描述允许中文；放行 `Merge`、`Revert`、`fixup!`、`squash!`）。
+- prek 拒绝在钩子配置文件有未暂存改动时提交；修改 `prek.toml` 时先单独提交配置，或与其他改动一起暂存。
 
 ## Go module 与 CI 门禁
 
