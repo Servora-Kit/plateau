@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 10
-- **Last Active**: 2026-11-22
+- **Total Sessions**: 11
+- **Last Active**: 2026-11-23
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~319 | Active |
+| `journal-1.md` | ~353 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 11 | 2026-11-23 | 清理 example 与 test 示例服务 | `9e4b4774` | `main` |
 | 10 | 2026-11-22 | 发布 servora v0.10.1、升级正式依赖并归档 10-04-admin-v1 | `ad592a4c`, `0fe8005d` | `main` |
 | 9 | 2026-11-22 | 完成 Admin Web 交付、跨仓传输契约统一与端到端验收 | `ff9d7f3`, `40b4389`, `ac43b6d`, `4d29ca1`, `d323c7f` | `main` |
 | 8 | 2026-11-15 | 完成 11-14-security-authn-refactor 平台认证重构与结项归档 | `f76995b6`, `39779e5b`, `b4199888` | `main` |

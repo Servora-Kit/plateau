@@ -317,3 +317,37 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 11: 清理 example 与 test 示例服务
+<!-- trellis-session: v=2 fp=cd0fe1036a945e3a -->
+
+**Date**: 2026-11-23
+**Task**: 清理 example 与 test 示例服务
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+移除 Plateau 中的 app/example 与 app/test 服务及其 Proto、生成产物、Just 编排、依赖锁与规范，同步更新 ../servora/docs/crud.md（8ca99bbb）
+
+### Main Changes
+
+- 删除 app/example、app/test、.trellis/spec/{example,test} 及 api/gen/{go,ts}/{example,test}
+- web/packages/client/test/kratos_stream_fixture.go 改用 structpb.Struct，清理 IAM OIDC 中 test-web 残留配置与单测环境变量
+- 更新 buf.yaml、justfile、just/{service,services,webs}.just、go.mod、pnpm-lock.yaml 与 AGENTS/规范，并同步 ../servora/docs/crud.md
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9e4b4774` | chore: 清理 example 与 test 示例服务及其生成产物 |
+
+### Testing
+
+- [OK] GOWORK=off just gen-fresh、just lint、GOWORK=off CC=/usr/bin/clang go test ./...（288 passed）
+- [OK] pnpm --filter @plateau/client test/typecheck、just web::lint、just web::build 与锁文件二次复验通过
+
+### Status
+
+[OK] **Completed**
