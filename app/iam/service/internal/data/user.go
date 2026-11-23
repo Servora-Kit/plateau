@@ -37,6 +37,7 @@ var (
 	listUsersActiveScope = []byte("iam.users.v1:active")
 	listUsersAllScope    = []byte("iam.users.v1:all")
 )
+
 type userRepository struct {
 	ent        *entmodel.Client
 	listFields *entcrud.ListFields[*entmodel.User]

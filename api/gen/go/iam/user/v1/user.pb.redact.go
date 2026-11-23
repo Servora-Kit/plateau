@@ -15,6 +15,7 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var _ validate.Rule
 var _ annotations.CommonLanguageSettings
 var _ annotations.FieldBehavior
 var _ annotations.ResourceDescriptor
@@ -22,7 +23,6 @@ var _ emptypb.Empty
 var _ fieldmaskpb.FieldMask
 var _ timestamppb.Timestamp
 var _ authnpb.AuthnRule
-var _ validate.Rule
 var _ authzpb.AuthzRule
 var _ redactv3.FieldRules
 

@@ -2,15 +2,15 @@ syntax = "proto3";
 
 package iam.authn.v1;
 
+import "buf/validate/validate.proto";
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "iam/user/v1/user.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
-import "buf/validate/validate.proto";
-import "servora/redact/v3/redact.proto";
 import "servora/errors/v1/errors.proto";
+import "servora/redact/v3/redact.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1;authnpb";
 
@@ -36,13 +36,15 @@ enum AuthnErrorReason {
   AUTHN_ERROR_REASON_INVALID_CREDENTIALS = 1 [(servora.errors.v1.code) = 401];
 }
 
-
 message LoginRequest {
   // Service canonicalizes email before locating the Login Identifier.
   string email = 1 [(google.api.field_behavior) = REQUIRED];
   string password = 2 [
     (google.api.field_behavior) = REQUIRED,
-    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (buf.validate.field).string = {
+      min_len: 8
+      max_len: 128
+    },
     (servora.redact.v3.value).string = ""
   ];
 }

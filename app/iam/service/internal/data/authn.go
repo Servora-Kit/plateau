@@ -47,6 +47,7 @@ func NewSessionRepository(data *Data) (biz.SessionRepo, error) {
 	}
 	return &sessionRepository{ent: data.ent, mapper: mapper}, nil
 }
+
 // lockUser 为身份变更、登录与 OAuth 提交提供同一数据库串行化边界。
 func lockUser(ctx context.Context, tx *entmodel.Tx, userID string) (*entmodel.User, error) {
 	value, err := tx.User.Query().Where(user.IDEQ(userID), user.DeleteTimeIsNil()).ForUpdate().Only(ctx)

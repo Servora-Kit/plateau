@@ -3,11 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
-	"time"
 	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
@@ -26,6 +21,11 @@ import (
 	"github.com/go-kratos/kratos/v3/transport"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
 )
 
 type stubUserRepo struct {
@@ -203,7 +203,7 @@ func (stubCAP) ValidateToken(context.Context, string) (bool, error) { return tru
 
 type stubMailer struct{ err error }
 
-func (m stubMailer) SendVerification(context.Context, string, string, int) error { return m.err }
+func (m stubMailer) SendVerification(context.Context, string, string, int) error  { return m.err }
 func (m stubMailer) SendPasswordReset(context.Context, string, string, int) error { return m.err }
 
 type failingSCSStore struct {
@@ -427,4 +427,3 @@ func TestUserServiceLifecycleAndErrorMappings(t *testing.T) {
 		t.Fatalf("ExpungeUser() error = %v", err)
 	}
 }
-

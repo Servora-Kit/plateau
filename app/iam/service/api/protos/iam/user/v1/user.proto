@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package iam.user.v1;
 
+import "buf/validate/validate.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
@@ -9,10 +10,9 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "plateau/security/authn/v1/annotations.proto";
-import "buf/validate/validate.proto";
 import "plateau/security/authz/v1/annotations.proto";
-import "servora/redact/v3/redact.proto";
 import "servora/errors/v1/errors.proto";
+import "servora/redact/v3/redact.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1;userpb";
 
@@ -171,7 +171,10 @@ message CreateUserRequest {
   ];
   string password = 3 [
     (google.api.field_behavior) = REQUIRED,
-    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (buf.validate.field).string = {
+      min_len: 8
+      max_len: 128
+    },
     (servora.redact.v3.value).string = ""
   ];
   optional bool require_password_change = 4 [(google.api.field_behavior) = OPTIONAL];
@@ -246,7 +249,10 @@ message SetUserPasswordRequest {
   ];
   string new_password = 2 [
     (google.api.field_behavior) = REQUIRED,
-    (buf.validate.field).string = {min_len: 8, max_len: 128},
+    (buf.validate.field).string = {
+      min_len: 8
+      max_len: 128
+    },
     (servora.redact.v3.value).string = ""
   ];
 }

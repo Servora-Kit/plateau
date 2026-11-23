@@ -35,12 +35,12 @@ import (
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	"github.com/alicebob/miniredis/v2"
+	jwtlib "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	fgaclient "github.com/openfga/go-sdk/client"
 	goredis "github.com/redis/go-redis/v9"
-	jwtlib "github.com/golang-jwt/jwt/v5"
 	oidcprotocol "github.com/zitadel/oidc/v3/pkg/oidc"
 	"google.golang.org/protobuf/proto"
 )

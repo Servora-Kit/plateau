@@ -176,7 +176,7 @@ var File_iam_authn_v1_authn_proto protoreflect.FileDescriptor
 
 const file_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\n" +
-	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"\\\n" +
+	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\\\n" +
 	"\fLoginRequest\x12\x1a\n" +
 	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x120\n" +
 	"\bpassword\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\"6\n" +

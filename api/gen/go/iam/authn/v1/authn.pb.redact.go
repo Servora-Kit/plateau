@@ -13,12 +13,12 @@ import (
 	proto "google.golang.org/protobuf/proto"
 )
 
+var _ validate.Rule
 var _ annotations.CommonLanguageSettings
 var _ annotations.FieldBehavior
 var _ userpb.UserProfile
 var _ authnpb.AuthnRule
 var _ authzpb.AuthzRule
-var _ validate.Rule
 var _ redactv3.FieldRules
 
 // Redact returns a redacted representation without mutating x.

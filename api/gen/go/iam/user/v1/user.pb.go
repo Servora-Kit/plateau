@@ -1321,7 +1321,7 @@ var File_iam_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x16iam/user/v1/user.proto\x12\viam.user.v1\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\x1a\x1eservora/errors/v1/errors.proto\"\x8e\x03\n" +
+	"\x16iam/user/v1/user.proto\x12\viam.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\x8e\x03\n" +
 	"\vUserProfile\x12\x1d\n" +
 	"\x04name\x18\x01 \x01(\tB\x04\xe2A\x01\x01H\x00R\x04name\x88\x01\x01\x12(\n" +
 	"\n" +
