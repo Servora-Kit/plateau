@@ -1,0 +1,133 @@
+default_install_hook_types = ["pre-commit", "pre-push", "commit-msg"]
+default_stages = ["pre-commit"]
+
+exclude = { glob = [
+  "api/gen/**",
+  "**/wire_gen.go",
+  "app/*/service/internal/data/ent/**",
+  "**/openapi.yaml",
+  "**/pnpm-lock.yaml",
+  "**/node_modules/**",
+  # Trellis、agent 与 GitNexus 工具自行生成和覆盖的文件，修复格式只会在下次同步时被改回。
+  ".trellis/**",
+  ".agent/**",
+  ".agents/**",
+  ".omp/**",
+  ".claude/**",
+  ".codex/**",
+  ".gitnexus/**",
+] }
+
+[[repos]]
+repo = "builtin"
+
+[[repos.hooks]]
+id = "trailing-whitespace"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "end-of-file-fixer"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "check-yaml"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "check-json"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "check-toml"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "check-merge-conflict"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "detect-private-key"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "check-added-large-files"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "mixed-line-ending"
+stages = ["pre-commit"]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "gofmt"
+name = "gofmt"
+entry = "gofmt -l -w"
+language = "system"
+types = ["go"]
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "buf-format"
+name = "buf format"
+entry = "buf format -w"
+language = "system"
+files = '\.proto$'
+pass_filenames = 1
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "just-fmt"
+name = "just fmt check"
+entry = "just --fmt --check --unstable --justfile"
+language = "system"
+files = '(^|/)(justfile|[^/]+\.just)$'
+pass_filenames = 1
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "lint-go"
+name = "just lint-go"
+entry = "just lint-go"
+language = "system"
+env = { GOWORK = "off" }
+pass_filenames = false
+always_run = true
+stages = ["pre-push"]
+
+[[repos.hooks]]
+id = "lint-proto"
+name = "just lint-proto"
+entry = "just lint-proto"
+language = "system"
+pass_filenames = false
+always_run = true
+stages = ["pre-push"]
+
+[[repos.hooks]]
+id = "buf-breaking"
+name = "just breaking"
+entry = "just breaking"
+language = "system"
+pass_filenames = false
+always_run = true
+stages = ["pre-push"]
+
+[[repos.hooks]]
+id = "gen-check"
+name = "just gen-check"
+entry = "just gen-check"
+language = "system"
+env = { GOWORK = "off" }
+pass_filenames = false
+always_run = true
+stages = ["pre-push"]
+
+[[repos.hooks]]
+id = "conventional-commit"
+name = "conventional commit message"
+entry = '\A((feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)\r\n]+\))?!?: [^\r\n]*\S|Merge [^\r\n]+|Revert "[^\r\n]+|(fixup|squash)! [^\r\n]+)'
+language = "pygrep"
+args = ["--negate", "--multiline"]
+stages = ["commit-msg"]

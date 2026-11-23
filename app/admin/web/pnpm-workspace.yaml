@@ -10,13 +10,11 @@ packages:
   - scripts/*
 
 publicHoistPattern:
-  - lefthook
   - eslint
   - oxfmt
   - oxlint
   - stylelint
   - '*postcss*'
-  - '@commitlint/*'
 
 strictPeerDependencies: false
 autoInstallPeers: true
@@ -34,8 +32,6 @@ overrides:
 catalog:
   '@ast-grep/napi': ^0.45.2
   '@changesets/git': ^3.0.4
-  '@commitlint/cli': ^21.2.1
-  '@commitlint/config-conventional': ^21.2.0
   '@ctrl/tinycolor': ^4.2.0
   '@eslint-community/eslint-plugin-eslint-comments': ^4.7.2
   '@eslint/js': ^10.0.1
@@ -81,12 +77,9 @@ catalog:
   circular-dependency-scanner: ^3.0.1
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
-  commitlint-plugin-function-rules: ^5.0.1
   consola: ^3.4.2
   cross-env: ^10.1.0
   cspell: ^10.1.1
-  cz-git: ^1.14.0
-  czg: ^1.14.0
   dayjs: ^1.11.21
   defu: ^6.1.7
   dotenv: ^17.4.2
@@ -107,7 +100,6 @@ catalog:
   html-minifier-terser: ^7.2.0
   json-bigint: ^1.0.0
   knip: ^6.29.0
-  lefthook: ^2.1.10
   lodash.clonedeep: ^4.5.0
   nprogress: ^0.2.0
   ora: ^9.4.1
@@ -172,5 +164,4 @@ allowBuilds:
   '@parcel/watcher': true
   core-js: true
   esbuild: true
-  lefthook: true
   vue-demi: true

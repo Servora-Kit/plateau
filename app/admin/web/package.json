@@ -23,7 +23,6 @@
   "devDependencies": {
     "@tsdown/css": "catalog:",
     "@types/node": "catalog:",
-    "@vben/commitlint-config": "workspace:*",
     "@vben/eslint-config": "workspace:*",
     "@vben/oxfmt-config": "workspace:*",
     "@vben/oxlint-config": "workspace:*",
@@ -38,7 +37,6 @@
     "cspell": "catalog:",
     "eslint": "catalog:",
     "happy-dom": "catalog:",
-    "lefthook": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
