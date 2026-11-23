@@ -40,7 +40,8 @@
 - [x] `actionlint`（含 shellcheck）、`renovate-config-validator --strict` 通过
 - [x] 集成测试本地实跑：PASS 80 / FAIL 0 / SKIP 1（`TestBrowserHarness` 需手动开启），IAM 与 Admin 集成测试实际执行
 - [x] 根 Web lint/typecheck/build、admin web lint/check/test:unit/build 本地通过
-- [ ] 远端 CI 实跑（需推送分支开 PR）
+- [x] 远端 CI 实跑：push main 的 run `45127566826` 全部 job 通过（含 ci-ok）；Security run `45126297753` 通过。前两轮修复了 just 导出空 `FGA_API_URL`、admin prek.toml 格式、3 个 govulncheck 漏洞、Vben 时区用例对 UTC 的假设
+- [ ] PR 事件下的路径分流（等第一个 PR 时观察）
 - [ ] Renovate Dependency Dashboard（需安装 App）
 
 ## 验证
