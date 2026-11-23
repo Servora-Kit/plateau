@@ -1,10 +1,6 @@
 default_stages = ["pre-commit"]
 
-exclude = { glob = [
-  "pnpm-lock.yaml",
-  "**/node_modules/**",
-  "**/dist/**",
-] }
+exclude = { glob = ["pnpm-lock.yaml", "**/node_modules/**", "**/dist/**"] }
 
 [[repos]]
 repo = "local"
@@ -22,7 +18,7 @@ id = "oxfmt"
 name = "oxfmt"
 entry = "pnpm exec oxfmt --threads=4 --no-error-on-unmatched-pattern"
 language = "system"
-files = '\.(js|jsx|ts|tsx|vue|cjs|mjs|cts|mts|json|jsonc)$'
+files = '\.(js|jsx|ts|tsx|vue|cjs|mjs|cts|mts|json|jsonc|toml)$'
 stages = ["pre-commit"]
 
 [[repos.hooks]]
