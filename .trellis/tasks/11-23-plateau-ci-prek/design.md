@@ -105,7 +105,7 @@ CI prek job：`prek run --all-files --hook-stage pre-commit --skip app/admin/web
 - `extends: ["config:recommended", ":semanticCommits", ":dependencyDashboard"]`，`timezone: Asia/Shanghai`，每周一定时；`postUpdateOptions: ["gomodTidy"]`。
 - 分组：`servora`（`github.com/Servora-Kit/**` + `@servora/*`）、`go-tools`（go.mod 中的 tool 依赖）、`github-actions`、`mise`、`root-web`（根 pnpm workspace）、`admin-web`（`app/admin/web`，Vben 依赖多，按月一次）、`compose-images`。
 - 关闭自动合并。servora 或插件升级后生成代码会变，`gen-check` 会失败；托管版 Renovate 不能执行 `just gen`，需要人在该 PR 上重新生成并提交。这是有意保留的信号：生成代码必须和插件版本一致。
-- 安装方式：Mend Renovate Community App（免费），选 Renovate Only + Silent 模式，只处理有配置的仓库（D5）。
+- 安装方式：Mend Renovate Community App（免费），选 Renovate Only。组织默认模式可以保持 Silent（不打扰其他仓库），但 plateau 必须在 Mend Developer Portal 的仓库设置里切到 Interactive。Silent 即 `dryRun=lookup`，即使仓库里有 `renovate.json` 也不提 PR、不建 Issue（D5）。
 
 ## 8. 兼容与风险
 

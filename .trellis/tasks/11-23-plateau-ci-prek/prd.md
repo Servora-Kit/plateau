@@ -50,7 +50,7 @@
 - D2 生成器版本（2026-11-23）：protoc 插件改为 go.mod `tool`，Servora 插件跟随 servora 依赖，删除 `SERVORA_VERSION`；buf、golangci-lint 保持二进制。用户原则：能自动跟踪的都自动跟踪，同时方便、易维护。
 - D3 prek 三层钩子（2026-11-23）：pre-commit（文件卫生、gofmt、buf format、just fmt；admin 只对暂存文件做 lint 修复）、pre-push（golangci-lint、buf lint、buf breaking、gen-check）、commit-msg（Conventional Commits，描述允许中文）；CI 跑同一份规则。
 - D4 集成测试（2026-11-23）：独立 `integration` job，PR 和 main 上 Go/proto/OpenFGA 有改动时运行，作为必过门禁；用仓库 compose 启动依赖。
-- D5 依赖 bot（2026-11-23）：Renovate + `mise.toml`；使用 Mend Renovate Community App，选 Renovate Only（免费）和 Silent 模式。
+- D5 依赖 bot（2026-11-23）：Renovate + `mise.toml`；使用 Mend Renovate Community App（Renovate Only，免费）。plateau 在仓库级使用 Interactive 模式；组织默认 Silent 只用于其他仓库。
 - D6 漏洞扫描（2026-11-23）：加入 `security.yml`，运行 govulncheck。
 
 ## Out of Scope

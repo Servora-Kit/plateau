@@ -3,7 +3,7 @@
 ## 前置条件
 
 - [x] test/example 移出工作已提交（`9e4b4774`）；`just/services.just`、`buf.yaml` 只剩 admin/audit/iam
-- [ ] 用户已安装 Mend Renovate Community App（Renovate Only，Silent 模式）——不影响实施，影响 R5 验收
+- [x] 用户已安装 Mend Renovate Community App（Renovate Only）
 
 ## 步骤
 
@@ -42,7 +42,7 @@
 - [x] 根 Web lint/typecheck/build、admin web lint/check/test:unit/build 本地通过
 - [x] 远端 CI 实跑：push main 的 run `45127566826` 全部 job 通过（含 ci-ok）；Security run `45126297753` 通过。前两轮修复了 just 导出空 `FGA_API_URL`、admin prek.toml 格式、3 个 govulncheck 漏洞、Vben 时区用例对 UTC 的假设
 - [ ] PR 事件下的路径分流（等第一个 PR 时观察）
-- [ ] Renovate Dependency Dashboard：App 已安装（Renovate Only + Silent），仓库 Issues 已于 2026-11-23 开启，等 Renovate 下一次扫描生成面板
+- [ ] Renovate Dependency Dashboard：仓库 Issues 已于 2026-11-23 开启；plateau 需在 developer.mend.io 切换为 Interactive 模式（Silent 不提 PR、不建 Issue），之后等下一次扫描
 - [x] main 分支保护：必过检查 `ci-ok`（GitHub Actions app_id 15368），`strict=false`，管理员可绕过，禁止 force push 与删除
 
 ## 验证
