@@ -352,6 +352,8 @@ jobs:
 
       - name: Unit tests
         working-directory: app/admin/web
+        env:
+          TZ: Asia/Shanghai
         run: pnpm run test:unit
 
   ci-ok:
