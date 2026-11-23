@@ -14,7 +14,8 @@ COMPOSE := env("COMPOSE", "docker compose")
 COMPOSE_FILES := env("COMPOSE_FILES", "-f docker-compose.yaml")
 COMPOSE_SERVICES := env("COMPOSE_SERVICES", "")
 ENV_FILE := env("ENV_FILE", join(ROOT_DIR, ".env"))
-FGA_API_URL := env("FGA_API_URL", "")
+# 不能命名为 FGA_API_URL：`set export` 会把空默认值导出给所有 recipe，覆盖服务配置里的 ${FGA_API_URL:默认值}。
+OPENFGA_API_URL := env("FGA_API_URL", "")
 OPENFGA_MODEL := env("OPENFGA_MODEL", "manifests/openfga/fga.mod")
 OPENFGA_TESTS := env("OPENFGA_TESTS", "manifests/openfga/*.fga.yaml")
 OPENFGA_SCRIPT_UNIX := env("OPENFGA_SCRIPT_UNIX", join(ROOT_DIR, "manifests/scripts/openfga/openfga.sh"))
@@ -211,16 +212,16 @@ openfga-model-test: openfga-model-validate
 
 [unix]
 openfga-init: openfga-model-test
-    @bash "{{ OPENFGA_SCRIPT_UNIX }}" init --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --api-url "{{ FGA_API_URL }}"
+    @bash "{{ OPENFGA_SCRIPT_UNIX }}" init --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --api-url "{{ OPENFGA_API_URL }}"
 
 [windows]
 openfga-init: openfga-model-test
-    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" init -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ FGA_API_URL }}"
+    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" init -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ OPENFGA_API_URL }}"
 
 [unix]
 openfga-model-apply: openfga-model-test
-    @bash "{{ OPENFGA_SCRIPT_UNIX }}" apply --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --api-url "{{ FGA_API_URL }}"
+    @bash "{{ OPENFGA_SCRIPT_UNIX }}" apply --model "{{ OPENFGA_MODEL }}" --env-file "{{ ENV_FILE }}" --api-url "{{ OPENFGA_API_URL }}"
 
 [windows]
 openfga-model-apply: openfga-model-test
-    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" apply -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ FGA_API_URL }}"
+    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" apply -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ OPENFGA_API_URL }}"
