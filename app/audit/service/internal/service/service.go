@@ -1,6 +1,7 @@
+// Package service implements gRPC and inbound transport adapters for audit.service.
 package service
 
 import "github.com/google/wire"
 
-// ProviderSet provides all service layer dependencies.
-var ProviderSet = wire.NewSet(NewAuditService)
+// ProviderSet provides audit service-layer implementations.
+var ProviderSet = wire.NewSet(NewEventService)

@@ -1,4 +1,5 @@
-audit_emitter:
-  enabled: true
-  backend: noop
-  topic: plateau.audit.events
+audit:
+  topic: "${AUDIT_KAFKA_TOPIC:plateau.audit.events}"
+  batch_size: 200
+  flush_interval: 1s
+  retention_days: 180

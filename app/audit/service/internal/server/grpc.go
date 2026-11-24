@@ -1,36 +1,56 @@
 package server
 
 import (
+	"context"
 	"log/slog"
 
-	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
-
-	auditpb "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	jwtconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
-	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
+	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/authn/jwt"
+	"github.com/Servora-Kit/plateau/security/authz/openfga"
+	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrgrpc "github.com/Servora-Kit/servora/transport/server/grpc"
 	"github.com/Servora-Kit/servora/transport/server/middleware"
+	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 )
 
-// NewGRPCServer creates the gRPC server for the audit service.
-func NewGRPCServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metrics, l *slog.Logger, svc *service.AuditService) *kgrpc.Server {
-	glog := l.With("scope", "audit/server/grpc")
+// NewServiceAuthenticator constructs the Resource Server JWT authenticator for audit.service.
+func NewServiceAuthenticator(cfg *jwtconfpb.JwtAuthnConfig) (*jwt.Authenticator, func(), error) {
+	return jwt.New(context.Background(), cfg)
+}
 
-	ms := middleware.NewChainBuilder(glog).
+// NewGRPCServer constructs the internal gRPC server protected by Service JWT AuthN and OpenFGA AuthZ.
+func NewGRPCServer(
+	c *corepb.Server,
+	obs *corepb.Observability,
+	m *metrics.Metrics,
+	jwtAuthn *jwt.Authenticator,
+	authorizer *openfga.Authorizer,
+	events *service.EventService,
+	l *slog.Logger,
+) *kgrpc.Server {
+	log := l.With("scope", "audit/server/grpc")
+
+	ms := middleware.NewChainBuilder(log).
 		WithTrace(obs.GetTrace()).
 		WithMetrics(m).
 		Build()
+	ms = append(ms,
+		jwt.ServerFor[jwt.ServiceClaims](jwtAuthn, security.WithRulesFuncs(auditeventpb.AuthnRules)),
+		openfga.Server(authorizer, security.WithRulesFuncs(auditeventpb.AuthzRules)),
+	)
 
 	opts := []svrgrpc.ServerOption{
 		svrgrpc.WithMiddleware(ms...),
 		svrgrpc.WithServices(func(s *kgrpc.Server) {
-			auditpb.RegisterAuditQueryServiceServer(s, svc)
+			auditeventpb.RegisterEventServiceServer(s, events)
 		}),
 	}
-	if c != nil && c.Grpc != nil {
-		opts = append(opts, svrgrpc.WithConfig(c.Grpc))
+	if c.GetGrpc() != nil {
+		opts = append(opts, svrgrpc.WithConfig(c.GetGrpc()))
 	}
-
 	return svrgrpc.NewServer(opts...)
 }

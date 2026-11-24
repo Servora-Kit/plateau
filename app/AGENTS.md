@@ -9,7 +9,7 @@
 
 - `app/iam/service/` + `app/iam/web/`：主要业务实践（账号/会话/OIDC/AuthZ）
 - `app/admin/service/` + `app/admin/web/`：平台管理应用（OIDC 本地会话 BFF 与 Vben 管理前端）
-- `app/audit/service/`：审计微服务，不再更新和做参考，等待后期重构
+- `app/audit/service/`：平台控制面审计服务（Kafka CloudEvents 入站消费、ClickHouse `audit.events` 去重存储与受 Service JWT + OpenFGA 保护的只读 gRPC 查询）
 
 各服务目录可包含：
 

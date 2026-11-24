@@ -1,0 +1,34 @@
+name: Audit service authorization
+model_file: fga.mod
+tuples:
+  - user: service:admin
+    relation: read_events
+    object: audit:global
+  - user: user:alice
+    relation: admin
+    object: admin:global
+tests:
+  - name: only explicitly authorized services may read audit events
+    check:
+      - user: service:admin
+        object: audit:global
+        assertions:
+          read_events: true
+      - user: service:other
+        object: audit:global
+        assertions:
+          read_events: false
+      - user: service:admin
+        object: audit:other
+        assertions:
+          read_events: false
+  - name: human identities cannot substitute a service on audit:global
+    check:
+      - user: user:alice
+        object: audit:global
+        assertions:
+          read_events: false
+      - user: user:admin
+        object: audit:global
+        assertions:
+          read_events: false

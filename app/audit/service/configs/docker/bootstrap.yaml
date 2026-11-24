@@ -1,17 +1,17 @@
 server:
   http:
     listen:
-      addr: "0.0.0.0:8000"
+      addr: "0.0.0.0:10020"
       timeout: 30s
   grpc:
     listen:
-      addr: "0.0.0.0:8001"
+      addr: "0.0.0.0:10021"
       timeout: 30s
 
 app:
   name: audit.service
   version: dev
-  env: prod
+  env: dev
 
 obs:
   log:
@@ -19,7 +19,7 @@ obs:
     backends:
       - stdout: {}
       - file:
-          path: "/app/logs/audit.service.log"
+          path: "./logs/audit.service.log"
           max_size: 20
           max_age: 30
           max_backups: 10
@@ -32,12 +32,6 @@ obs:
 
 registry:
   consul:
-    addr: "consul:8500"
-    scheme: "http"
-    datacenter: "dc1"
-    tags:
-      - "traefik.enable=true"
-      - "traefik.http.routers.audit-api.rule=PathPrefix(`/v1/audit`)"
-      - "traefik.http.routers.audit-api.entrypoints=web"
-      - "traefik.http.routers.audit-api.service=audit-http"
-      - "traefik.http.services.audit-http.loadbalancer.server.port=8000"
+    addr: "${REGISTRY_CONSUL_ADDR:consul:8500}"
+    scheme: "${REGISTRY_CONSUL_SCHEME:http}"
+    datacenter: "${REGISTRY_CONSUL_DC:dc1}"

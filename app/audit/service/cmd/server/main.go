@@ -6,13 +6,14 @@ import (
 	"flag"
 	"fmt"
 
-	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
-	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
+	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	jwtconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
+	svrkafka "github.com/Servora-Kit/plateau/transport/server/kafka"
 	"github.com/Servora-Kit/servora/core/bootstrap"
-
 	"github.com/go-kratos/kratos/v3"
 	"github.com/go-kratos/kratos/v3/registry"
 	"github.com/go-kratos/kratos/v3/transport/grpc"
@@ -28,19 +29,20 @@ var (
 )
 
 func init() {
-	flag.StringVar(&flagconf, "conf", "./configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&flagconf, "conf", "./configs", "config path, eg: -conf ./configs/local")
 }
 
-func newApp(rt *bootstrap.Runtime, reg registry.Registrar, gs *grpc.Server, hs *http.Server, consumer *data.Consumer) *kratos.App {
+func newApp(
+	rt *bootstrap.Runtime,
+	reg registry.Registrar,
+	gs *grpc.Server,
+	hs *http.Server,
+	ks *svrkafka.Server,
+	_ *data.Data,
+) *kratos.App {
 	return rt.NewApp(
-		kratos.Server(gs, hs),
+		kratos.Server(gs, hs, ks),
 		kratos.Registrar(reg),
-		kratos.BeforeStart(func(ctx context.Context) error {
-			return consumer.Start(ctx)
-		}),
-		kratos.AfterStop(func(ctx context.Context) error {
-			return consumer.Stop(ctx)
-		}),
 	)
 }
 
@@ -51,20 +53,22 @@ func main() {
 	}
 }
 
-func run() (err error) {
+func run() error {
 	rt, err := bootstrap.NewRuntime(flagconf, bootstrap.Name(Name), bootstrap.Version(Version))
 	if err != nil {
 		return err
 	}
-	kafkaCfg := &kafkapb.Kafka{}
+
+	auditCfg := &auditconfv1.Audit{}
 	clickHouseCfg := &clickhousepb.ClickHouse{}
-	auditCfg := &auditpb.AuditEmitter{}
-	consumerCfg := &auditconfv1.AuditConsumerConfig{}
-	if err := bootstrap.Scan(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg); err != nil {
-		return errors.Join(fmt.Errorf("scan bootstrap configs: %w", err), rt.Close(context.Background()))
+	kafkaCfg := &kafkapb.Kafka{}
+	jwtAuthnCfg := &jwtconfpb.JwtAuthnConfig{}
+	openFGACfg := &openfgapb.OpenFGA{}
+	if err := bootstrap.Scan(rt, auditCfg, clickHouseCfg, kafkaCfg, jwtAuthnCfg, openFGACfg); err != nil {
+		return errors.Join(fmt.Errorf("scan Audit configs: %w", err), rt.Close(context.Background()))
 	}
 
 	return rt.Run(func() (*kratos.App, func(), error) {
-		return wireApp(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg)
+		return wireApp(rt, auditCfg, clickHouseCfg, kafkaCfg, jwtAuthnCfg, openFGACfg)
 	})
 }

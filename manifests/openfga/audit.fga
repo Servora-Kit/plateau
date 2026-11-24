@@ -1,0 +1,5 @@
+module audit
+
+type audit
+  relations
+    define read_events: [service]

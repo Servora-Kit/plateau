@@ -35,9 +35,3 @@ registry:
     addr: "${REGISTRY_CONSUL_ADDR:localhost:8500}"
     scheme: "${REGISTRY_CONSUL_SCHEME:http}"
     datacenter: "${REGISTRY_CONSUL_DC:dc1}"
-    tags:
-      - "traefik.enable=true"
-      - "traefik.http.routers.audit-api.rule=PathPrefix(`/v1/audit`)"
-      - "traefik.http.routers.audit-api.entrypoints=web"
-      - "traefik.http.routers.audit-api.service=audit-http"
-      - "traefik.http.services.audit-http.loadbalancer.server.port=10020"

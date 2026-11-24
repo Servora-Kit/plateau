@@ -7,22 +7,21 @@
 package main
 
 import (
-	"context"
-	"github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
-	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/server"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
-	"github.com/Servora-Kit/plateau/infra/kafka"
+	"github.com/Servora-Kit/plateau/infra/openfga"
+	openfga2 "github.com/Servora-Kit/plateau/security/authz/openfga"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	"github.com/go-kratos/kratos/v3"
-	"github.com/twmb/franz-go/pkg/kgo"
-	"log/slog"
 )
 
 import (
@@ -31,7 +30,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *clickhousepb.ClickHouse, auditEmitter *auditpb.AuditEmitter, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, audit *auditconfv1.Audit, clickHouse *clickhousepb.ClickHouse, kafka *kafkapb.Kafka, jwtAuthnConfig *jwtv1.JwtAuthnConfig, openFGA *openfgaconfpb.OpenFGA) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -43,46 +42,70 @@ func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *click
 	if err != nil {
 		return nil, nil, err
 	}
-	conn, err := data.NewClickHouseClient(clickHouse)
+	authenticator, cleanup2, err := server.NewServiceAuthenticator(jwtAuthnConfig)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	dataData, cleanup2, err := data.NewData(conn, auditConsumerConfig, logger)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
-	auditRepo := data.NewAuditRepo(dataData, logger)
-	auditUsecase := biz.NewAuditUsecase(auditRepo)
-	auditService := service.NewAuditService(auditUsecase)
-	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, logger, auditService)
-	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger, auditService)
-	client, err := newKafkaClient(kafka, auditEmitter, logger)
+	openFgaClient, err := openfga.New(openFGA)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	batchWriter := data.NewBatchWriter(dataData, auditConsumerConfig, client, logger)
-	consumer := data.NewConsumer(client, batchWriter, kafka, auditEmitter, logger)
-	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, consumer)
+	authorizer, err := openfga2.NewDefault(openFgaClient)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	conn, cleanup3, err := data.NewClickHouseConn(clickHouse, logger)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	dataData, err := data.NewData(conn, audit, logger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventRepo, err := data.NewEventRepo(dataData)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventUsecase, err := biz.NewEventUsecase(eventRepo, logger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventService, err := service.NewEventService(eventUsecase)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, authorizer, eventService, logger)
+	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger)
+	kafkaServer, err := server.NewKafkaServer(kafka, audit, eventService, logger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, kafkaServer, dataData)
 	return kratosApp, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
-}
-
-// wire.go:
-
-func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditpb.AuditEmitter, l *slog.Logger) (*kgo.Client, error) {
-	topic := data.DefaultTopic(auditCfg)
-	group := data.DefaultConsumerGroup(cfg)
-	loggerOpt := kafka.WithSlogLogger(l)
-	if l != nil {
-		loggerOpt = kafka.WithSlogLogger(l.With("scope", "audit/kafka"))
-	}
-	return kafka.NewClientOptional(context.Background(), cfg,
-		loggerOpt, kgo.ConsumerGroup(group), kgo.ConsumeTopics(topic), kgo.DisableAutoCommit(),
-	)
 }

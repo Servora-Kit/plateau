@@ -3,21 +3,19 @@ package server
 import (
 	"log/slog"
 
-	khttp "github.com/go-kratos/kratos/v3/transport/http"
-
-	auditpb "github.com/Servora-Kit/plateau/api/gen/go/audit/service/v1"
-	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
-	corev1 "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
+	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrhttp "github.com/Servora-Kit/servora/transport/server/http"
+	"github.com/Servora-Kit/servora/transport/server/http/health"
 	"github.com/Servora-Kit/servora/transport/server/middleware"
+	khttp "github.com/go-kratos/kratos/v3/transport/http"
 )
 
-// NewHTTPServer creates the HTTP server for the audit service.
-func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metrics, l *slog.Logger, svc *service.AuditService) *khttp.Server {
-	hlog := l.With("scope", "audit/server/http")
+// NewHTTPServer constructs the internal operations HTTP server (/healthz, /readyz, /metrics) on port 10020.
+func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metrics, l *slog.Logger) *khttp.Server {
+	log := l.With("scope", "audit/server/http")
 
-	ms := middleware.NewChainBuilder(hlog).
+	ms := middleware.NewChainBuilder(log).
 		WithTrace(obs.GetTrace()).
 		WithMetrics(m).
 		Build()
@@ -25,13 +23,10 @@ func NewHTTPServer(c *corev1.Server, obs *corev1.Observability, m *metrics.Metri
 	opts := []svrhttp.ServerOption{
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
-		svrhttp.WithServices(func(s *khttp.Server) {
-			auditpb.RegisterAuditQueryServiceHTTPServer(s, svc)
-		}),
+		svrhttp.WithHealthCheck(health.NewHandler()),
 	}
-	if c != nil && c.Http != nil {
-		opts = append(opts, svrhttp.WithConfig(c.Http))
+	if c.GetHttp() != nil {
+		opts = append(opts, svrhttp.WithConfig(c.GetHttp()))
 	}
-
 	return svrhttp.NewServer(opts...)
 }

@@ -1,0 +1,6 @@
+kafka:
+  brokers:
+    - "${KAFKA_BROKER_ADDR:127.0.0.1:29092}"
+  client_id: audit.service
+  consumer_group: "${AUDIT_KAFKA_CONSUMER_GROUP:audit-consumer}"
+  required_acks: -1

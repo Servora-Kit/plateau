@@ -1,0 +1,5 @@
+jwt_authn_config:
+  issuer: "${IAM_PUBLIC_ORIGIN:https://iam.plateau.local}"
+  audience: audit
+  jwks:
+    uri: "${IAM_JWKS_URI:https://iam.plateau.local/keys}"
