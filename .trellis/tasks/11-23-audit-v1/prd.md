@@ -23,7 +23,7 @@
 - **`app/audit/service` 推倒重建**：
   - 彻底废弃旧实现中无鉴权裸露 Traefik 路由（`app/audit/service/internal/server/http.go:17-37`、`configs/local/bootstrap.yaml:39-43`）、旧 `audit.service.v1` 包结构、未绑定过滤条件的明文 base64 游标（`internal/data/audit.go:31-52`）及混放于 `internal/data` 的消费生命周期（`internal/data/consumer.go:34-86`）。
   - 登记 `10020–10029` 端口段（`10020` HTTP 仅用于内部运维/健康探针，关闭公开网关路由；`10021` gRPC 面向内部授权服务开放）。
-  - ClickHouse 库名由 `docker-compose.yaml:275` 残留的 `servora_audit` 统一改为 `plateau_audit`；单宽表存储平台审计事件，支持基于 `event_id` 的幂等去重（容忍 Kafka at-least-once 重试），默认 TTL 保留 **180 天**（支持配置覆盖）。
+  - ClickHouse 库名对齐 `docker-compose.yaml` 现行默认值 `audit`（表名 `events`）；单宽表存储平台审计事件，支持基于 `event_id` 的幂等去重（容忍 Kafka at-least-once 重试），默认 TTL 保留 **180 天**（支持配置覆盖与动态同步）。
 - **投递不阻断主业务**：审计发送失败仅记录结构化错误日志与指标，不改写业务 RPC 返回结果；敏感字段（密码、令牌、密钥）受 `servora.redact.v3` 保护，绝不落入审计载荷。
 
 ## 任务组织
@@ -33,7 +33,7 @@
 | 子任务 | 父需求归属 | 交付职责 | 前置顺序 |
 | --- | --- | --- | --- |
 | [底座迁移与共享审计运行时](../11-23-audit-v1-runtime/prd.md) | §1、§2；配合 §7 | Servora 旧审计/Kafka 净身与发版；Plateau `infra/kafka`、`transport/server/kafka`、`cmd/protoc-gen-plateau-audit`、`security/audit` 运行时与平台 Proto 契约 | 第 1 步（其余子任务前置） |
-| [Audit 微服务与存储重建](../11-23-audit-v1-service/prd.md) | §3、§4；配合 §6、§7 | `app/audit/service` 推倒重建：`audit.event.v1` AIP 契约、ClickHouse `plateau_audit` 表与 180 天 TTL、Kafka 批量消费、Service JWT + OpenFGA `audit.fga` 鉴权 | 依赖 `audit-v1-runtime` |
+| [Audit 微服务与存储重建](../11-23-audit-v1-service/prd.md) | §3、§4；配合 §6、§7 | `app/audit/service` 推倒重建：`audit.event.v1` AIP 契约、ClickHouse `audit.events` 表与 180 天 TTL、Kafka 批量消费、Service JWT + OpenFGA `audit.fga` 鉴权 | 依赖 `audit-v1-runtime` |
 | [IAM 与 Admin 审计接入及查询编排](../11-23-audit-v1-producers-bff/prd.md) | §5、§6；配合 §7 | IAM 与 Admin 平台控制面事件生产（规则自动审计 + 免鉴权认证与 403 拒绝显式审计）；Admin BFF 接入 `audit` gRPC 并向管理员暴露查询接口 | 依赖 `audit-v1-runtime` 与 `audit-v1-service` 契约 |
 | [Admin Web 审计视图与联调](../11-23-audit-v1-web/prd.md) | §7、§8 | `app/admin/web` 新增「审计日志」一级菜单、分类快捷筛选、详情与同 `trace_id` 关联链路抽屉，完成全链路联调 | 依赖 `audit-v1-producers-bff` |
 
@@ -41,24 +41,24 @@
 
 ### 1. Servora 清理与跨仓契约独立门禁
 
-- [ ] Servora 已完整移除旧审计注解、审计配置、`cloudevents.proto`、`contrib/kafka`、`protoc-gen-servora-audit`、`cmd/internal/{ruleplan,optionmerge}`、`obs/audit` 及关联示例与 TS 生成物，`GOWORK=off` 下 Servora 全量构建、测试、Proto lint 与前端类型检查通过并完成版本更新。
-- [ ] Plateau 更新依赖至新版本 Servora，在不依赖本地 `go.work`（`GOWORK=off`）下通过 `just gen-check`、`just test`、`just lint` 与 `just api-ts-check`。
+- [x] Servora 已完整移除旧审计注解、审计配置、`cloudevents.proto`、`contrib/kafka`、`protoc-gen-servora-audit`、`cmd/internal/{ruleplan,optionmerge}`、`obs/audit` 及关联示例与 TS 生成物，`GOWORK=off` 下 Servora 全量构建、测试、Proto lint 与前端类型检查通过并完成版本更新。
+- [x] Plateau 更新依赖至新版本 Servora，在不依赖本地 `go.work`（`GOWORK=off`）下通过 `just gen-check`、`just test`、`just lint` 与 `just api-ts-check`。
 
 ### 2. Plateau 共享流式传输与审计运行时（`infra/kafka` + `transport/server/kafka` + `security/audit`）
 
-- [ ] `infra/kafka` 基于 `plateau.infra.kafka.v1.Kafka` 提供区分“未配置 / 配置或连接失败 / 连接成功”的客户端构造能力，复用 Servora TLS 与 `slog` 适配；`transport/server/kafka` 提供非泛型 `*kafka.Server`（实现 Kratos `transport.Server`），统一托管拉包、按批/定时聚合、仅在批次处理成功时提交累积位点及停机刷盘生命周期。
-- [ ] `cmd/protoc-gen-plateau-audit` 基于 `plateau.security.audit.v1`（extension `50100`/`50101`）与 `internal/codegen/ruleplan` 生成不可变规则表与克隆访问函数，纳入根 `go.mod` `tool` 与 `buf.go.gen.yaml`。
-- [ ] `security/audit` 中间件与事件构造器自动提取 `security.ActorFrom(ctx)`（`human` / `service` / `anonymous`）、服务名、RPC `operation`、OTel `trace_id`、客户端 IP / User-Agent / `request_id`、Kratos 错误 `reason`（`error_code`），并支持从请求/响应的标准 AIP 资源注解提取目标资源名且遵守脱敏规则。
+- [x] `infra/kafka` 基于 `plateau.infra.kafka.v1.Kafka` 提供区分“未配置 / 配置或连接失败 / 连接成功”的客户端构造能力，复用 Servora TLS 与 `slog` 适配；`transport/server/kafka` 提供非泛型 `*kafka.Server`（实现 Kratos `transport.Server`），统一托管拉包、按批/定时聚合、仅在批次处理成功时提交累积位点及停机刷盘生命周期。
+- [x] `cmd/protoc-gen-plateau-audit` 基于 `plateau.security.audit.v1`（extension `50100`/`50101`）与 `internal/codegen/ruleplan` 生成不可变规则表与克隆访问函数，纳入根 `go.mod` `tool` 与 `buf.go.gen.yaml`。
+- [x] `security/audit` 中间件与事件构造器自动提取 `security.ActorFrom(ctx)`（`human` / `service` / `anonymous`）、服务名、RPC `operation`、OTel `trace_id`、客户端 IP / User-Agent / `request_id`、Kratos 错误 `reason`（`error_code`），并支持从请求/响应的标准 AIP 资源注解提取目标资源名且遵守脱敏规则。
 
 ### 3. `app/audit/service` 消费与 ClickHouse 持久化
 
-- [ ] 兼容 CloudEvents structured JSON 与 Kafka binary 绑定，校验必填属性（`id`、`type`、`source`、`time`）；坏消息按明确策略记录诊断信息后推进位点，不死循环阻塞分区；仅在 ClickHouse 批次写入成功后提交 Kafka 位点，进程退出时使用独立超时 context 完成尾批 flush。
-- [ ] ClickHouse `plateau_audit` 表按事件发生时间 `occurred_at` 分区，默认保留期 180 天（可通过 `audit.conf.v1` 配置调整），对相同 `event_id` 重复投递具备去重保障；未知扩展事件保留原始 JSON / ProtoJSON / base64 信封于 `detail` 列。
+- [x] 兼容 CloudEvents structured JSON 与 Kafka binary 绑定，校验必填属性（`id`、`type`、`source`、`time`）；坏消息按明确策略记录诊断信息后推进位点，不死循环阻塞分区；仅在 ClickHouse 批次写入成功后提交 Kafka 位点，进程退出时使用独立超时 context 完成尾批 flush。
+- [x] ClickHouse `audit.events` 表按事件发生时间 `occurred_at` 按月分区，默认保留期 180 天（可通过 `audit.conf.v1` 配置调整），对相同 `event_id` 重复投递具备去重保障；未知扩展事件保留原始 JSON / base64 对象信封于 `detail_json` 列。
 
 ### 4. `app/audit/service` 查询契约与服务间安全
 
-- [ ] `audit.event.v1.AuditEventService` 仅提供只读 RPC（`GetAuditEvent`、`ListAuditEvents`，无创建/修改/删除接口），遵循 AIP 资源规范；`ListAuditEvents` 支持时间区间、事件类别、生产服务、`actor_type`、`actor_id`、目标资源、`success`、`trace_id` 过滤，且不透明 `page_token` 绑定查询过滤指纹（篡改过滤条件时拒绝旧游标）。
-- [ ] `app/audit/service` gRPC 强制挂载 `jwt.ServerFor[jwt.ServiceClaims]` 与 `openfga.Server`（基于 `manifests/openfga/audit.fga` 校验服务读取关系），拒绝匿名、人类令牌、错误 audience 或未授权服务访问；移除公开 Traefik 路由暴露。
+- [x] `audit.event.v1.EventService` 仅提供只读 RPC（`GetEvent`、`ListEvents`，无创建/修改/删除接口），遵循 AIP 资源规范；`ListEvents` 支持时间区间、事件类别、生产服务、`actor_type`、`actor_id`、目标资源、`success`、`trace_id` 过滤，且不透明 `page_token` 绑定查询过滤指纹（篡改过滤条件时拒绝旧游标）。
+- [x] `app/audit/service` gRPC 强制挂载 `jwt.ServerFor[jwt.ServiceClaims]` 与 `openfga.Server`（基于 `manifests/openfga/audit.fga` 校验服务读取关系），拒绝匿名、人类令牌、错误 audience 或未授权服务访问；移除公开 Traefik 路由暴露。
 
 ### 5. IAM 与 Admin 控制面审计生产
 
@@ -67,7 +67,7 @@
 
 ### 6. Admin 平台审计查询编排
 
-- [ ] Admin 后端使用自身 OAuth Service Token 调用 `audit.event.v1.AuditEventService` gRPC，面向浏览器暴露受本地管理员会话与 OpenFGA 平台管理权限保护的 HTTP 查询接口；下游故障与人的登录态失效明确区分。
+- [ ] Admin 后端使用自身 OAuth Service Token 调用 `audit.event.v1.EventService` gRPC，面向浏览器暴露受本地管理员会话与 OpenFGA 平台管理权限保护的 HTTP 查询接口；下游故障与人的登录态失效明确区分。
 
 ### 7. Admin Web 审计日志视图
 

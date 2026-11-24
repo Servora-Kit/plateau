@@ -22,8 +22,8 @@ sequenceDiagram
 
     Note over Browser,Audit: 读路径：Admin BFF 校验人类 read_audit 权限，持 Service Token 查询 Audit
     Browser->>Admin: GET /v1/admin/audit/events (SCS Cookie)
-    Admin->>Audit: gRPC ListAuditEvents (Bearer Service Token aud=audit)
-    Audit-->>Admin: ListAuditEventsResponse
+    Admin->>Audit: gRPC ListEvents (Bearer Service Token aud=audit)
+    Audit-->>Admin: ListEventsResponse
     Admin-->>Browser: 200 OK
 ```
 
@@ -104,7 +104,7 @@ sequenceDiagram
 
 ### 4.2 Admin 查询 Proto 契约（`app/admin/service/api/protos/admin/audit/v1/audit.proto`）
 
-对外暴露受管理员 SCS 会话与 `read_audit` 权限保护的 HTTP 查询接口，复用 `audit.event.v1.AuditEvent` 资源模型，生成 OpenAPI 与 `@plateau/api/admin/audit/v1` TS 客户端：
+对外暴露受管理员 SCS 会话与 `read_audit` 权限保护的 HTTP 查询接口，复用 `audit.event.v1.Event` 资源模型，生成 OpenAPI 与 `@plateau/api/admin/audit/v1` TS 客户端：
 
 ```protobuf
 syntax = "proto3";
@@ -135,14 +135,14 @@ service AuditService {
   };
   option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
 
-  // ListAuditEvents 分页检索平台控制面审计事件。
-  rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse) {
+  // ListEvents 分页检索平台控制面审计事件。
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
     option (google.api.http) = {get: "/v1/admin/audit/events"};
   }
 
-  // GetAuditEvent 按规范资源名查询单条审计事件详情。
-  rpc GetAuditEvent(GetAuditEventRequest) returns (audit.event.v1.AuditEvent) {
-    option (google.api.http) = {get: "/v1/admin/{name=auditEvents/*}"};
+  // GetEvent 按规范资源名查询单条审计事件详情。
+  rpc GetEvent(GetEventRequest) returns (audit.event.v1.Event) {
+    option (google.api.http) = {get: "/v1/admin/audit/{name=events/*}"};
     option (google.api.method_signature) = "name";
   }
 }
@@ -158,7 +158,7 @@ enum AdminAuditErrorReason {
 }
 ```
 
-- `ListAuditEventsRequest` 字段与 `audit.event.v1.ListAuditEventsRequest` 一一对应（`start_time`、`end_time`、`category`、`service`、`event_type`、`operation`、`actor_type`、`actor_id`、`resource_type`、`resource_name`、`optional bool success`、`trace_id`、`page_size`、`page_token`）；`ListAuditEventsResponse` 返回 `repeated audit.event.v1.AuditEvent events = 1` 与 `string next_page_token = 2`。
+- `ListEventsRequest` 字段与 `audit.event.v1.ListEventsRequest` 一一对应（`start_time`、`end_time`、`category`、`service`、`event_type`、`operation`、`actor_type`、`actor_id`、`resource_type`、`resource_name`、`optional bool success`、`trace_id`、`page_size`、`page_token`）；`ListEventsResponse` 返回 `repeated audit.event.v1.Event events = 1` 与 `string next_page_token = 2`。
 
 ### 4.3 下游 gRPC 调用与错误隔离不变量
 

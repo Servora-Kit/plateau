@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | P1 | §5 | IAM 控制面审计生产：`iam.user.v1.UserService`（10 个变更 RPC）、`iam.authn.v1.AuthnService.Login`、`iam.account.v1.AccountService`（9 个非只读 RPC）、`iam.session.v1.SessionService.Logout` 启用声明式规则审计并配合上下文主体/资源富化；原生 OIDC 路由（`/authorize/callback`、`/end_session`、`/oauth/token` 失败）补充显式审计事件；全部受控接口的 403 拒绝由 `audit.Server` 自动捕获。 |
 | P2 | §5 | Admin 控制面审计生产：`admin.user.v1.UserService`（10 个管理写 RPC）与 `admin.auth.v1.AuthService.Logout` 启用声明式规则审计（记录 `human:<admin_uid>` 与浏览器 IP/UA，并与下游 IAM `service:admin` 审计共享同一 `trace_id`）；原生浏览器 OIDC 回调 `handleCallback`（成功、登录失败、非管理员 `access_denied`）补充显式审计事件。 |
-| P3 | §6 | Admin 审计查询编排：新增 `admin.audit.v1.AuditService`（HTTP `GET /v1/admin/audit/events`、`GET /v1/admin/{name=auditEvents/*}` + OpenAPI + `@plateau/api` TS 客户端）；扩展 `admin.fga` 增加 `read_audit: admin` 并纳入 `GetSessionResponse.permissions`；为 IAM OAuth `admin` 客户端补充 `audit` 受众（`audiences: [iam, audit]`），Admin 后端持 Service Token 调用 `audit` gRPC，并将下游鉴权/连接故障映射为 503 以保护管理员本地会话。 |
+| P3 | §6 | Admin 审计查询编排：新增 `admin.audit.v1.AuditService`（HTTP `GET /v1/admin/audit/events`、`GET /v1/admin/audit/{name=events/*}` + OpenAPI + `@plateau/api` TS 客户端）；扩展 `admin.fga` 增加 `read_audit: admin` 并纳入 `GetSessionResponse.permissions`；为 IAM OAuth `admin` 客户端补充 `audit` 受众（`audiences: [iam, audit]`），Admin 后端持 Service Token 调用 `audit` gRPC，并将下游鉴权/连接故障映射为 503 以保护管理员本地会话。 |
 
 ## 验收标准
 

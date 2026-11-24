@@ -6,52 +6,48 @@
 
 ## 1. 服务定位、端口与目录结构
 
-`app/audit/service` 是平台控制面专属的事后归集与只读查询微服务：入站通过 Kafka 消费 `plateau.audit.events` 并批量写入 ClickHouse，对内仅通过受 Service JWT 与 OpenFGA 保护的 gRPC 接口向获权平台服务（如 `app/admin/service`）开放检索，不直接面向浏览器暴露公开 API。
+`app/audit/service` 是平台控制面专属的单向消费终点与只读检索微服务：入站通过 Kafka 消费 `plateau.audit.events` 并批量写入 ClickHouse `audit.events`，对内仅通过受 Service JWT 与 OpenFGA 保护的 gRPC 接口向获权平台服务（如 `app/admin/service`）开放检索；自身不反向生产审计事件（不挂载 `audit.Server`、不配置 `audit_emitter`），也不面向浏览器暴露公开 API。
 
 - **固定端口段（`10020–10029`）**：
-  
-  - HTTP `10020`：仅用于本地/容器健康检查与内部调试，移除旧 `configs/*/bootstrap.yaml` 中的 Traefik 公开路由标签（`traefik.enable` 不开启公开 `/v1/audit` 转发）；
-  - gRPC `10021`：承载 `audit.event.v1.AuditEventService` 内部调用；
+  - HTTP `10020`：仅由 `svrhttp.NewServer` 承载内部 `/healthz`、`/readyz` 与 `/metrics`，不注册业务路由、移除 `configs/*/bootstrap.yaml` 中的 Traefik 公开路由标签，删除空壳 `api/buf.openapi.gen.yaml`、`internal/assets/openapi.yaml` 及旧 `Makefile`；
+  - gRPC `10021`：承载 `audit.event.v1.EventService` 内部调用；
   - 无独立 Web 前端（端口 `10022` 留空，界面统一归 `app/admin/web`）。
-- **标准四层目录布局**（彻底清理旧 `audit.service.v1` 与混放于 `data` 层的消费循环）：
+- **标准目录布局**（对齐 IAM/Admin 的 `internal/data/schema/` 规范与 `NewData` 建表生命周期，不设空壳 `internal/startup/` 包）：
   ```text
   app/audit/service/
   ├── .air.toml
   ├── justfile                              # import "../../../just/service.just"
   ├── api/
-  │   ├── buf.openapi.gen.yaml              # 生成 internal/assets/openapi.yaml
   │   └── protos/audit/
   │       ├── conf/v1/config.proto          # Audit 服务消费批次与保留期配置（section: audit）
-  │       └── event/v1/event.proto          # AuditEvent 资源与只读 AuditEventService
+  │       └── event/v1/event.proto          # Event 资源与只读 EventService
   ├── cmd/server/
   │   ├── main.go                           # bootstrap.NewRuntime + Scan + Run
   │   ├── wire.go                           # Wire 依赖装配
   │   ├── wire_gen.go
-  │   └── config_test.go                    # local / docker 配置扫描校验测试
+  │   └── config_test.go                    # local / docker 配置离线扫描校验测试
   ├── configs/
   │   ├── local/                            # bootstrap.yaml, audit.yaml, clickhouse.yaml, kafka.yaml, jwt_authn.yaml, openfga.yaml
   │   └── docker/
   └── internal/
-      ├── assets/openapi.yaml
       ├── biz/
       │   ├── biz.go                        # ProviderSet
-      │   ├── event.go                      # AuditEvent 领域模型、CloudEvents 校验投影、查询/入库 Usecase
+      │   ├── event.go                      # 复用 *auditeventpb.Event 领域资源、CloudEvents 归一化投影与查询/入库 Usecase
       │   ├── page_token.go                 # 绑定查询过滤指纹的不透明游标编解码
-      │   └── errors.go                     # 领域错误构造与映射
+      │   └── errors.go                     # 领域哨兵错误定义
       ├── data/
-      │   ├── data.go                       # ProviderSet + ClickHouse 连接生命周期管理
-      │   ├── schema.go                     # audit_events 幂等建表与 TTL 迁移
-      │   └── audit_event.go                # ClickHouse BatchInsert、GetByEventID、List 参数化查询
+      │   ├── schema/
+      │   │   └── event.go                  # 单表存储定义：表名常量、带 ch 标签的 EventRow、幂等建表与按需 MODIFY TTL
+      │   ├── data.go                       # ProviderSet + ClickHouse/Kafka 非空强校验、表初始化与连接关闭
+      │   └── event.go                      # 实现 biz.EventRepo（AppendStruct / Select）及 EventRow -> *auditeventpb.Event 单跳转换
       ├── server/
       │   ├── server.go                     # ProviderSet
-      │   ├── grpc.go                       # ServiceClaims JWT AuthN + OpenFGA AuthZ + AuditEventService
-      │   ├── http.go                       # 最小内部 HTTP Server（不暴露免鉴权查询）
+      │   ├── grpc.go                       # ServiceClaims JWT AuthN + OpenFGA AuthZ + EventService
+      │   ├── http.go                       # 最小内部运维 HTTP Server（/healthz, /readyz, /metrics）
       │   └── kafka.go                      # Kafka 入站传输 Server（实现 Kratos transport.Server）
-      ├── service/
-      │   ├── service.go                    # ProviderSet
-      │   └── event.go                      # Proto <-> biz 转换与 AuditEventService gRPC 实现
-      └── startup/
-          └── initializer.go                # BeforeStart 幂等执行 ClickHouse 表初始化
+      └── service/
+          ├── service.go                    # ProviderSet
+          └── event.go                      # 资源名解析、错误编码与 EventService gRPC 实现
   ```
 
 ---
@@ -60,7 +56,7 @@
 
 ### 2.1 服务配置契约（`audit/conf/v1/config.proto`）
 
-采用 `servora.conf.v1` 标准 `Apply()` 默认值与 `buf.validate` 约束（替代旧实现手写默认值）：
+采用 `servora.conf.v1` 标准 `Apply()` 默认值与 `buf.validate` 约束：
 
 ```protobuf
 syntax = "proto3";
@@ -96,7 +92,7 @@ message Audit {
 
 ### 2.2 领域查询契约（`audit/event/v1/event.proto`）
 
-严格遵循 AIP 资源模型与平台安全注解，**仅暴露 `GetAuditEvent` 与 `ListAuditEvents` 两个只读 RPC**：
+对齐 `iam.user.v1` 命名规范（去除 `audit` 命名空间内的重复 `Audit` 前缀），**仅暴露 `GetEvent` 与 `ListEvents` 两个只读 RPC**：
 
 ```protobuf
 syntax = "proto3";
@@ -108,14 +104,14 @@ import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/timestamp.proto";
-import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/audit/v1/annotations.proto";
+import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 import "servora/errors/v1/errors.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1;auditeventpb";
 
-service AuditEventService {
+service EventService {
   option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
   option (plateau.security.authz.v1.service_default) = {
     mode: AUTHZ_MODE_REQUIRED
@@ -123,34 +119,33 @@ service AuditEventService {
     resource_type: "audit"
     resource_id: "global"
   };
-  // 查询审计自身不重复产生平台审计事件，防递归放大。
   option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
 
-  rpc GetAuditEvent(GetAuditEventRequest) returns (AuditEvent) {
+  rpc GetEvent(GetEventRequest) returns (Event) {
     option (google.api.method_signature) = "name";
   }
 
-  rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse) {
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
     option (google.api.method_signature) = "page_size,page_token";
   }
 }
 
-enum AuditErrorReason {
+enum EventErrorReason {
   option (servora.errors.v1.default_code) = 500;
 
-  AUDIT_ERROR_REASON_UNSPECIFIED = 0;
-  AUDIT_ERROR_REASON_NOT_FOUND = 1 [(servora.errors.v1.code) = 404];
-  AUDIT_ERROR_REASON_INVALID_ARGUMENT = 2 [(servora.errors.v1.code) = 400];
-  AUDIT_ERROR_REASON_INVALID_PAGE_TOKEN = 3 [(servora.errors.v1.code) = 400];
-  AUDIT_ERROR_REASON_STORAGE_UNAVAILABLE = 4 [(servora.errors.v1.code) = 503];
+  EVENT_ERROR_REASON_UNSPECIFIED = 0;
+  EVENT_ERROR_REASON_NOT_FOUND = 1 [(servora.errors.v1.code) = 404];
+  EVENT_ERROR_REASON_INVALID_ARGUMENT = 2 [(servora.errors.v1.code) = 400];
+  EVENT_ERROR_REASON_INVALID_PAGE_TOKEN = 3 [(servora.errors.v1.code) = 400];
+  EVENT_ERROR_REASON_STORAGE_UNAVAILABLE = 4 [(servora.errors.v1.code) = 503];
 }
 
-message AuditEvent {
+message Event {
   option (google.api.resource) = {
-    type: "audit.plateau.dev/AuditEvent"
-    pattern: "auditEvents/{event}"
-    singular: "auditEvent"
-    plural: "auditEvents"
+    type: "audit.plateau.dev/Event"
+    pattern: "events/{event}"
+    singular: "event"
+    plural: "events"
   };
 
   string name = 1 [(google.api.field_behavior) = IDENTIFIER];
@@ -177,99 +172,100 @@ message AuditEvent {
   string client_ip = 17 [(google.api.field_behavior) = OUTPUT_ONLY];
   string user_agent = 18 [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // 规范化的 JSON 对象字符串（空载荷统一为 "{}"），避免深层动态嵌套对 Proto/TS 造成的损耗。
+  // 规范化 JSON 对象字符串（空载荷存 "{}"，数组/标量包入 {"value":...}，二进制包入信封对象）。
   string detail_json = 19 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 ```
 
-`ListAuditEventsRequest` 提供类型明确的过滤字段（避免在 ClickHouse 上手写易出错的任意表达式解析器）：
-- `google.protobuf.Timestamp start_time = 1` / `end_time = 2`（若均提供且 `start_time > end_time` 返回 `AUDIT_ERROR_REASON_INVALID_ARGUMENT`）；
+`ListEventsRequest` 提供类型明确的精确过滤字段（所有字符串过滤项统一 `strings.TrimSpace` 后执行严格精确匹配 `=`）：
+- `google.protobuf.Timestamp start_time = 1` / `end_time = 2`（若均提供且 `start_time > end_time` 返回 `EVENT_ERROR_REASON_INVALID_ARGUMENT`；未传时不在服务端隐式截断时间窗，确保仅按 `trace_id` 检索时能跨月返回完整调用链）；
 - `plateau.security.audit.v1.AuditCategory category = 3`（非 `UNSPECIFIED` 时精确匹配）；
 - `string service = 4`、`string event_type = 5`、`string operation = 6`；
 - `string actor_type = 7`、`string actor_id = 8`；
 - `string resource_type = 9`、`string resource_name = 10`；
-- `optional bool success = 11`（使用 `optional` 严格区分“不限成败”、“仅成功 `true`”与“仅失败 `false`”）；
-- `string trace_id = 12`（供详情抽屉一键拉取同一调用链上下游关联事件）；
-- `int32 page_size = 13`（默认 `50`，最大钳制或校验 `200`）、`string page_token = 14`。
+- `optional bool success = 11`（区分不限成败、仅成功 `true` 与仅失败 `false`）；
+- `string trace_id = 12`；
+- `int32 page_size = 13`（默认 `50`，最大钳制为 `200`；负值返回 `EVENT_ERROR_REASON_INVALID_ARGUMENT`）、`string page_token = 14`。
 
 ---
 
-## 3. ClickHouse 存储模型与去重策略（`plateau_audit`）
+## 3. ClickHouse 存储模型、结构体标签与读写策略（`audit.events`）
 
-1. **数据库重命名**：更新 `docker-compose.yaml` 与本地/容器 `clickhouse.yaml`，将历史残留 `servora_audit` / `servora` 统一收敛为 `plateau_audit` / `plateau`。
-2. **表引擎与主键设计**：
+1. **数据库与强依赖校验**：
+   - 默认库名对齐 `docker-compose.yaml` 现行 `CLICKHOUSE_DB: audit`；
+   - `app/audit/service` 启动构造期强制要求 `infra/clickhouse.NewConnOptional` 与 `infra/kafka.NewClientOptional` 返回的客户端均非 `nil`（未配置或不可达立即报错退出，禁止降级为空跑）。
+2. **一表一文件 Schema 与 `ch` 标签行模型（`internal/data/schema/event.go`）**：
+   - 使用官方 `clickhouse-go/v2` 原生 `ch:"..."` 结构体标签承载 `batch.AppendStruct` 与 `conn.Select` 映射，不引入第三方 ClickHouse ORM：
    ```sql
-   CREATE TABLE IF NOT EXISTS audit_events (
+   CREATE TABLE IF NOT EXISTS events (
        event_id       String,
        event_type     LowCardinality(String),
        category       LowCardinality(String),
        occurred_at    DateTime64(6, 'UTC'),
        ingested_at    DateTime64(6, 'UTC') DEFAULT now64(6, 'UTC'),
-   
+
        service        LowCardinality(String),
        operation      LowCardinality(String),
-   
+
        actor_type     LowCardinality(String),
        actor_id       String,
-   
+
        resource_type  LowCardinality(String),
        resource_name  String,
-   
+
        success        Bool,
        error_code     LowCardinality(String),
-       error_message  String,
-   
+       error_message  String CODEC(ZSTD(1)),
+
        trace_id       String,
        request_id     String,
        client_ip      String,
-       user_agent     String,
-   
-       detail_json    String,
-   
-       INDEX idx_event_id event_id TYPE bloom_filter(0.01) GRANULARITY 4,
-       INDEX idx_trace_id trace_id TYPE bloom_filter(0.01) GRANULARITY 4,
-       INDEX idx_actor_id actor_id TYPE bloom_filter(0.01) GRANULARITY 4,
-       INDEX idx_resource_name resource_name TYPE bloom_filter(0.01) GRANULARITY 4
+       user_agent     String CODEC(ZSTD(1)),
+
+       detail_json    String CODEC(ZSTD(1)),
+
+       INDEX idx_event_id event_id TYPE bloom_filter(0.01) GRANULARITY 1,
+       INDEX idx_trace_id trace_id TYPE bloom_filter(0.01) GRANULARITY 1,
+       INDEX idx_actor_id actor_id TYPE bloom_filter(0.01) GRANULARITY 1,
+       INDEX idx_resource_name resource_name TYPE bloom_filter(0.01) GRANULARITY 1
    ) ENGINE = ReplacingMergeTree(ingested_at)
    PARTITION BY toYYYYMM(occurred_at)
    ORDER BY (occurred_at, event_id)
    TTL toDateTime(occurred_at) + INTERVAL 180 DAY
    SETTINGS index_granularity = 8192;
    ```
-   - **为什么排序键定为 `(occurred_at, event_id)`**：
-     - `ReplacingMergeTree` 仅对**排序键完全相同**的行执行去重；同一条 CloudEvent 在 Kafka at-least-once 重试时，其 Producer 产生的 `occurred_at` 与 `event_id` 恒定不变，天然命中同一排序键；
-     - 管理台列表按 `ORDER BY occurred_at DESC, event_id DESC` 倒序浏览，与物理主键顺序完全逆序对齐，ClickHouse 可直接利用主键索引裁剪时间窗口并避免全量重排；
-     - 按月分区 `toYYYYMM(occurred_at)`（比按天分区减少 30 倍分区 part 数量，180 天仅维护约 6–7 个活跃分区），同时在 `event_id`、`trace_id`、`actor_id`、`resource_name` 上建立 `bloom_filter` 跳数索引，保障 `GetAuditEvent` 单点查询与 `trace_id` 关联查询的毫秒级响应；
-     - 查询语句附带 `FINAL SETTINGS do_not_merge_across_partitions_select_final = 1`，确保后台异步 Merge 尚未触发前读取结果也严格无重复行。
+   - **按需 TTL 同步**：`EnsureEventsTable` 在执行 `CREATE TABLE IF NOT EXISTS` 后，查询 `SELECT engine_full FROM system.tables WHERE database = currentDatabase() AND name = 'events'` 提取当前 `INTERVAL N DAY`；仅当 `N != retentionDays` 时执行 `ALTER TABLE events MODIFY TTL toDateTime(occurred_at) + INTERVAL %d DAY`。
+   - **查询去重分工**：
+     - `ListEvents`：按 `ORDER BY occurred_at DESC, event_id DESC` 扫描，附带 `FINAL SETTINGS do_not_merge_across_partitions_select_final = 1`；
+     - `GetEvent`：按 `WHERE event_id = ? ORDER BY ingested_at DESC LIMIT 1`（不附带 `FINAL`）直接利用 `idx_event_id` 跳数索引单点返回最新行。
 
 ---
 
 ## 4. 绑定过滤指纹的 `page_token` 契约
 
-遵循 `.trellis/spec/audit/backend.md` 要求，杜绝旧实现明文 JSON 游标被跨条件混用：
-- 复用 `servora/core/crud.NewUnsignedPageTokenCodec()`（确定性 Proto 二进制 + Base64URL 编码）或专用二进制载荷，内部包含：
-  1. `version = 1`；
-  2. `filter_sha256`：对除 `page_size` 与 `page_token` 外的全部规范化过滤条件计算确定性 SHA-256 指纹；
-  3. 游标锚点：`last_occurred_unix_micros`（int64）+ `last_event_id`（string）。
-- `ListAuditEvents` 收到非空 `page_token` 时：解码失败、版本不匹配或 `filter_sha256` 与当前请求不一致，立即返回 `AUDIT_ERROR_REASON_INVALID_PAGE_TOKEN`（HTTP 400 / gRPC `InvalidArgument`）；校验通过时注入参数化谓词 `(occurred_at < ? OR (occurred_at = ? AND event_id < ?))`，多取 `page_size + 1` 行判断是否存在下一页。
+复用 `servora/core/crud.NewUnsignedPageTokenCodec()` 与 `crudpb.PageTokenPayload`（确定性 Proto 二进制 + 无填充 Base64URL）：
+1. `Version = crud.CurrentPageTokenVersion`（`1`）；
+2. `ContextFingerprint`：对除 `page_size` 与 `page_token` 外的全部规范化过滤条件计算确定性 SHA-256（32 字节）；
+3. `Cursor`：`[Int64Value(lastOccurredAt.UTC().UnixMicro()), StringValue(lastEventID)]`。
+- `ListEvents` 收到非空 `page_token` 时：解码失败、版本不匹配、游标长度异常或 `ContextFingerprint` 不一致，立即返回 `EVENT_ERROR_REASON_INVALID_PAGE_TOKEN`（HTTP 400 / gRPC `InvalidArgument`）；校验通过时注入参数化谓词 `(occurred_at < ? OR (occurred_at = ? AND event_id < ?))`，多取 `page_size + 1` 行判断是否存在下一页。
 
 ---
 
-## 5. Kafka 入站薄装配与四层职责分工（`internal/server/kafka.go`）
+## 5. CloudEvents 入库归一化与四层职责分工
 
-依托子任务 1 提供的非泛型 `plateau/transport/server/kafka`（`*svrkafka.Server`），`app/audit/service/internal/server/kafka.go` 保持与 `http.go`、`grpc.go` 完全对称的 ~25 行薄装配形态，交由 `rt.NewApp(kratos.Server(gs, hs, ks))` 统一托管生命周期。
-
-| 层与文件 | 职责内容 | 严禁越层行为 |
+| 层与文件 | 职责内容 | 禁止越层行为 |
 | --- | --- | --- |
-| `transport/server/kafka`（平台共享） | 非泛型 `*svrkafka.Server`：强制 `DisableAutoCommit`、`PollFetches` 拉取、按 `batch_size` / `flush_interval` 攒批、失败退避、仅在 `BatchHandler` 返回 `nil` 时执行 `CommitRecords`、优雅 `Stop` 尾批刷盘 | 零 CloudEvents 依赖、零审计领域耦合 |
-| `internal/server/kafka.go` | **本服务协议薄装配**：注册 `auditCfg.GetTopic()` 的 `BatchHandler`，遍历 `[]*kgo.Record` 调用 `auditkafka.DecodeRecord` 解码为 `[]cloudevents.Event`，转发给 `eventSvc.IngestEvents` | 不将 `*kgo.Record` 或 Kafka 位点概念下传至 `service`/`biz`/`data`；不拼装 SQL |
-| `internal/service/event.go` | **入站适配**：除实现 `AuditEventService` gRPC 查询外，提供内部入站方法将 `[]cloudevents.Event` 转发给 `biz.AuditEventUsecase.IngestEvents` | 不持有数据库或 Kafka 客户端 |
-| `internal/biz/event.go` | **领域校验与投影**：校验 CloudEvents 必填属性（`id`、`type`、`source`、`time`），投影生成领域实体 `biz.AuditEvent`（缺失必填属性的坏事件在此记诊断日志并剔除，不阻塞同批合法事件），调用 `AuditEventRepo.SaveBatch` | 不感知 Kafka 分区/位点，不 import ClickHouse 驱动 |
-| `internal/data/audit_event.go` | **ClickHouse 持久化**：仅实现 `biz.AuditEventRepo`，执行 `PrepareBatch` / `Send` 与参数化 `SELECT ... FINAL` | 不做 CloudEvents 解码或坏消息丢弃裁决 |
+| `internal/server/kafka.go` | 注册 `auditCfg.GetTopic()` 的 `BatchHandler`，遍历 `[]*kgo.Record` 调用 `auditkafka.DecodeRecord` 解码为 `[]cloudevents.Event`，转发给 `eventSvc.IngestEvents` | 不将 `*kgo.Record` 或 Kafka 位点概念下传至 `service`/`biz`/`data` |
+| `internal/service/event.go` | 实现 `EventService` gRPC 查询与内部 `IngestEvents` 转发，统一在 `eventError` 中将 `biz` 哨兵错误映射为 `EventErrorReason`（直接返回 `*auditeventpb.Event` 无需二次拷贝） | 不持有数据库或 Kafka 客户端 |
+| `internal/biz/event.go` | 校验必填属性（`id`、`type`、`source`、`time`）并归一化生成领域资源 `*auditeventpb.Event`（坏事件记日志剔除），调用 `EventRepo.SaveBatch` | 不含 `ch` 标签，不反向 import `data` 或透传 RPC 请求类型 |
+| `internal/data/schema/event.go` + `internal/data/event.go` | 单表 `EventRow`、建表/TTL 同步、`PrepareBatch` + `AppendStruct` 写入及参数化 `Select` 查询 | 不做 CloudEvents 解码或坏消息丢弃裁决 |
 
-- **累积位点安全与毒丸隔离不变量**：
-  - Kafka 同分区 offset 为累积水位线：批内若夹杂协议帧损坏记录（`auditkafka.DecodeRecord` 失败），`internal/server/kafka.go` 记录含 `topic/partition/offset` 的错误日志并将其从待写切片剔除，**绝不在同批前序合法记录写入 ClickHouse 前提前单独提交该坏记录位点**；
-  - 若批内存在合法事件，待 `eventSvc.IngestEvents` 写入 ClickHouse 返回 `nil` 后，由 `svrkafka.Server` 一次性提交整批（含已剔除坏帧与已持久化合法事件）的位点；若整批全为坏帧（过滤后切片为空），直接返回 `nil` 推进位点防死锁；若 ClickHouse 写入报错，返回 `err` 保留整批位点供退避重试。
+- **入库三项归一化规则（`internal/biz/event.go`）**：
+  1. **`trace_id` 提取**：优先解析 W3C `traceparent`（`00-<32hex>-<16hex>-<2hex>`）提取中间全小写 32 位非全零 hex `trace_id`；若无合法 `traceparent` 则回退读取 `traceid` 扩展；
+  2. **`category` 归一化**：仅接受已知小枚举值（`authn`、`resource`、`authz`），缺失或未知值统一存为空串 `""`，查询时映射为 `AUDIT_CATEGORY_UNSPECIFIED`；
+  3. **`detail_json` 对象保证**：空载荷存 `"{}"`；合法 JSON 对象紧凑化后存入；合法 JSON 数组/标量包入 `{"value": <compact_json>}`；非 JSON 原始字节包入 `{"_content_type": ..., "_dataschema": ..., "_base64": ...}`。
+- **累积位点安全**：批内协议帧损坏或缺失必填 CloudEvents 属性的记录仅记结构化诊断日志并从待写切片剔除，绝不提前单独提交位点；待同批合法记录写入 ClickHouse 返回 `nil` 后由 `svrkafka.Server` 一次性提交整批位点（整批均为空/坏记录时直接返回 `nil` 推进位点防死锁；ClickHouse 写失败返回 `err` 保留整批位点供退避重试）。
+
 ---
 
 ## 6. 服务间认证与 OpenFGA 授权模型
@@ -278,15 +274,14 @@ message AuditEvent {
    - 新增 `manifests/openfga/audit.fga` 并注册进 `manifests/openfga/fga.mod`：
      ```fga
      module audit
-     
+
      type audit
        relations
          define read_events: [service]
      ```
-   - 新增 `manifests/openfga/audit.fga.yaml` 模型单测：验证 `service:admin` 被授予 `read_events` on `audit:global` 时允许访问，未授权 `service:other` 及任意 `user:*` 均被拒绝。
+   - 新增 `manifests/openfga/audit.fga.yaml` 模型单测：覆盖 `service:admin` 获授 `read_events` on `audit:global` 时放行，未授权 `service:other` 及任意人类主体拒绝。
 2. **JWT 认证配置（`configs/*/jwt_authn.yaml`）**：
    - `audit` gRPC 服务装配 `jwt.ServerFor[jwt.ServiceClaims](jwtAuthn, security.WithRulesFuncs(auditeventpb.AuthnRules))` 与 `openfga.Server(authorizer, security.WithRulesFuncs(auditeventpb.AuthzRules))`。
-   - `audience` 固定设为 `"audit"`（与 IAM 的 `"iam"` 严格隔离）。
-   - **源码约束对齐（见 `security/jwt/jwks.go:24-31`）**：
-     - `configs/local/jwt_authn.yaml`：本地回环地址允许 HTTP JWKS，配置 `issuer: "${IAM_PUBLIC_ORIGIN:http://localhost:10002}"` 与 `jwks.uri: "http://127.0.0.1:10000/keys"`（启动时需 IAM 先就绪）；
-     - `configs/docker/jwt_authn.yaml`：容器网络内主机名为 `iam`（非 loopback，`NewJWKS` 强制要求 HTTPS），因此 Docker 开发编排采用挂载只读签名公钥或 `verification_keys` 配置验签（生产环境走内部/外部 HTTPS JWKS），避免容器 HTTP 主机名被 `NewJWKS` 拒绝。
+   - Local 与 Docker 统一采用 `jwks.uri` 模式（不引入静态公钥与手工 `kid`）：
+     - `configs/local/jwt_authn.yaml`：`issuer: "${IAM_PUBLIC_ORIGIN:http://localhost:10002}"`、`audience: "audit"`、`jwks.uri: "${IAM_JWKS_URI:http://127.0.0.1:10000/keys}"`；
+     - `configs/docker/jwt_authn.yaml`：`issuer: "${IAM_PUBLIC_ORIGIN:https://iam.plateau.local}"`、`audience: "audit"`、`jwks.uri: "${IAM_JWKS_URI:https://iam.plateau.local/keys}"`。

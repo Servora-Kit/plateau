@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | W1 | §7 | 在 Admin Web 导航新增与「总览 / 用户管理」同级的单个一级菜单「审计日志」（`/audit`，`order: 3`），打通 `router/guard.ts` 将会话 `permissions` 注入前端路由准入校验，按 `read_audit` 权限码控制菜单与页面访问，不堆叠二级子菜单。 |
 | W2 | §7 | 实现审计日志列表页：扩展 `AdminApi.audit` 与 `resolveAdminApiError`（确保下游 503 故障保留登录态），提供类别快捷切换（全部 / 认证与会话 / 资源变更 / 授权拒绝）、时间范围、`actor_type`（人类 / 服务 / 匿名）、服务名、执行结果、`actor_id` / 目标资源 / `operation` / `trace_id` 过滤与游标栈翻页（过滤条件变更自动重置游标）。 |
-| W3 | §7 | 实现审计事件详情抽屉：通过 `GetAuditEvent` 展示完整标准字段（发生时间、服务与操作、主体、目标资源、客户端 IP/UA、结果与错误码、`trace_id`/`request_id`）、格式化 `detail_json`，并按同一 `trace_id` 自动拉取并按时间正序展示跨服务关联问责时间线（支持抽屉内切换查看任一跳记录）。 |
+| W3 | §7 | 实现审计事件详情抽屉：通过 `GetEvent` 展示完整标准字段（发生时间、服务与操作、主体、目标资源、客户端 IP/UA、结果与错误码、`trace_id`/`request_id`）、格式化 `detail_json`，并按同一 `trace_id` 自动拉取并按时间正序展示跨服务关联问责时间线（支持抽屉内切换查看任一跳记录）。 |
 | W4 | §8 | 完成本地完整环境（PostgreSQL、Redis、OpenFGA、Kafka、ClickHouse、IAM、Admin、Audit）下的端到端浏览器联调验收。 |
 
 ## 验收标准

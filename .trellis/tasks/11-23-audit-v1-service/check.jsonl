@@ -1,0 +1,8 @@
+{"file":".trellis/tasks/11-23-audit-v1-service/prd.md","reason":"逐条核对 AC-S1~AC-S4 验收标准"}
+{"file":".trellis/tasks/11-23-audit-v1-service/design.md","reason":"核对 EventService 契约、19 列 ReplacingMergeTree 表、游标指纹与 JWKS 配置"}
+{"file":".trellis/tasks/11-23-audit-v1-service/implement.md","reason":"核对旧文件清理、分层测试与 GOWORK=off 门禁"}
+{"file":".trellis/spec/audit/backend.md","reason":"核对累积位点提交安全、坏消息隔离与参数化查询"}
+{"file":".trellis/spec/service/backend/layers.md","reason":"核对 biz 零驱动/Proto 耦合及 data/schema 单表归属"}
+{"file":".trellis/spec/plateau/security/authN.md","reason":"核对 ServiceClaims 与 audience=audit 隔离测试覆盖"}
+{"file":".trellis/spec/plateau/security/authZ.md","reason":"核对 audit.fga 授权校验与单测通过"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核对 Proto lint、TS 生成物与无漂移"}

@@ -1,0 +1,12 @@
+{"file":".trellis/tasks/11-23-audit-v1/prd.md","reason":"平台审计总体定位、单向依赖不变量与父级验收"}
+{"file":".trellis/tasks/11-23-audit-v1-service/prd.md","reason":"子任务 2 范围与 AC-S1~AC-S4 验收标准"}
+{"file":".trellis/tasks/11-23-audit-v1-service/design.md","reason":"audit.event.v1 契约、ClickHouse audit.events 表模型、游标与鉴权设计"}
+{"file":".trellis/tasks/11-23-audit-v1-service/implement.md","reason":"分步执行计划与验证门禁"}
+{"file":".trellis/spec/audit/backend.md","reason":"审计消费、持久化与查询安全约定"}
+{"file":".trellis/spec/service/backend/layers.md","reason":"四层职责分工与依赖方向"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"跨层错误单点转换与日志脱敏约定"}
+{"file":".trellis/spec/plateau/infra/clickhouse.md","reason":"ClickHouse 连接构造与生命周期约定"}
+{"file":".trellis/spec/plateau/infra/kafka.md","reason":"Kafka 客户端与入站传输 Server 约定"}
+{"file":".trellis/spec/plateau/security/authN.md","reason":"ServiceClaims JWT 认证中间件与 JWKS 约定"}
+{"file":".trellis/spec/plateau/security/authZ.md","reason":"OpenFGA 授权中间件与模块模型约定"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"AIP 资源契约、分页游标与错误原因枚举约定"}

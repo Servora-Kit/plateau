@@ -65,7 +65,7 @@ app/admin/web/apps/web-antd/src/
   1. **时间范围（`timeRange`）**：`RangePicker`（支持时分秒，提供「近 1 小时 / 近 24 小时 / 近 7 天 / 近 30 天」快捷预设），转换为 UTC RFC3339 `startTime` / `endTime`；校验 `startTime <= endTime`。
   2. **主体类型（`actorType`）**：全部 / 人类（`human`）/ 服务（`service`）/ 匿名（`anonymous`）。
   3. **执行结果（`outcome`）**：全部（`success: undefined`）/ 成功（`success: true`）/ 失败（`success: false`）。
-  4. **生产服务（`service`）**：支持下拉选择常用控制面服务（`iam.service`、`admin.service`、`audit.service`）或清空查全部。
+  4. **生产服务（`service`）**：支持下拉选择常用控制面服务（`iam.service`、`admin.service`）或清空查全部。
   5. **主体 ID（`actorId`）**、**目标资源（`resourceName`，如 `users/019...`）**、**操作名（`operation`）**、**链路 `traceId`**：文本精确匹配输入（自动 `trim`），并支持从 URL Query（如 `?traceId=...`、`?actorId=...`、`?resourceName=...`）初始化回填。
 
 ### 4.2 表格列与游标栈翻页
@@ -87,7 +87,7 @@ app/admin/web/apps/web-antd/src/
 
 ## 5. 审计详情与同 `trace_id` 跨服务链路抽屉（`audit-detail-drawer.vue`）
 
-抽屉接收 `{ resourceName: string, initialEvent?: AuditEvent }`，打开时调用 `GetAuditEvent({ name: resourceName })` 获取权威记录，并当 `traceId` 非空时并发调用 `ListAuditEvents({ traceId, pageSize: 50 })` 拉取同一调用链上的全部关联审计记录：
+抽屉接收 `{ resourceName: string, initialEvent?: Event }`，打开时调用 `GetEvent({ name: resourceName })` 获取权威记录，并当 `traceId` 非空时并发调用 `ListEvents({ traceId, pageSize: 50 })` 拉取同一调用链上的全部关联审计记录：
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
