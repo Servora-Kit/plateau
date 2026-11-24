@@ -1,0 +1,8 @@
+{"file":".trellis/tasks/11-23-audit-v1/prd.md","reason":"核对母框架净身与平台归位总体约束"}
+{"file":".trellis/tasks/11-23-audit-v1-runtime/prd.md","reason":"逐条核对 AC-R1~AC-R5 完成情况"}
+{"file":".trellis/tasks/11-23-audit-v1-runtime/design.md","reason":"核对 CloudEvents 属性命名、采样无关 trace 注入与脱敏契约"}
+{"file":".trellis/tasks/11-23-audit-v1-runtime/implement.md","reason":"核对两仓 GOWORK=off 门禁与规范文档同步"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"核对无残留临时适配且跨仓依赖真实升级"}
+{"file":".trellis/spec/plateau/codegen/ruleplan.md","reason":"核对生成器确定性排序与防御性克隆测试覆盖"}
+{"file":".trellis/spec/plateau/security/actor.md","reason":"核对 anonymous 与可信身份区分及零伪造"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核对源 Proto lint、TS 生成物与错误编码规范"}

@@ -1,0 +1,12 @@
+{"file":".trellis/tasks/11-23-audit-v1/prd.md","reason":"平台审计总体定位、跨服务问责原则与父级验收"}
+{"file":".trellis/tasks/11-23-audit-v1-runtime/prd.md","reason":"子任务 1 范围与 AC-R1~AC-R5 验收标准"}
+{"file":".trellis/tasks/11-23-audit-v1-runtime/design.md","reason":"Proto 契约、CloudEvents 扩展属性表与中间件顺序"}
+{"file":".trellis/tasks/11-23-audit-v1-runtime/implement.md","reason":"跨仓净身、落地与门禁执行步骤"}
+{"file":".trellis/spec/plateau/project/boundaries.md","reason":"Servora 与 Plateau 协同演进及独立门禁约束"}
+{"file":".trellis/spec/plateau/project/structure.md","reason":"平台目录组织与新增共享包归属"}
+{"file":".trellis/spec/plateau/codegen/cmd.md","reason":"protoc-gen-plateau-* 插件入口与生成约定"}
+{"file":".trellis/spec/plateau/codegen/ruleplan.md","reason":"service_default 与方法级 rule 合并和克隆规则"}
+{"file":".trellis/spec/plateau/security/actor.md","reason":"可信执行主体 Actor 类型与读取不变量"}
+{"file":".trellis/spec/plateau/infra/clickhouse.md","reason":"对齐平台可选基础设施连接的返回与克隆契约"}
+{"file":".trellis/spec/api/proto/annotations.md","reason":"平台安全注解声明与配置处理契约"}
+{"file":".trellis/spec/servora/framework/providers.md","reason":"清理 Servora contrib/kafka 时的框架侧规范对齐"}
