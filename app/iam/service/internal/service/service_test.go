@@ -9,7 +9,7 @@ import (
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
-	authnsecurity "github.com/Servora-Kit/plateau/security/authn"
+	"github.com/Servora-Kit/plateau/security"
 	sessionauthn "github.com/Servora-Kit/plateau/security/authn/session"
 	"github.com/Servora-Kit/plateau/security/password"
 	sessions "github.com/Servora-Kit/plateau/security/session"
@@ -333,7 +333,7 @@ func TestAuthnAndAccountServiceInitialPasswordAndDeleteFlows(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	authnMW := sessionauthn.Server(sessionAuthn, authnsecurity.WithRulesFuncs(accountpb.AuthnRules))
+	authnMW := sessionauthn.Server(sessionAuthn, security.WithRulesFuncs(accountpb.AuthnRules))
 	var capturedAuthedCtx context.Context
 	deleteCtx := transport.NewServerContext(ctx, stubServerTransport{op: accountpb.OperationAccountServiceDeleteAccount})
 	if _, err := authnMW(func(authedCtx context.Context, req any) (any, error) {

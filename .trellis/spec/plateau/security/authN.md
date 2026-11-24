@@ -4,7 +4,7 @@
 
 ## 规则与默认拒绝
 
-启用路由中间件时，通过 `authn.WithRulesFuncs` 传入生成的 `AuthnRules`。规则按 operation 查找，provider 按注册顺序合并，后者覆盖同名 operation；nil provider 跳过，nil Option 导致 panic。不要依赖偶然重复注册覆盖安全策略。
+启用路由中间件时，通过 `security.WithRulesFuncs`（定义于 [security/rules.go](../../../../security/rules.go)）传入生成的 `AuthnRules`。规则按 operation 查找，provider 按注册顺序合并，后者覆盖同名 operation；nil provider 跳过，nil Option 导致 panic。不要依赖偶然重复注册覆盖安全策略。
 
 - `PUBLIC`：直接写入 anonymous Actor，不顺带尝试把无效或已有凭据升级为用户。
 - `REQUIRED`：验证当前实现的凭据，成功后写入可信 Actor。

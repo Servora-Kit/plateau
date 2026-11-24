@@ -10,7 +10,6 @@
 | [bootstrap](bootstrap.md) | 启动、扫描、Wire、配置和关闭顺序 |
 | [crud](crud.md) | 框架 CRUD plan、列表、映射或 Ent adapter |
 | [transport](transport.md) | HTTP/gRPC client/server、endpoint 或 middleware |
-| [audit](audit.md) | 审计事件、规则或 auditor 后端 |
 | [observability](observability.md) | 日志、trace、metric 运行时 |
 | [providers](providers.md) | `contrib` provider、生命周期或 adapter |
 | [tls](tls.md) | TLS Proto 到 `crypto/tls.Config` 的构造 |

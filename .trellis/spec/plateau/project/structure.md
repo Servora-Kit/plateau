@@ -10,10 +10,11 @@
   - `gen/ts/`：共享 TypeScript HTTP client、error reason 与 CRUD helper 输出。
   - `gen/package.json`：`@plateau/api` 的依赖及 exports；`gen/go/` 属于仓库根 Go module。
 - `app/<应用>/service|web`：平台业务端；服务目录与职责见 [layout](../../service/backend/layout.md) 和 [layers](../../service/backend/layers.md)。
-- `cmd/protoc-gen-plateau-authn/`、`cmd/protoc-gen-plateau-authz/`：平台安全生成器，从当前 checkout 本地安装。
+- `cmd/protoc-gen-plateau-authn/`、`cmd/protoc-gen-plateau-authz/`、`cmd/protoc-gen-plateau-audit/`：平台安全生成器，在根 `go.mod` `tool` 声明并由 Buf 调用。
 - `internal/codegen/`：`optionmerge`、`ruleplan`、`plugintest` 共享实现；命令入口和校验见 [codegen](../codegen/index.md)。
-- `security/`：`actor.go`、`authn/`、`authz/`、`cap/`、`password/`、`jwt/`、`session/`。公共安全错误源在 `api/protos/plateau/security/errors/v1/`，当前没有手写 `security/errors/`。
-- `infra/`：平台专用基础设施；通用 Ent driver 与 CRUD adapter 归框架的 `contrib/db/entgo`，不在平台重复实现。
+- `security/`：`actor.go`、`authn/`、`authz/`、`audit/`、`oidc/`、`cap/`、`password/`、`jwt/`、`session/`。公共安全错误源在 `api/protos/plateau/security/errors/v1/`，当前没有手写 `security/errors/`。
+- `infra/`：平台专用基础设施（`openfga/`、`clickhouse/`、`kafka/`、`entgo/mixin/`）；通用 Ent driver 与 CRUD adapter 归框架的 `contrib/db/entgo`，不在平台重复实现。
+- `transport/server/kafka/`：与 `servora/transport/server/{http,grpc}` 同构的非泛型 Kafka 入站批消费 `transport.Server`。
 - `web/packages/client/`：平台共享前端通信能力，规则见 [web/client](../../web/client/index.md)。
 - `just/`：共享 Just settings、应用注册和 service/web 命令实现；根 `justfile` 是项目入口。
 - `manifests/`：scripts、openfga、grafana、prometheus、otel、traefik、loki 等部署资源。

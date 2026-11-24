@@ -48,14 +48,13 @@ plugins:
       out: api/gen/go
       opt: paths=source_relative
 
-
-    # generate typed CRUD descriptors, field paths, and resource-name helpers
-    - local: ["go", "tool", "protoc-gen-servora-crud"]
+    # generate audit rules from Plateau proto annotations
+    - local: ["go", "tool", "protoc-gen-plateau-audit"]
       out: api/gen/go
       opt: paths=source_relative
 
-    # generate audit rules from proto annotations
-    - local: ["go", "tool", "protoc-gen-servora-audit"]
+    # generate typed CRUD descriptors, field paths, and resource-name helpers
+    - local: ["go", "tool", "protoc-gen-servora-crud"]
       out: api/gen/go
       opt: paths=source_relative
 

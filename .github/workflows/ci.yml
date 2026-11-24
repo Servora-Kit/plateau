@@ -47,6 +47,7 @@ jobs:
               - 'infra/**'
               - 'internal/**'
               - 'security/**'
+              - 'transport/**'
               - '!**/*.proto'
             proto:
               - '**/*.proto'

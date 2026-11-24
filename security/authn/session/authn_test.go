@@ -10,7 +10,6 @@ import (
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	securitypb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	"github.com/Servora-Kit/plateau/security"
-	authnruntime "github.com/Servora-Kit/plateau/security/authn"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-kratos/kratos/v3/transport"
@@ -105,7 +104,7 @@ func TestMiddlewareRulesAndFailures(t *testing.T) {
 				ctx = loadedContext(manager)
 			}
 			ctx = transport.NewServerContext(ctx, testTransport{})
-			rules := authnruntime.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
+			rules := security.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
 				if tc.mode == authnpb.AuthnMode_AUTHN_MODE_UNSPECIFIED {
 					return nil
 				}

@@ -14,9 +14,8 @@ import (
 	"github.com/alexedwards/scs/v2"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
 
-	authnsecurity "github.com/Servora-Kit/plateau/security/authn"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/authn/session"
-	authzsecurity "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	"github.com/Servora-Kit/plateau/security/cap"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
@@ -43,8 +42,8 @@ func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, app *corepb.App,
 		WithMetrics(m).
 		Build()
 	ms = append(ms,
-		session.Server(sessionAuthn, authnsecurity.WithRulesFuncs(authnpb.AuthnRules, sessionpb.AuthnRules, accountpb.AuthnRules)),
-		openfga.Server(authorizer, authzsecurity.WithRulesFuncs(authnpb.AuthzRules, sessionpb.AuthzRules, accountpb.AuthzRules)),
+		session.Server(sessionAuthn, security.WithRulesFuncs(authnpb.AuthnRules, sessionpb.AuthnRules, accountpb.AuthnRules)),
+		openfga.Server(authorizer, security.WithRulesFuncs(authnpb.AuthzRules, sessionpb.AuthzRules, accountpb.AuthzRules)),
 	)
 
 	opts := []svrhttp.ServerOption{

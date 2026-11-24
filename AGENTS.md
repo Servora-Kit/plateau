@@ -22,10 +22,11 @@
   - `gen/package.json` 管理共享 TS 包依赖与 exports
 - `app/` 平台微服务，均在 `app/{ServiceName}/` 下（服务结构见 [app/AGENTS.md](app/AGENTS.md)）
 - `cmd/` 平台级命令工具
-  - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/` AuthN/AuthZ 代码生成插件；与其余 protoc 插件统一在根 `go.mod` `tool` 声明，由 buf 模板经 `go tool` 调用
+  - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/`、`protoc-gen-plateau-audit/` AuthN/AuthZ/Audit 代码生成插件；与其余 protoc 插件统一在根 `go.mod` `tool` 声明，由 buf 模板经 `go tool` 调用
 - `internal/codegen/` 共享代码生成实现
-- `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
-- `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`entgo/mixin/` 软删除便利层；通用 Ent driver 与 CRUD adapter 归 Servora 的 `contrib/db/entgo/`
+- `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`audit/`（含 `audit/kafka/`）、`oidc/`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
+- `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`kafka/`、`entgo/mixin/` 软删除便利层；通用 Ent driver 与 CRUD adapter 归 Servora 的 `contrib/db/entgo/`
+- `transport/` 平台传输扩展：`server/kafka/` 非泛型 Kafka 入站批消费 `transport.Server`
 - `web/packages/client/` 平台共享前端通信能力（见 [web/client 规范](.trellis/spec/web/client/index.md)）
 - `just/` 平台共享 Just settings、registry 与 service 实现
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）

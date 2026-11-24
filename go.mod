@@ -6,11 +6,11 @@ toolchain go1.27.4
 
 tool (
 	entgo.io/ent/cmd/ent
+	github.com/Servora-Kit/plateau/cmd/protoc-gen-plateau-audit
 	github.com/Servora-Kit/plateau/cmd/protoc-gen-plateau-authn
 	github.com/Servora-Kit/plateau/cmd/protoc-gen-plateau-authz
 	github.com/Servora-Kit/servora/cmd/protoc-gen-go-errors
 	github.com/Servora-Kit/servora/cmd/protoc-gen-redact
-	github.com/Servora-Kit/servora/cmd/protoc-gen-servora-audit
 	github.com/Servora-Kit/servora/cmd/protoc-gen-servora-conf
 	github.com/Servora-Kit/servora/cmd/protoc-gen-servora-crud
 	github.com/Servora-Kit/servora/cmd/protoc-gen-typescript-http
@@ -28,7 +28,7 @@ require (
 	entgo.io/ent v0.14.5
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
 	github.com/MicahParks/keyfunc/v3 v3.8.2
-	github.com/Servora-Kit/servora v0.10.1
+	github.com/Servora-Kit/servora v0.11.0
 	github.com/alexedwards/argon2id v1.0.0
 	github.com/alexedwards/scs/postgresstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
@@ -44,8 +44,11 @@ require (
 	github.com/openfga/go-sdk v0.8.2
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/twmb/franz-go v1.20.7
+	github.com/twmb/franz-go/pkg/kmsg v1.12.0
+	github.com/twmb/franz-go/plugin/kotel v1.6.0
 	github.com/wneessen/go-mail v0.7.2
 	github.com/zitadel/oidc/v3 v3.49.2
+	go.opentelemetry.io/otel/trace v1.47.0
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.24.0
@@ -202,8 +205,6 @@ require (
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
-	github.com/twmb/franz-go/pkg/kmsg v1.12.0 // indirect
-	github.com/twmb/franz-go/plugin/kotel v1.6.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
@@ -226,7 +227,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.47.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.47.0 // indirect
-	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

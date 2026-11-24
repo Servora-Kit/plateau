@@ -4,11 +4,11 @@ Plateau 承载平台业务、主要参考应用和具体安全生态；Servora �
 
 | 内容 | 权威归属 |
 | --- | --- |
-| 平台总体结构、具体 AuthN/AuthZ、OpenFGA 适配、安全插件 | `plateau` |
+| 平台总体结构、具体 AuthN/AuthZ/Audit、OpenFGA/Kafka 适配、安全插件 | `plateau` |
 | 平台源 Proto、注解声明、共享生成产物 | `api` |
 | 平台共享 client | `web` |
 | 微服务如何分层和使用 Servora | `service` |
-| 母框架自身 CRUD、启动、transport、provider、审计、CLI | `servora` |
+| 母框架自身 CRUD、启动、transport、provider、CLI | `servora` |
 | 应用定位、领域模型、业务流程与前后端 | `<应用>/architecture.md`、`backend.md`、`frontend.md` |
 
 ## Servora 协同迭代

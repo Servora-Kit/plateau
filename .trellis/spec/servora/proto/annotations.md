@@ -2,8 +2,6 @@
 
 框架 Proto 位于 `api/protos/servora/<namespace>/v1/`，package 为 `servora.<domain>.v1`，目录与版本对齐，`go_package` 指向 `api/gen/go/servora/<namespace>/v1`。annotation 号段从 `5xx00` 规划，方法/消息用 `+0`，服务/字段用 `+1`。
 
-`servora.audit.v1.rule` 与 `service_default` 扩展 MethodOptions/ServiceOptions；方法有显式有效值时覆盖服务默认，否则继承。生成器与运行时须保持此语义。
-
 `servora.conf.v1.section` 标记配置段，`field` 声明互斥的 default/required；`servora.errors.v1` 为错误枚举声明 HTTP 状态码，CRUD 错误只涵盖框架输入和不变量。
 
 配置定义放在所属模块，`core/bootstrap` 只加载与装配。默认值、参数转换和资源检查各有明确负责位置，不为每个模块增加配置准备包装。CORS 的来源、方法和请求头默认列表由其中间件维护；其余已声明的固定字段默认由 Proto 维护。

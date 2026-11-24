@@ -10,13 +10,13 @@ import (
 	"context"
 	"github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/server"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
-	"github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
-	"github.com/Servora-Kit/servora/contrib/kafka"
+	"github.com/Servora-Kit/plateau/infra/kafka"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/registry"
 	"github.com/Servora-Kit/servora/obs/metrics"
@@ -31,7 +31,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *clickhousepb.ClickHouse, auditContract *auditconfpb.AuditContract, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *clickhousepb.ClickHouse, auditEmitter *auditpb.AuditEmitter, auditConsumerConfig *auditconfv1.AuditConsumerConfig) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -58,14 +58,14 @@ func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *click
 	auditService := service.NewAuditService(auditUsecase)
 	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, logger, auditService)
 	httpServer := server.NewHTTPServer(corev1Server, observability, metricsMetrics, logger, auditService)
-	client, err := newKafkaClient(kafka, auditContract, logger)
+	client, err := newKafkaClient(kafka, auditEmitter, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	batchWriter := data.NewBatchWriter(dataData, auditConsumerConfig, client, logger)
-	consumer := data.NewConsumer(client, batchWriter, kafka, auditContract, logger)
+	consumer := data.NewConsumer(client, batchWriter, kafka, auditEmitter, logger)
 	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, consumer)
 	return kratosApp, func() {
 		cleanup2()
@@ -75,7 +75,7 @@ func wireApp(runtime *bootstrap.Runtime, kafka *kafkapb.Kafka, clickHouse *click
 
 // wire.go:
 
-func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditconfpb.AuditContract, l *slog.Logger) (*kgo.Client, error) {
+func newKafkaClient(cfg *kafkapb.Kafka, auditCfg *auditpb.AuditEmitter, l *slog.Logger) (*kgo.Client, error) {
 	topic := data.DefaultTopic(auditCfg)
 	group := data.DefaultConsumerGroup(cfg)
 	loggerOpt := kafka.WithSlogLogger(l)

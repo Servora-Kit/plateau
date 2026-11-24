@@ -11,7 +11,6 @@ import (
 	authzpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
-	authzruntime "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -40,8 +39,8 @@ func authzMiddlewareContext() context.Context {
 	return transport.NewServerContext(context.Background(), &authzMiddlewareTransport{operation: middlewareOperation})
 }
 
-func authzMiddlewareRules(rule *authzpb.AuthzRule) authzruntime.Option {
-	return authzruntime.WithRulesFuncs(func() map[string]*authzpb.AuthzRule {
+func authzMiddlewareRules(rule *authzpb.AuthzRule) security.RulesOption[*authzpb.AuthzRule] {
+	return security.WithRulesFuncs(func() map[string]*authzpb.AuthzRule {
 		return map[string]*authzpb.AuthzRule{middlewareOperation: rule}
 	})
 }

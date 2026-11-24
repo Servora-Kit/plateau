@@ -12,7 +12,7 @@
 
 ## 路由中间件
 
-`authz.WithRulesFuncs` 合并生成规则，后注册 provider 覆盖同名 operation。必须显式配置规则：
+`security.WithRulesFuncs`（定义于 [security/rules.go](../../../../security/rules.go)）合并生成规则，后注册 provider 覆盖同名 operation。必须显式配置规则：
 - `NONE` 跳过授权，不代表已经认证，也不为请求授予身份。
 - `REQUIRED` 读取 AuthN 写入的可信 Actor，使用静态 resource_id 或从 Proto 请求的 resource_id_field 解析裸 ID，再检查。
 - 缺 transport、缺规则、未知 mode 都失败；缺身份为 Unauthenticated，明确拒绝为 PermissionDenied，参数错误为 InvalidArgument，已分类依赖故障为 Unavailable。

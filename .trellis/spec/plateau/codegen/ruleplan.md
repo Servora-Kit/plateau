@@ -1,6 +1,6 @@
 # 共享规则规划
 
-适用于 optionmerge、ruleplan 和插件测试设施。职责是可复用的声明读取、合并与输出规划；AuthN/AuthZ 特定错误、字段约束和 Go 输出语句留在各命令。
+适用于 optionmerge、ruleplan 和插件测试设施。职责是可复用的声明读取、合并与输出规划；AuthN/AuthZ/Audit 特定错误、字段约束和 Go 输出语句留在各命令。
 
 ## 合并和克隆
 
@@ -16,4 +16,4 @@
 
 不能只校验最终留下的声明，也不能依赖 map 遍历顺序产生代码。扩展共享规划应保持错误定位中的文件、service、method/operation 信息。
 
-[plugintest](../../../../internal/codegen/plugintest/plugintest.go) 为命令测试提供生成结果编译与行为验证。入口为两个 cmd 插件测试；重构规划同时运行两组，避免只满足一个注解家族。规则运行时聚合与生成合并是不同阶段，见 [AuthN](../security/authN.md)、[AuthZ](../security/authZ.md)。
+[plugintest](../../../../internal/codegen/plugintest/plugintest.go) 为命令测试提供生成结果编译与行为验证。入口为三个 cmd 插件测试；重构规划同时运行全部插件单测，避免只满足单一注解家族。规则运行时聚合与生成合并是不同阶段，见 [AuthN](../security/authN.md)、[AuthZ](../security/authZ.md)、[Audit](../security/audit.md)。

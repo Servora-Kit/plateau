@@ -135,21 +135,13 @@ gen-check:
 
 [unix]
 _gen-clean-files:
-    rm -rf -- "{{ join(ROOT_DIR, "api/gen/go") }}" "{{ join(ROOT_DIR, "api/gen/ts") }}" "{{ join(ROOT_DIR, "api/gen/dist") }}"
+    rm -rf -- "{{ join(ROOT_DIR, "api/gen/go") }}" "{{ join(ROOT_DIR, "api/gen/ts") }}"
 
 [windows]
 _gen-clean-files:
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue @("{{ join(ROOT_DIR, "api/gen/go") }}", "{{ join(ROOT_DIR, "api/gen/ts") }}", "{{ join(ROOT_DIR, "api/gen/dist") }}")
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue @("{{ join(ROOT_DIR, "api/gen/go") }}", "{{ join(ROOT_DIR, "api/gen/ts") }}")
 
 gen-clean: _gen-clean-files
-
-[unix]
-_clean-api-dist-files:
-    rm -rf -- "{{ join(ROOT_DIR, "api/gen/dist") }}"
-
-[windows]
-_clean-api-dist-files:
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "{{ join(ROOT_DIR, "api/gen/dist") }}"
 
 build: gen service::_build web::build
 
@@ -175,7 +167,7 @@ fmt-proto-check *args:
 breaking *args:
     @buf breaking --against "{{ BUF_BREAKING_AGAINST }}" {{ args }}
 
-clean: _clean-api-dist-files service::clean
+clean: service::clean
 
 compose-up:
     @{{ COMPOSE }} {{ COMPOSE_FILES }} up -d {{ COMPOSE_SERVICES }}

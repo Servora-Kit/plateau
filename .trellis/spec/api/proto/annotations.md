@@ -4,7 +4,7 @@ Proto 定义注解与业务声明，生成器负责解释，运行时负责执�
 
 ## Plateau 安全规则
 
-[AuthN](../../../../api/protos/plateau/security/authn/v1/annotations.proto) 有 UNSPECIFIED/PUBLIC/REQUIRED；[AuthZ](../../../../api/protos/plateau/security/authz/v1/annotations.proto) 有 UNSPECIFIED/NONE/REQUIRED。各自提供 method rule 与 service_default。
+[AuthN](../../../../api/protos/plateau/security/authn/v1/annotations.proto) 有 UNSPECIFIED/PUBLIC/REQUIRED；[AuthZ](../../../../api/protos/plateau/security/authz/v1/annotations.proto) 有 UNSPECIFIED/NONE/REQUIRED；[Audit](../../../../api/protos/plateau/security/audit/v1/annotations.proto) 有 UNSPECIFIED/DISABLED/ENABLED 及可选 `AuditCategory`。各自提供 method rule 与 service_default。
 
 | 方法声明 | 有效 service default | 合并结果 |
 | --- | --- | --- |
@@ -18,8 +18,8 @@ PUBLIC 与 NONE 是不同维度：公开认证路由不自动关闭授权，NONE
 
 ## 框架和标准注解
 
-google.api 的 HTTP、resource、resource_reference、field_behavior 定义 API 形状；Servora errors、conf、crud、audit 定义各框架能力的附加合同。它们不共用 Plateau 的 optionmerge 语义，不能因名称相似就推断相同覆盖方式。
+google.api 的 HTTP、resource、resource_reference、field_behavior 定义 API 形状；Servora errors、conf、crud 定义各框架能力的附加合同。它们不共用 Plateau 的 optionmerge 语义，不能因名称相似就推断相同覆盖方式。
 
 配置注解只声明 schema 与校验输入，不承担消费方实现；具体功能的必需配置由构造入口校验，共享 section 可选不代表功能可缺少配置。
 
-检查：新增枚举是否有声明校验与运行时分支；字段路径是否匹配 input descriptor；override 是否误以为局部合并；生成与 runtime 是否同步。依据：[平台生成器](../../plateau/codegen/cmd.md)、[共享规划](../../plateau/codegen/ruleplan.md)、[AuthN](../../plateau/security/authN.md)、[AuthZ](../../plateau/security/authZ.md)。
+检查：新增枚举是否有声明校验与运行时分支；字段路径是否匹配 input descriptor；override 是否误以为局部合并；生成与 runtime 是否同步。依据：[平台生成器](../../plateau/codegen/cmd.md)、[共享规划](../../plateau/codegen/ruleplan.md)、[AuthN](../../plateau/security/authN.md)、[AuthZ](../../plateau/security/authZ.md)、[Audit](../../plateau/security/audit.md)。

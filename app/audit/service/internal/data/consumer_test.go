@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	auditkafka "github.com/Servora-Kit/servora/obs/audit/kafka"
+	auditkafka "github.com/Servora-Kit/plateau/security/audit/kafka"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -27,7 +27,7 @@ func TestConsumerHandleDecodesCloudEventsKafkaRecords(t *testing.T) {
 				writer: writer,
 				log:    testLogger(),
 			}
-			record, err := auditkafka.EncodeRecord(defaultTopic, testCloudEvent(t), tt.mode, nil)
+			record, err := auditkafka.EncodeRecord(auditkafka.DefaultTopic, testCloudEvent(t), tt.mode)
 			if err != nil {
 				t.Fatalf("EncodeRecord() error = %v", err)
 			}

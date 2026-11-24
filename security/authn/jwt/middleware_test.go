@@ -7,7 +7,6 @@ import (
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
-	authnruntime "github.com/Servora-Kit/plateau/security/authn"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 )
@@ -53,8 +52,8 @@ func middlewareContext(authorization string) context.Context {
 	return transport.NewServerContext(context.Background(), &middlewareTransport{operation: middlewareOperation, header: header})
 }
 
-func middlewareRules(mode authnpb.AuthnMode) authnruntime.Option {
-	return authnruntime.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
+func middlewareRules(mode authnpb.AuthnMode) security.RulesOption[*authnpb.AuthnRule] {
+	return security.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
 		return map[string]*authnpb.AuthnRule{middlewareOperation: {Mode: mode}}
 	})
 }

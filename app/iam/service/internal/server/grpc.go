@@ -5,9 +5,8 @@ import (
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/service"
-	authnsecurity "github.com/Servora-Kit/plateau/security/authn"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/authn/jwt"
-	authzsecurity "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
@@ -25,8 +24,8 @@ func NewGRPCServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metri
 		WithMetrics(m).
 		Build()
 	ms = append(ms,
-		jwt.ServerFor[jwt.ServiceClaims](jwtAuthn, authnsecurity.WithRulesFuncs(userpb.AuthnRules)),
-		openfga.Server(authorizer, authzsecurity.WithRulesFuncs(userpb.AuthzRules)),
+		jwt.ServerFor[jwt.ServiceClaims](jwtAuthn, security.WithRulesFuncs(userpb.AuthnRules)),
+		openfga.Server(authorizer, security.WithRulesFuncs(userpb.AuthzRules)),
 	)
 
 	opts := []svrgrpc.ServerOption{

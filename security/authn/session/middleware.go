@@ -8,17 +8,16 @@ import (
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
-	authnruntime "github.com/Servora-Kit/plateau/security/authn"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 )
 
 // Server constructs session-specific route authentication middleware.
-func Server[T any](authenticator *Authenticator[T], opts ...authnruntime.Option) middleware.Middleware {
+func Server[T any](authenticator *Authenticator[T], opts ...security.RulesOption[*authnpb.AuthnRule]) middleware.Middleware {
 	if !validAuthenticator(authenticator) {
 		panic("session authn: authenticator is invalid")
 	}
-	rules := authnruntime.NewRules(opts...)
+	rules := security.NewRules(opts...)
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, request any) (any, error) {
 			if ctx == nil {

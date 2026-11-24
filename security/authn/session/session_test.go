@@ -12,7 +12,6 @@ import (
 	securitypb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/security"
-	authnruntime "github.com/Servora-Kit/plateau/security/authn"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	"github.com/alexedwards/scs/v2/memstore"
@@ -44,7 +43,7 @@ func TestUserSessionSaveRotationAuthAndDefensiveClone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	requiredRules := authnruntime.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
+	requiredRules := security.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
 		return map[string]*authnpb.AuthnRule{"/test/Get": {Mode: authnpb.AuthnMode_AUTHN_MODE_REQUIRED}}
 	})
 	mw := Server(userAuthn, requiredRules)
@@ -157,7 +156,7 @@ func TestUserSessionEdgeCases(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	requiredRules := authnruntime.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
+	requiredRules := security.WithRulesFuncs(func() map[string]*authnpb.AuthnRule {
 		return map[string]*authnpb.AuthnRule{"/test/Get": {Mode: authnpb.AuthnMode_AUTHN_MODE_REQUIRED}}
 	})
 	mw := Server(userAuthn, requiredRules)

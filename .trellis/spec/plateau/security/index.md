@@ -7,6 +7,7 @@
 | [Actor](actor.md) | 定义和传递可信执行身份 |
 | [AuthN](authN.md) | JWT／Session 认证和路由规则 |
 | [AuthZ](authZ.md) | OpenFGA 能力、目标和失败分类 |
+| [Audit](audit.md) | CloudEvents 审计契约、RPC 中间件、403 拒绝捕获与后端适配 |
 | [CAP](capabilities.md) | PoW challenge 与一次性消费 |
 | [凭据与会话工具](credentials.md) | 密码、JWT 签名/密钥和 SCS 装载 |
 

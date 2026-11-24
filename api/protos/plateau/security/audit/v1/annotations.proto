@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package plateau.security.audit.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1;auditpb";
+
+// AuditMode defines whether an RPC method produces a runtime audit event.
+enum AuditMode {
+  AUDIT_MODE_UNSPECIFIED = 0;
+  AUDIT_MODE_DISABLED = 1;
+  AUDIT_MODE_ENABLED = 2;
+}
+
+// AuditCategory classifies control-plane audit events for query filtering.
+enum AuditCategory {
+  AUDIT_CATEGORY_UNSPECIFIED = 0;
+  AUDIT_CATEGORY_AUTHN = 1;
+  AUDIT_CATEGORY_RESOURCE = 2;
+  AUDIT_CATEGORY_AUTHZ = 3;
+}
+
+// AuditRule declares an RPC audit policy.
+message AuditRule {
+  AuditMode mode = 1;
+  AuditCategory category = 2;
+}
+
+extend google.protobuf.MethodOptions {
+  AuditRule rule = 50100;
+}
+
+extend google.protobuf.ServiceOptions {
+  AuditRule service_default = 50101;
+}

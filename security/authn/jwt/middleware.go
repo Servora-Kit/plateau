@@ -8,19 +8,18 @@ import (
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
-	authnruntime "github.com/Servora-Kit/plateau/security/authn"
 	"github.com/go-kratos/kratos/v3/middleware"
 	"github.com/go-kratos/kratos/v3/transport"
 	jwtlib "github.com/golang-jwt/jwt/v5"
 )
 
 // ServerFor constructs JWT-specific route authentication middleware for a self-mapping ActorClaims struct type T.
-func ServerFor[T any, P ActorClaims[T]](authenticator *Authenticator, opts ...authnruntime.Option) middleware.Middleware {
+func ServerFor[T any, P ActorClaims[T]](authenticator *Authenticator, opts ...security.RulesOption[*authnpb.AuthnRule]) middleware.Middleware {
 	return Server(authenticator, func() P { return P(new(T)) }, P.Actor, opts...)
 }
 
 // Server constructs JWT-specific route authentication middleware.
-func Server[T jwtlib.Claims](authenticator *Authenticator, newClaims func() T, mapActor func(T) (security.Actor, error), opts ...authnruntime.Option) middleware.Middleware {
+func Server[T jwtlib.Claims](authenticator *Authenticator, newClaims func() T, mapActor func(T) (security.Actor, error), opts ...security.RulesOption[*authnpb.AuthnRule]) middleware.Middleware {
 	if !validAuthenticator(authenticator) {
 		panic("jwt authn: authenticator is invalid")
 	}
@@ -30,7 +29,7 @@ func Server[T jwtlib.Claims](authenticator *Authenticator, newClaims func() T, m
 	if mapActor == nil {
 		panic("jwt authn: actor mapper is nil")
 	}
-	rules := authnruntime.NewRules(opts...)
+	rules := security.NewRules(opts...)
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, request any) (any, error) {
 			if ctx == nil {

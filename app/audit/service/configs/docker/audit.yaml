@@ -1,5 +1,4 @@
-audit_contract:
+audit_emitter:
   enabled: true
-  emitter_type: noop
-  topic: servora.audit.events
-  service_name: audit
+  backend: noop
+  topic: plateau.audit.events

@@ -7,9 +7,8 @@ import (
 	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
 	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
-	authnsecurity "github.com/Servora-Kit/plateau/security/authn"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/authn/session"
-	authzsecurity "github.com/Servora-Kit/plateau/security/authz"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
@@ -48,8 +47,8 @@ func NewHTTPServer(
 		Build()
 	ms = append(
 		ms,
-		session.Server(sessionAuthn, authnsecurity.WithRulesFuncs(adminauthpb.AuthnRules, adminuserpb.AuthnRules)),
-		openfga.Server(authorizer, authzsecurity.WithRulesFuncs(adminauthpb.AuthzRules, adminuserpb.AuthzRules)),
+		session.Server(sessionAuthn, security.WithRulesFuncs(adminauthpb.AuthnRules, adminuserpb.AuthnRules)),
+		openfga.Server(authorizer, security.WithRulesFuncs(adminauthpb.AuthzRules, adminuserpb.AuthzRules)),
 	)
 
 	opts := []svrhttp.ServerOption{

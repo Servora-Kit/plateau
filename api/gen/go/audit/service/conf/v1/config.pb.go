@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11-devel
 // 	protoc        (unknown)
-// source: audit/service/conf/v1/audit_config.proto
+// source: audit/service/conf/v1/config.proto
 
 package auditconfv1
 
@@ -35,7 +35,7 @@ type AuditConsumerConfig struct {
 
 func (x *AuditConsumerConfig) Reset() {
 	*x = AuditConsumerConfig{}
-	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[0]
+	mi := &file_audit_service_conf_v1_config_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -47,7 +47,7 @@ func (x *AuditConsumerConfig) String() string {
 func (*AuditConsumerConfig) ProtoMessage() {}
 
 func (x *AuditConsumerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_audit_service_conf_v1_audit_config_proto_msgTypes[0]
+	mi := &file_audit_service_conf_v1_config_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,7 +60,7 @@ func (x *AuditConsumerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuditConsumerConfig.ProtoReflect.Descriptor instead.
 func (*AuditConsumerConfig) Descriptor() ([]byte, []int) {
-	return file_audit_service_conf_v1_audit_config_proto_rawDescGZIP(), []int{0}
+	return file_audit_service_conf_v1_config_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *AuditConsumerConfig) GetConsumerBatchSize() int32 {
@@ -84,34 +84,34 @@ func (x *AuditConsumerConfig) GetRetentionDays() int32 {
 	return 0
 }
 
-var File_audit_service_conf_v1_audit_config_proto protoreflect.FileDescriptor
+var File_audit_service_conf_v1_config_proto protoreflect.FileDescriptor
 
-const file_audit_service_conf_v1_audit_config_proto_rawDesc = "" +
+const file_audit_service_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"(audit/service/conf/v1/audit_config.proto\x12\x15audit.service.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xc5\x01\n" +
+	"\"audit/service/conf/v1/config.proto\x12\x15audit.service.conf.v1\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xc5\x01\n" +
 	"\x13AuditConsumerConfig\x12.\n" +
 	"\x13consumer_batch_size\x18\x01 \x01(\x05R\x11consumerBatchSize\x12Q\n" +
 	"\x17consumer_flush_interval\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x15consumerFlushInterval\x12%\n" +
 	"\x0eretention_days\x18\x03 \x01(\x05R\rretentionDays:\x04\x80\xce\x18\x01BMZKgithub.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1;auditconfv1b\x06proto3"
 
 var (
-	file_audit_service_conf_v1_audit_config_proto_rawDescOnce sync.Once
-	file_audit_service_conf_v1_audit_config_proto_rawDescData []byte
+	file_audit_service_conf_v1_config_proto_rawDescOnce sync.Once
+	file_audit_service_conf_v1_config_proto_rawDescData []byte
 )
 
-func file_audit_service_conf_v1_audit_config_proto_rawDescGZIP() []byte {
-	file_audit_service_conf_v1_audit_config_proto_rawDescOnce.Do(func() {
-		file_audit_service_conf_v1_audit_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_audit_config_proto_rawDesc), len(file_audit_service_conf_v1_audit_config_proto_rawDesc)))
+func file_audit_service_conf_v1_config_proto_rawDescGZIP() []byte {
+	file_audit_service_conf_v1_config_proto_rawDescOnce.Do(func() {
+		file_audit_service_conf_v1_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_config_proto_rawDesc), len(file_audit_service_conf_v1_config_proto_rawDesc)))
 	})
-	return file_audit_service_conf_v1_audit_config_proto_rawDescData
+	return file_audit_service_conf_v1_config_proto_rawDescData
 }
 
-var file_audit_service_conf_v1_audit_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_audit_service_conf_v1_audit_config_proto_goTypes = []any{
+var file_audit_service_conf_v1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_audit_service_conf_v1_config_proto_goTypes = []any{
 	(*AuditConsumerConfig)(nil), // 0: audit.service.conf.v1.AuditConsumerConfig
 	(*durationpb.Duration)(nil), // 1: google.protobuf.Duration
 }
-var file_audit_service_conf_v1_audit_config_proto_depIdxs = []int32{
+var file_audit_service_conf_v1_config_proto_depIdxs = []int32{
 	1, // 0: audit.service.conf.v1.AuditConsumerConfig.consumer_flush_interval:type_name -> google.protobuf.Duration
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
@@ -120,26 +120,26 @@ var file_audit_service_conf_v1_audit_config_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_audit_service_conf_v1_audit_config_proto_init() }
-func file_audit_service_conf_v1_audit_config_proto_init() {
-	if File_audit_service_conf_v1_audit_config_proto != nil {
+func init() { file_audit_service_conf_v1_config_proto_init() }
+func file_audit_service_conf_v1_config_proto_init() {
+	if File_audit_service_conf_v1_config_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_audit_config_proto_rawDesc), len(file_audit_service_conf_v1_audit_config_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_service_conf_v1_config_proto_rawDesc), len(file_audit_service_conf_v1_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_audit_service_conf_v1_audit_config_proto_goTypes,
-		DependencyIndexes: file_audit_service_conf_v1_audit_config_proto_depIdxs,
-		MessageInfos:      file_audit_service_conf_v1_audit_config_proto_msgTypes,
+		GoTypes:           file_audit_service_conf_v1_config_proto_goTypes,
+		DependencyIndexes: file_audit_service_conf_v1_config_proto_depIdxs,
+		MessageInfos:      file_audit_service_conf_v1_config_proto_msgTypes,
 	}.Build()
-	File_audit_service_conf_v1_audit_config_proto = out.File
-	file_audit_service_conf_v1_audit_config_proto_goTypes = nil
-	file_audit_service_conf_v1_audit_config_proto_depIdxs = nil
+	File_audit_service_conf_v1_config_proto = out.File
+	file_audit_service_conf_v1_config_proto_goTypes = nil
+	file_audit_service_conf_v1_config_proto_depIdxs = nil
 }

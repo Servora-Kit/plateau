@@ -8,9 +8,9 @@ import (
 
 	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/service/conf/v1"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
+	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/data"
-	kafkapb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/kafka/v1"
-	auditconfpb "github.com/Servora-Kit/servora/api/gen/go/servora/obs/audit/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 
 	"github.com/go-kratos/kratos/v3"
@@ -58,7 +58,7 @@ func run() (err error) {
 	}
 	kafkaCfg := &kafkapb.Kafka{}
 	clickHouseCfg := &clickhousepb.ClickHouse{}
-	auditCfg := &auditconfpb.AuditContract{}
+	auditCfg := &auditpb.AuditEmitter{}
 	consumerCfg := &auditconfv1.AuditConsumerConfig{}
 	if err := bootstrap.Scan(rt, kafkaCfg, clickHouseCfg, auditCfg, consumerCfg); err != nil {
 		return errors.Join(fmt.Errorf("scan bootstrap configs: %w", err), rt.Close(context.Background()))
