@@ -393,3 +393,39 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 13: 全平台审计服务重建、多服务统一审计定稿与 Admin Web 审计视图交付
+<!-- trellis-session: v=2 fp=d1cb3e336c7e1c4b -->
+
+**Date**: 2026-11-25
+**Task**: 全平台审计服务重建、多服务统一审计定稿与 Admin Web 审计视图交付
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 Servora 至 Plateau 审计运行时归位、audit.service 与 ClickHouse 重建、IAM/Admin 审计生产与查询编排、ListServices 动态发现及 Admin Web 审计视图全链路验收
+
+### Main Changes
+
+- 新增 audit.event.v1 与 admin.audit.v1 ListServices 生产服务枚举接口并对齐全平台多服务共享审计定位
+- 在 Admin Web 落地一级审计日志菜单、细粒度权限路由守卫、折叠筛选、无 totalSize 游标翻页、同 trace_id 关联抽屉及用户详情双向跳转
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b20c5ada` | docs(task): 新增 audit-v1 规划并记录 runtime 子任务交付 |
+| `cd656b67` | feat(audit): 重建 audit 微服务、ClickHouse 存储与服务间鉴权 |
+| `b860573f` | feat(audit): 接入 IAM 与 Admin 控制面审计生产及查询编排 |
+| `f3e135f1` | feat(audit): 新增 ListServices 生产服务枚举接口并对齐全平台审计规范 |
+| `f74cd99a` | feat(admin-web): 落地全平台审计日志视图、同链路详情抽屉与用户页互跳 |
+
+### Testing
+
+- [OK] GOWORK=off just gen-check、just openfga-model-test、just lint、vitest、just web::lint、just web::build 与本地全栈浏览器联调通过
+
+### Status
+
+[OK] **Completed**
