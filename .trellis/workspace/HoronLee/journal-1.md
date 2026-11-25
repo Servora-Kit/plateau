@@ -429,3 +429,36 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 14: 开发与运维启动链路治理交付
+<!-- trellis-session: v=2 fp=b3faaf629669d9a3 -->
+
+**Date**: 2026-11-25
+**Task**: 开发与运维启动链路治理交付
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 OpenFGA 平台服务元组幂等同步、IAM keygen 原生密钥生成、Just/Air 启动修复、Traefik 双数据源本地回环网关（*.plateau.localhost:8080）与 process-compose 全栈进程编排（含 SSE MCP）验收归档
+
+### Main Changes
+
+- 新增 manifests/openfga/tuples/platform-services.yaml 与 openfga.{sh,ps1} sync-tuples、app/iam/service/cmd/keygen 幂等密钥生成子命令，修复 Air 构建标识与 Just 并发生成竞态
+- 启用 Traefik consulCatalog 后端路由自治 + routes.yaml 纯前端低优兜底，提取共享 security.IsLoopbackHost 放行 RFC 6761 *.localhost 回环入口
+- 落地 process-compose 全栈 DAG 探针编排与 :18091 内置 SSE MCP Server，同步 README、AGENTS.md 与 .trellis/spec 规范
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `98879d52` | feat(bootstrap): 治理 OpenFGA 元组同步、IAM 密钥生成、Traefik 本地网关与全栈进程编排 |
+
+### Testing
+
+- [OK] GOWORK=off 全套门禁、prek、Traefik 网关重建实测与 process-compose 全栈联调通过
+
+### Status
+
+[OK] **Completed**
