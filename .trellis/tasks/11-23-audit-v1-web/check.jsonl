@@ -1,0 +1,3 @@
+{"file": ".trellis/tasks/11-23-audit-v1-web/prd.md", "reason": "核对 AC-W1~AC-W3 验收标准"}
+{"file": ".trellis/tasks/11-23-audit-v1-web/design.md", "reason": "核对无 totalSize 游标翻页、503 保会话与零冗余请求契约"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "跨前后端数据流与错误传播检查"}

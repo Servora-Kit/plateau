@@ -2,14 +2,14 @@
 
 ## 目标
 
-将审计注解、代码生成插件、CloudEvents 审计运行时及 Kafka 客户端封装从母框架 Servora 迁归 Plateau，按现行 IAM / Admin 工程标准彻底重建平台级审计服务 `app/audit/service`，打通平台控制面（IAM 与 Admin）审计事件生产、ClickHouse 持久化、服务间鉴权及 Admin Web 查询视图。
+将审计注解、代码生成插件、CloudEvents 审计运行时及 Kafka 客户端封装从母框架 Servora 迁归 Plateau，按现行 IAM / Admin 工程标准彻底重建全平台共享审计服务 `app/audit/service`，打通基准服务（IAM 与 Admin）及后续可扩展业务微服务审计事件生产、ClickHouse 持久化、服务间鉴权及 Admin Web 查询视图。
 
 ## 平台定位与职责划分
 
-平台审计遵循与 `app/admin` 完全对称的平台定位（见 `.trellis/spec/admin/architecture.md`）：
+平台审计与 `iam.service`、`app/admin` 协同构成平台三大基准服务（参考 [multi-service-audit-architecture.md](research/multi-service-audit-architecture.md) 与 `.trellis/spec/admin/architecture.md`）：
 
-1. **共享审计与流式传输工具包（`security/audit` + `cmd/protoc-gen-plateau-audit` + `infra/kafka` + `transport/server/kafka`）**：无特定业务倾向的规则生成、CloudEvents 事件封装、发送器与非泛型 Kafka 协议消费 Server 实现。平台服务和未来任意业务微服务均可复用该工具包；业务微服务若建设自有业务审计或消息消费，配置其独立的业务 Topic 或存储目标即可。
-2. **平台控制面审计服务（`app/audit/service` + `app/admin` 审计入口）**：仅消费平台控制面 Topic（默认 `plateau.audit.events`），**只负责平台核心控制面（IAM 全局身份/认证/令牌生命周期、Admin 平台管理编排、核心服务间鉴权拒绝）的不可抵赖问责留痕**，面向平台管理员提供只读检索。
+1. **共享审计与流式传输工具包（`security/audit` + `cmd/protoc-gen-plateau-audit` + `infra/kafka` + `transport/server/kafka`）**：无特定业务倾向的规则生成、CloudEvents 事件封装、发送器与非泛型 Kafka 协议消费 Server 实现，供平台基准服务与后续任意可扩展业务微服务（如 CMS、Mall、SaaS）统一复用。
+2. **全平台共享审计服务与全局查阅面（`app/audit/service` + `app/admin` 审计入口）**：统一消费平台共享审计 Topic（默认 `plateau.audit.events`），**承接平台核心服务（IAM 全局身份/认证/令牌生命周期、Admin 平台管理编排、服务间鉴权拒绝）以及后续各业务微服务的管理配置写变更与安全策略拒绝留痕**；`app/admin` 自身不承载具体业务流程或业务自有数据，但依托同构 CloudEvents 信封向平台全局管理员与安全合规人员提供零业务耦合的跨服务只读检索。
 3. **多服务调用链路的记录原则（问责事实 vs 链路追踪）**：
    - 执行拓扑、内部读查询耗时、SQL 与常规缓存/鉴权放行过程由 OTel Trace（Jaeger）与日志（Loki）负责，`app/audit` 不重复建设调用树或访问流水。
    - 每次跨越受审计的服务信任面时，接收端按自身验证通过的真实 `security.Actor` 独立落一条扁平问责事实，不跨服务透传浏览器凭据或伪造人类操作者（与 `10-04-admin-v1/prd.md:102` 一致）：例如管理员经浏览器调用 Admin 再由 Admin 调 IAM 时，Admin 记录 `human:<admin_uid>`（含外部来源 IP/UA），IAM 记录 `service:<client_id>`（防范绕过 Admin 直连 IAM gRPC 无据可查），两跳通过共享 OTel `trace_id` 在查询时按需串联。
@@ -57,7 +57,7 @@
 
 ### 4. `app/audit/service` 查询契约与服务间安全
 
-- [x] `audit.event.v1.EventService` 仅提供只读 RPC（`GetEvent`、`ListEvents`，无创建/修改/删除接口），遵循 AIP 资源规范；`ListEvents` 支持时间区间、事件类别、生产服务、`actor_type`、`actor_id`、目标资源、`success`、`trace_id` 过滤，且不透明 `page_token` 绑定查询过滤指纹（篡改过滤条件时拒绝旧游标）。
+- [x] `audit.event.v1.EventService` 仅提供只读 RPC（`GetEvent`、`ListEvents`、`ListServices`，无创建/修改/删除接口），遵循 AIP 资源规范；`ListEvents` 支持时间区间、事件类别、生产服务、`actor_type`、`actor_id`、目标资源、`success`、`trace_id` 过滤，且不透明 `page_token` 绑定查询过滤指纹（篡改过滤条件时拒绝旧游标）；`ListServices` 基于 `LowCardinality(String)` 词典索引返回已观测生产服务标识。
 - [x] `app/audit/service` gRPC 强制挂载 `jwt.ServerFor[jwt.ServiceClaims]` 与 `openfga.Server`（基于 `manifests/openfga/audit.fga` 校验服务读取关系），拒绝匿名、人类令牌、错误 audience 或未授权服务访问；移除公开 Traefik 路由暴露。
 
 ### 5. IAM 与 Admin 控制面审计生产
@@ -81,7 +81,7 @@
 
 ## 范围外事项
 
-- **业务应用与租户级审计**：不接收、不存储、不展示未来业务子系统或租户工作台内部的领域业务操作日志，不引入 `tenant_id` 多租户字段。
+- **业务自有状态数据与外部租户控制台**：不存储业务微服务需实时读写的领域状态表或大体积历史版本正文（留归各业务独立数据库）；不直接向外部 SaaS 租户开放 `app/admin` 全局控制台（未来多租户自查需求由对应 SaaS 服务在服务端强绑已认证 `tenant_id` 只读访问 `audit.service`）。
 - **高频运行观测流水**：不审计常规只读查询（`Get*` / `List*`）、健康检查、SQL 语句执行（不做 DB Driver 级全量拦截）及常规放行的 OpenFGA `Check` 判定。
 - **反向业务耦合**：不将 `app/audit` 用作登录限流、账号锁定等实时业务风控状态源，不在 `app/audit` 内反向调用 IAM 拼装用户实时资料。
 - **伪防篡改与本地归档脚本**：不引入无链式校验闭环的单行数字签名，不编写导出容器本地磁盘 JSONL 文件的定时删表任务。

@@ -1,0 +1,7 @@
+{"file": ".trellis/tasks/11-23-audit-v1-web/prd.md", "reason": "Admin Web 审计视图需求与 AC-W1~AC-W3 验收标准"}
+{"file": ".trellis/tasks/11-23-audit-v1-web/design.md", "reason": "Admin Web 审计视图路由权限、折叠筛选、游标分页与关联链路抽屉设计"}
+{"file": ".trellis/tasks/11-23-audit-v1-web/implement.md", "reason": "实施步骤、文件范围与验证保障"}
+{"file": ".trellis/spec/admin/architecture.md", "reason": "Admin 管理编排定位与全平台审计只读查阅分工"}
+{"file": ".trellis/spec/admin/backend.md", "reason": "Admin 会话权限、服务间调用与 503 故障隔离约定"}
+{"file": ".trellis/spec/web/client/http.md", "reason": "@plateau/client HTTP 请求、AbortSignal 与 ApiError 契约"}
+{"file": "app/admin/service/api/protos/admin/audit/v1/audit.proto", "reason": "Admin AuditService (ListEvents, GetEvent, ListServices) 与错误码契约"}
