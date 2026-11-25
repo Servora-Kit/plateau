@@ -20,17 +20,17 @@
   - 在 `audit.service` 基于无 `FINAL` 的 `SELECT DISTINCT service FROM events WHERE service != '' ORDER BY service ASC` 实现毫秒级服务名枚举，在 `admin.service` 完成编排与 `503` 错误隔离，补齐分层单测与 gRPC 准入断言；
   - 同步修订 `11-23-audit-v1/prd.md`、`.trellis/spec/audit/backend.md`、`.trellis/spec/plateau/security/audit.md` 及本任务规划文档。
 
-- [ ] **Step 2：Admin Web API 客户端、错误恢复、权限守卫与总览页联动（W1、W2）**
+- [x] **Step 2：Admin Web API 客户端、错误恢复、权限守卫与总览页联动（W1、W2）**
   - 在 `src/api/client.ts` 接入 `createAuditServiceClient`；在 `src/api/errors.ts` 映射 `AdminAuditErrorReason`（`503 DOWNSTREAM_UNAVAILABLE` 标记 `preserveSession: true`）并补充 `errors.test.ts` 单测；
   - 在 `src/router/guard.ts` 将 `['admin', ...authStore.permissions]` 传入 `generateAccess`，在 `src/store/auth.ts` 检测权限变更触发 `accessStore.setIsAccessChecked(false)`，新增一级路由 `src/router/routes/modules/audit.ts` 与中英文菜单标题；
   - 在 `src/views/overview/index.vue` 补齐 `read_audit` 权限说明、未收录新权限码原文回退渲染及审计日志快捷入口卡片。
 
-- [ ] **Step 3：审计日志列表页、详情抽屉与用户页双向跳转实现（W2、W3）**
+- [x] **Step 3：审计日志列表页、详情抽屉与用户页双向跳转实现（W2、W3）**
   - 实现 `src/views/audit/schemas.ts` 与 `__tests__/schemas.test.ts`：覆盖服务名 `//` 前缀自动归一化与去前缀展示、固化时间窗口请求构造、查询签名变更自动重置游标栈、无 `totalSize` 翻页状态计算及 `detail_json` 安全格式化；
   - 实现 `src/views/audit/index.vue`：顶部类别 `Segmented`、首行 4 项 + 折叠 4 项筛选栏（合并 `ListServices` + 三基准服务保底 + 当前列表服务 + `AutoComplete` 自由输入，无精确 URL 参数默认固化近 7 天）、`503` 常驻重试 `Alert` 横幅、`403` 动态刷新权限与底部游标分页栏；
   - 实现 `src/views/audit/components/audit-detail-drawer.vue`：直接复用内存完整 `Event`（支持手动刷新与 `?event=events/<id>` 直达 `GetEvent`）、同 `trace_id` 关联查询（`pageSize: 200` + 超限截断提示与回填列表按钮）、JSON 一键复制，并打通与 `user-detail-drawer.vue` / `views/users/index.vue`（`?userId=<id>`）的双向深链跳转。
 
-- [ ] **Step 4：前端静态检查、全栈真实环境浏览器联调验收与驻留运行（W4，AC-W1 ~ AC-W3）**
+- [x] **Step 4：前端静态检查、全栈真实环境浏览器联调验收与驻留运行（W4，AC-W1 ~ AC-W3）**
   - 运行 `app/admin/web` 单元测试、`just web::lint` 与 `just web::build` 确保类型、规范与构建零警告通过；
   - 启动本地 Docker 基础设施与 `iam.service`（`10000`/`10001`）、`admin.service`（`10010`）、`audit.service`（`10020`/`10021`）、IAM Web（`10002`）、Admin Web（`10012`）；
   - 使用内置浏览器工具完整实测场景 A（登录成败与脱敏）、场景 B（跨服务用户变更双跳 `trace_id` 串联与双向跳转）、场景 C（403 授权拒绝），核对无控制台报错且真实数据完全一致，最后保持全部服务运行供人工验收。

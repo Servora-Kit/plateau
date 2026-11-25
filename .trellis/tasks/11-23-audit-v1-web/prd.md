@@ -17,9 +17,9 @@
 
 ## 验收标准
 
-- [ ] AC-W1（W1、W2）：`just web::build` 与 `just web::lint` 通过；审计页面筛选、重置、翻页及空态/错误态反馈与后端真实数据一致，不使用任何前端硬编码演示数据。
-- [ ] AC-W2（W3）：点开任意审计记录可查看结构化详情与 `detail` 载荷；对于管理员在 Admin Web 发起的用户变更操作，详情抽屉内可直观看到同一 `trace_id` 下 Admin（`human`）与 IAM（`service`）两跳完整问责记录。
-- [ ] AC-W3（W4）：浏览器实测覆盖 IAM 登录失败/成功、Admin 创建/封禁/恢复用户、非管理员访问拒绝等核心路径，事件经 Kafka 入 ClickHouse 后可在 Admin Web 准确检索与核对。
+- [x] AC-W1（W1、W2）：`just web::build` 与 `just web::lint` 通过；审计页面筛选、重置、翻页及空态/错误态反馈与后端真实数据一致，不使用任何前端硬编码演示数据。
+- [x] AC-W2（W3）：点开任意审计记录可查看结构化详情与 `detail` 载荷；对于管理员在 Admin Web 发起的用户变更操作，详情抽屉内可直观看到同一 `trace_id` 下 Admin（`human`）与 IAM（`service`）两跳完整问责记录。
+- [x] AC-W3（W4）：浏览器实测覆盖 IAM 登录失败/成功、Admin 创建/封禁/恢复用户、非管理员访问拒绝等核心路径，事件经 Kafka 入 ClickHouse 后可在 Admin Web 准确检索与核对。
 
 ## 依赖与交付协作
 

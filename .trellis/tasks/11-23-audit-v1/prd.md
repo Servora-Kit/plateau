@@ -71,13 +71,13 @@
 
 ### 7. Admin Web 审计日志视图
 
-- [ ] `app/admin/web` 在「总览 / 用户管理」同级新增单个一级菜单「审计日志」，不堆叠多余二级菜单。
-- [ ] 支持按类别快捷视图（全部 / 认证与会话 / 资源变更 / 授权拒绝）、时间范围、`actor_type`（人类 / 服务 / 匿名）、服务、执行结果、`actor_id` / 目标资源 / `trace_id` 筛选分页浏览。
-- [ ] 点击记录打开详情抽屉，展示完整标准维度、格式化 `detail` JSON，并支持按该记录的 `trace_id` 展示同一调用链上的上下游关联审计记录。
+- [x] `app/admin/web` 在「总览 / 用户管理」同级新增单个一级菜单「审计日志」，不堆叠多余二级菜单。
+- [x] 支持按类别快捷视图（全部 / 认证与会话 / 资源变更 / 授权拒绝）、时间范围、`actor_type`（人类 / 服务 / 匿名）、服务、执行结果、`actor_id` / 目标资源 / `trace_id` 筛选分页浏览。
+- [x] 点击记录打开详情抽屉，展示完整标准维度、格式化 `detail` JSON，并支持按该记录的 `trace_id` 展示同一调用链上的上下游关联审计记录。
 
 ### 8. 全链路真实联调验收
 
-- [ ] 在本地基础设施（PostgreSQL、Redis、OpenFGA、Kafka、ClickHouse）启动下，完成浏览器 → Admin Web → Admin Service → IAM Service → Kafka → Audit Service（ClickHouse）→ Admin Web 查询展示的端到端实测，覆盖人类直连认证成败、Admin 跨服务管理变更（同 `trace_id` 双记录关联）及无权限拒绝场景。
+- [x] 在本地基础设施（PostgreSQL、Redis、OpenFGA、Kafka、ClickHouse）启动下，完成浏览器 → Admin Web → Admin Service → IAM Service → Kafka → Audit Service（ClickHouse）→ Admin Web 查询展示的端到端实测，覆盖人类直连认证成败、Admin 跨服务管理变更（同 `trace_id` 双记录关联）及无权限拒绝场景。
 
 ## 范围外事项
 
