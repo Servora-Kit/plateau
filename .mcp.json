@@ -10,6 +10,10 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "gitnexus@latest", "mcp"]
+    },
+    "openfga": {
+      "type": "http",
+      "url": "https://openfga.dev/docs/mcp"
     }
   }
 }
