@@ -12,6 +12,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	_ "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/runtime"
+	infrakafka "github.com/Servora-Kit/plateau/infra/kafka"
 	fgapkg "github.com/Servora-Kit/plateau/infra/openfga"
 	"github.com/Servora-Kit/plateau/security/cap"
 	sessions "github.com/Servora-Kit/plateau/security/session"
@@ -27,7 +28,7 @@ import (
 )
 
 // ProviderSet provides the IAM database driver, generated client, and data layer.
-var ProviderSet = wire.NewSet(NewData, cap.New, NewCAPVerifier, NewUserRepository, NewCredentialRepository, NewSessionRepository, NewOAuthRepository, NewVerificationTokenRepo, NewPasswordResetTokenRepository, NewInitialUserCreator, NewSQLDB, NewEntDriver, NewDBClient, NewHTTPSessionManager, NewRedisClient, fgapkg.New)
+var ProviderSet = wire.NewSet(NewData, cap.New, NewCAPVerifier, NewUserRepository, NewCredentialRepository, NewSessionRepository, NewOAuthRepository, NewVerificationTokenRepo, NewPasswordResetTokenRepository, NewInitialUserCreator, NewSQLDB, NewEntDriver, NewDBClient, NewHTTPSessionManager, NewRedisClient, fgapkg.New, infrakafka.New)
 
 // Data owns the IAM Ent client and repository-scoped persistence resources.
 type Data struct {

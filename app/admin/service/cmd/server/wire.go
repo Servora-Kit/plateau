@@ -5,7 +5,9 @@ package main
 
 import (
 	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
+	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
@@ -24,6 +26,8 @@ func wireApp(
 	*oidcpb.OIDCClient,
 	*openfgapb.OpenFGA,
 	*sessionpb.Session,
+	*kafkapb.Kafka,
+	*auditpb.AuditEmitter,
 ) (*kratos.App, func(), error) {
 	panic(wire.Build(
 		bootstrap.ProviderSet,

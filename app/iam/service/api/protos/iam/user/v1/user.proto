@@ -9,6 +9,7 @@ import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
+import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 import "servora/errors/v1/errors.proto";
@@ -25,6 +26,10 @@ service UserService {
     resource_type: "iam"
     resource_id: "global"
   };
+  option (plateau.security.audit.v1.service_default) = {
+    mode: AUDIT_MODE_ENABLED
+    category: AUDIT_CATEGORY_RESOURCE
+  };
 
   // CreateUser creates a pending user with an administrator-supplied initial password.
   rpc CreateUser(CreateUserRequest) returns (User) {
@@ -34,11 +39,13 @@ service UserService {
   // GetUser returns one global IAM user by resource name.
   rpc GetUser(GetUserRequest) returns (User) {
     option (google.api.method_signature) = "name";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
   }
 
   // ListUsers returns a page of globally unique IAM users.
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
     option (google.api.method_signature) = "page_size,page_token,filter,order_by";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
   }
 
   // UpdateUser updates administrator-editable profile fields.

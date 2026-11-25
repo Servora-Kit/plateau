@@ -279,35 +279,36 @@ func (uc *AccountUsecase) RequestPasswordReset(ctx context.Context, email, capTo
 }
 
 // ConfirmPasswordReset peeks a reset token snapshot, enforces initial-password change if required, and atomically commits.
-func (uc *AccountUsecase) ConfirmPasswordReset(ctx context.Context, token, newPassword string) error {
+func (uc *AccountUsecase) ConfirmPasswordReset(ctx context.Context, token, newPassword string) (string, error) {
 	if token == "" {
-		return ErrInvalidToken
+		return "", ErrInvalidToken
 	}
 	if err := ValidatePassword(newPassword); err != nil {
-		return err
+		return "", err
 	}
 	now := uc.now()
 	proof, err := uc.resetTokens.Peek(ctx, HashOpaqueSecret(token), now)
 	if err != nil {
-		return accountTokenError(err)
+		return "", accountTokenError(err)
 	}
 	if proof.RequiresPasswordChange {
 		same, _, err := password.Compare(newPassword, proof.Credential.PasswordHash)
 		if err != nil {
-			return fmt.Errorf("compare reset password: %w", err)
+			return "", fmt.Errorf("compare reset password: %w", err)
 		}
 		if same {
-			return ErrInvalidPassword
+			return "", ErrInvalidPassword
 		}
 	}
 	hash, err := password.Hash(newPassword)
 	if err != nil {
-		return ErrInvalidPassword
+		return "", ErrInvalidPassword
 	}
-	if _, err := uc.resetTokens.ConsumeAndReplacePassword(ctx, *proof, hash, uc.now()); err != nil {
-		return accountTokenError(err)
+	userID, err := uc.resetTokens.ConsumeAndReplacePassword(ctx, *proof, hash, uc.now())
+	if err != nil {
+		return "", accountTokenError(err)
 	}
-	return nil
+	return userID, nil
 }
 
 // ChangePassword replaces the current password, preserves the current Login Session and revokes all OAuth Token Sessions.

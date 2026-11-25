@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 	"time"
@@ -53,6 +54,13 @@ func Backend(client *kgo.Client) audit.Option {
 			Mode:  BinaryMode,
 		})
 	})
+}
+
+// NewDefault constructs an audit.Auditor from AuditEmitter configuration with
+// the Kafka backend registered over client. When enabled with backend "kafka"
+// and client is nil, startup fails immediately with an error.
+func NewDefault(cfg *auditpb.AuditEmitter, client *kgo.Client, l *slog.Logger) (audit.Auditor, error) {
+	return audit.New(cfg, l, Backend(client))
 }
 
 // New constructs a Kafka-backed audit.Auditor publishing to cfg.Topic (defaulting

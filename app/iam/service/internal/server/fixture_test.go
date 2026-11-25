@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/Servora-Kit/plateau/security/password"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/alexedwards/scs/v2"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	kgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
 	"github.com/google/uuid"
@@ -62,6 +64,7 @@ type serverFixture struct {
 	redis       *redis.Client
 	capPrefix   string
 	mailer      *testMailer
+	auditor     *recordingAuditor
 }
 
 // The tests borrow Plateau Compose services and own only their schema/store.
@@ -165,11 +168,12 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	t.Cleanup(closeAuthn)
 	serverConfig := &corepb.Server{Http: &corepb.Server_HTTP{Listen: &corepb.Server_Listen{Timeout: durationpb.New(15 * time.Second)}}, Grpc: &corepb.Server_GRPC{Listen: &corepb.Server_Listen{Timeout: durationpb.New(15 * time.Second)}}}
-	httpServer, err := NewHTTPServer(serverConfig, nil, app, nil, captcha, provider, manager, sessionAuthn, authorizer, authnService, sessionService, accountService, logger)
+	auditor := &recordingAuditor{}
+	httpServer, err := NewHTTPServer(serverConfig, nil, app, nil, captcha, provider, manager, sessionAuthn, auditor, authorizer, authnService, sessionService, accountService, logger)
 	check(t, err)
 	web.Config.Handler = httpServer
 	web.Start()
-	grpcServer := NewGRPCServer(serverConfig, nil, nil, serviceAuthn, authorizer, userService, logger)
+	grpcServer := NewGRPCServer(serverConfig, nil, nil, serviceAuthn, auditor, authorizer, userService, logger)
 	email := "alice@example.com"
 	hash, err := password.Hash(testPassword)
 	check(t, err)
@@ -181,7 +185,7 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	person, err = users.Get(t.Context(), person.GetUserId())
 	check(t, err)
-	return &serverFixture{db: db, ent: client, manager: manager, users: users, logins: logins, resets: resets, user: person, http: httpServer, grpc: grpcServer, web: web, fga: fga, oidc: storage, config: config, initializer: initializer, redis: rdb, capPrefix: schema + ":", mailer: mailer}
+	return &serverFixture{db: db, ent: client, manager: manager, users: users, logins: logins, resets: resets, user: person, http: httpServer, grpc: grpcServer, web: web, fga: fga, oidc: storage, config: config, initializer: initializer, redis: rdb, capPrefix: schema + ":", mailer: mailer, auditor: auditor}
 }
 
 func newProtocolConfig(t *testing.T, issuer string) *oidcpb.OIDC {
@@ -241,4 +245,26 @@ func (f *serverFixture) login(t *testing.T, password string, previous *http.Cook
 	}
 	t.Fatal("login did not deliver session cookie")
 	return nil
+}
+
+type recordingAuditor struct {
+	mu     sync.Mutex
+	events []cloudevents.Event
+}
+
+func (r *recordingAuditor) Emit(_ context.Context, event cloudevents.Event) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.events = append(r.events, event.Clone())
+	return nil
+}
+
+func (r *recordingAuditor) snapshot() []cloudevents.Event {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := make([]cloudevents.Event, len(r.events))
+	for i, ev := range r.events {
+		out[i] = ev.Clone()
+	}
+	return out
 }

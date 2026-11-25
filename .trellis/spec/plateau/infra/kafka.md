@@ -16,6 +16,7 @@
   - `NewClient(ctx context.Context, cfg *kafkapb.Kafka, extra ...kgo.Opt) (*kgo.Client, error)`
   - `NewClientOptional(ctx context.Context, cfg *kafkapb.Kafka, extra ...kgo.Opt) (*kgo.Client, error)`
   - `WithSlogLogger(l *slog.Logger) kgo.Opt`
+  - `New(cfg *kafkapb.Kafka, l *slog.Logger) (*kgo.Client, func(), error)`
 - 入站消费传输层（[transport/server/kafka/server.go](../../../../transport/server/kafka/server.go)）：
   - `type BatchHandler func(ctx context.Context, records []*kgo.Record) error`
   - `NewServer(cfg *kafkapb.Kafka, opts ...ServerOption) (*Server, error)`（实现 Kratos `transport.Server`）
@@ -26,6 +27,7 @@
   - `(nil, nil)`：`cfg == nil` 或 `brokers` 为空（未配置 Kafka，由调用方决定禁用相关特性）；
   - `(nil, err)`：已配置但参数校验、TLS/SASL 构造或 `Ping` 失败；
   - `(client, nil)`：连接成功，调用方负责 `client.Close()`。
+- `New` 面向微服务 Wire 注入：当 `cfg == nil` 或 `brokers` 为空时返回 `(nil, noopCleanup, nil)`；一旦配置了非空 `brokers` 即同步执行 `Ping` 强校验并返回带 `client.Close()` 清理函数的客户端，连接不可达时启动立即失败。
 - `BuildOpts` 先深克隆输入 `cfg` 再执行 `Apply()`，绝不原地修改调用方传入的 Proto 消息；SASL `password` 标注 `(servora.redact.v3.value).string = ""`。
 - `transport/server/kafka.Server` 保持非泛型协议传输定位（单实例通过 `WithTopicHandler(topic, handler)` 挂载一个或多个 Topic）：
   - 构造入口末尾强制注入 `kgo.ConsumerGroup`、`kgo.ConsumeTopics` 与 `kgo.DisableAutoCommit()`；
@@ -45,7 +47,7 @@
 
 ### 5. Good / Base / Bad Cases
 
-- **Good**：生产端使用 `infrakafka.NewClientOptional` 构造 `*kgo.Client` 注入 `audit.New(emitterCfg, kafkaClient, logger)`；消费端微服务在 `internal/server` 使用 `transport/server/kafka.NewServer` 注册到 `kratos.Server(...)`。
+- **Good**：生产端微服务在 `data.ProviderSet` 注入 `infrakafka.New` 并在 `server.ProviderSet` 注入 `auditkafka.NewDefault`；消费端微服务在 `internal/server` 使用 `transport/server/kafka.NewServer` 注册到 `kratos.Server(...)`。
 - **Base**：本地未启用 Kafka 时省略 `kafka:` 配置段，`NewClientOptional` 返回 `nil, nil`，`audit.New` 按配置回退 `Noop` / `stdout` / `log` 审计器。
 - **Bad**：在业务 `data` 层手写 `PollFetches` goroutine 并在前序缓冲尚未落库时对单条坏消息单独 `CommitRecords`（导致同分区前序未刷盘偏移量被隐式确认丢失）。
 

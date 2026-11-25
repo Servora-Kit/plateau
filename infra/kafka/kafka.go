@@ -127,6 +127,20 @@ func NewClientOptional(ctx context.Context, cfg *kafkapb.Kafka, extra ...kgo.Opt
 	return NewClient(ctx, cfg, extra...)
 }
 
+// New opens an optional franz-go client for Wire dependency injection,
+// validating connectivity via Ping whenever Kafka brokers are configured.
+// When Kafka is unconfigured (cfg nil or empty brokers), it returns (nil, noop, nil).
+func New(cfg *kafkapb.Kafka, l *slog.Logger) (*kgo.Client, func(), error) {
+	client, err := NewClientOptional(context.Background(), cfg, WithSlogLogger(l))
+	if err != nil {
+		return nil, nil, err
+	}
+	if client == nil {
+		return nil, func() {}, nil
+	}
+	return client, client.Close, nil
+}
+
 func buildSASL(sasl *kafkapb.Kafka_SASL) (kgo.Opt, error) {
 	switch strings.ToUpper(strings.TrimSpace(sasl.GetMechanism())) {
 	case "PLAIN":

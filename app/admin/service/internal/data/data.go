@@ -13,6 +13,7 @@ import (
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	entmodel "github.com/Servora-Kit/plateau/app/admin/service/internal/data/ent"
 	_ "github.com/Servora-Kit/plateau/app/admin/service/internal/data/ent/runtime"
+	infrakafka "github.com/Servora-Kit/plateau/infra/kafka"
 	fgapkg "github.com/Servora-Kit/plateau/infra/openfga"
 	securityoidc "github.com/Servora-Kit/plateau/security/oidc"
 	sessions "github.com/Servora-Kit/plateau/security/session"
@@ -38,7 +39,9 @@ var ProviderSet = wire.NewSet(
 	NewData,
 	NewIAMUserRepo,
 	NewAdminSeedRepo,
+	NewAuditEventRepo,
 	fgapkg.New,
+	infrakafka.New,
 )
 
 // Data owns shared Admin persistence and downstream client resources.

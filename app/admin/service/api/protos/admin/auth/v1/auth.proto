@@ -4,6 +4,7 @@ package admin.auth.v1;
 
 import "google/api/annotations.proto";
 import "iam/user/v1/user.proto";
+import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 
@@ -18,6 +19,7 @@ service AuthService {
     resource_type: "admin"
     resource_id: "global"
   };
+  option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
 
   // GetSession 返回当前管理员的本地会话快照与实时权限码列表。
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
@@ -31,6 +33,10 @@ service AuthService {
       body: "*"
     };
     option (plateau.security.authz.v1.rule) = {mode: AUTHZ_MODE_NONE};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
   }
 }
 

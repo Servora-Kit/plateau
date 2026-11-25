@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package admin.audit.v1;
+
+import "audit/event/v1/event.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+import "plateau/security/audit/v1/annotations.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1;adminauditv1";
+
+// AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
+service AuditService {
+  option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
+  option (plateau.security.authz.v1.service_default) = {
+    mode: AUTHZ_MODE_REQUIRED
+    action: "read_audit"
+    resource_type: "admin"
+    resource_id: "global"
+  };
+  option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
+
+  // ListEvents 分页检索平台控制面审计事件。
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
+    option (google.api.http) = {get: "/v1/admin/audit/events"};
+    option (google.api.method_signature) = "page_size,page_token";
+  }
+
+  // GetEvent 按规范资源名查询单条审计事件详情。
+  rpc GetEvent(GetEventRequest) returns (.audit.event.v1.Event) {
+    option (google.api.http) = {get: "/v1/admin/audit/{name=events/*}"};
+    option (google.api.method_signature) = "name";
+  }
+}
+
+// AdminAuditErrorReason 定义 Admin 审计查询编排的公开业务错误原因。
+enum AdminAuditErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  ADMIN_AUDIT_ERROR_REASON_UNSPECIFIED = 0;
+  ADMIN_AUDIT_ERROR_REASON_EVENT_NOT_FOUND = 1 [(servora.errors.v1.code) = 404];
+  ADMIN_AUDIT_ERROR_REASON_INVALID_ARGUMENT = 2 [(servora.errors.v1.code) = 400];
+  ADMIN_AUDIT_ERROR_REASON_INVALID_PAGE_TOKEN = 3 [(servora.errors.v1.code) = 400];
+  ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE = 4 [(servora.errors.v1.code) = 503];
+}
+
+message GetEventRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "audit.plateau.dev/Event"}
+  ];
+}
+
+message ListEventsRequest {
+  google.protobuf.Timestamp start_time = 1 [(google.api.field_behavior) = OPTIONAL];
+  google.protobuf.Timestamp end_time = 2 [(google.api.field_behavior) = OPTIONAL];
+  plateau.security.audit.v1.AuditCategory category = 3 [(google.api.field_behavior) = OPTIONAL];
+  string service = 4 [(google.api.field_behavior) = OPTIONAL];
+  string event_type = 5 [(google.api.field_behavior) = OPTIONAL];
+  string operation = 6 [(google.api.field_behavior) = OPTIONAL];
+  string actor_type = 7 [(google.api.field_behavior) = OPTIONAL];
+  string actor_id = 8 [(google.api.field_behavior) = OPTIONAL];
+  string resource_type = 9 [(google.api.field_behavior) = OPTIONAL];
+  string resource_name = 10 [(google.api.field_behavior) = OPTIONAL];
+  optional bool success = 11 [(google.api.field_behavior) = OPTIONAL];
+  string trace_id = 12 [(google.api.field_behavior) = OPTIONAL];
+  int32 page_size = 13 [(google.api.field_behavior) = OPTIONAL];
+  string page_token = 14 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message ListEventsResponse {
+  repeated .audit.event.v1.Event events = 1;
+  string next_page_token = 2;
+}

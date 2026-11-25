@@ -1,0 +1,5 @@
+kafka:
+  brokers:
+    - "${KAFKA_BROKER_ADDR:kafka:9092}"
+  client_id: admin.service
+  required_acks: -1

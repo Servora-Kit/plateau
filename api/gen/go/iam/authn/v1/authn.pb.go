@@ -9,6 +9,7 @@ package authnpb
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
@@ -176,7 +177,7 @@ var File_iam_authn_v1_authn_proto protoreflect.FileDescriptor
 
 const file_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\n" +
-	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\\\n" +
+	"\x18iam/authn/v1/authn.proto\x12\fiam.authn.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\\\n" +
 	"\fLoginRequest\x12\x1a\n" +
 	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x120\n" +
 	"\bpassword\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\"6\n" +
@@ -184,9 +185,9 @@ const file_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user*p\n" +
 	"\x10AuthnErrorReason\x12\"\n" +
 	"\x1eAUTHN_ERROR_REASON_UNSPECIFIED\x10\x00\x121\n" +
-	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\x8f\x01\n" +
-	"\fAuthnService\x12w\n" +
-	"\x05Login\x12\x1a.iam.authn.v1.LoginRequest\x1a\x1b.iam.authn.v1.LoginResponse\"5\xdaA\x0eemail,password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/login\x1a\x06\xca\xc1\x18\x02\b\x01B@Z>github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1;authnpbb\x06proto3"
+	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\x97\x01\n" +
+	"\fAuthnService\x12\x7f\n" +
+	"\x05Login\x12\x1a.iam.authn.v1.LoginRequest\x1a\x1b.iam.authn.v1.LoginResponse\"=\xdaA\x0eemail,password\xa2\xbb\x18\x04\b\x02\x10\x01\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/login\x1a\x06\xca\xc1\x18\x02\b\x01B@Z>github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1;authnpbb\x06proto3"
 
 var (
 	file_iam_authn_v1_authn_proto_rawDescOnce sync.Once

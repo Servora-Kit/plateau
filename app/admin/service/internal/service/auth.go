@@ -12,6 +12,7 @@ import (
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/audit"
 	"github.com/Servora-Kit/plateau/security/authn/session"
 	securityoidc "github.com/Servora-Kit/plateau/security/oidc"
 	"github.com/alexedwards/scs/v2"
@@ -63,9 +64,12 @@ func NewAuthService(
 }
 
 // RegisterOIDCHTTP registers the browser OIDC authorization redirect and callback endpoints.
-func (s *AuthService) RegisterOIDCHTTP(srv *khttp.Server) {
+func (s *AuthService) RegisterOIDCHTTP(srv *khttp.Server, auditor audit.Auditor) {
 	srv.Handle(oidcLoginPath, http.HandlerFunc(s.handleLogin))
-	srv.Handle(oidcCallbackPath, http.HandlerFunc(s.handleCallback))
+	srv.Handle(
+		oidcCallbackPath,
+		audit.HTTPHandler(auditor, "plateau.admin.auth.callback.v1", audit.CategoryAuthn)(http.HandlerFunc(s.handleCallback)),
+	)
 }
 
 func (s *AuthService) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -91,13 +95,18 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = s.manager.Destroy(r.Context())
 		if errors.Is(err, securityoidc.ErrProviderUnavailable) {
+			audit.SetError(r.Context(), "OIDC_PROVIDER_UNAVAILABLE", "identity provider is unavailable")
 			s.log.ErrorContext(r.Context(), "OIDC CompleteLogin provider unavailable", "err", err)
 			http.Redirect(w, r, webLoginPath+"?error=service_unavailable", http.StatusFound)
 			return
 		}
+		audit.SetError(r.Context(), "OIDC_LOGIN_FAILED", "OIDC callback verification failed")
 		http.Redirect(w, r, webLoginPath+"?error=login_failed", http.StatusFound)
 		return
 	}
+
+	audit.SetActor(r.Context(), security.Actor{Type: security.ActorTypeHuman, ID: user.GetUserId()})
+	audit.SetResource(r.Context(), "iam.plateau.dev/User", "users/"+user.GetUserId())
 
 	if !s.seed.Seeded() {
 		if seedErr := s.seed.Ensure(r.Context()); seedErr != nil {
@@ -108,18 +117,23 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 	allowed, err := s.uc.CheckAccess(r.Context(), user.GetUserId())
 	if err != nil {
 		_ = s.manager.Destroy(r.Context())
+		audit.SetError(r.Context(), "AUTHZ_CHECK_UNAVAILABLE", "authorization check unavailable")
 		s.log.ErrorContext(r.Context(), "OpenFGA access check failed during callback", "err", err)
 		http.Redirect(w, r, webLoginPath+"?error=service_unavailable", http.StatusFound)
 		return
 	}
 	if !allowed {
 		_ = s.manager.Destroy(r.Context())
+		audit.SetEventOverride(r.Context(), audit.AuthzDeniedEventType, audit.CategoryAuthz)
+		audit.SetResource(r.Context(), biz.AdminResourceType, biz.AdminResourceType+"/"+biz.AdminResourceID)
+		audit.SetError(r.Context(), "SECURITY_ERROR_REASON_PERMISSION_DENIED", "admin access denied")
 		http.Redirect(w, r, webLoginPath+"?error=access_denied", http.StatusFound)
 		return
 	}
 
 	if err := session.SaveUser(r.Context(), s.manager, user); err != nil {
 		_ = s.manager.Destroy(r.Context())
+		audit.SetError(r.Context(), "SESSION_PERSIST_FAILED", "admin session persistence failed")
 		s.log.ErrorContext(r.Context(), "persist admin session failed during callback", "err", err)
 		http.Redirect(w, r, webLoginPath+"?error=service_unavailable", http.StatusFound)
 		return
@@ -153,6 +167,9 @@ func (s *AuthService) GetSession(ctx context.Context, _ *adminauthpb.GetSessionR
 }
 
 func (s *AuthService) Logout(ctx context.Context, _ *adminauthpb.LogoutRequest) (*adminauthpb.LogoutResponse, error) {
+	if actor, ok := security.ActorFrom(ctx); ok && actor.Type == security.ActorTypeHuman && actor.ID != "" {
+		audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+actor.ID)
+	}
 	if err := s.manager.Destroy(ctx); err != nil {
 		return nil, kerrors.InternalServer("SESSION_DESTROY_FAILED", "failed to destroy local admin session").WithCause(err)
 	}

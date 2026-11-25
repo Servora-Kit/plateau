@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"log/slog"
 	"net"
 	"strconv"
 	"testing"
@@ -159,6 +160,37 @@ func TestBackendRegistrationAndRealKgoClientEmit(t *testing.T) {
 		}
 	case <-ctx.Done():
 		t.Fatal("timed out waiting for produced Kafka record")
+	}
+}
+
+func TestNewDefault(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	disabledAuditor, err := NewDefault(&auditpb.AuditEmitter{Enabled: false}, nil, logger)
+	if err != nil || disabledAuditor == nil {
+		t.Fatalf("NewDefault(disabled, nil client) = (%v, %v), want non-nil Noop auditor", disabledAuditor, err)
+	}
+
+	if _, err := NewDefault(&auditpb.AuditEmitter{
+		Enabled: true,
+		Backend: new("kafka"),
+	}, nil, logger); err == nil {
+		t.Fatal("NewDefault(enabled kafka, nil client) succeeded, want error")
+	}
+
+	client, err := kgo.NewClient(kgo.SeedBrokers("127.0.0.1:9092"))
+	if err != nil {
+		t.Fatalf("kgo.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	kafkaAuditor, err := NewDefault(&auditpb.AuditEmitter{
+		Enabled: true,
+		Backend: new("kafka"),
+		Topic:   new(DefaultTopic),
+	}, client, logger)
+	if err != nil || kafkaAuditor == nil {
+		t.Fatalf("NewDefault(enabled kafka, valid client) = (%v, %v), want non-nil auditor", kafkaAuditor, err)
 	}
 }
 

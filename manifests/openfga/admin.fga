@@ -6,3 +6,4 @@ type admin
     define access: admin
     define manage_users: admin
     define expunge_users: admin
+    define read_audit: admin

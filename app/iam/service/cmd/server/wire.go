@@ -6,8 +6,10 @@ package main
 import (
 	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
 	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	mailpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	capv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
@@ -32,6 +34,8 @@ func wireApp(
 	*mailpb.Mail,
 	*openfgapb.OpenFGA,
 	*sessionpb.Session,
+	*kafkapb.Kafka,
+	*auditpb.AuditEmitter,
 ) (*kratos.App, func(), error) {
 	panic(wire.Build(
 		bootstrap.ProviderSet,

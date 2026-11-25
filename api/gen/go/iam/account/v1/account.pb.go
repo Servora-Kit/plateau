@@ -9,6 +9,7 @@ package accountpb
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
@@ -1014,7 +1015,7 @@ var File_iam_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_iam_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"\x1ciam/account/v1/account.proto\x12\x0eiam.account.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xc2\x01\n" +
+	"\x1ciam/account/v1/account.proto\x12\x0eiam.account.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xc2\x01\n" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x120\n" +
 	"\bpassword\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x128\n" +
@@ -1072,19 +1073,19 @@ const file_iam_account_v1_account_proto_rawDesc = "" +
 	"-ACCOUNT_ERROR_REASON_EMAIL_ALREADY_REGISTERED\x10\x04\x1a\x05\xa8\xd4\x18\x99\x03\x12-\n" +
 	"\"ACCOUNT_ERROR_REASON_USER_DISABLED\x10\x05\x1a\x05\xa8\xd4\x18\x93\x03\x12/\n" +
 	"$ACCOUNT_ERROR_REASON_UNAUTHENTICATED\x10\x06\x1a\x05\xa8\xd4\x18\x91\x03\x12-\n" +
-	"\"ACCOUNT_ERROR_REASON_INVALID_STATE\x10\a\x1a\x05\xa8\xd4\x18\x99\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xd3\r\n" +
-	"\x0eAccountService\x12\x9b\x01\n" +
-	"\bRegister\x12\x1f.iam.account.v1.RegisterRequest\x1a .iam.account.v1.RegisterResponse\"L\xdaA email,password,profile,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/iam/account/register\x12\x8d\x01\n" +
+	"\"ACCOUNT_ERROR_REASON_INVALID_STATE\x10\a\x1a\x05\xa8\xd4\x18\x99\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xfa\r\n" +
+	"\x0eAccountService\x12\xa3\x01\n" +
+	"\bRegister\x12\x1f.iam.account.v1.RegisterRequest\x1a .iam.account.v1.RegisterResponse\"T\xdaA email,password,profile,cap_token\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/iam/account/register\x12\x8d\x01\n" +
 	"\vVerifyEmail\x12\".iam.account.v1.VerifyEmailRequest\x1a#.iam.account.v1.VerifyEmailResponse\"5\xdaA\x05token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/iam/account/verify-email\x12\xc2\x01\n" +
-	"\x17ResendVerificationEmail\x12..iam.account.v1.ResendVerificationEmailRequest\x1a/.iam.account.v1.ResendVerificationEmailResponse\"F\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/account/resend-verification\x12z\n" +
+	"\x17ResendVerificationEmail\x12..iam.account.v1.ResendVerificationEmailRequest\x1a/.iam.account.v1.ResendVerificationEmailResponse\"F\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/account/resend-verification\x12\x80\x01\n" +
 	"\n" +
-	"GetProfile\x12!.iam.account.v1.GetProfileRequest\x1a\".iam.account.v1.GetProfileResponse\"%\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/iam/account/profile\x12\xa2\x01\n" +
-	"\rUpdateProfile\x12$.iam.account.v1.UpdateProfileRequest\x1a%.iam.account.v1.UpdateProfileResponse\"D\xdaA\x13profile,update_mask\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\":\aprofile2\x17/v1/iam/account/profile\x12\xb1\x01\n" +
+	"GetProfile\x12!.iam.account.v1.GetProfileRequest\x1a\".iam.account.v1.GetProfileResponse\"+\xa2\xbb\x18\x02\b\x01\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/iam/account/profile\x12\xaa\x01\n" +
+	"\rUpdateProfile\x12$.iam.account.v1.UpdateProfileRequest\x1a%.iam.account.v1.UpdateProfileResponse\"L\xdaA\x13profile,update_mask\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\":\aprofile2\x17/v1/iam/account/profile\x12\xb1\x01\n" +
 	"\x0eChangePassword\x12%.iam.account.v1.ChangePasswordRequest\x1a&.iam.account.v1.ChangePasswordResponse\"P\xdaA\x1dcurrent_password,new_password\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/iam/account/change-password\x12\xbc\x01\n" +
 	"\x14RequestPasswordReset\x12+.iam.account.v1.RequestPasswordResetRequest\x1a,.iam.account.v1.RequestPasswordResetResponse\"I\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/request\x12\xbf\x01\n" +
 	"\x14ConfirmPasswordReset\x12+.iam.account.v1.ConfirmPasswordResetRequest\x1a,.iam.account.v1.ConfirmPasswordResetResponse\"L\xdaA\x12token,new_password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/confirm\x12\xd4\x01\n" +
-	"\x15ChangeInitialPassword\x12,.iam.account.v1.ChangeInitialPasswordRequest\x1a-.iam.account.v1.ChangeInitialPasswordResponse\"^\xdaA#email,current_password,new_password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/iam/account/change-initial-password\x12\x98\x01\n" +
-	"\rDeleteAccount\x12$.iam.account.v1.DeleteAccountRequest\x1a%.iam.account.v1.DeleteAccountResponse\":\xdaA\x10current_password\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/iam/account/delete\x1a\x06\xca\xc1\x18\x02\b\x01BDZBgithub.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;accountpbb\x06proto3"
+	"\x15ChangeInitialPassword\x12,.iam.account.v1.ChangeInitialPasswordRequest\x1a-.iam.account.v1.ChangeInitialPasswordResponse\"^\xdaA#email,current_password,new_password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/iam/account/change-initial-password\x12\xa0\x01\n" +
+	"\rDeleteAccount\x12$.iam.account.v1.DeleteAccountRequest\x1a%.iam.account.v1.DeleteAccountResponse\"B\xdaA\x10current_password\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/iam/account/delete\x1a\x0e\xaa\xbb\x18\x04\b\x02\x10\x01\xca\xc1\x18\x02\b\x01BDZBgithub.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;accountpbb\x06proto3"
 
 var (
 	file_iam_account_v1_account_proto_rawDescOnce sync.Once

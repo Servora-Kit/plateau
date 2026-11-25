@@ -3,6 +3,7 @@ syntax = "proto3";
 package iam.session.v1;
 
 import "google/api/annotations.proto";
+import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 import "servora/errors/v1/errors.proto";
@@ -20,6 +21,10 @@ service SessionService {
       body: "*"
     };
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
   }
 }
 

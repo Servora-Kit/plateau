@@ -6,6 +6,7 @@ import (
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/service"
 	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/audit"
 	"github.com/Servora-Kit/plateau/security/authn/jwt"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
@@ -16,7 +17,7 @@ import (
 )
 
 // NewGRPCServer creates the IAM gRPC server.
-func NewGRPCServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metrics, jwtAuthn *jwt.Authenticator, authorizer *openfga.Authorizer, users *service.UserService, l *slog.Logger) *kgrpc.Server {
+func NewGRPCServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metrics, jwtAuthn *jwt.Authenticator, auditor audit.Auditor, authorizer *openfga.Authorizer, users *service.UserService, l *slog.Logger) *kgrpc.Server {
 	log := l.With("scope", "iam/server/grpc")
 
 	ms := middleware.NewChainBuilder(log).
@@ -25,6 +26,7 @@ func NewGRPCServer(c *corepb.Server, obs *corepb.Observability, m *metrics.Metri
 		Build()
 	ms = append(ms,
 		jwt.ServerFor[jwt.ServiceClaims](jwtAuthn, security.WithRulesFuncs(userpb.AuthnRules)),
+		audit.Server(auditor, security.WithRulesFuncs(userpb.AuditRules)),
 		openfga.Server(authorizer, security.WithRulesFuncs(userpb.AuthzRules)),
 	)
 

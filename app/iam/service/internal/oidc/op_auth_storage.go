@@ -12,6 +12,8 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
+	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/audit"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
@@ -83,11 +85,19 @@ func (storage *OIDCStorage) AuthRequestByID(ctx context.Context, requestID strin
 	if err != nil {
 		return nil, fmt.Errorf("query OIDC authorization request: %w", err)
 	}
+	audit.SetDetail(ctx, map[string]any{
+		"client_id": entity.ClientID,
+		"scopes":    slices.Clone(entity.Scopes),
+	})
 	return &authorizationRequest{entity: entity}, nil
 }
 
 // CompleteAuthRequest binds a verified IAM browser session to a pending OAuth request.
 func (storage *OIDCStorage) CompleteAuthRequest(ctx context.Context, requestID, userID, iamSessionID string, _ time.Time) error {
+	if userID != "" {
+		audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: userID})
+		audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+userID)
+	}
 	err := storage.tokens.CompleteAuthorizationRequest(ctx, requestID, userID, iamSessionID, storage.now().UTC())
 	if errors.Is(err, biz.ErrOAuthGrantInvalid) {
 		return storageNotFoundError{cause: fmt.Errorf("OIDC authorization request is missing, expired, or ineligible: %w", err)}
@@ -221,6 +231,13 @@ func (storage *OIDCStorage) TokenRequestByRefreshToken(ctx context.Context, refr
 }
 
 func (storage *OIDCStorage) TerminateSession(ctx context.Context, userID, clientID string) error {
+	if userID != "" {
+		audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: userID})
+		audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+userID)
+	}
+	if clientID != "" {
+		audit.SetDetail(ctx, map[string]any{"client_id": clientID})
+	}
 	return storage.tokens.RevokeClient(ctx, userID, clientID, storage.now())
 }
 

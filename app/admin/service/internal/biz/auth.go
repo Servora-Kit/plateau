@@ -16,12 +16,14 @@ const (
 	PermAccess       = "access"
 	PermManageUsers  = "manage_users"
 	PermExpungeUsers = "expunge_users"
+	PermReadAudit    = "read_audit"
 )
 
 var adminPermissionOrder = []string{
 	PermAccess,
 	PermManageUsers,
 	PermExpungeUsers,
+	PermReadAudit,
 }
 
 // AuthUsecase evaluates real-time OpenFGA permissions for Admin BFF sessions.

@@ -8,6 +8,7 @@ import (
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	"github.com/Servora-Kit/plateau/security/audit"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
@@ -30,10 +31,11 @@ func (s *SessionService) Logout(ctx context.Context, _ *sessionpb.LogoutRequest)
 	if !sessions.Loaded(ctx, s.manager) {
 		return nil, sessionError(fmt.Errorf("HTTP session is not loaded"))
 	}
-	_, login, err := iamauthn.From(ctx)
+	user, login, err := iamauthn.From(ctx)
 	if err != nil {
 		return nil, sessionpb.ErrorSessionErrorReasonRevoked("session is not active")
 	}
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+user.GetUserId())
 	if err := s.sessions.Logout(ctx, login.ID); err != nil {
 		return nil, sessionError(err)
 	}

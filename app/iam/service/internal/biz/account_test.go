@@ -324,12 +324,12 @@ func TestAccountPasswordResetUsesCAPAndRevokesSessions(t *testing.T) {
 	if mail.resetCalls != 1 || resetTokens.tokenHash == "" || mail.resetLink == "" {
 		t.Fatalf("reset request mail=%d token=%q link=%q", mail.resetCalls, resetTokens.tokenHash, mail.resetLink)
 	}
-	if err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "new correct horse battery staple"); !errors.Is(err, ErrInvalidToken) {
+	if _, err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "new correct horse battery staple"); !errors.Is(err, ErrInvalidToken) {
 		t.Fatalf("ConfirmPasswordReset() error = %v, want invalid token", err)
 	}
 	resetTokens.tokenHash = HashOpaqueSecret("reset-token")
-	if err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "new correct horse battery staple"); err != nil {
-		t.Fatalf("ConfirmPasswordReset() error = %v", err)
+	if userID, err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "new correct horse battery staple"); err != nil || userID != "user-1" {
+		t.Fatalf("ConfirmPasswordReset() userID = %q, error = %v", userID, err)
 	}
 	if !resetTokens.replaced {
 		t.Fatal("atomic reset operation was not invoked")
@@ -416,7 +416,7 @@ func TestAccountChangeInitialPasswordAndDeleteAccount(t *testing.T) {
 		t.Fatalf("unchanged password error = %v, want ErrInvalidPassword", err)
 	}
 	session, err := usecase.ChangeInitialPassword(t.Context(), " Person@Example.com ", initialPlain, nextPlain)
-	if err != nil || session == nil || !credentials.completedInitial {
+	if err != nil || session == nil || session.UserID != "user-1" || !credentials.completedInitial {
 		t.Fatalf("ChangeInitialPassword() session=%#v err=%v", session, err)
 	}
 
@@ -458,14 +458,14 @@ func TestConfirmPasswordResetRejectsUnchangedPasswordWhenUpdateRequired(t *testi
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", currentPlain); !errors.Is(err, ErrInvalidPassword) {
-		t.Fatalf("unchanged password error = %v, want ErrInvalidPassword", err)
+	if uid, err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", currentPlain); !errors.Is(err, ErrInvalidPassword) || uid != "" {
+		t.Fatalf("unchanged password uid=%q error = %v, want empty uid & ErrInvalidPassword", uid, err)
 	}
 	if resetTokens.replaced {
 		t.Fatal("unchanged password consumed reset token")
 	}
-	if err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "brand new horse battery staple"); err != nil {
-		t.Fatalf("ConfirmPasswordReset() with distinct password error = %v", err)
+	if userID, err := usecase.ConfirmPasswordReset(t.Context(), "reset-token", "brand new horse battery staple"); err != nil || userID != "user-1" {
+		t.Fatalf("ConfirmPasswordReset() with distinct password userID = %q, error = %v", userID, err)
 	}
 	if !resetTokens.replaced {
 		t.Fatal("distinct password did not consume reset token")

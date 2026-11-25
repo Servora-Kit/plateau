@@ -9,6 +9,8 @@ import (
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/audit"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
@@ -48,6 +50,7 @@ func (s *AccountService) VerifyEmail(ctx context.Context, request *accountpb.Ver
 	if err != nil {
 		return nil, accountError(err)
 	}
+	audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: user.GetUserId()})
 	return &accountpb.VerifyEmailResponse{User: user}, nil
 }
 
@@ -75,9 +78,12 @@ func (s *AccountService) ConfirmPasswordReset(ctx context.Context, request *acco
 	if request == nil {
 		return nil, accountError(biz.ErrInvalidToken)
 	}
-	if err := s.account.ConfirmPasswordReset(ctx, request.GetToken(), request.GetNewPassword()); err != nil {
+	userID, err := s.account.ConfirmPasswordReset(ctx, request.GetToken(), request.GetNewPassword())
+	if err != nil {
 		return nil, accountError(err)
 	}
+	audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: userID})
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+userID)
 	return &accountpb.ConfirmPasswordResetResponse{}, nil
 }
 
@@ -97,6 +103,7 @@ func (s *AccountService) UpdateProfile(ctx context.Context, request *accountpb.U
 	if err != nil {
 		return nil, accountError(err)
 	}
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+user.GetUserId())
 	profile, err := mergeProfile(user.GetProfile(), request.GetProfile(), request.GetUpdateMask())
 	if err != nil {
 		return nil, err
@@ -116,6 +123,7 @@ func (s *AccountService) ChangePassword(ctx context.Context, request *accountpb.
 	if err != nil {
 		return nil, accountError(err)
 	}
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+user.GetUserId())
 	if err := s.account.ChangePassword(ctx, user.GetUserId(), loginSession.ID, request.GetCurrentPassword(), request.GetNewPassword()); err != nil {
 		return nil, accountError(err)
 	}
@@ -141,6 +149,8 @@ func (s *AccountService) ChangeInitialPassword(ctx context.Context, request *acc
 		}
 		return nil, accountError(err)
 	}
+	audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: loginSession.UserID})
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+loginSession.UserID)
 	if err := s.manager.RenewToken(ctx); err != nil {
 		s.manager.Remove(ctx, authn.LoginReferenceKey)
 		return nil, accountError(err)
@@ -160,6 +170,7 @@ func (s *AccountService) DeleteAccount(ctx context.Context, request *accountpb.D
 	if err != nil {
 		return nil, accountError(err)
 	}
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+user.GetUserId())
 	if err := s.account.DeleteAccount(ctx, user.GetUserId(), loginSession.ID, request.GetCurrentPassword()); err != nil {
 		return nil, accountError(err)
 	}

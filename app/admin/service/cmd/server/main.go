@@ -7,7 +7,9 @@ import (
 	"fmt"
 
 	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
+	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/data"
@@ -54,11 +56,13 @@ func run() error {
 	oidcClientCfg := &oidcpb.OIDCClient{}
 	openFGACfg := &openfgapb.OpenFGA{}
 	sessionCfg := &sessionpb.Session{}
-	if err := bootstrap.Scan(rt, adminCfg, oidcClientCfg, openFGACfg, sessionCfg); err != nil {
+	kafkaCfg := &kafkapb.Kafka{}
+	auditCfg := &auditpb.AuditEmitter{}
+	if err := bootstrap.Scan(rt, adminCfg, oidcClientCfg, openFGACfg, sessionCfg, kafkaCfg, auditCfg); err != nil {
 		return errors.Join(fmt.Errorf("scan Admin configs: %w", err), rt.Close(context.Background()))
 	}
 
 	return rt.Run(func() (*kratos.App, func(), error) {
-		return wireApp(rt, adminCfg, oidcClientCfg, openFGACfg, sessionCfg)
+		return wireApp(rt, adminCfg, oidcClientCfg, openFGACfg, sessionCfg, kafkaCfg, auditCfg)
 	})
 }

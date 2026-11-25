@@ -10,6 +10,7 @@ import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "iam/user/v1/user.proto";
+import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 import "servora/errors/v1/errors.proto";
@@ -26,17 +27,23 @@ service UserService {
     resource_type: "admin"
     resource_id: "global"
   };
+  option (plateau.security.audit.v1.service_default) = {
+    mode: AUDIT_MODE_ENABLED
+    category: AUDIT_CATEGORY_RESOURCE
+  };
 
   // ListUsers 分页查询 IAM 用户（支持回收站视图）。
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {get: "/v1/admin/users"};
     option (google.api.method_signature) = "page_size,page_token,filter,order_by";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
   }
 
   // GetUser 按规范资源名查询单个 IAM 用户。
   rpc GetUser(GetUserRequest) returns (iam.user.v1.User) {
     option (google.api.http) = {get: "/v1/admin/{name=users/*}"};
     option (google.api.method_signature) = "name";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
   }
 
   // CreateUser 创建待验证 IAM 用户并自动触发验证邮件投递。

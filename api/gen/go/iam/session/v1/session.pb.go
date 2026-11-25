@@ -7,6 +7,7 @@
 package sessionpb
 
 import (
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
@@ -148,14 +149,14 @@ var File_iam_session_v1_session_proto protoreflect.FileDescriptor
 
 const file_iam_session_v1_session_proto_rawDesc = "" +
 	"\n" +
-	"\x1ciam/session/v1/session.proto\x12\x0eiam.session.v1\x1a\x1cgoogle/api/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\"\x0f\n" +
+	"\x1ciam/session/v1/session.proto\x12\x0eiam.session.v1\x1a\x1cgoogle/api/annotations.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
 	"\x0eLogoutResponse*j\n" +
 	"\x12SessionErrorReason\x12$\n" +
 	" SESSION_ERROR_REASON_UNSPECIFIED\x10\x00\x12'\n" +
-	"\x1cSESSION_ERROR_REASON_REVOKED\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\x93\x01\n" +
-	"\x0eSessionService\x12y\n" +
-	"\x06Logout\x12\x1d.iam.session.v1.LogoutRequest\x1a\x1e.iam.session.v1.LogoutResponse\"0\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/iam/sessions/current:logout\x1a\x06\xca\xc1\x18\x02\b\x01BDZBgithub.com/Servora-Kit/plateau/api/gen/go/iam/session/v1;sessionpbb\x06proto3"
+	"\x1cSESSION_ERROR_REASON_REVOKED\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\x9c\x01\n" +
+	"\x0eSessionService\x12\x81\x01\n" +
+	"\x06Logout\x12\x1d.iam.session.v1.LogoutRequest\x1a\x1e.iam.session.v1.LogoutResponse\"8\xa2\xbb\x18\x04\b\x02\x10\x01\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/iam/sessions/current:logout\x1a\x06\xca\xc1\x18\x02\b\x01BDZBgithub.com/Servora-Kit/plateau/api/gen/go/iam/session/v1;sessionpbb\x06proto3"
 
 var (
 	file_iam_session_v1_session_proto_rawDescOnce sync.Once

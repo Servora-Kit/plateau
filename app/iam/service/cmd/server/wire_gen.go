@@ -9,8 +9,10 @@ package main
 import (
 	"github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
@@ -21,7 +23,9 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/server"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/service"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/startup"
+	"github.com/Servora-Kit/plateau/infra/kafka"
 	"github.com/Servora-Kit/plateau/infra/openfga"
+	kafka2 "github.com/Servora-Kit/plateau/security/audit/kafka"
 	openfga2 "github.com/Servora-Kit/plateau/security/authz/openfga"
 	cap2 "github.com/Servora-Kit/plateau/security/cap"
 	"github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
@@ -37,7 +41,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oidcconfv1.OIDC, capv1CAP *capv1.CAP, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA, session *sessionv1.Session) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oidcconfv1.OIDC, capv1CAP *capv1.CAP, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA, session *sessionv1.Session, kafkapbKafka *kafkapb.Kafka, auditEmitter *auditpb.AuditEmitter) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -122,8 +126,28 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
+	kgoClient, cleanup6, err := kafka.New(kafkapbKafka, logger)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	auditor, err := kafka2.NewDefault(auditEmitter, kgoClient, logger)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	authorizer, err := openfga2.NewDefault(openFgaClient)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -133,6 +157,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	userRepo, err := data.NewUserRepository(dataData)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -142,6 +167,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	credentialRepo, err := data.NewCredentialRepository(dataData)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -151,6 +177,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	verificationTokenRepo, err := data.NewVerificationTokenRepo(dataData)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -160,6 +187,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	passwordResetTokenRepo, err := data.NewPasswordResetTokenRepository(dataData)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -169,6 +197,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	capCap, err := cap2.New(capv1CAP, redisClient)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -179,6 +208,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	capVerifier := data.NewCAPVerifier(capCap)
 	sender, err := mail.NewSender(mailpbMail)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -188,6 +218,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	from, err := mail.NewFrom(mailpbMail)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -197,6 +228,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	templates, err := mail.NewTemplates()
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -206,6 +238,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	mailer, err := mail.NewMailer(sender, from, templates)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -216,6 +249,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	mailSender := mail.NewMailSender(mailer)
 	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, app)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -225,6 +259,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	sessionRepo, err := data.NewSessionRepository(dataData)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -234,6 +269,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	userUsecase, err := biz.NewUserUsecase(accountUsecase, userRepo, credentialRepo, sessionRepo)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -243,6 +279,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	userService, err := service.NewUserService(userUsecase)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -250,9 +287,10 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, authorizer, userService, logger)
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, auditor, authorizer, userService, logger)
 	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -260,8 +298,9 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	sessionManager, cleanup6, err := data.NewHTTPSessionManager(session, db, client)
+	sessionManager, cleanup7, err := data.NewHTTPSessionManager(session, db, client)
 	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -271,6 +310,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	iamProvider, err := oidc.NewIAMProvider(oidcconfv1OIDC, oidcStorage, sessionUsecase, sessionManager)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -281,6 +321,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	v, err := authn.NewSessionAuthenticator(sessionUsecase, sessionManager)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -291,6 +332,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	authenticationUsecase, err := biz.NewAuthenticationUsecase(userRepo, credentialRepo, sessionUsecase)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -301,6 +343,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	authnService, err := service.NewAuthnService(authenticationUsecase, sessionManager)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -311,6 +354,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	sessionService, err := service.NewSessionService(sessionUsecase, sessionManager)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -321,6 +365,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	accountService, err := service.NewAccountService(accountUsecase, sessionManager)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -329,8 +374,9 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, capCap, iamProvider, sessionManager, v, authorizer, authnService, sessionService, accountService, logger)
+	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, capCap, iamProvider, sessionManager, v, auditor, authorizer, authnService, sessionService, accountService, logger)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -341,6 +387,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	initialUserCreator, err := data.NewInitialUserCreator(dataData)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -351,6 +398,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	userInitializer, err := biz.NewUserInitializer(iam, userRepo, initialUserCreator, logger)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -361,6 +409,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	oidcInitializer, err := oidc.NewOIDCInitializer(oidcconfv1OIDC, oidcStorage)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -371,6 +420,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	initializer, err := startup.NewInitializer(userInitializer, oidcInitializer)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -381,6 +431,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 	}
 	kratosApp := newApp(runtime, registrar, grpcServer, httpServer, initializer, dataData)
 	return kratosApp, func() {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()

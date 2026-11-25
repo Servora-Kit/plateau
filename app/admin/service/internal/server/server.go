@@ -2,6 +2,7 @@
 package server
 
 import (
+	auditkafka "github.com/Servora-Kit/plateau/security/audit/kafka"
 	"github.com/Servora-Kit/plateau/security/authn/session"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	"github.com/Servora-Kit/servora/core/registry"
@@ -15,6 +16,7 @@ var ProviderSet = wire.NewSet(
 	registry.NewDiscovery,
 	metrics.New,
 	session.NewUserAuthenticator,
+	auditkafka.NewDefault,
 	openfga.NewDefault,
 	NewHTTPServer,
 )

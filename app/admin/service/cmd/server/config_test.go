@@ -5,7 +5,9 @@ import (
 	"time"
 
 	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
+	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	securityoidc "github.com/Servora-Kit/plateau/security/oidc"
@@ -34,7 +36,9 @@ func TestDevelopmentConfigScan(t *testing.T) {
 			oidcCfg := new(oidcpb.OIDCClient)
 			openFGA := new(openfgapb.OpenFGA)
 			httpSession := new(sessionpb.Session)
-			if err := bootstrap.Scan(&bootstrap.Runtime{Bootstrap: bc, Config: loaded}, adminCfg, oidcCfg, openFGA, httpSession); err != nil {
+			kafkaCfg := new(kafkapb.Kafka)
+			auditCfg := new(auditpb.AuditEmitter)
+			if err := bootstrap.Scan(&bootstrap.Runtime{Bootstrap: bc, Config: loaded}, adminCfg, oidcCfg, openFGA, httpSession, kafkaCfg, auditCfg); err != nil {
 				t.Fatal(err)
 			}
 
@@ -62,6 +66,15 @@ func TestDevelopmentConfigScan(t *testing.T) {
 			}
 			if openFGA.GetStoreId() != "01M2AY5F5K50N3M0Z9B911E84B" || openFGA.GetApiUrl() == "" {
 				t.Fatal("OpenFGA config did not load")
+			}
+			if len(kafkaCfg.GetBrokers()) == 0 || kafkaCfg.GetClientId() != "admin.service" {
+				t.Fatalf("Kafka config did not load: %+v", kafkaCfg)
+			}
+			if !auditCfg.GetEnabled() || auditCfg.GetBackend() != "kafka" || auditCfg.GetTopic() != "plateau.audit.events" {
+				t.Fatalf("AuditEmitter config did not load: %+v", auditCfg)
+			}
+			if len(bc.GetData().GetClient().GetServices()) < 2 {
+				t.Fatalf("expected iam.service and audit.service in data.client.services, got %+v", bc.GetData().GetClient().GetServices())
 			}
 		})
 	}

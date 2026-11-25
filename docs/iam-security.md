@@ -22,7 +22,7 @@ oidc:
     - client_id: admin
       client_secret: ${IAM_ADMIN_CLIENT_SECRET}
       allowed_grant_types: [client_credentials]
-      audiences: [iam]
+      audiences: [iam, audit]
 ```
 
 访问令牌默认五分钟，可用 `oidc.service_access_token_ttl` 设置正时长，例如 `300s`。配置中的 Duration 遵循 Protobuf JSON 的秒格式。用户 OIDC 客户端继续配置回调、scope、`trusted: true` 及授权码/刷新流程。静态配置在部署加载时同步；换密钥保留 client_id，移除客户端停止新签发，已有服务令牌在到期前仍可验证。
@@ -33,7 +33,7 @@ Cookie 默认 Secure、HttpOnly、host-only、Path=/、SameSite=Lax。IAM 保留
 
 ## 显式授权
 
-部署模型使用 `manifests/openfga/fga.mod`。IAM 关系包含 `service:<client_id> manage_users iam:global` 与独立的永久删除关系 `service:<client_id> expunge_users iam:global`（不从 `manage_users` 派生）；Admin 示例中的 `user:<id> admin admin:global` 只表达 Admin 自己的用户权限。客户端注册不会产生权限。
+部署模型使用 `manifests/openfga/fga.mod`。IAM 关系包含 `service:<client_id> manage_users iam:global` 与独立的永久删除关系 `service:<client_id> expunge_users iam:global`（不从 `manage_users` 派生）；Audit 关系包含 `service:<client_id> read_events audit:global`；Admin 示例中的 `user:<id> admin admin:global` 派生 `access`、`manage_users`、`expunge_users` 与 `read_audit`。客户端注册不会产生权限。
 
 ```bash
 rtk proxy just openfga-model-validate
@@ -41,6 +41,7 @@ rtk proxy just openfga-model-test
 rtk proxy just openfga-model-apply
 rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin manage_users iam:global
 rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin expunge_users iam:global
+rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin read_events audit:global
 ```
 
 Just 默认加载项目 `.env` 并覆盖同名环境变量。使用独立测试 store 时，必须同时指定 `--dotenv-path` 和 `ENV_FILE`，确保模型写入与输出文件指向同一环境：

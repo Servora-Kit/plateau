@@ -13,4 +13,4 @@ oidc:
         - email
       trusted: true
       allowed_grant_types: [authorization_code, client_credentials]
-      audiences: [iam]
+      audiences: [iam, audit]

@@ -8,6 +8,7 @@ package userpb
 
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
@@ -1321,7 +1322,7 @@ var File_iam_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x16iam/user/v1/user.proto\x12\viam.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\x8e\x03\n" +
+	"\x16iam/user/v1/user.proto\x12\viam.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\x8e\x03\n" +
 	"\vUserProfile\x12\x1d\n" +
 	"\x04name\x18\x01 \x01(\tB\x04\xe2A\x01\x01H\x00R\x04name\x88\x01\x01\x12(\n" +
 	"\n" +
@@ -1438,12 +1439,12 @@ const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\x14USER_STATUS_DISABLED\x10\x03*d\n" +
 	"\x12UserRequiredAction\x12$\n" +
 	" USER_REQUIRED_ACTION_UNSPECIFIED\x10\x00\x12(\n" +
-	"$USER_REQUIRED_ACTION_UPDATE_PASSWORD\x10\x012\xc8\t\n" +
+	"$USER_REQUIRED_ACTION_UPDATE_PASSWORD\x10\x012\xdc\t\n" +
 	"\vUserService\x12Y\n" +
 	"\n" +
-	"CreateUser\x12\x1e.iam.user.v1.CreateUserRequest\x1a\x11.iam.user.v1.User\"\x18\xdaA\x15user,user_id,password\x12B\n" +
-	"\aGetUser\x12\x1b.iam.user.v1.GetUserRequest\x1a\x11.iam.user.v1.User\"\a\xdaA\x04name\x12s\n" +
-	"\tListUsers\x12\x1d.iam.user.v1.ListUsersRequest\x1a\x1e.iam.user.v1.ListUsersResponse\"'\xdaA$page_size,page_token,filter,order_by\x12T\n" +
+	"CreateUser\x12\x1e.iam.user.v1.CreateUserRequest\x1a\x11.iam.user.v1.User\"\x18\xdaA\x15user,user_id,password\x12H\n" +
+	"\aGetUser\x12\x1b.iam.user.v1.GetUserRequest\x1a\x11.iam.user.v1.User\"\r\xdaA\x04name\xa2\xbb\x18\x02\b\x01\x12y\n" +
+	"\tListUsers\x12\x1d.iam.user.v1.ListUsersRequest\x1a\x1e.iam.user.v1.ListUsersResponse\"-\xdaA$page_size,page_token,filter,order_by\xa2\xbb\x18\x02\b\x01\x12T\n" +
 	"\n" +
 	"UpdateUser\x12\x1e.iam.user.v1.UpdateUserRequest\x1a\x11.iam.user.v1.User\"\x13\xdaA\x10user,update_mask\x12Y\n" +
 	"\vDisableUser\x12\x1f.iam.user.v1.DisableUserRequest\x1a .iam.user.v1.DisableUserResponse\"\a\xdaA\x04name\x12V\n" +
@@ -1455,7 +1456,7 @@ const file_iam_user_v1_user_proto_rawDesc = "" +
 	"\n" +
 	"DeleteUser\x12\x1e.iam.user.v1.DeleteUserRequest\x1a\x11.iam.user.v1.User\"\a\xdaA\x04name\x12L\n" +
 	"\fUndeleteUser\x12 .iam.user.v1.UndeleteUserRequest\x1a\x11.iam.user.v1.User\"\a\xdaA\x04name\x12q\n" +
-	"\vExpungeUser\x12\x1f.iam.user.v1.ExpungeUserRequest\x1a\x16.google.protobuf.Empty\")\xdaA\x04name\xc2\xc1\x18\x1e\b\x02\x12\rexpunge_users\x1a\x03iam\"\x06global\x1a'\xca\xc1\x18\x1d\b\x02\x12\fmanage_users\x1a\x03iam\"\x06global\xea\xc7\x18\x02\b\x02B>Z<github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1;userpbb\x06proto3"
+	"\vExpungeUser\x12\x1f.iam.user.v1.ExpungeUserRequest\x1a\x16.google.protobuf.Empty\")\xdaA\x04name\xc2\xc1\x18\x1e\b\x02\x12\rexpunge_users\x1a\x03iam\"\x06global\x1a/\xaa\xbb\x18\x04\b\x02\x10\x02\xca\xc1\x18\x1d\b\x02\x12\fmanage_users\x1a\x03iam\"\x06global\xea\xc7\x18\x02\b\x02B>Z<github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1;userpbb\x06proto3"
 
 var (
 	file_iam_user_v1_user_proto_rawDescOnce sync.Once

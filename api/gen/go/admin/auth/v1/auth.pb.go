@@ -8,6 +8,7 @@ package adminauthv1
 
 import (
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -189,17 +190,17 @@ var File_admin_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_admin_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x18admin/auth/v1/auth.proto\x12\radmin.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\"\x13\n" +
+	"\x18admin/auth/v1/auth.proto\x12\radmin.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\"\x13\n" +
 	"\x11GetSessionRequest\"]\n" +
 	"\x12GetSessionResponse\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.iam.user.v1.UserR\x04user\x12 \n" +
 	"\vpermissions\x18\x02 \x03(\tR\vpermissions\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
-	"\x0eLogoutResponse2\x94\x02\n" +
+	"\x0eLogoutResponse2\xa2\x02\n" +
 	"\vAuthService\x12q\n" +
 	"\n" +
-	"GetSession\x12 .admin.auth.v1.GetSessionRequest\x1a!.admin.auth.v1.GetSessionResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/admin/auth/session\x12m\n" +
-	"\x06Logout\x12\x1c.admin.auth.v1.LogoutRequest\x1a\x1d.admin.auth.v1.LogoutResponse\"&\xc2\xc1\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v1/admin/auth/logout\x1a#\xca\xc1\x18\x19\b\x02\x12\x06access\x1a\x05admin\"\x06global\xea\xc7\x18\x02\b\x02BEZCgithub.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1;adminauthv1b\x06proto3"
+	"GetSession\x12 .admin.auth.v1.GetSessionRequest\x1a!.admin.auth.v1.GetSessionResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/admin/auth/session\x12u\n" +
+	"\x06Logout\x12\x1c.admin.auth.v1.LogoutRequest\x1a\x1d.admin.auth.v1.LogoutResponse\".\xa2\xbb\x18\x04\b\x02\x10\x01\xc2\xc1\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v1/admin/auth/logout\x1a)\xaa\xbb\x18\x02\b\x01\xca\xc1\x18\x19\b\x02\x12\x06access\x1a\x05admin\"\x06global\xea\xc7\x18\x02\b\x02BEZCgithub.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1;adminauthv1b\x06proto3"
 
 var (
 	file_admin_auth_v1_auth_proto_rawDescOnce sync.Once

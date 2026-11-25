@@ -39,6 +39,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/startup"
+	"github.com/Servora-Kit/plateau/security/audit"
 	authnsession "github.com/Servora-Kit/plateau/security/authn/session"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
@@ -408,7 +409,7 @@ obs:
       allowed_scopes: [openid, profile, email]
       trusted: true
       allowed_grant_types: [authorization_code, client_credentials]
-      audiences: [iam]
+      audiences: [iam, audit]
 `, iamOrigin, signingPath, cryptoPath, oidcClientSecret, adminCallbackURI),
 		"openfga.yaml": fmt.Sprintf("open_fga:\n  api_url: %q\n  store_id: %q\n  model_id: %q\n", fgaURL, storeID, modelID),
 		"session.yaml": "session:\n  lifetime: 86400s\n  idle_timeout: 3600s\n  cookie:\n    name: iam_session\n    secure: false\n",
@@ -524,6 +525,16 @@ func buildAdminInstance(
 					},
 				},
 			},
+			{
+				Name: "audit.service",
+				Endpoints: []*corepb.Data_Client_Endpoint{
+					{
+						Protocol: "grpc",
+						Endpoint: "127.0.0.1:1",
+						Timeout:  durationpb.New(5 * time.Second),
+					},
+				},
+			},
 		},
 	}
 
@@ -586,6 +597,11 @@ func buildAdminInstance(
 	}
 	t.Cleanup(closeIAMRepo)
 
+	auditRepo, closeAuditRepo, err := data.NewAuditEventRepo(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(closeAuditRepo)
 	seedRepo, err := data.NewAdminSeedRepo(d)
 	if err != nil {
 		t.Fatal(err)
@@ -599,6 +615,10 @@ func buildAdminInstance(
 		t.Fatal(err)
 	}
 	userUC, err := biz.NewUserUsecase(iamRepo, authorizer, logger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	auditUC, err := biz.NewAuditUsecase(auditRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -624,6 +644,11 @@ func buildAdminInstance(
 	if err != nil {
 		t.Fatal(err)
 	}
+	auditSvc, err := service.NewAuditService(auditUC)
+	if err != nil {
+		t.Fatal(err)
+	}
+	auditor := audit.Noop()
 
 	httpServer, err := NewHTTPServer(
 		&corepb.Server{Http: &corepb.Server_HTTP{Listen: &corepb.Server_Listen{Timeout: durationpb.New(15 * time.Second)}}},
@@ -632,9 +657,11 @@ func buildAdminInstance(
 		nil,
 		sessionMgr,
 		sessionAuthn,
+		auditor,
 		authorizer,
 		authSvc,
 		userSvc,
+		auditSvc,
 		logger,
 	)
 	if err != nil {
@@ -892,7 +919,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	if adminUserID == "" || sessionPayload.GetUser().GetName() != "users/"+adminUserID || sessionPayload.GetUser().GetEmail() != adminBootstrapEml || !sessionPayload.GetUser().GetEmailVerified() {
 		t.Fatalf("unexpected GetSession user: %+v", sessionPayload.GetUser())
 	}
-	wantPerms := []string{"access", "manage_users", "expunge_users"}
+	wantPerms := []string{"access", "manage_users", "expunge_users", "read_audit"}
 	if !slices.Equal(sessionPayload.GetPermissions(), wantPerms) {
 		t.Fatalf("GetSession permissions = %v, want %v", sessionPayload.GetPermissions(), wantPerms)
 	}

@@ -1,0 +1,5 @@
+kafka:
+  brokers:
+    - "${KAFKA_BROKER_ADDR:127.0.0.1:29092}"
+  client_id: iam.service
+  required_acks: -1

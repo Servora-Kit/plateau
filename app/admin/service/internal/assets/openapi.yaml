@@ -6,6 +6,105 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /v1/admin/audit/events:
+        get:
+            tags:
+                - AuditService
+            description: ListEvents 分页检索平台控制面审计事件。
+            operationId: AuditService_ListEvents
+            parameters:
+                - name: startTime
+                  in: query
+                  schema:
+                    type: string
+                    format: date-time
+                - name: endTime
+                  in: query
+                  schema:
+                    type: string
+                    format: date-time
+                - name: category
+                  in: query
+                  schema:
+                    enum:
+                        - AUDIT_CATEGORY_UNSPECIFIED
+                        - AUDIT_CATEGORY_AUTHN
+                        - AUDIT_CATEGORY_RESOURCE
+                        - AUDIT_CATEGORY_AUTHZ
+                    type: string
+                    format: enum
+                - name: service
+                  in: query
+                  schema:
+                    type: string
+                - name: eventType
+                  in: query
+                  schema:
+                    type: string
+                - name: operation
+                  in: query
+                  schema:
+                    type: string
+                - name: actorType
+                  in: query
+                  schema:
+                    type: string
+                - name: actorId
+                  in: query
+                  schema:
+                    type: string
+                - name: resourceType
+                  in: query
+                  schema:
+                    type: string
+                - name: resourceName
+                  in: query
+                  schema:
+                    type: string
+                - name: success
+                  in: query
+                  schema:
+                    type: boolean
+                - name: traceId
+                  in: query
+                  schema:
+                    type: string
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageToken
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListEventsResponse'
+    /v1/admin/audit/events/{event}:
+        get:
+            tags:
+                - AuditService
+            description: GetEvent 按规范资源名查询单条审计事件详情。
+            operationId: AuditService_GetEvent
+            parameters:
+                - name: event
+                  in: path
+                  description: The event id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Event'
     /v1/admin/auth/logout:
         post:
             tags:
@@ -387,6 +486,74 @@ components:
                     type: string
                 etag:
                     type: string
+        Event:
+            type: object
+            properties:
+                name:
+                    type: string
+                eventId:
+                    readOnly: true
+                    type: string
+                eventType:
+                    readOnly: true
+                    type: string
+                category:
+                    readOnly: true
+                    enum:
+                        - AUDIT_CATEGORY_UNSPECIFIED
+                        - AUDIT_CATEGORY_AUTHN
+                        - AUDIT_CATEGORY_RESOURCE
+                        - AUDIT_CATEGORY_AUTHZ
+                    type: string
+                    format: enum
+                occurredTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                service:
+                    readOnly: true
+                    type: string
+                operation:
+                    readOnly: true
+                    type: string
+                actorType:
+                    readOnly: true
+                    type: string
+                actorId:
+                    readOnly: true
+                    type: string
+                resourceType:
+                    readOnly: true
+                    type: string
+                resourceName:
+                    readOnly: true
+                    type: string
+                success:
+                    readOnly: true
+                    type: boolean
+                errorCode:
+                    readOnly: true
+                    type: string
+                errorMessage:
+                    readOnly: true
+                    type: string
+                traceId:
+                    readOnly: true
+                    type: string
+                requestId:
+                    readOnly: true
+                    type: string
+                clientIp:
+                    readOnly: true
+                    type: string
+                userAgent:
+                    readOnly: true
+                    type: string
+                detailJson:
+                    readOnly: true
+                    type: string
+                    description: Normalized JSON object string ("{}" when empty).
+            description: Event represents one immutable control-plane accountability record.
         ExpungeUserRequest:
             required:
                 - name
@@ -403,6 +570,15 @@ components:
                     type: array
                     items:
                         type: string
+        ListEventsResponse:
+            type: object
+            properties:
+                events:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Event'
+                nextPageToken:
+                    type: string
         ListUsersResponse:
             type: object
             properties:
@@ -543,6 +719,8 @@ components:
                     type: string
             description: UserProfile contains the OIDC standard profile fields supported by IAM.
 tags:
+    - name: AuditService
+      description: AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
     - name: AuthService
       description: AuthService 提供 Admin BFF 会话查询与独立本地登出接口。
     - name: UserService

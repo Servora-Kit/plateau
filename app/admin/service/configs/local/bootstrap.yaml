@@ -18,6 +18,11 @@ data:
           - protocol: grpc
             endpoint: "${IAM_GRPC_ENDPOINT:127.0.0.1:10001}"
             timeout: 5s
+      - name: audit.service
+        endpoints:
+          - protocol: grpc
+            endpoint: "${AUDIT_GRPC_ENDPOINT:127.0.0.1:10021}"
+            timeout: 5s
 
 app:
   name: admin.service

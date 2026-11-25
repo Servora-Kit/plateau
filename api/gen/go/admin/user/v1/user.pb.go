@@ -9,6 +9,7 @@ package adminuserv1
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/errors/v1"
@@ -954,7 +955,7 @@ var File_admin_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_admin_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x18admin/user/v1/user.proto\x12\radmin.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xed\x01\n" +
+	"\x18admin/user/v1/user.proto\x12\radmin.user.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\x1a\x16iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xed\x01\n" +
 	"\x10ListUsersRequest\x12!\n" +
 	"\tpage_size\x18\x01 \x01(\x05B\x04\xe2A\x01\x01R\bpageSize\x12#\n" +
 	"\n" +
@@ -1025,10 +1026,10 @@ const file_admin_user_v1_user_proto_rawDesc = "" +
 	"%ADMIN_USER_ERROR_REASON_INVALID_STATE\x10\x05\x1a\x05\xa8\xd4\x18\x99\x03\x120\n" +
 	"%ADMIN_USER_ERROR_REASON_ETAG_MISMATCH\x10\x06\x1a\x05\xa8\xd4\x18\x99\x03\x12<\n" +
 	"1ADMIN_USER_ERROR_REASON_VERIFICATION_EMAIL_FAILED\x10\a\x1a\x05\xa8\xd4\x18\xf7\x03\x129\n" +
-	".ADMIN_USER_ERROR_REASON_DOWNSTREAM_UNAVAILABLE\x10\b\x1a\x05\xa8\xd4\x18\xf7\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xc7\r\n" +
-	"\vUserService\x12\x8e\x01\n" +
-	"\tListUsers\x12\x1f.admin.user.v1.ListUsersRequest\x1a .admin.user.v1.ListUsersResponse\">\xdaA$page_size,page_token,filter,order_by\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/admin/users\x12d\n" +
-	"\aGetUser\x12\x1d.admin.user.v1.GetUserRequest\x1a\x11.iam.user.v1.User\"'\xdaA\x04name\x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/admin/{name=users/*}\x12\x85\x01\n" +
+	".ADMIN_USER_ERROR_REASON_DOWNSTREAM_UNAVAILABLE\x10\b\x1a\x05\xa8\xd4\x18\xf7\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xdb\r\n" +
+	"\vUserService\x12\x94\x01\n" +
+	"\tListUsers\x12\x1f.admin.user.v1.ListUsersRequest\x1a .admin.user.v1.ListUsersResponse\"D\xdaA$page_size,page_token,filter,order_by\xa2\xbb\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/admin/users\x12j\n" +
+	"\aGetUser\x12\x1d.admin.user.v1.GetUserRequest\x1a\x11.iam.user.v1.User\"-\xdaA\x04name\xa2\xbb\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/admin/{name=users/*}\x12\x85\x01\n" +
 	"\n" +
 	"CreateUser\x12 .admin.user.v1.CreateUserRequest\x1a!.admin.user.v1.CreateUserResponse\"2\xdaA\x15user,user_id,password\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/admin/users\x12\xc0\x01\n" +
 	"\x19SendUserVerificationEmail\x12/.admin.user.v1.SendUserVerificationEmailRequest\x1a0.admin.user.v1.SendUserVerificationEmailResponse\"@\xdaA\x04name\x82\xd3\xe4\x93\x023:\x01*\"./v1/admin/{name=users/*}:sendVerificationEmail\x12\x81\x01\n" +
@@ -1042,7 +1043,7 @@ const file_admin_user_v1_user_proto_rawDesc = "" +
 	"\n" +
 	"DeleteUser\x12 .admin.user.v1.DeleteUserRequest\x1a\x11.iam.user.v1.User\"'\xdaA\x04name\x82\xd3\xe4\x93\x02\x1a*\x18/v1/admin/{name=users/*}\x12z\n" +
 	"\fUndeleteUser\x12\".admin.user.v1.UndeleteUserRequest\x1a\x11.iam.user.v1.User\"3\xdaA\x04name\x82\xd3\xe4\x93\x02&:\x01*\"!/v1/admin/{name=users/*}:undelete\x12\xa0\x01\n" +
-	"\vExpungeUser\x12!.admin.user.v1.ExpungeUserRequest\x1a\x16.google.protobuf.Empty\"V\xdaA\x04name\xc2\xc1\x18 \b\x02\x12\rexpunge_users\x1a\x05admin\"\x06global\x82\xd3\xe4\x93\x02%:\x01*\" /v1/admin/{name=users/*}:expunge\x1a)\xca\xc1\x18\x1f\b\x02\x12\fmanage_users\x1a\x05admin\"\x06global\xea\xc7\x18\x02\b\x02BEZCgithub.com/Servora-Kit/plateau/api/gen/go/admin/user/v1;adminuserv1b\x06proto3"
+	"\vExpungeUser\x12!.admin.user.v1.ExpungeUserRequest\x1a\x16.google.protobuf.Empty\"V\xdaA\x04name\xc2\xc1\x18 \b\x02\x12\rexpunge_users\x1a\x05admin\"\x06global\x82\xd3\xe4\x93\x02%:\x01*\" /v1/admin/{name=users/*}:expunge\x1a1\xaa\xbb\x18\x04\b\x02\x10\x02\xca\xc1\x18\x1f\b\x02\x12\fmanage_users\x1a\x05admin\"\x06global\xea\xc7\x18\x02\b\x02BEZCgithub.com/Servora-Kit/plateau/api/gen/go/admin/user/v1;adminuserv1b\x06proto3"
 
 var (
 	file_admin_user_v1_user_proto_rawDescOnce sync.Once

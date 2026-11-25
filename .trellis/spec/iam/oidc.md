@@ -7,3 +7,4 @@
 - 服务 token 仅发给允许 `client_credentials` 且已注册 audience 的 client，不提供 refresh token，access-token TTL 必须为正。IAM 签发的 JWT Access Token 统一写入 `token_use=access` 与对应的 `actor_type`（人类令牌为 `human`，服务令牌为 `service`）；ID Token 不携带 `token_use=access`。
 - 服务认证通过 `security/authn/jwt.ServerFor[jwt.ServiceClaims]` 强制校验 `token_use=access`、`actor_type=service`、`sub=client_id`、签发时间与 token ID，并校验 issuer 和接收服务声明的 audience（人类 Access Token 与 ID Token 均被服务接口拒绝）。
 - token 校验仅产生身份，不产生额外管理权限；接收服务独立执行 [授权](authorization.md)。
+- `internal/oidc` 协议引擎不直接依赖 `audit.Auditor` 或 `cloudevents`；原生 OIDC HTTP 审计由 `oidc.RegisterHTTPServer` 在路由层外包 `security/audit.HTTPHandler` 完成，内部仅通过 `ctx` 被动补充身份、客户端与错误标记，未登录常规 `302 /login` 引导与成功的 `/oauth/token` 请求不产生审计事件。`admin` 服务客户端默认配置双受众 `audiences: [iam, audit]`，由启动期 `OIDCInitializer` 幂等同步。

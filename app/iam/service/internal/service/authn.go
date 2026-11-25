@@ -8,6 +8,8 @@ import (
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/audit"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
@@ -38,6 +40,8 @@ func (s *AuthnService) Login(ctx context.Context, request *authnpb.LoginRequest)
 	if err != nil {
 		return nil, authnError(err)
 	}
+	audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: user.GetUserId()})
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+user.GetUserId())
 	if loginSession == nil {
 		if len(user.GetRequiredActions()) == 0 {
 			return nil, authnError(fmt.Errorf("login session is missing for user without required actions"))

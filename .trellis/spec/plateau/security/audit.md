@@ -18,11 +18,12 @@
   - `type Auditor interface { Emit(ctx context.Context, event cloudevents.Event) error }`
   - `New(cfg *auditpb.AuditEmitter, logger *slog.Logger, opts ...Option) (Auditor, error)`（内置 `Noop`、`NewStdout`、`NewLog`、`Multi`；外部后端通过 `WithBackend` 注册）
   - `Server(auditor Auditor, opts ...security.RulesOption[*auditpb.AuditRule]) middleware.Middleware`
+  - `HTTPHandler(auditor Auditor, eventType, category string, opts ...HTTPOption) func(http.Handler) http.Handler`（支持 `WithHTTPOnlyErrors()`、`WithHTTPPostHook(...)`）
   - `NewEvent(ctx context.Context, opts ...EventOption) cloudevents.Event` 与 `SetJSONProtoData(e *cloudevents.Event, msg proto.Message) error`
-  - `SetActor(ctx context.Context, actor security.Actor)` / `SetResource(ctx context.Context, resourceType, resourceName string)`
+  - `SetActor(ctx context.Context, actor security.Actor)` / `SetResource(ctx context.Context, resourceType, resourceName string)`（RPC 与 `HTTPHandler` 共用）；`SetDetail(ctx context.Context, detail map[string]any)` / `SetError(ctx context.Context, code, message string)` / `SetEventOverride(ctx context.Context, eventType, category string)` / `Skip(ctx context.Context)`（由 `HTTPHandler` 消费）
   - `ExtractResource(msg proto.Message) (resourceType, resourceName string)` / `RedactClone(msg proto.Message) proto.Message`
 - Kafka 审计后端与协议绑定（[security/audit/kafka](../../../../security/audit/kafka/kafka.go)）：
-  - `Backend(client *kgo.Client) audit.Option` / `New(client *kgo.Client, cfg Config) (audit.Auditor, error)`（直接借用 `*kgo.Client`，连接生命周期归属 `infra/kafka` 调用方）
+  - `NewDefault(cfg *auditpb.AuditEmitter, client *kgo.Client, l *slog.Logger) (audit.Auditor, error)` / `Backend(client *kgo.Client) audit.Option` / `New(client *kgo.Client, cfg Config) (audit.Auditor, error)`（直接借用 `*kgo.Client`，连接生命周期归属 `infra/kafka` 调用方）
   - `EncodeRecord(topic string, event cloudevents.Event, mode Mode) (*kgo.Record, error)` / `DecodeRecord(record *kgo.Record) (*cloudevents.Event, error)`
 
 ### 3. Contracts
@@ -35,6 +36,7 @@
   - 必须位于 `AuthN` 之后、`AuthZ`（`openfga.Server`）之前：`AuthN → Audit → AuthZ → Handler`。
   - 当下游返回 `SECURITY_ERROR_REASON_PERMISSION_DENIED`（403）时，即使方法规则为 `AUDIT_MODE_DISABLED` 也会自动发出 `authz` 拒绝事件；常规 `200 OK` 只读请求在 `DISABLED` 下零分配直接返回。
 - **AIP 资源提取回退**：优先从请求消息提取 `google.api.resource` 或 `google.api.resource_reference`；若请求无资源 ID（如 `CreateUserRequest`）且调用成功，自动回退从响应消息提取已分配的规范资源名。
+- **原生 HTTP 协议无侵入审计**：针对非 Kratos RPC 的协议路由（如 IAM OIDC `/authorize/callback`、`/end_session`、`/oauth/token` 与 Admin `/v1/admin/auth/callback`），在路由注册层使用 `audit.HTTPHandler` 包装（`subject = "<METHOD> <PATH>"`，内置 `defer` 保证外层会话落库 `panic(responseAborted{})` 或未捕获异常中止时仍按 `500` 记录失败审计），协议处理函数仅通过 `ctx` 被动调用 `SetActor`、`SetResource`、`SetDetail`、`SetError`、`SetEventOverride`、`Skip`；严禁读取或记录 `client_secret`、授权 `code`、`refresh_token`、`code_verifier` 或会话 Cookie。
 
 ### 4. Validation & Error Matrix
 

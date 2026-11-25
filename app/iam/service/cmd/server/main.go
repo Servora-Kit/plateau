@@ -8,8 +8,10 @@ import (
 
 	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
 	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	mailpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	capv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
@@ -62,11 +64,13 @@ func run() (err error) {
 	redisCfg := &redispb.Redis{}
 	mailCfg := &mailpb.Mail{}
 	openFGACfg := &openfgapb.OpenFGA{}
-	if err := bootstrap.Scan(rt, iamCfg, oidcCfg, capCfg, redisCfg, mailCfg, openFGACfg, sessionCfg); err != nil {
+	kafkaCfg := &kafkapb.Kafka{}
+	auditCfg := &auditpb.AuditEmitter{}
+	if err := bootstrap.Scan(rt, iamCfg, oidcCfg, capCfg, redisCfg, mailCfg, openFGACfg, sessionCfg, kafkaCfg, auditCfg); err != nil {
 		return errors.Join(fmt.Errorf("scan IAM configs: %w", err), rt.Close(context.Background()))
 	}
 
 	return rt.Run(func() (*kratos.App, func(), error) {
-		return wireApp(rt, iamCfg, oidcCfg, capCfg, redisCfg, mailCfg, openFGACfg, sessionCfg)
+		return wireApp(rt, iamCfg, oidcCfg, capCfg, redisCfg, mailCfg, openFGACfg, sessionCfg, kafkaCfg, auditCfg)
 	})
 }

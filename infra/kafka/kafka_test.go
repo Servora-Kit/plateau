@@ -182,6 +182,48 @@ func TestNewClientOptionalDistinguishesAbsentFailureAndConnected(t *testing.T) {
 	client.Close()
 }
 
+func TestNewWireProviderLifecycle(t *testing.T) {
+	client, cleanup, err := New(nil, testLogger())
+	if err != nil {
+		t.Fatalf("New(nil) error = %v", err)
+	}
+	if client != nil {
+		t.Fatalf("New(nil) client = %v, want nil", client)
+	}
+	if cleanup == nil {
+		t.Fatal("New(nil) returned nil cleanup")
+	}
+	cleanup()
+
+	closedLn, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen closed port: %v", err)
+	}
+	closedAddr := closedLn.Addr().String()
+	_ = closedLn.Close()
+
+	_, _, err = New(&kafkapb.Kafka{
+		Brokers:     []string{closedAddr},
+		DialTimeout: durationpb.New(150 * time.Millisecond),
+	}, testLogger())
+	if err == nil {
+		t.Fatal("New(closed broker) succeeded, want Ping failure")
+	}
+
+	stubAddr := startStubKafkaPingServer(t)
+	client, cleanup, err = New(&kafkapb.Kafka{
+		Brokers:     []string{stubAddr},
+		DialTimeout: durationpb.New(2 * time.Second),
+	}, testLogger())
+	if err != nil {
+		t.Fatalf("New(stub broker) error = %v", err)
+	}
+	if client == nil || cleanup == nil {
+		t.Fatalf("New(stub broker) client=%v cleanupNil=%v, want non-nil", client, cleanup == nil)
+	}
+	cleanup()
+}
+
 func TestWithSlogLoggerExplicitOption(t *testing.T) {
 	if WithSlogLogger(testLogger()) == nil {
 		t.Fatal("WithSlogLogger() returned nil option")

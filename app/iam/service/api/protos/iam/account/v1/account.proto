@@ -8,6 +8,7 @@ import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/field_mask.proto";
 import "iam/user/v1/user.proto";
+import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
 import "plateau/security/authz/v1/annotations.proto";
 import "servora/errors/v1/errors.proto";
@@ -18,6 +19,10 @@ option go_package = "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1;ac
 // AccountService owns self-service registration, profile and recovery flows.
 service AccountService {
   option (plateau.security.authz.v1.service_default) = {mode: AUTHZ_MODE_NONE};
+  option (plateau.security.audit.v1.service_default) = {
+    mode: AUDIT_MODE_ENABLED
+    category: AUDIT_CATEGORY_AUTHN
+  };
   // Register creates a pending user and sends an email-verification message.
   rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
@@ -26,6 +31,10 @@ service AccountService {
     };
     option (google.api.method_signature) = "email,password,profile,cap_token";
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_RESOURCE
+    };
   }
 
   // VerifyEmail consumes a one-time email-verification token.
@@ -52,6 +61,7 @@ service AccountService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {
     option (google.api.http) = {get: "/v1/iam/account/profile"};
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
   }
 
   // UpdateProfile updates the currently authenticated user's OIDC profile.
@@ -62,6 +72,10 @@ service AccountService {
     };
     option (google.api.method_signature) = "profile,update_mask";
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_RESOURCE
+    };
   }
 
   // ChangePassword changes the current password and revokes other sessions.
@@ -112,6 +126,10 @@ service AccountService {
     };
     option (google.api.method_signature) = "current_password";
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_RESOURCE
+    };
   }
 }
 

@@ -5,6 +5,7 @@ package userpb
 
 import (
 	validate "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
 	authzpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authz/v1"
 	redactv3 "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
@@ -22,6 +23,7 @@ var _ annotations.ResourceDescriptor
 var _ emptypb.Empty
 var _ fieldmaskpb.FieldMask
 var _ timestamppb.Timestamp
+var _ auditpb.AuditRule
 var _ authnpb.AuthnRule
 var _ authzpb.AuthzRule
 var _ redactv3.FieldRules

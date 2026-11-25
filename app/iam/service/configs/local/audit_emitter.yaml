@@ -1,0 +1,4 @@
+audit_emitter:
+  enabled: true
+  backend: kafka
+  topic: "${AUDIT_KAFKA_TOPIC:plateau.audit.events}"

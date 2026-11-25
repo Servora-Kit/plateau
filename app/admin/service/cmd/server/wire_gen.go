@@ -8,7 +8,9 @@ package main
 
 import (
 	"github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
@@ -16,7 +18,9 @@ import (
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/server"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/startup"
+	"github.com/Servora-Kit/plateau/infra/kafka"
 	"github.com/Servora-Kit/plateau/infra/openfga"
+	kafka2 "github.com/Servora-Kit/plateau/security/audit/kafka"
 	"github.com/Servora-Kit/plateau/security/authn/session"
 	openfga2 "github.com/Servora-Kit/plateau/security/authz/openfga"
 	"github.com/Servora-Kit/servora/core/bootstrap"
@@ -31,7 +35,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *oidcv1.OIDCClient, openFGA *openfgaconfpb.OpenFGA, sessionv1Session *sessionv1.Session) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *oidcv1.OIDCClient, openFGA *openfgaconfpb.OpenFGA, sessionv1Session *sessionv1.Session, kafkapbKafka *kafkapb.Kafka, auditEmitter *auditpb.AuditEmitter) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -76,7 +80,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	openFgaClient, err := openfga.New(openFGA)
+	kgoClient, cleanup5, err := kafka.New(kafkapbKafka, logger)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -84,32 +88,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	authorizer, err := openfga2.NewDefault(openFgaClient)
-	if err != nil {
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	authUsecase, err := biz.NewAuthUsecase(authorizer)
-	if err != nil {
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	discovery := registry.NewDiscovery(corev1Registry)
-	dialer, cleanup5, err := data.NewDialer(corev1Data, observability, metricsMetrics, oidcClient, discovery, logger)
-	if err != nil {
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	dataData, err := data.NewData(dialer, client, openFgaClient)
+	auditor, err := kafka2.NewDefault(auditEmitter, kgoClient, logger)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -118,8 +97,56 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	iamUserRepo, cleanup6, err := data.NewIAMUserRepo(dataData)
+	openFgaClient, err := openfga.New(openFGA)
 	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authorizer, err := openfga2.NewDefault(openFgaClient)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authUsecase, err := biz.NewAuthUsecase(authorizer)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	discovery := registry.NewDiscovery(corev1Registry)
+	dialer, cleanup6, err := data.NewDialer(corev1Data, observability, metricsMetrics, oidcClient, discovery, logger)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	dataData, err := data.NewData(dialer, client, openFgaClient)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	iamUserRepo, cleanup7, err := data.NewIAMUserRepo(dataData)
+	if err != nil {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -129,6 +156,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	adminSeedRepo, err := data.NewAdminSeedRepo(dataData)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -139,6 +167,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	seedInitializer, err := biz.NewSeedInitializer(admin, iamUserRepo, adminSeedRepo, logger)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -149,6 +178,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	authService, err := service.NewAuthService(authUsecase, seedInitializer, oidcClient, sessionManager, logger)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -159,6 +189,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	userUsecase, err := biz.NewUserUsecase(iamUserRepo, authorizer, logger)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -169,6 +200,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	userService, err := service.NewUserService(userUsecase)
 	if err != nil {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -177,8 +209,45 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, sessionManager, v, authorizer, authService, userService, logger)
+	auditEventRepo, cleanup8, err := data.NewAuditEventRepo(dataData)
 	if err != nil {
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	auditUsecase, err := biz.NewAuditUsecase(auditEventRepo)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	auditService, err := service.NewAuditService(auditUsecase)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, sessionManager, v, auditor, authorizer, authService, userService, auditService, logger)
+	if err != nil {
+		cleanup8()
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -189,6 +258,8 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	initializer, err := startup.NewInitializer(seedInitializer, logger)
 	if err != nil {
+		cleanup8()
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -199,6 +270,8 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	kratosApp := newApp(runtime, registrar, httpServer, initializer, dataData)
 	return kratosApp, func() {
+		cleanup8()
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()

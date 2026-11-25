@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 
+	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1"
 	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
 	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/security/audit"
 	"github.com/Servora-Kit/plateau/security/authn/session"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
@@ -27,9 +29,11 @@ func NewHTTPServer(
 	m *metrics.Metrics,
 	manager *scs.SessionManager,
 	sessionAuthn *session.UserAuthenticator,
+	auditor audit.Auditor,
 	authorizer *openfga.Authorizer,
 	authSvc *service.AuthService,
 	userSvc *service.UserService,
+	auditSvc *service.AuditService,
 	l *slog.Logger,
 ) (*khttp.Server, error) {
 	browserFilter, err := httpsession.NewFilter(manager, httpsession.FilterConfig{
@@ -47,8 +51,9 @@ func NewHTTPServer(
 		Build()
 	ms = append(
 		ms,
-		session.Server(sessionAuthn, security.WithRulesFuncs(adminauthpb.AuthnRules, adminuserpb.AuthnRules)),
-		openfga.Server(authorizer, security.WithRulesFuncs(adminauthpb.AuthzRules, adminuserpb.AuthzRules)),
+		session.Server(sessionAuthn, security.WithRulesFuncs(adminauthpb.AuthnRules, adminuserpb.AuthnRules, adminauditpb.AuthnRules)),
+		audit.Server(auditor, security.WithRulesFuncs(adminauthpb.AuditRules, adminuserpb.AuditRules, adminauditpb.AuditRules)),
+		openfga.Server(authorizer, security.WithRulesFuncs(adminauthpb.AuthzRules, adminuserpb.AuthzRules, adminauditpb.AuthzRules)),
 	)
 
 	opts := []svrhttp.ServerOption{
@@ -56,9 +61,10 @@ func NewHTTPServer(
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
 		svrhttp.WithServices(func(s *khttp.Server) {
-			authSvc.RegisterOIDCHTTP(s)
+			authSvc.RegisterOIDCHTTP(s, auditor)
 			adminauthpb.RegisterAuthServiceHTTPServer(s, authSvc)
 			adminuserpb.RegisterUserServiceHTTPServer(s, userSvc)
+			adminauditpb.RegisterAuditServiceHTTPServer(s, auditSvc)
 		}),
 	}
 	if c.GetHttp() != nil {
