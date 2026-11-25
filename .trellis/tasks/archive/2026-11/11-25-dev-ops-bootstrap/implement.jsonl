@@ -1,0 +1,23 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "跨包与跨层复用思考准则"}
+{"file": ".trellis/spec/plateau/project/index.md", "reason": "平台项目目录、端口、Just 变量导出与门禁检查入口"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "Just set export 约束、mise 工具版本单一来源、prek 钩子与 GOWORK=off 门禁"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "manifests、just、app 目录职责分工"}
+{"file": ".trellis/spec/plateau/infra/index.md", "reason": "平台共享基础设施入口规范"}
+{"file": ".trellis/spec/plateau/infra/openfga.md", "reason": "OpenFGA store/model/tuple 职责分离与安全部署约束"}
+{"file": ".trellis/spec/plateau/security/index.md", "reason": "平台安全组件总入口"}
+{"file": ".trellis/spec/plateau/security/authN.md", "reason": "JWKS 拉取与回环明文校验边界"}
+{"file": ".trellis/spec/plateau/security/authZ.md", "reason": "主体映射与平台服务授权边界"}
+{"file": ".trellis/spec/plateau/security/credentials.md", "reason": "密钥文件权限、随机源与禁止日志泄露规范"}
+{"file": ".trellis/spec/service/backend/index.md", "reason": "微服务后端分层与构建入口"}
+{"file": ".trellis/spec/service/backend/bootstrap.md", "reason": "cmd 子命令入口职责与配置扫描约束"}
+{"file": ".trellis/spec/service/backend/coding.md", "reason": "错误处理、日志脱敏与避免为单测引入冗余私有符号"}
+{"file": ".trellis/spec/service/backend/testing.md", "reason": "后端单元测试与集成测试规范"}
+{"file": ".trellis/spec/iam/index.md", "reason": "IAM 服务总体规范入口"}
+{"file": ".trellis/spec/iam/architecture.md", "reason": "IAM 公开入口同源转发与 IAM_PUBLIC_ORIGIN 一致性要求"}
+{"file": ".trellis/spec/iam/oidc.md", "reason": "OIDC issuer 校验、签名/加密密钥加载与客户端配置同步"}
+{"file": ".trellis/spec/iam/startup.md", "reason": "IAM 启动期初始化幂等性与职责边界"}
+{"file": ".trellis/spec/iam/frontend.md", "reason": "IAM Next.js CSR 与同源请求规范"}
+{"file": ".trellis/spec/admin/index.md", "reason": "Admin 应用规范入口"}
+{"file": ".trellis/spec/admin/architecture.md", "reason": "Admin 管理编排职责边界"}
+{"file": ".trellis/spec/admin/backend.md", "reason": "Admin OIDC BFF 回调、会话同源保护与启动自举依赖"}
+{"file": ".trellis/spec/admin/frontend.md", "reason": "Admin Vben 独立 workspace、Vite 代理与构建门禁"}

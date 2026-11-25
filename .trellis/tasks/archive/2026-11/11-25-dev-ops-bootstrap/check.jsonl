@@ -1,0 +1,13 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "核查跨层与代码复用边界"}
+{"file": ".trellis/spec/plateau/project/index.md", "reason": "核查项目结构、端口分配与门禁完整性"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "核查 Just 变量污染风险、mise 工具声明、prek 与 GOWORK=off 门禁"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "核查 manifests、just、cmd 目录落位合规性"}
+{"file": ".trellis/spec/plateau/infra/openfga.md", "reason": "核查 OpenFGA init/apply 与 sync-tuples 隔离及幂等性"}
+{"file": ".trellis/spec/plateau/security/authN.md", "reason": "核查 RFC 6761 *.localhost 回环放行未削弱非回环 HTTPS 强制检查"}
+{"file": ".trellis/spec/plateau/security/credentials.md", "reason": "核查 keygen 0600 权限、原子写入与密钥零泄露"}
+{"file": ".trellis/spec/service/backend/coding.md", "reason": "核查无冗余测试私有符号、错误处理与日志安全"}
+{"file": ".trellis/spec/service/backend/testing.md", "reason": "核查单元测试覆盖率与隔离性"}
+{"file": ".trellis/spec/iam/architecture.md", "reason": "核查 Traefik 路由、IAM_PUBLIC_ORIGIN、issuer 与前端代理一致性"}
+{"file": ".trellis/spec/iam/oidc.md", "reason": "核查 OIDC 密钥校验复用与协议端点行为"}
+{"file": ".trellis/spec/admin/backend.md", "reason": "核查 Admin OIDC 回调与同源会话安全"}
+{"file": ".trellis/spec/admin/frontend.md", "reason": "核查 Admin 独立 workspace 安装、lint/test/build 门禁"}
