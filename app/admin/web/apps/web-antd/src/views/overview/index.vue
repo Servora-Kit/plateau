@@ -198,7 +198,7 @@ function goToAuditLogs() {
 
           <Card size="small" title="全平台审计日志">
             <p class="text-muted-foreground mb-4 text-sm">
-              跨服务检索认证会话、资源变更与授权拒绝问责记录，查看脱敏载荷并按同一
+              跨服务检索身份认证、资源变更与授权拒绝问责记录，查看脱敏载荷并按同一
               TraceID 串联多服务调用链。
             </p>
             <Tooltip

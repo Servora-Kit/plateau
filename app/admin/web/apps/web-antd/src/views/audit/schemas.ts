@@ -385,7 +385,7 @@ export function getCategoryBadge(category?: AuditCategory | null | string): {
 } {
   switch (category) {
     case 'AUDIT_CATEGORY_AUTHN': {
-      return { color: 'processing', text: '认证与会话' };
+      return { color: 'processing', text: '身份认证' };
     }
     case 'AUDIT_CATEGORY_AUTHZ': {
       return { color: 'error', text: '授权拒绝' };

@@ -555,7 +555,7 @@ onMounted(() => {
               <Segmented
                 :options="[
                   { label: '全部', value: 'all' },
-                  { label: '认证与会话', value: 'AUDIT_CATEGORY_AUTHN' },
+                  { label: '身份认证', value: 'AUDIT_CATEGORY_AUTHN' },
                   { label: '资源变更', value: 'AUDIT_CATEGORY_RESOURCE' },
                   { label: '授权拒绝', value: 'AUDIT_CATEGORY_AUTHZ' },
                 ]"
