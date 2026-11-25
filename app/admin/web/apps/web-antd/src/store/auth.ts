@@ -53,11 +53,24 @@ export const useAuthStore = defineStore('auth', () => {
     return permissionSet.value.has(code);
   }
 
+  function haveSamePermissions(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    const left = [...a].toSorted();
+    const right = [...b].toSorted();
+    return left.every((code, index) => code === right[index]);
+  }
+
   function syncUserSnapshot(user: User, nextPermissions?: string[]) {
     currentUser.value = user;
     if (nextPermissions !== undefined) {
+      const changed = !haveSamePermissions(permissions.value, nextPermissions);
       permissions.value = [...nextPermissions];
       accessStore.setAccessCodes([...nextPermissions]);
+      if (changed && accessStore.isAccessChecked) {
+        accessStore.setIsAccessChecked(false);
+      }
     }
     const displayName = resolveUserDisplayName(user);
     userStore.setUserInfo({

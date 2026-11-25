@@ -36,6 +36,7 @@ describe('useAuthStore', () => {
     logoutMock.mockReset();
     replaceMock.mockReset();
     vi.spyOn(apiModule, 'createAdminApi').mockReturnValue({
+      audit: {} as AdminApi['audit'],
       auth: {
         GetSession: getSessionMock,
         Logout: logoutMock,
@@ -150,6 +151,26 @@ describe('useAuthStore', () => {
       path: '/auth/login',
       query: { redirect: '/users?view=deleted' },
     });
+  });
+
+  it('invalidates accessStore.isAccessChecked when refreshed session permissions change', async () => {
+    getSessionMock.mockResolvedValueOnce({
+      permissions: ['access', 'read_audit'],
+      user: { email: 'admin@plateau.local', userId: 'u_admin' },
+    });
+
+    const authStore = useAuthStore();
+    const accessStore = useAccessStore();
+    expect(await authStore.ensureSession()).toBe('authenticated');
+    accessStore.setIsAccessChecked(true);
+
+    getSessionMock.mockResolvedValueOnce({
+      permissions: ['access'],
+      user: { email: 'admin@plateau.local', userId: 'u_admin' },
+    });
+    expect(await authStore.ensureSession(true)).toBe('authenticated');
+    expect(authStore.hasPermission('read_audit')).toBe(false);
+    expect(accessStore.isAccessChecked).toBe(false);
   });
 
   it('resolves user display name by priority', () => {

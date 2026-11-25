@@ -31,6 +31,7 @@ const avatarInitial = computed(() =>
 );
 
 const canManageUsers = computed(() => authStore.hasPermission('manage_users'));
+const canReadAudit = computed(() => authStore.hasPermission('read_audit'));
 
 const PERMISSION_CATALOG = [
   {
@@ -45,7 +46,18 @@ const PERMISSION_CATALOG = [
     code: 'expunge_users',
     label: '显式永久删除（expunge_users）',
   },
+  {
+    code: 'read_audit',
+    label: '审计日志查阅（read_audit）',
+  },
 ] as const;
+
+const catalogCodeSet = new Set<string>(
+  PERMISSION_CATALOG.map((item) => item.code),
+);
+const uncataloguedPermissions = computed(() =>
+  authStore.permissions.filter((code) => !catalogCodeSet.has(code)),
+);
 
 const statusBadge = computed(() => {
   switch (currentUser.value?.status) {
@@ -75,11 +87,15 @@ function goToCreateUser() {
 function goToRecycleBin() {
   router.push({ path: '/users', query: { view: 'deleted' } });
 }
+
+function goToAuditLogs() {
+  router.push('/audit');
+}
 </script>
 
 <template>
   <Page
-    description="展示当前唯一平台管理员真实身份与实时授权范围，并提供 IAM 全局用户管理快捷入口。"
+    description="展示当前平台管理员真实身份与实时授权范围，并提供 IAM 全局用户管理与全平台审计检索快捷入口。"
     title="平台管理总览"
   >
     <div class="flex flex-col gap-4">
@@ -135,13 +151,20 @@ function goToRecycleBin() {
                   authStore.hasPermission(item.code) ? '已授权' : '未授权'
                 }}
               </Tag>
+              <Tag
+                v-for="rawCode in uncataloguedPermissions"
+                :key="rawCode"
+                color="blue"
+              >
+                {{ rawCode }}：已授权
+              </Tag>
             </Space>
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
-      <Card :bordered="false" title="IAM 全局用户管理入口">
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <Card :bordered="false" title="平台管理与合规审计快捷入口">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card size="small" title="正常用户列表">
             <p class="text-muted-foreground mb-4 text-sm">
               按邮箱、状态与用户 ID 查询全局账号，查看详情、编辑 7
@@ -171,6 +194,20 @@ function goToRecycleBin() {
               查看无限期保留的已软删除账号（原邮箱保持占用），支持恢复账号或核对完整邮箱后显式永久删除。
             </p>
             <Button @click="goToRecycleBin">打开回收站视图</Button>
+          </Card>
+
+          <Card size="small" title="全平台审计日志">
+            <p class="text-muted-foreground mb-4 text-sm">
+              跨服务检索认证会话、资源变更与授权拒绝问责记录，查看脱敏载荷并按同一
+              TraceID 串联多服务调用链。
+            </p>
+            <Tooltip
+              :title="canReadAudit ? undefined : '当前账号缺少 read_audit 权限'"
+            >
+              <Button :disabled="!canReadAudit" @click="goToAuditLogs">
+                查看审计日志
+              </Button>
+            </Tooltip>
           </Card>
         </div>
       </Card>

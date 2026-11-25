@@ -1,4 +1,8 @@
 import {
+  AdminAuditErrorReason,
+  isAdminAuditErrorReason,
+} from '@plateau/api/admin/audit/v1/audit.errors';
+import {
   AdminUserErrorReason,
   isAdminUserErrorReason,
 } from '@plateau/api/admin/user/v1/user.errors';
@@ -119,6 +123,36 @@ function resolveKnownReason(
         return baseResult(
           'email_failed',
           '验证邮件投递失败，邮件服务暂时不可用，请稍后重试',
+        );
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
+  if (isAdminAuditErrorReason(reason)) {
+    switch (reason) {
+      case AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE: {
+        return baseResult(
+          'unavailable',
+          '下游审计存储服务暂时不可用，当前管理会话仍有效，请稍后重试',
+        );
+      }
+      case AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_EVENT_NOT_FOUND: {
+        return baseResult('not_found', '目标审计记录不存在或已超过保留期清理');
+      }
+      case AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_INVALID_ARGUMENT: {
+        return baseResult(
+          'invalid_argument',
+          '审计筛选条件格式有误，请检查起止时间或输入项',
+        );
+      }
+      case AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_INVALID_PAGE_TOKEN: {
+        return baseResult(
+          'invalid_argument',
+          '分页游标已失效，已自动重置回首页',
+          { shouldRefreshRecord: true },
         );
       }
       default: {

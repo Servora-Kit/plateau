@@ -1,6 +1,8 @@
+import type { AuditService } from '@plateau/api/admin/audit/v1';
 import type { AuthService } from '@plateau/api/admin/auth/v1';
 import type { UserService } from '@plateau/api/admin/user/v1';
 
+import { createAuditServiceClient } from '@plateau/api/admin/audit/v1';
 import { createAuthServiceClient } from '@plateau/api/admin/auth/v1';
 import { createUserServiceClient } from '@plateau/api/admin/user/v1';
 import { createHttpClient, createTransport } from '@plateau/client';
@@ -8,6 +10,7 @@ import { createHttpClient, createTransport } from '@plateau/client';
 const DEFAULT_RETURN_PATH = '/overview';
 
 export interface AdminApi {
+  audit: AuditService;
   auth: AuthService;
   users: UserService;
 }
@@ -23,6 +26,7 @@ export const adminHttpClient = createHttpClient({
 export function createAdminApi(signal?: AbortSignal): AdminApi {
   const transport = createTransport(adminHttpClient, { signal });
   return {
+    audit: createAuditServiceClient(transport),
     auth: createAuthServiceClient(transport),
     users: createUserServiceClient(transport),
   };

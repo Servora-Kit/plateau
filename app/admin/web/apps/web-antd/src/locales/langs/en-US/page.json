@@ -1,4 +1,7 @@
 {
+  "audit": {
+    "title": "Audit Logs"
+  },
   "auth": {
     "login": "Administrator Login"
   },

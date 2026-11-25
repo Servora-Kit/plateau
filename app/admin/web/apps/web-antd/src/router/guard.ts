@@ -88,7 +88,7 @@ function setupAccessGuard(router: Router) {
     }
 
     const { accessibleMenus, accessibleRoutes } = await generateAccess({
-      roles: ['admin'],
+      roles: ['admin', ...authStore.permissions],
       router,
       routes: accessRoutes,
     });

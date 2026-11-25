@@ -585,6 +585,28 @@ watch(
   },
   { flush: 'post', immediate: true },
 );
+
+watch(
+  () => route.query.userId,
+  async (rawUserId) => {
+    const cleanUserId = Array.isArray(rawUserId)
+      ? rawUserId[0]?.trim()
+      : rawUserId?.trim();
+    if (!cleanUserId) {
+      return;
+    }
+    const nextQuery = { ...route.query };
+    delete nextQuery.userId;
+    await router.replace({ path: '/users', query: nextQuery });
+    await nextTick();
+    detailDrawerApi
+      .setData({
+        resourceName: resolveUserResourceName({ userId: cleanUserId }),
+      })
+      .open();
+  },
+  { flush: 'post', immediate: true },
+);
 </script>
 
 <template>

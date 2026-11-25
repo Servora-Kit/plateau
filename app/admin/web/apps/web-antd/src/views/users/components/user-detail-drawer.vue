@@ -13,6 +13,7 @@ import { formatDateTime } from '@vben/utils';
 import {
   Alert,
   Avatar,
+  Button,
   Descriptions,
   Divider,
   message,
@@ -67,6 +68,7 @@ const canEditProfile = computed(
     !isDeleted.value &&
     authStore.hasPermission('manage_users'),
 );
+const canReadAudit = computed(() => authStore.hasPermission('read_audit'));
 
 const displayName = computed(() => resolveUserDisplayName(detailUser.value));
 const avatarUrl = computed(
@@ -237,6 +239,30 @@ const [Drawer, drawerApi] = useVbenDrawer<UserDetailDrawerPayload>({
     });
   },
 });
+
+async function jumpToResourceAudit() {
+  if (!detailUser.value) {
+    return;
+  }
+  const resourceName = resolveUserResourceName(detailUser.value);
+  drawerApi.close();
+  await router.push({
+    path: '/audit',
+    query: { resourceName },
+  });
+}
+
+async function jumpToActorAudit() {
+  const userId = detailUser.value?.userId?.trim();
+  if (!userId) {
+    return;
+  }
+  drawerApi.close();
+  await router.push({
+    path: '/audit',
+    query: { actorId: userId, actorType: 'human' },
+  });
+}
 </script>
 
 <template>
@@ -254,18 +280,32 @@ const [Drawer, drawerApi] = useVbenDrawer<UserDetailDrawerPayload>({
         type="warning"
       />
 
-      <div class="flex items-center gap-3">
-        <Avatar :size="48" :src="avatarUrl || undefined">
-          {{ displayName.slice(0, 1).toUpperCase() }}
-        </Avatar>
-        <div>
-          <div class="text-foreground text-base font-semibold">
-            {{ displayName }}
-          </div>
-          <div class="text-muted-foreground text-xs">
-            {{ detailUser.email || '—' }}
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <Avatar :size="48" :src="avatarUrl || undefined">
+            {{ displayName.slice(0, 1).toUpperCase() }}
+          </Avatar>
+          <div>
+            <div class="text-foreground text-base font-semibold">
+              {{ displayName }}
+            </div>
+            <div class="text-muted-foreground text-xs">
+              {{ detailUser.email || '—' }}
+            </div>
           </div>
         </div>
+        <Space v-if="canReadAudit" size="small" wrap>
+          <Button size="small" @click="jumpToResourceAudit">
+            查看账号变更审计
+          </Button>
+          <Button
+            v-if="detailUser.userId"
+            size="small"
+            @click="jumpToActorAudit"
+          >
+            查看该账号操作审计
+          </Button>
+        </Space>
       </div>
 
       <Descriptions bordered :column="1" size="small" title="身份与状态元数据">

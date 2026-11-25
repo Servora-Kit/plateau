@@ -1,3 +1,4 @@
+import { AdminAuditErrorReason } from '@plateau/api/admin/audit/v1/audit.errors';
 import { AdminUserErrorReason } from '@plateau/api/admin/user/v1/user.errors';
 import { SecurityErrorReason } from '@plateau/api/plateau/security/errors/v1/errors.errors';
 import { CrudErrorReason } from '@servora/proto-utils/error-reasons/servora/crud/v1/errors';
@@ -206,6 +207,59 @@ describe('resolveAdminApiError', () => {
     ).toMatchObject({
       category: 'invalid_argument',
       preserveSession: true,
+    });
+  });
+
+  it('maps AdminAuditErrorReason codes while preserving admin session on 503 downstream faults', () => {
+    const auditDownstream = resolveAdminApiError(
+      httpError(
+        503,
+        AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE,
+        'clickhouse dial 127.0.0.1:19000 password=topsecret',
+      ),
+    );
+    expect(auditDownstream).toMatchObject({
+      category: 'unavailable',
+      preserveSession: true,
+    });
+    expect(auditDownstream.message).not.toContain('topsecret');
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          404,
+          AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_EVENT_NOT_FOUND,
+        ),
+      ),
+    ).toMatchObject({
+      category: 'not_found',
+      preserveSession: true,
+    });
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          400,
+          AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_INVALID_ARGUMENT,
+        ),
+      ),
+    ).toMatchObject({
+      category: 'invalid_argument',
+      preserveSession: true,
+      shouldRefreshRecord: false,
+    });
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          400,
+          AdminAuditErrorReason.ADMIN_AUDIT_ERROR_REASON_INVALID_PAGE_TOKEN,
+        ),
+      ),
+    ).toMatchObject({
+      category: 'invalid_argument',
+      preserveSession: true,
+      shouldRefreshRecord: true,
     });
   });
 
