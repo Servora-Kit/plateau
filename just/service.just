@@ -60,18 +60,24 @@ _gen: openapi wire gen-ent
 
 gen: api _gen
 
+[unix]
 [working-directory(COMPONENT_DIR)]
 _build:
-    @{{ if path_exists(CMD_DIR) { "go build " + GOFLAGS + " -ldflags \"" + LDFLAGS + "\" -o ./bin/ ./..." } else { "echo No cmd directory found for " + SERVICE_NAME + ", skipping build" } }}
+    @if [ -d "{{ CMD_DIR }}" ]; then mkdir -p ./bin && go build {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" -o ./bin/ ./...; else echo "No cmd directory found for {{ SERVICE_NAME }}, skipping build"; fi
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+_build:
+    @if (Test-Path -LiteralPath "{{ CMD_DIR }}" -PathType Container) { New-Item -ItemType Directory -Force -Path ./bin | Out-Null; go build {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" -o ./bin/ ./... } else { Write-Output "No cmd directory found for {{ SERVICE_NAME }}, skipping build" }
 
 build: gen _build
 
 [working-directory(COMPONENT_DIR)]
-run: api openapi
+run:
     -@go run {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" ./cmd/server -conf "{{ CONF }}"
 
 [working-directory(COMPONENT_DIR)]
-dev: api openapi
+dev:
     @air
 
 app: build

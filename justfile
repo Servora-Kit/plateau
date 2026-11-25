@@ -17,6 +17,7 @@ ENV_FILE := env("ENV_FILE", join(ROOT_DIR, ".env"))
 OPENFGA_API_URL := env("FGA_API_URL", "")
 OPENFGA_MODEL := env("OPENFGA_MODEL", "manifests/openfga/fga.mod")
 OPENFGA_TESTS := env("OPENFGA_TESTS", "manifests/openfga/*.fga.yaml")
+OPENFGA_TUPLES := env("OPENFGA_TUPLES", "manifests/openfga/tuples/platform-services.yaml")
 OPENFGA_SCRIPT_UNIX := env("OPENFGA_SCRIPT_UNIX", join(ROOT_DIR, "manifests/scripts/openfga/openfga.sh"))
 OPENFGA_SCRIPT_WINDOWS := env("OPENFGA_SCRIPT_WINDOWS", join(ROOT_DIR, "manifests/scripts/openfga/openfga.ps1"))
 VERSION_ENV := env("VERSION", "")
@@ -38,12 +39,14 @@ init:
     @mise install
     @prek install
     @"{{ PNPM }}" install --frozen-lockfile
+    @"{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" web::install
 
 [windows]
 init:
     @mise install
     @prek install
     @& "{{ PNPM }}" install --frozen-lockfile
+    @& "{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" web::install
 
 api: api-go api-ts
 
@@ -169,6 +172,29 @@ breaking *args:
 
 clean: service::clean
 
+[unix]
+[working-directory(ROOT_DIR)]
+dev *args:
+    @if [ -z "{{ args }}" ] && process-compose project state -p 18090 >/dev/null 2>&1; then process-compose attach -p 18090; else process-compose -f process-compose.yaml -p 18090 {{ args }}; fi
+
+[windows]
+[working-directory(ROOT_DIR)]
+dev *args:
+    @if ([string]::IsNullOrWhiteSpace("{{ args }}")) { process-compose project state -p 18090 *>$null; if ($LASTEXITCODE -eq 0) { process-compose attach -p 18090; exit $LASTEXITCODE } }; process-compose -f process-compose.yaml -p 18090 {{ args }}
+
+[unix]
+[working-directory(ROOT_DIR)]
+dev-up:
+    @if process-compose project state -p 18090 >/dev/null 2>&1; then echo "process-compose is already running on :18090 (run 'just dev' to attach)"; else process-compose -f process-compose.yaml -p 18090 -D; fi
+
+[windows]
+[working-directory(ROOT_DIR)]
+dev-up:
+    @process-compose project state -p 18090 *>$null; if ($LASTEXITCODE -eq 0) { Write-Output "process-compose is already running on :18090 (run 'just dev' to attach)" } else { process-compose -f process-compose.yaml -p 18090 -D }
+[working-directory(ROOT_DIR)]
+dev-down:
+    @process-compose down -p 18090
+
 compose-up:
     @{{ COMPOSE }} {{ COMPOSE_FILES }} up -d {{ COMPOSE_SERVICES }}
 
@@ -208,3 +234,19 @@ openfga-model-apply: openfga-model-test
 [windows]
 openfga-model-apply: openfga-model-test
     @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" apply -Model "{{ OPENFGA_MODEL }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ OPENFGA_API_URL }}"
+
+[unix]
+openfga-tuple-sync:
+    @bash "{{ OPENFGA_SCRIPT_UNIX }}" sync-tuples --tuples-file "{{ OPENFGA_TUPLES }}" --env-file "{{ ENV_FILE }}" --api-url "{{ OPENFGA_API_URL }}"
+
+[windows]
+openfga-tuple-sync:
+    @powershell -NoProfile -ExecutionPolicy Bypass -File "{{ OPENFGA_SCRIPT_WINDOWS }}" sync-tuples -TuplesFile "{{ OPENFGA_TUPLES }}" -EnvFile "{{ ENV_FILE }}" -ApiUrl "{{ OPENFGA_API_URL }}"
+
+[unix]
+openfga-setup: openfga-init
+    @"{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" --dotenv-path "{{ ENV_FILE }}" openfga-tuple-sync
+
+[windows]
+openfga-setup: openfga-init
+    @& "{{ JUST }}" --justfile "{{ join(ROOT_DIR, "justfile") }}" --dotenv-path "{{ ENV_FILE }}" openfga-tuple-sync

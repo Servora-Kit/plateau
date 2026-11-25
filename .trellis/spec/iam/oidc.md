@@ -1,6 +1,6 @@
 # OIDC Provider 与服务令牌
 
-- Provider 构造时校验 issuer、签名密钥与配置；静态 client 和密钥元数据在服务可用前协调，见 [启动](startup.md)。
+- Provider 构造时校验 issuer（仅允许 HTTPS 或符合 RFC 6761 的回环主机 `localhost`、`127.0.0.1`、`::1`、`*.localhost`）、签名密钥与配置；`app/iam/service/cmd/keygen` 复用 `internal/oidc` 的密钥校验逻辑幂等生成/轮换 `0600` 权限的 RSA-2048 PKCS#8 PEM 签名私钥与 32B 加密密钥（多副本部署须由一次性初始化任务写入共享 Secret，严禁副本各自生成临时密钥）。静态 client 和密钥元数据在服务可用前协调，见 [启动](startup.md)。
 - 授权请求限定 authorization-code、query response mode、PKCE S256 与 `openid` scope；能力变更同步 discovery 元数据和存储契约。
 - 授权回调先确认 SCS 已加载并解析活跃身份与登录会话，不绕过 [会话校验](sessions.md)。
 - 授权请求完成、code 保存、人类令牌签发/刷新与 userinfo 投影均须校验非软删除 `ACTIVE` 身份、主邮箱已验证且 `required_actions` 为空；code 与 refresh 发行在事务中锁定身份，code 条件消费，refresh 轮换消费旧 token 并建立后继，重放已消费 refresh 时撤销对应 OAuth 会话并返回 invalid grant。

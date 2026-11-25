@@ -1,5 +1,6 @@
 [tools]
 air = "1.67.4"
+"aqua:F1bonacc1/process-compose" = "1.124.0"
 "aqua:openfga/cli" = "0.9.0"
 buf = "1.75.0"
 golangci-lint = "2.15.0"

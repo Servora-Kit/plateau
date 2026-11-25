@@ -5,7 +5,7 @@
 新增 transport 时：
 
 1. 在职责明确的 `http.go`、`grpc.go`、`sse.go` 或同类文件中构造 server。
-2. 装配可观测性和服务端配置，再注册生成 API。
+2. 装配可观测性、健康探针（HTTP 挂载 `svrhttp.WithHealthCheck(health.NewHandler())` 暴露内部 `/healthz` 与 `/readyz`，供本地 `process-compose` 与容器探针使用；边缘网关不向公网转发 `/healthz`、`/readyz` 与 `/metrics`）和服务端配置，再注册生成 API。
 3. 将资源名、鉴权业务决定、CRUD 生命周期和存储调用交给下层。
 
 不要创建只供 HTTP 使用的重复 Proto service，不在 server 层承载业务流程或数据库访问。端口和配置路径遵循统一项目约定，不在 transport 构造器中硬编码。

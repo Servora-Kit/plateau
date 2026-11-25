@@ -36,7 +36,8 @@ func (key *publicKey) Algorithm() jose.SignatureAlgorithm { return jose.RS256 }
 func (key *publicKey) Use() string                        { return "sig" }
 func (key *publicKey) Key() any                           { return key.key }
 
-func loadSigningKey(path string) (*rsa.PrivateKey, string, string, error) {
+// LoadSigningKey reads and validates an RSA (>=2048-bit) PKCS#1/PKCS#8 PEM signing key and returns its key ID and public JWK JSON.
+func LoadSigningKey(path string) (*rsa.PrivateKey, string, string, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return nil, "", "", fmt.Errorf("OIDC signing key path is empty")
@@ -93,7 +94,8 @@ func loadSigningKey(path string) (*rsa.PrivateKey, string, string, error) {
 	return privateKey, keyID, string(jwkBytes), nil
 }
 
-func loadCryptoKey(path string) ([32]byte, string, error) {
+// LoadCryptoKey reads and validates a 32-byte OIDC symmetric crypto key (raw, hex, or unpadded base64url) and returns its key ID.
+func LoadCryptoKey(path string) ([32]byte, string, error) {
 	var key [32]byte
 	path = strings.TrimSpace(path)
 	if path == "" {

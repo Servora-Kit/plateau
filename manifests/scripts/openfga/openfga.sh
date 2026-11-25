@@ -6,12 +6,15 @@ usage() {
 Usage:
   openfga.sh init [options]
   openfga.sh apply [options]
+  openfga.sh sync-tuples [options]
 
 Options:
   --api-url URL       OpenFGA API URL (default: FGA_API_URL or http://localhost:18080)
   --model FILE        Authorization model file
   --store-name NAME   Store name used by init (default: plateau)
-  --store-id ID       Existing store ID used by apply/init
+  --store-id ID       Existing store ID used by init/apply/sync-tuples
+  --model-id ID       Authorization model ID used by sync-tuples (default: FGA_MODEL_ID)
+  --tuples-file FILE  Relationship tuples file (default: manifests/openfga/tuples/platform-services.yaml)
   --env-file FILE     dotenv output/input file (default: .env)
   -h, --help          Show this help
 EOF
@@ -28,6 +31,8 @@ api_url=""
 model_file="manifests/openfga/fga.mod"
 store_name="plateau"
 store_id=""
+model_id=""
+tuples_file="manifests/openfga/tuples/platform-services.yaml"
 env_file=".env"
 
 while (($# > 0)); do
@@ -36,20 +41,22 @@ while (($# > 0)); do
     --model) [[ $# -ge 2 ]] || { echo "--model requires a value" >&2; exit 2; }; model_file="$2"; shift 2 ;;
     --store-name) [[ $# -ge 2 ]] || { echo "--store-name requires a value" >&2; exit 2; }; store_name="$2"; shift 2 ;;
     --store-id) [[ $# -ge 2 ]] || { echo "--store-id requires a value" >&2; exit 2; }; store_id="$2"; shift 2 ;;
+    --model-id) [[ $# -ge 2 ]] || { echo "--model-id requires a value" >&2; exit 2; }; model_id="$2"; shift 2 ;;
+    --tuples-file) [[ $# -ge 2 ]] || { echo "--tuples-file requires a value" >&2; exit 2; }; tuples_file="$2"; shift 2 ;;
     --env-file) [[ $# -ge 2 ]] || { echo "--env-file requires a value" >&2; exit 2; }; env_file="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
-for tool in fga jq awk; do
+required_tools=(fga awk)
+[[ "$command_name" == "sync-tuples" ]] || required_tools+=(jq)
+for tool in "${required_tools[@]}"; do
   command -v "$tool" >/dev/null 2>&1 || {
     echo "required command not found: $tool" >&2
     exit 127
   }
 done
-
-[[ -f "$model_file" ]] || { echo "model file not found: $model_file" >&2; exit 1; }
 
 # Read only dotenv key/value pairs; never source an arbitrary environment file.
 dotenv_get() {
@@ -147,6 +154,7 @@ fga_call() { fga "${fga_args[@]}" "$@"; }
 
 write_model() {
   local response model_id
+  [[ -f "$model_file" ]] || { echo "model file not found: $model_file" >&2; exit 1; }
   response="$(fga_call model write --store-id "$store_id" --file "$model_file")" || {
     echo "failed to write OpenFGA authorization model" >&2
     exit 1
@@ -201,6 +209,18 @@ case "$command_name" in
     model_id="$(write_model)"
     atomic_upsert_env "FGA_MODEL_ID=$model_id"
     printf 'OpenFGA model applied: %s\n' "$model_id"
+    ;;
+  sync-tuples)
+    [[ -n "$store_id" ]] || store_id="$(config_value FGA_STORE_ID)"
+    [[ -n "$store_id" ]] || { echo "store ID required: use --store-id or FGA_STORE_ID" >&2; exit 2; }
+    [[ -n "$model_id" ]] || model_id="$(config_value FGA_MODEL_ID)"
+    [[ -n "$model_id" ]] || { echo "model ID required: use --model-id or FGA_MODEL_ID" >&2; exit 2; }
+    [[ -f "$tuples_file" ]] || { echo "tuples file not found: $tuples_file" >&2; exit 1; }
+    fga_call tuple write --store-id "$store_id" --model-id "$model_id" --file "$tuples_file" --on-duplicate ignore >/dev/null || {
+      echo "failed to sync OpenFGA tuples from: $tuples_file" >&2
+      exit 1
+    }
+    printf 'OpenFGA tuples synced: %s\n' "$tuples_file"
     ;;
   *)
     echo "unknown command: $command_name" >&2

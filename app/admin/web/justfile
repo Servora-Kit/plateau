@@ -5,6 +5,16 @@ PNPM := env("PNPM", "pnpm")
 
 [unix]
 [working-directory(COMPONENT_DIR)]
+install:
+    @"{{ PNPM }}" install --frozen-lockfile
+
+[windows]
+[working-directory(COMPONENT_DIR)]
+install:
+    @& "{{ PNPM }}" install --frozen-lockfile
+
+[unix]
+[working-directory(COMPONENT_DIR)]
 dev *args:
     @"{{ PNPM }}" run dev {{ args }}
 

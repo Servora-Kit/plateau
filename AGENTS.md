@@ -6,7 +6,7 @@
 
 - 从 `10000` 起，每个应用固定分配 10 个端口：`+0` HTTP、`+1` gRPC、`+2` Web，`+3～+9` 预留；IAM、Admin、Audit 依次使用前三个段。新增服务从 `10030` 起按 10 端口段顺序登记，不重排已有编号。
 - 此约定用于本地监听和 Docker 宿主机映射；容器内部端口、共享中间件端口和生产公开端口不受影响。同一应用的原生运行与容器映射不可同时占用相同端口。
-- Web 的 dev 与 preview/start 默认共用 Web 端口，不同时启动。改动 IAM 或 Admin 公开入口时，同步 `IAM_PUBLIC_ORIGIN` / `ADMIN_PUBLIC_ORIGIN`、Web 端口和后端代理地址。
+- 本地全栈开发默认经 Docker Traefik（`:8080`）使用 RFC 6761 回环域名 `http://iam.plateau.localhost:8080` 与 `http://admin.plateau.localhost:8080`（免改 `/etc/hosts`），各应用自身监听端口仍保持 `10000–10029` 不变。Web 的 dev 与 preview/start 默认共用 Web 端口，不同时启动。改动 IAM 或 Admin 公开入口时，同步 `IAM_PUBLIC_ORIGIN` / `ADMIN_PUBLIC_ORIGIN`、Web 端口和网关/后端代理地址。
 
 | 应用 | 端口段 | HTTP | gRPC | Web |
 | --- | --- | --- | --- | --- |
@@ -25,7 +25,7 @@
 - `cmd/` 平台级命令工具
   - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/`、`protoc-gen-plateau-audit/` AuthN/AuthZ/Audit 代码生成插件；与其余 protoc 插件统一在根 `go.mod` `tool` 声明，由 buf 模板经 `go tool` 调用
 - `internal/codegen/` 共享代码生成实现
-- `security/` 共享安全生态：`actor.go`、`authn/<implementation>`、`authz/<engine>`、`audit/`（含 `audit/kafka/`）、`oidc/`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
+- `security/` 共享安全生态：`actor.go`、`identity.go`、`loopback.go`、`rules.go`、`authn/<implementation>`、`authz/<engine>`、`audit/`（含 `audit/kafka/`）、`oidc/`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
 - `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`kafka/`、`entgo/mixin/` 软删除便利层；通用 Ent driver 与 CRUD adapter 归 Servora 的 `contrib/db/entgo/`
 - `transport/` 平台传输扩展：`server/kafka/` 非泛型 Kafka 入站批消费 `transport.Server`
 - `web/packages/client/` 平台共享前端通信能力（见 [web/client 规范](.trellis/spec/web/client/index.md)）
@@ -33,7 +33,7 @@
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）
 - `docs/adr/` 架构决策记录
 - `justfile` 项目级 Just 命令入口
-- `mise.toml` 固定 CLI 工具版本（buf、golangci-lint、just、fga、prek、node、pnpm、air）；Go 版本以 `go.mod` 为准
+- `mise.toml` 固定 CLI 工具版本（buf、golangci-lint、just、fga、process-compose、prek、node、pnpm、air）；Go 版本以 `go.mod` 为准
 - `prek.toml` 根 Git 钩子配置（`pre-commit` / `pre-push` / `commit-msg`）；`app/admin/web/prek.toml` 为 Vben 子项目钩子配置
 - `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 独立 workspace 和 lockfile，并通过 `link:` 引用 `@plateau/api`、`@plateau/client`
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
@@ -44,11 +44,16 @@
 - `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与各服务 Go 后端的依赖
 - 跨仓源码联调（如与 Servora）可在本地共同父目录自建 `go.work` / `pnpm-workspace.yaml`，不提交到仓库；父级 pnpm workspace 需排除 `plateau/app/admin/web`。仓库门禁以 `GOWORK=off` 的独立检查为准，联调通过不代表门禁通过
 - `docker-compose.yaml` 本地基础设施编排
+- `process-compose.yaml` 本地全栈进程编排（REST `:18090`，内置 SSE MCP `:18091`）
+- `.mcp.json` 项目级 MCP 服务声明（含 `process-compose` SSE 接入）
 
 ## 命令
 
 ```bash
-just init              # mise install + prek install + pnpm install --frozen-lockfile
+just init              # mise install + prek install + 根 workspace 与 Admin Web 依赖安装
+just dev               # process-compose TUI 全栈启动（含 compose-up、keygen、openfga-setup 与 5 个应用）
+just dev-up            # 后台守护模式启动全栈开发环境
+just dev-down          # 停止本地应用进程（保留 Docker 中间件容器）
 just gen
 just gen-check         # GOWORK=off 下校验生成产物无漂移
 just wire
@@ -57,13 +62,17 @@ just lint
 just fmt-proto-check
 just breaking          # 对比 BUF_BREAKING_AGAINST（默认 .git#ref=origin/main）
 just api-ts-check
+just service::iam::keygen
 just openfga-model-validate
 just openfga-model-test
 just openfga-model-apply
+just openfga-tuple-sync
+just openfga-setup     # openfga-init + openfga-tuple-sync
 just web::iam::dev
 just web::admin::dev
 just web::build
 just web::lint
+just web::test
 ```
 
 `api/gen`、平台原生 Web 与 `web/packages/*` 共用根 pnpm workspace 和 lockfile；Vben Admin 在 `app/admin/web` 中独立安装依赖。新增平台服务参考 `app/iam`、`app/admin` 与 [app/AGENTS.md](app/AGENTS.md)。

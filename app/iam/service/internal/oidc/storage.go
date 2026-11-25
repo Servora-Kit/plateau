@@ -32,7 +32,7 @@ func NewOIDCStorage(client *entmodel.Client, config *oidcconfpb.OIDC, tokens biz
 	if err := config.Apply(); err != nil {
 		return nil, fmt.Errorf("OIDC storage config: %w", err)
 	}
-	privateKey, keyID, publicJWK, err := loadSigningKey(config.GetSigningKeyPath())
+	privateKey, keyID, publicJWK, err := LoadSigningKey(config.GetSigningKeyPath())
 	if err != nil {
 		return nil, err
 	}

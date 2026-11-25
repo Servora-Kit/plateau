@@ -1,9 +1,12 @@
 package jwt
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -101,5 +104,53 @@ func TestJWKSInitialFailureIsFatal(t *testing.T) {
 	if _, cleanup, err := NewJWKS(t.Context(), &jwtpb.JWKS{Uri: server.URL}); err == nil {
 		cleanup()
 		t.Fatal("unavailable initial JWKS accepted")
+	}
+}
+
+func TestJWKSLoopbackHostValidation(t *testing.T) {
+	canceledCtx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	allowedHTTP := []string{
+		"http://localhost:10000/keys",
+		"http://LOCALHOST:10000/keys",
+		"http://127.0.0.1:10000/keys",
+		"http://[::1]:10000/keys",
+		"http://iam.plateau.localhost:8080/keys",
+		"http://IAM.Plateau.LocalHost:8080/keys",
+	}
+	for _, uri := range allowedHTTP {
+		_, cleanup, err := NewJWKS(canceledCtx, &jwtpb.JWKS{Uri: uri})
+		if cleanup != nil {
+			cleanup()
+		}
+		if err == nil {
+			t.Fatalf("NewJWKS(%q) with canceled context unexpectedly succeeded", uri)
+		}
+		if strings.Contains(err.Error(), "requires HTTPS") {
+			t.Errorf("NewJWKS(%q) rejected valid loopback host: %v", uri, err)
+		}
+		if !errors.Is(err, context.Canceled) {
+			t.Errorf("NewJWKS(%q) expected context.Canceled after passing URI check, got: %v", uri, err)
+		}
+	}
+
+	rejectedHTTP := []string{
+		"http://.localhost:8080/keys",
+		"http://..localhost:8080/keys",
+		"http://foo..localhost:8080/keys",
+		"http://.iam.plateau.localhost:8080/keys",
+		"http://evil-localhost.com/keys",
+		"http://iam.plateau.localhost.evil.com/keys",
+		"http://localhost.:8080/keys",
+	}
+	for _, uri := range rejectedHTTP {
+		_, cleanup, err := NewJWKS(canceledCtx, &jwtpb.JWKS{Uri: uri})
+		if cleanup != nil {
+			cleanup()
+		}
+		if err == nil || !strings.Contains(err.Error(), "requires HTTPS") {
+			t.Errorf("NewJWKS(%q) error = %v; want HTTPS requirement error", uri, err)
+		}
 	}
 }

@@ -22,6 +22,7 @@ import (
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrhttp "github.com/Servora-Kit/servora/transport/server/http"
+	"github.com/Servora-Kit/servora/transport/server/http/health"
 	"github.com/Servora-Kit/servora/transport/server/middleware"
 )
 
@@ -52,6 +53,7 @@ func NewHTTPServer(c *corepb.Server, obs *corepb.Observability, app *corepb.App,
 		svrhttp.WithFilter(browserFilter),
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
+		svrhttp.WithHealthCheck(health.NewHandler()),
 		svrhttp.WithServices(func(s *khttp.Server) {
 			cap.Register(s, captcha)
 			oidc.RegisterHTTPServer(s, oidcProvider, auditor)

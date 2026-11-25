@@ -644,7 +644,7 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 	kafkaBroker, auditTopic, chAddr, chUser, chPass, chDB := prepareAuditInfra(t)
 	fgaURL, storeID, modelID, fgaSDK := createTempOpenFGAStore(t)
 
-	// Grant service:admin read_events on audit:global (matching docs/iam-security.md).
+	// Grant service:admin read_events on audit:global (matching docs/iam.md).
 	if _, err := fgaSDK.Write(t.Context()).Body(fgaclient.ClientWriteRequest{
 		Writes: []fgaclient.ClientTupleKey{
 			{User: "service:admin", Relation: "read_events", Object: "audit:global"},

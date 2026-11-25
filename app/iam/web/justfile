@@ -34,3 +34,13 @@ lint:
 [working-directory(ROOT_DIR)]
 lint:
     @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run lint
+
+[unix]
+[working-directory(ROOT_DIR)]
+test:
+    @"{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run --if-present test
+
+[windows]
+[working-directory(ROOT_DIR)]
+test:
+    @& "{{ PNPM }}" --filter "{{ WEB_PACKAGE }}" run --if-present test

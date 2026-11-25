@@ -28,7 +28,7 @@ app:
   name: admin.service
   version: dev
   env: dev
-  external_url: "${ADMIN_PUBLIC_ORIGIN:http://localhost:10012}"
+  external_url: "${ADMIN_PUBLIC_ORIGIN:http://admin.plateau.localhost:8080}"
 
 obs:
   log:
@@ -52,3 +52,11 @@ registry:
     addr: "${REGISTRY_CONSUL_ADDR:localhost:8500}"
     scheme: "${REGISTRY_CONSUL_SCHEME:http}"
     datacenter: "${REGISTRY_CONSUL_DC:dc1}"
+    tags:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-api.entrypoints=web"
+      - "traefik.http.routers.admin-api.priority=100"
+      - "traefik.http.routers.admin-api.rule=Host(`admin.plateau.localhost`) && (PathPrefix(`/v1/`) || Path(`/docs`) || PathPrefix(`/docs/`))"
+      - "traefik.http.routers.admin-api.service=admin-api"
+      - "traefik.http.services.admin-api.loadbalancer.passhostheader=true"
+      - "traefik.http.services.admin-api.loadbalancer.server.port=10010"

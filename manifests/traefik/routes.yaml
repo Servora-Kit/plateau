@@ -1,0 +1,30 @@
+# 纯前端进程（Next.js / Vite）不接入 Consul 注册，在此保留低优先级页面兜底；
+# Go 后端服务（iam.service / admin.service 及后续微服务）统一由各自 bootstrap.yaml 的 registry.consul.tags 自治声明路由。
+http:
+  routers:
+    iam-web:
+      rule: 'Host(`{{ env "IAM_TRAEFIK_HOST" | default "iam.plateau.localhost" }}`) && !Path(`/metrics`) && !Path(`/healthz`) && !Path(`/readyz`)'
+      entryPoints:
+        - web
+      priority: 10
+      service: iam-web
+
+    admin-web:
+      rule: 'Host(`{{ env "ADMIN_TRAEFIK_HOST" | default "admin.plateau.localhost" }}`) && !Path(`/metrics`) && !Path(`/healthz`) && !Path(`/readyz`)'
+      entryPoints:
+        - web
+      priority: 10
+      service: admin-web
+
+  services:
+    iam-web:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: '{{ env "IAM_WEB_UPSTREAM" | default "http://host.docker.internal:10002" }}'
+
+    admin-web:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: '{{ env "ADMIN_WEB_UPSTREAM" | default "http://host.docker.internal:10012" }}'

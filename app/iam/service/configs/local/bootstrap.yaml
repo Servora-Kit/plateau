@@ -19,7 +19,7 @@ app:
   name: iam.service
   version: dev
   env: dev
-  external_url: "${IAM_PUBLIC_ORIGIN:http://localhost:10002}"
+  external_url: "${IAM_PUBLIC_ORIGIN:http://iam.plateau.localhost:8080}"
 
 obs:
   log:
@@ -43,3 +43,11 @@ registry:
     addr: "${REGISTRY_CONSUL_ADDR:localhost:8500}"
     scheme: "${REGISTRY_CONSUL_SCHEME:http}"
     datacenter: "${REGISTRY_CONSUL_DC:dc1}"
+    tags:
+      - "traefik.enable=true"
+      - "traefik.http.routers.iam-api.entrypoints=web"
+      - "traefik.http.routers.iam-api.priority=100"
+      - "traefik.http.routers.iam-api.rule=Host(`iam.plateau.localhost`) && (PathPrefix(`/v1/`) || PathPrefix(`/cap/`) || PathPrefix(`/.well-known/`) || Path(`/keys`) || Path(`/authorize`) || PathPrefix(`/authorize/`) || PathPrefix(`/oauth/`) || Path(`/userinfo`) || Path(`/revoke`) || Path(`/end_session`) || Path(`/docs`) || PathPrefix(`/docs/`))"
+      - "traefik.http.routers.iam-api.service=iam-api"
+      - "traefik.http.services.iam-api.loadbalancer.passhostheader=true"
+      - "traefik.http.services.iam-api.loadbalancer.server.port=10000"

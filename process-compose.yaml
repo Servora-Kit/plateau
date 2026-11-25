@@ -1,0 +1,162 @@
+version: "0.5"
+
+mcp_server:
+  host: 127.0.0.1
+  port: 18091
+  transport: sse
+  expose_control_tools: true
+
+processes:
+  compose-up:
+    is_template_disabled: true
+    command: |
+      set -euo pipefail
+      just compose-up
+      for i in $(seq 1 90); do
+        unhealthy=0
+        for svc in postgres redis kafka clickhouse consul traefik; do
+          cid="$(docker compose -f docker-compose.yaml ps -q "$svc" 2>/dev/null || true)"
+          status="$( [ -n "$cid" ] && docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true )"
+          if [ "$status" != "healthy" ]; then
+            unhealthy=1
+            break
+          fi
+        done
+        if [ "$unhealthy" -eq 0 ]; then
+          exit 0
+        fi
+        sleep 1
+      done
+      echo "Timed out waiting for Docker infrastructure containers to become healthy" >&2
+      exit 1
+
+  iam-keygen:
+    command: just service::iam::keygen
+
+  openfga-setup:
+    command: |
+      set -euo pipefail
+      for i in $(seq 1 60); do
+        if curl -fsS http://127.0.0.1:18080/healthz >/dev/null 2>&1; then
+          exec just openfga-setup
+        fi
+        sleep 1
+      done
+      echo "Timed out waiting for OpenFGA (:18080/healthz)" >&2
+      exit 1
+    depends_on:
+      compose-up:
+        condition: process_completed_successfully
+
+  iam-service:
+    command: just service::iam::dev
+    depends_on:
+      compose-up:
+        condition: process_completed_successfully
+      iam-keygen:
+        condition: process_completed_successfully
+      openfga-setup:
+        condition: process_completed_successfully
+    availability:
+      restart: on_failure
+      backoff_seconds: 2
+      max_restarts: 5
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        scheme: http
+        port: 10000
+        path: /readyz
+      initial_delay_seconds: 2
+      period_seconds: 2
+      timeout_seconds: 2
+      success_threshold: 1
+      failure_threshold: 20
+
+  audit-service:
+    command: just service::audit::dev
+    depends_on:
+      iam-service:
+        condition: process_healthy
+    availability:
+      restart: on_failure
+      backoff_seconds: 2
+      max_restarts: 5
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        scheme: http
+        port: 10020
+        path: /readyz
+      initial_delay_seconds: 2
+      period_seconds: 2
+      timeout_seconds: 2
+      success_threshold: 1
+      failure_threshold: 20
+
+  iam-web:
+    command: just web::iam::dev
+    depends_on:
+      iam-service:
+        condition: process_healthy
+    availability:
+      restart: on_failure
+      backoff_seconds: 2
+      max_restarts: 5
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        scheme: http
+        port: 10002
+        path: /
+      initial_delay_seconds: 2
+      period_seconds: 2
+      timeout_seconds: 3
+      success_threshold: 1
+      failure_threshold: 20
+
+  admin-service:
+    command: just service::admin::dev
+    depends_on:
+      iam-service:
+        condition: process_healthy
+      audit-service:
+        condition: process_healthy
+      iam-web:
+        condition: process_healthy
+    availability:
+      restart: on_failure
+      backoff_seconds: 2
+      max_restarts: 5
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        scheme: http
+        port: 10010
+        path: /readyz
+      initial_delay_seconds: 2
+      period_seconds: 2
+      timeout_seconds: 2
+      success_threshold: 1
+      failure_threshold: 20
+
+  admin-web:
+    command: just web::admin::dev
+    depends_on:
+      admin-service:
+        condition: process_healthy
+    availability:
+      restart: on_failure
+      backoff_seconds: 2
+      max_restarts: 5
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        scheme: http
+        port: 10012
+        path: /
+      initial_delay_seconds: 2
+      period_seconds: 2
+      timeout_seconds: 3
+      success_threshold: 1
+      failure_threshold: 20

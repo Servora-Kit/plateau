@@ -744,3 +744,58 @@ func sameStrings(left, right []string) bool {
 	}
 	return true
 }
+
+func TestLoopbackHostIssuerAndRedirectURI(t *testing.T) {
+	allowedIssuers := []string{
+		"http://localhost:10002",
+		"http://LOCALHOST:8080",
+		"http://127.0.0.1:10000",
+		"http://[::1]:10000",
+		"http://iam.plateau.localhost:8080",
+		"http://IAM.Plateau.LocalHost:8080/",
+		"https://iam.example.com",
+	}
+	for _, raw := range allowedIssuers {
+		if _, _, err := normalizeIssuer(raw); err != nil {
+			t.Errorf("normalizeIssuer(%q) unexpected error: %v", raw, err)
+		}
+	}
+
+	rejectedIssuers := []string{
+		"http://.localhost:8080",
+		"http://..localhost:8080",
+		"http://foo..localhost:8080",
+		"http://.iam.plateau.localhost:8080",
+		"http://evil-localhost.com",
+		"http://iam.plateau.localhost.evil.com",
+		"http://localhost.:8080",
+	}
+	for _, raw := range rejectedIssuers {
+		if _, _, err := normalizeIssuer(raw); err == nil {
+			t.Errorf("normalizeIssuer(%q) succeeded; expected HTTPS requirement error", raw)
+		}
+	}
+
+	allowedRedirects := []string{
+		"http://localhost:10012/v1/admin/auth/callback",
+		"http://admin.plateau.localhost:8080/v1/admin/auth/callback",
+		"https://admin.example.com/v1/admin/auth/callback",
+	}
+	for _, raw := range allowedRedirects {
+		if err := validateRedirectURI(raw); err != nil {
+			t.Errorf("validateRedirectURI(%q) unexpected error: %v", raw, err)
+		}
+	}
+
+	rejectedRedirects := []string{
+		"http://.localhost:8080/callback",
+		"http://foo..localhost:8080/callback",
+		"http://evil-localhost.com/callback",
+		"http://admin.plateau.localhost.evil.com/callback",
+	}
+	for _, raw := range rejectedRedirects {
+		if err := validateRedirectURI(raw); err == nil {
+			t.Errorf("validateRedirectURI(%q) succeeded; expected HTTPS requirement error", raw)
+		}
+	}
+}

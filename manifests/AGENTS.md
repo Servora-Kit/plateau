@@ -1,75 +1,67 @@
 # AGENTS.md - manifests/
 
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-03-15 | Updated: 2026-03-22 -->
+<!-- Generated: 2026-03-15 | Updated: 2026-11-25 -->
 
 ## 目录定位
 
-`manifests/` 保存仓库内可运行或可复用的部署资产，当前重点是 `k8s/` Kustomize 清单、`openfga/` 模型与 `scripts/` 自动化脚本。
-这里描述的是 **当前仓库真实存在的目录和命令**，不要沿用过时目录名。
+`manifests/` 保存仓库内实际运行与复用的部署及初始化资产，包含 OpenFGA 授权模型与平台静态服务元组、本地容器网关 Traefik 配置、数据库与模型自动化脚本，以及可观测组件配置。
 
 ## 当前结构
 
 ```text
 manifests/
-├── k8s/
-│   ├── base/                 # 命名空间、RBAC 与跨服务聚合入口
-│   ├── iam/                  # IAM 服务 Kustomize 清单
-│   └── sayhello/             # SayHello 服务 Kustomize 清单
-├── openfga/                 # 扁平 OpenFGA modular model 目录
-│   ├── fga.mod             # 组合各领域 module 的部署入口
-│   ├── *.fga               # 各领域授权 module（如 iam.fga）
-│   └── *.fga.yaml          # 引用 fga.mod 的领域模型测试
+├── openfga/                          # OpenFGA 模块化授权模型与静态服务元组
+│   ├── fga.mod                       # 组合各领域模块的部署入口
+│   ├── *.fga                         # 各领域授权模块（iam.fga / admin.fga / audit.fga）
+│   ├── *.fga.yaml                    # 引用 fga.mod 的声明式模型测试
+│   └── tuples/
+│       └── platform-services.yaml    # 平台服务间静态授权关系元组（如 service:admin）
 ├── scripts/
-│   ├── openfga.sh            # Unix OpenFGA store/model 管理
-│   ├── openfga.ps1           # 原生 PowerShell 等价实现
-│   ├── k6/                   # 压测脚本
-│   └── postgres-init/        # Compose 用 DB 初始化 SQL
-└── ...
+│   ├── openfga/
+│   │   ├── openfga.sh                # Unix OpenFGA store / model / sync-tuples 脚本
+│   │   └── openfga.ps1               # Windows PowerShell 等价实现
+│   ├── postgres/                     # Compose PostgreSQL 多库与角色初始化脚本
+│   └── ci/                           # CI 辅助脚本
+├── traefik/
+│   ├── traefik.yaml                  # 本地开发网关静态配置（Consul Catalog + File Provider）
+│   └── routes.yaml                   # 纯前端进程（iam-web / admin-web）低优先级页面兜底路由
+├── otel/                             # OpenTelemetry Collector 配置
+├── prometheus/                       # Prometheus 抓取配置
+├── loki/                             # Loki 日志存储配置
+└── grafana/                          # Grafana 数据源与预置看板
 ```
 
 ## WHERE TO LOOK
 
 | 任务 | 位置 | 说明 |
 |------|------|------|
-| 本地基础设施 | `../docker-compose.yaml` | root `just compose-up` |
-| 本地开发环境 | `../docker-compose.yaml` + 服务 leaf 本机 Air | root `just compose-up` 后执行 `just service::<name>::dev` |
-| K8s 基础设施聚合 | `k8s/base/` | Namespace / RBAC / 跨目录资源聚合 |
-| IAM 服务部署 | `k8s/iam/` | `deployment.yaml`、`service.yaml`、`configmap.yaml`、依赖资源 |
-| SayHello 服务部署 | `k8s/sayhello/` | `deployment.yaml`、`service.yaml`、`configmap.yaml` |
-| OpenFGA model | `openfga/*.fga`、`openfga/fga.mod` | 修改后需执行 `just openfga-model-apply` |
-| OpenFGA model 测试 | `openfga/*.fga.yaml` | 使用 `just openfga-model-test` |
-| OpenFGA 管理脚本 | `scripts/openfga.sh`、`scripts/openfga.ps1` | 由 Just 按操作系统分派，不依赖 `svr` |
-| Compose 初始化脚本 | `scripts/postgres-init/` | 根 `docker-compose.yaml` 挂载 |
-| 压测脚本 | `scripts/k6/` | k6 压测 |
+| 本地基础设施容器 | `../docker-compose.yaml` | `just compose-up` |
+| 本地全栈一键编排 | `../process-compose.yaml` | `just dev` / `just dev-up` / `just dev-down` |
+| Traefik 网关路由 | `traefik/routes.yaml` + 各服务 `bootstrap.yaml` | Go 后端由各自 `registry.consul.tags` 自治声明，`routes.yaml` 仅作纯前端兜底；严禁暴露 `audit.service` 或 `/metrics`、`/healthz`、`/readyz` |
+| OpenFGA 模型与单测 | `openfga/*.fga`、`openfga/*.fga.yaml` | `just openfga-model-test` / `just openfga-model-apply` |
+| OpenFGA 平台服务元组 | `openfga/tuples/platform-services.yaml` | `just openfga-tuple-sync`（或本地 `just openfga-setup`） |
+| OpenFGA 管理脚本 | `scripts/openfga/openfga.{sh,ps1}` | 支持 `init`、`apply`、`sync-tuples` 三种子命令 |
+| PostgreSQL 初始化 | `scripts/postgres/create-databases.sh` | 供 `docker-compose.yaml` 中 `postgres-provision` 挂载执行 |
 
-## 约定
+## 关键约定
 
-### 与 templates/ 的区别
-- `templates/`：框架级示例模板，给使用框架的人参考
-- `manifests/`：当前仓库实际使用/维护的部署资产
-- 两者可以相互参考，但不要假设目录结构完全同步
+1. **OpenFGA 三层分离**：
+   - `init` / `apply` 仅管理 Store 与授权模型（写入 `.env` 的 `FGA_STORE_ID` / `FGA_MODEL_ID`），不自动写元组，确保集成测试临时 Store 零预设元组隔离。
+   - `tuples/platform-services.yaml` 仅声明不含动态用户 UUID 与个人敏感信息的平台级服务关系（如 `service:admin` 对 `iam:global` 和 `audit:global` 的调用权），通过 `just openfga-tuple-sync` 幂等同步（`--on-duplicate ignore`）。
+2. **Traefik 本地网关路由（后端 Consul 自治 + 前端文件兜底）**：
+   - `traefik/traefik.yaml` 同时启用 `providers.consulCatalog`（`exposedByDefault: false`）与 `providers.file`：Go 微服务（`iam.service`、`admin.service` 及后续业务服务）统一在各自 `configs/{local,docker}/bootstrap.yaml` 的 `registry.consul.tags` 声明 `priority=100` 路由及显式 HTTP 端口（`server.port`），新增后端服务无需改动 `manifests/traefik/`；`traefik/routes.yaml` 仅保留不注册 Consul 的纯前端进程（`iam-web:10002`、`admin-web:10012`，`priority: 10`）兜底。
 
-### K8s 清单组织
-- 统一使用 **Kustomize**，不是 Helm
-- `k8s/base/` 负责命名空间、RBAC 与跨目录聚合；服务自身资源定义放在 `k8s/<service>/`
-- 服务目录通常包含 `deployment.yaml`、`service.yaml`、`configmap.yaml`；如果有额外依赖（如 postgres、redis），也与服务清单放在同级目录
-- 修改 `kustomization.yaml` 时先核对引用路径是否仍与当前仓库结构一致，尤其不要保留已经迁移/删除的旧路径
+## 常用命令
 
-### 常用命令
 ```bash
 just compose-up
-just compose-stop
 just compose-down
 just compose-reset
-just openfga-init
 just openfga-model-validate
 just openfga-model-test
+just openfga-init
 just openfga-model-apply
+just openfga-tuple-sync
+just openfga-setup
 ```
-
-## 维护提醒
-
-- SQL 初始化脚本如果位于服务目录，应在对应服务目录内维护；`manifests/scripts/postgres-init/` 仅负责 Compose 场景
-- 变更 OpenFGA model 后，除了提交文件本身，还要提醒执行 `just openfga-model-apply`
-- 如果清单引用了 `app/`、`templates/` 或外部目录，更新前先验证这些路径今天是否真实存在，避免把历史遗留路径继续写入文档

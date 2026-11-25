@@ -2,3 +2,7 @@ import "../../../just/service.just"
 
 # IAM uses the shared service lifecycle; keep an explicit Ent alias at the leaf.
 ent: gen-ent
+
+[working-directory(COMPONENT_DIR)]
+keygen *args:
+    @go run {{ GOFLAGS }} ./cmd/keygen -conf "{{ CONF }}" {{ args }}

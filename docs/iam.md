@@ -4,7 +4,7 @@ IAM HTTP 提供登录、注销、账户与 OIDC 协议入口；UserService 管�
 
 ## 运行配置
 
-本机读取 `app/iam/service/configs/local/`，容器读取 `configs/docker/`。两者使用相同配置结构，数据库、Redis、邮件和 OpenFGA 地址分别指向本机端口或 Compose 服务名。容器配置要求公开 HTTPS 入口可从调用方访问，并挂载 OIDC 签名密钥与提供方加密密钥。
+本机读取 `app/iam/service/configs/local/`（默认通过本地 Traefik 暴露 RFC 6761 回环域名 `http://iam.plateau.localhost:8080`，免改 `/etc/hosts`），容器读取 `configs/docker/`。两者使用相同配置结构，数据库、Redis、邮件和 OpenFGA 地址分别指向本机端口或 Compose 服务名。非回环生产环境要求公开 HTTPS 入口可从调用方访问，并挂载 OIDC 签名密钥与提供方加密密钥。
 
 ```yaml
 iam:
@@ -31,24 +31,35 @@ Cookie 默认 Secure、HttpOnly、host-only、Path=/、SameSite=Lax。IAM 保留
 
 初始用户仅在不存在时创建，状态为 active 且邮箱已验证，初始密码只在首次创建时输出。初始化不写任何 IAM 或 Admin 授权关系。
 
+### OIDC 密钥生成与轮换（`cmd/keygen`）
+
+`app/iam/service/cmd/keygen` 复用 `internal/oidc` 的密钥解析规则，用于生成与校验 RSA-2048 PKCS#8 PEM 签名私钥和 32 字节加密密钥（目录权限 `0700`、文件权限 `0600`，临时文件回读校验后原子替换）：
+
+- **本地初始化**：执行 `just service::iam::keygen`（默认读取 `./configs/local/` 中的 `oidc.yaml`）。目标密钥文件已存在且合法时幂等跳过，保护当前登录态与未过期令牌；若文件损坏且未传 `-force` 则直接报错退出，拒绝静默覆盖；需要轮换密钥时传入 `just service::iam::keygen -force`。
+- **容器与多副本生产环境**：`just service::iam::build` 会在 `./bin/` 下同时编译产出 `server` 与 `keygen`。多副本部署严禁让每个 `iam.service` 副本各自在容器临时盘执行生成（否则各副本持有不同私钥与加密密钥会导致跨实例验签失败）；应由 CI/CD 或一次性初始化 Job 执行 `./bin/keygen -signing-key <path> -crypto-key <path>` 将密钥写入外部共享 Secret 后再挂载给各只读副本。
+
 ## 显式授权
 
 部署模型使用 `manifests/openfga/fga.mod`。IAM 关系包含 `service:<client_id> manage_users iam:global` 与独立的永久删除关系 `service:<client_id> expunge_users iam:global`（不从 `manage_users` 派生）；Audit 关系包含 `service:<client_id> read_events audit:global`；Admin 示例中的 `user:<id> admin admin:global` 派生 `access`、`manage_users`、`expunge_users` 与 `read_audit`。客户端注册不会产生权限。
 
+OpenFGA 采用三层分离管理：Store（`init`）、授权模型（`init` / `apply`）与平台服务静态关系元组（`sync-tuples`，读取 `manifests/openfga/tuples/platform-services.yaml`）。`openfga-init` 与 `openfga-model-apply` 保持零预设元组以保障集成测试隔离：
+
 ```bash
-rtk proxy just openfga-model-validate
-rtk proxy just openfga-model-test
-rtk proxy just openfga-model-apply
-rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin manage_users iam:global
-rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin expunge_users iam:global
-rtk proxy fga tuple write --api-url "$FGA_API_URL" --store-id "$FGA_STORE_ID" --model-id "$FGA_MODEL_ID" --on-duplicate ignore service:admin read_events audit:global
+# 本地一键完成 Store 创建、模型校验写入与平台服务元组同步
+just openfga-setup
+
+# 生产或指定环境分步执行
+just openfga-model-validate
+just openfga-model-test
+just openfga-model-apply
+just openfga-tuple-sync
 ```
 
 Just 默认加载项目 `.env` 并覆盖同名环境变量。使用独立测试 store 时，必须同时指定 `--dotenv-path` 和 `ENV_FILE`，确保模型写入与输出文件指向同一环境：
 
 ```bash
-rtk proxy bash manifests/scripts/openfga/openfga.sh init --store-name iam-security-test --env-file /tmp/iam-security-test.env
-rtk proxy just --dotenv-path /tmp/iam-security-test.env ENV_FILE=/tmp/iam-security-test.env openfga-model-apply
+bash manifests/scripts/openfga/openfga.sh init --store-name iam-test --env-file /tmp/iam-test.env
+just --dotenv-path /tmp/iam-test.env ENV_FILE=/tmp/iam-test.env openfga-model-apply
 ```
 
 开发模型直接替换，旧平台授权数据不迁移。CMS 模型由 Admin 示例替代。

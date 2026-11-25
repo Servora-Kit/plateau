@@ -8,6 +8,7 @@ import (
 	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/audit"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
@@ -59,7 +60,7 @@ func NewIAMProvider(
 	if err != nil {
 		return nil, err
 	}
-	cryptoKey, cryptoKeyID, err := loadCryptoKey(config.GetCryptoKeyPath())
+	cryptoKey, cryptoKeyID, err := LoadCryptoKey(config.GetCryptoKeyPath())
 	if err != nil {
 		return nil, err
 	}
@@ -350,17 +351,8 @@ func normalizeIssuer(raw string) (string, bool, error) {
 	if parsed.Scheme == "https" {
 		return issuer, false, nil
 	}
-	if parsed.Scheme == "http" && isLoopbackHost(parsed.Hostname()) {
+	if parsed.Scheme == "http" && security.IsLoopbackHost(parsed.Hostname()) {
 		return issuer, true, nil
 	}
 	return "", false, fmt.Errorf("OIDC issuer must use HTTPS except on localhost")
-}
-
-func isLoopbackHost(host string) bool {
-	switch host {
-	case "localhost", "127.0.0.1", "::1":
-		return true
-	default:
-		return false
-	}
 }

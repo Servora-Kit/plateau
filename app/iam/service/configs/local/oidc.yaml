@@ -1,12 +1,12 @@
 oidc:
-  issuer: "${IAM_PUBLIC_ORIGIN:http://localhost:10002}"
+  issuer: "${IAM_PUBLIC_ORIGIN:http://iam.plateau.localhost:8080}"
   signing_key_path: "${IAM_OIDC_SIGNING_KEY_PATH:./configs/local/secrets/oidc-signing.pem}"
   crypto_key_path: "${IAM_OIDC_CRYPTO_KEY_PATH:./configs/local/secrets/oidc-crypto.key}"
   clients:
     - client_id: admin
       client_secret: "${IAM_ADMIN_CLIENT_SECRET:dev-admin-oidc-client-secret-32bytes}"
       redirect_uris:
-        - "${ADMIN_OIDC_REDIRECT_URI:http://localhost:10012/v1/admin/auth/callback}"
+        - "${ADMIN_OIDC_REDIRECT_URI:http://admin.plateau.localhost:8080/v1/admin/auth/callback}"
       allowed_scopes:
         - openid
         - profile

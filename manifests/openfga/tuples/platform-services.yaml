@@ -1,0 +1,9 @@
+- user: service:admin
+  relation: manage_users
+  object: iam:global
+- user: service:admin
+  relation: expunge_users
+  object: iam:global
+- user: service:admin
+  relation: read_events
+  object: audit:global

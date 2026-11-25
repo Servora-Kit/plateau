@@ -9,6 +9,7 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/jwt/v1"
+	"github.com/Servora-Kit/plateau/security"
 )
 
 // NewJWKS caches a trusted remote key set until cleanup or context cancellation.
@@ -20,7 +21,7 @@ func NewJWKS(ctx context.Context, config *jwtpb.JWKS) (*Verifier, func(), error)
 	if err != nil || uri.Host == "" || uri.User != nil || uri.Fragment != "" {
 		return nil, nil, fmt.Errorf("jwt: invalid JWKS URI")
 	}
-	loopback := uri.Hostname() == "localhost" || uri.Hostname() == "127.0.0.1" || uri.Hostname() == "::1"
+	loopback := security.IsLoopbackHost(uri.Hostname())
 	if uri.Scheme != "https" && (uri.Scheme != "http" || !loopback) {
 		return nil, nil, fmt.Errorf("jwt: JWKS requires HTTPS except on loopback")
 	}

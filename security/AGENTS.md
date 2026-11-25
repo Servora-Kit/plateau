@@ -11,6 +11,8 @@
 
 - `actor.go`：共享执行主体 `Actor{Type, ID}`，类型为 `human` / `service` / `anonymous`；作为 AuthN 结果与 AuthZ 输入的通用载体，经 `WithActor` / `ActorFrom` 在进程内传递
 - `rules.go`：泛型路由规则聚合入口（`RulesOption[R]` / `WithRulesFuncs[R]` / `NewRules[R]`），统一承载 AuthN、AuthZ 与 Audit 生成规则表的合并
+- `identity.go`：统一邮箱规范化（`NormalizeEmail`）
+- `loopback.go`：RFC 6761 与回环地址校验（`IsLoopbackHost`）
 - `authn/`：认证实现族
   - `jwt/`：Bearer JWT 认证器、泛型指针约束 `ActorClaims[T]`（`AuthenticateFor` / `ServerFor`）及平台通用 `AccessClaims` / `ServiceClaims` / `HumanClaims`
   - `session/`：泛型 SCS 会话认证器（`New[T]` / `Server[T]`）以及标准 `*userpb.User` 浏览器会话接入（`SaveUser` / `NewUserAuthenticator` / `UserFrom`）

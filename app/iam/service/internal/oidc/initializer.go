@@ -12,6 +12,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 )
@@ -211,7 +212,7 @@ func validateRedirectURI(raw string) error {
 	if parsed.Scheme == "https" {
 		return nil
 	}
-	if parsed.Scheme == "http" && isLoopbackHost(parsed.Hostname()) {
+	if parsed.Scheme == "http" && security.IsLoopbackHost(parsed.Hostname()) {
 		return nil
 	}
 	return fmt.Errorf("redirect URI %q must use HTTPS except on localhost", raw)

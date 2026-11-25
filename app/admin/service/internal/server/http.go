@@ -16,6 +16,7 @@ import (
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	svrhttp "github.com/Servora-Kit/servora/transport/server/http"
+	"github.com/Servora-Kit/servora/transport/server/http/health"
 	"github.com/Servora-Kit/servora/transport/server/middleware"
 	"github.com/alexedwards/scs/v2"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
@@ -60,6 +61,7 @@ func NewHTTPServer(
 		svrhttp.WithFilter(browserFilter),
 		svrhttp.WithMiddleware(ms...),
 		svrhttp.WithMetrics(m),
+		svrhttp.WithHealthCheck(health.NewHandler()),
 		svrhttp.WithServices(func(s *khttp.Server) {
 			authSvc.RegisterOIDCHTTP(s, auditor)
 			adminauthpb.RegisterAuthServiceHTTPServer(s, authSvc)

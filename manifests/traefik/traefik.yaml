@@ -35,6 +35,9 @@ providers:
     exposedByDefault: false
     refreshInterval: 5s
     prefix: traefik
+  file:
+    filename: /etc/traefik/routes.yaml
+    watch: true
 
 log:
   level: INFO

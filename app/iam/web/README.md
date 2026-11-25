@@ -4,14 +4,16 @@ IAM Web 使用 Next.js App Router，通过同源路径调用 IAM、CAP 与 OIDC 
 
 ## 本地开发
 
-在 Plateau 根目录执行 `pnpm install`，并启动 Docker 中间件。随后在两个终端分别运行：
+推荐在仓库根目录通过一键编排启动全栈环境：
 
 ```bash
-just service::iam::run
-just web::iam::dev
+just init
+just dev
 ```
 
-Web 默认入口为 `http://localhost:10002`，Go HTTP/gRPC 使用 `10000/10001`。修改入口时通过 `IAM_PUBLIC_ORIGIN` 同步邮件与 OIDC 地址；非 localhost 环境应使用受信任的 HTTPS。
+本地默认通过 Traefik 网关以 `http://iam.plateau.localhost:8080` 访问（遵循 RFC 6761 免改 `/etc/hosts`），网关将 API、CAP、OIDC 与 `/docs` 路径直转 `iam.service:10000`，其余页面流量转发至 `iam-web:10002`。
+
+若脱离网关单独调试，也可保留 Next.js 内置同源 rewrite 回退能力，在两个终端分别运行 `just service::iam::run` 与 `just web::iam::dev` 并覆盖 `IAM_PUBLIC_ORIGIN=http://localhost:10002`。修改公开入口时须同步邮件与 OIDC 地址；非回环环境必须使用受信任的 HTTPS。
 
 ## 构建与运行
 

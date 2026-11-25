@@ -1,12 +1,14 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet('init', 'apply')]
+    [ValidateSet('init', 'apply', 'sync-tuples')]
     [string]$Command,
     [string]$ApiUrl,
     [string]$Model = 'manifests/openfga/fga.mod',
     [string]$StoreName,
     [string]$StoreId,
+    [string]$ModelId,
+    [string]$TuplesFile = 'manifests/openfga/tuples/platform-services.yaml',
     [string]$EnvFile = '.env'
 )
 
@@ -15,9 +17,6 @@ $ErrorActionPreference = 'Stop'
 
 if (-not (Get-Command fga -ErrorAction SilentlyContinue)) {
     throw 'required command not found: fga'
-}
-if (-not (Test-Path -LiteralPath $Model -PathType Leaf)) {
-    throw "model file not found: $Model"
 }
 
 function Get-DotEnvValue([string]$Key) {
@@ -116,6 +115,9 @@ function Find-StoreIdByName {
 }
 
 function Write-Model {
+    if (-not (Test-Path -LiteralPath $Model -PathType Leaf)) {
+        throw "model file not found: $Model"
+    }
     $response = Invoke-Fga @('model', 'write', '--store-id', $StoreId, '--file', $Model)
     return Get-JsonId $response 'model'
 }
@@ -137,10 +139,20 @@ if ($Command -eq 'init') {
     Write-InitEnvironment $modelId
     Write-Output "OpenFGA store ready: $StoreId"
     Write-Output "OpenFGA model ready: $modelId"
-} else {
+} elseif ($Command -eq 'apply') {
     if ([string]::IsNullOrWhiteSpace($StoreId)) { $StoreId = Get-ConfigValue 'FGA_STORE_ID' }
     if ([string]::IsNullOrWhiteSpace($StoreId)) { throw 'store ID required: use -StoreId or FGA_STORE_ID' }
     $modelId = Write-Model
     Set-DotEnvValues @{ FGA_MODEL_ID = $modelId }
     Write-Output "OpenFGA model applied: $modelId"
+} else {
+    if ([string]::IsNullOrWhiteSpace($StoreId)) { $StoreId = Get-ConfigValue 'FGA_STORE_ID' }
+    if ([string]::IsNullOrWhiteSpace($StoreId)) { throw 'store ID required: use -StoreId or FGA_STORE_ID' }
+    if ([string]::IsNullOrWhiteSpace($ModelId)) { $ModelId = Get-ConfigValue 'FGA_MODEL_ID' }
+    if ([string]::IsNullOrWhiteSpace($ModelId)) { throw 'model ID required: use -ModelId or FGA_MODEL_ID' }
+    if ([string]::IsNullOrWhiteSpace($TuplesFile) -or -not (Test-Path -LiteralPath $TuplesFile -PathType Leaf)) {
+        throw "tuples file not found: $TuplesFile"
+    }
+    Invoke-Fga @('tuple', 'write', '--store-id', $StoreId, '--model-id', $ModelId, '--file', $TuplesFile, '--on-duplicate', 'ignore') | Out-Null
+    Write-Output "OpenFGA tuples synced: $TuplesFile"
 }
