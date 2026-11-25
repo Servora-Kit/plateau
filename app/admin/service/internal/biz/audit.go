@@ -16,9 +16,10 @@ var ErrInvalidAuditArgument = errors.New("admin: invalid audit query argument")
 type AuditEventRepo interface {
 	ListEvents(ctx context.Context, req *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error)
 	GetEvent(ctx context.Context, req *auditeventpb.GetEventRequest) (*auditeventpb.Event, error)
+	ListServices(ctx context.Context, req *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error)
 }
 
-// AuditUsecase orchestrates read-only control-plane audit event queries for platform administrators.
+// AuditUsecase orchestrates read-only platform audit event queries for platform administrators.
 type AuditUsecase struct {
 	repo AuditEventRepo
 }
@@ -59,7 +60,7 @@ func (uc *AuditUsecase) ListEvents(ctx context.Context, req *auditeventpb.ListEv
 	return uc.repo.ListEvents(ctx, req)
 }
 
-// GetEvent retrieves one control-plane audit event by validated resource name.
+// GetEvent retrieves one platform audit event by validated resource name.
 func (uc *AuditUsecase) GetEvent(ctx context.Context, name auditeventpb.EventName) (*auditeventpb.Event, error) {
 	actor, ok := security.ActorFrom(ctx)
 	if !ok || !actor.Valid() || actor.Type != security.ActorTypeHuman {
@@ -70,4 +71,17 @@ func (uc *AuditUsecase) GetEvent(ctx context.Context, name auditeventpb.EventNam
 		return nil, fmt.Errorf("%w: %v", ErrInvalidAuditArgument, err)
 	}
 	return uc.repo.GetEvent(ctx, &auditeventpb.GetEventRequest{Name: formatted})
+}
+
+// ListServices retrieves distinct producer service identifiers for human administrators.
+func (uc *AuditUsecase) ListServices(ctx context.Context) ([]string, error) {
+	actor, ok := security.ActorFrom(ctx)
+	if !ok || !actor.Valid() || actor.Type != security.ActorTypeHuman {
+		return nil, ErrUnauthenticated
+	}
+	resp, err := uc.repo.ListServices(ctx, &auditeventpb.ListServicesRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetServices(), nil
 }

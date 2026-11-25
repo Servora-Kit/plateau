@@ -328,6 +328,86 @@ func (x *ListEventsResponse) GetNextPageToken() string {
 	return ""
 }
 
+type ListServicesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListServicesRequest) Reset() {
+	*x = ListServicesRequest{}
+	mi := &file_admin_audit_v1_audit_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListServicesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListServicesRequest) ProtoMessage() {}
+
+func (x *ListServicesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admin_audit_v1_audit_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListServicesRequest.ProtoReflect.Descriptor instead.
+func (*ListServicesRequest) Descriptor() ([]byte, []int) {
+	return file_admin_audit_v1_audit_proto_rawDescGZIP(), []int{3}
+}
+
+type ListServicesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Services      []string               `protobuf:"bytes,1,rep,name=services,proto3" json:"services,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListServicesResponse) Reset() {
+	*x = ListServicesResponse{}
+	mi := &file_admin_audit_v1_audit_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListServicesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListServicesResponse) ProtoMessage() {}
+
+func (x *ListServicesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admin_audit_v1_audit_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListServicesResponse.ProtoReflect.Descriptor instead.
+func (*ListServicesResponse) Descriptor() ([]byte, []int) {
+	return file_admin_audit_v1_audit_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListServicesResponse) GetServices() []string {
+	if x != nil {
+		return x.Services
+	}
+	return nil
+}
+
 var File_admin_audit_v1_audit_proto protoreflect.FileDescriptor
 
 const file_admin_audit_v1_audit_proto_rawDesc = "" +
@@ -360,17 +440,21 @@ const file_admin_audit_v1_audit_proto_rawDesc = "" +
 	"\b_success\"k\n" +
 	"\x12ListEventsResponse\x12-\n" +
 	"\x06events\x18\x01 \x03(\v2\x15.audit.event.v1.EventR\x06events\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\xa7\x02\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x15\n" +
+	"\x13ListServicesRequest\"2\n" +
+	"\x14ListServicesResponse\x12\x1a\n" +
+	"\bservices\x18\x01 \x03(\tR\bservices*\xa7\x02\n" +
 	"\x15AdminAuditErrorReason\x12(\n" +
 	"$ADMIN_AUDIT_ERROR_REASON_UNSPECIFIED\x10\x00\x123\n" +
 	"(ADMIN_AUDIT_ERROR_REASON_EVENT_NOT_FOUND\x10\x01\x1a\x05\xa8\xd4\x18\x94\x03\x124\n" +
 	")ADMIN_AUDIT_ERROR_REASON_INVALID_ARGUMENT\x10\x02\x1a\x05\xa8\xd4\x18\x90\x03\x126\n" +
 	"+ADMIN_AUDIT_ERROR_REASON_INVALID_PAGE_TOKEN\x10\x03\x1a\x05\xa8\xd4\x18\x90\x03\x12:\n" +
-	"/ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE\x10\x04\x1a\x05\xa8\xd4\x18\xf7\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xbe\x02\n" +
+	"/ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE\x10\x04\x1a\x05\xa8\xd4\x18\xf7\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xbb\x03\n" +
 	"\fAuditService\x12\x8a\x01\n" +
 	"\n" +
 	"ListEvents\x12!.admin.audit.v1.ListEventsRequest\x1a\".admin.audit.v1.ListEventsResponse\"5\xdaA\x14page_size,page_token\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/admin/audit/events\x12r\n" +
-	"\bGetEvent\x12\x1f.admin.audit.v1.GetEventRequest\x1a\x15.audit.event.v1.Event\".\xdaA\x04name\x82\xd3\xe4\x93\x02!\x12\x1f/v1/admin/audit/{name=events/*}\x1a-\xaa\xbb\x18\x02\b\x01\xca\xc1\x18\x1d\b\x02\x12\n" +
+	"\bGetEvent\x12\x1f.admin.audit.v1.GetEventRequest\x1a\x15.audit.event.v1.Event\".\xdaA\x04name\x82\xd3\xe4\x93\x02!\x12\x1f/v1/admin/audit/{name=events/*}\x12{\n" +
+	"\fListServices\x12#.admin.audit.v1.ListServicesRequest\x1a$.admin.audit.v1.ListServicesResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/admin/audit/services\x1a-\xaa\xbb\x18\x02\b\x01\xca\xc1\x18\x1d\b\x02\x12\n" +
 	"read_audit\x1a\x05admin\"\x06global\xea\xc7\x18\x02\b\x02BGZEgithub.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1;adminauditv1b\x06proto3"
 
 var (
@@ -386,27 +470,31 @@ func file_admin_audit_v1_audit_proto_rawDescGZIP() []byte {
 }
 
 var file_admin_audit_v1_audit_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_admin_audit_v1_audit_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_admin_audit_v1_audit_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_admin_audit_v1_audit_proto_goTypes = []any{
 	(AdminAuditErrorReason)(0),    // 0: admin.audit.v1.AdminAuditErrorReason
 	(*GetEventRequest)(nil),       // 1: admin.audit.v1.GetEventRequest
 	(*ListEventsRequest)(nil),     // 2: admin.audit.v1.ListEventsRequest
 	(*ListEventsResponse)(nil),    // 3: admin.audit.v1.ListEventsResponse
-	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
-	(v1.AuditCategory)(0),         // 5: plateau.security.audit.v1.AuditCategory
-	(*v11.Event)(nil),             // 6: audit.event.v1.Event
+	(*ListServicesRequest)(nil),   // 4: admin.audit.v1.ListServicesRequest
+	(*ListServicesResponse)(nil),  // 5: admin.audit.v1.ListServicesResponse
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(v1.AuditCategory)(0),         // 7: plateau.security.audit.v1.AuditCategory
+	(*v11.Event)(nil),             // 8: audit.event.v1.Event
 }
 var file_admin_audit_v1_audit_proto_depIdxs = []int32{
-	4, // 0: admin.audit.v1.ListEventsRequest.start_time:type_name -> google.protobuf.Timestamp
-	4, // 1: admin.audit.v1.ListEventsRequest.end_time:type_name -> google.protobuf.Timestamp
-	5, // 2: admin.audit.v1.ListEventsRequest.category:type_name -> plateau.security.audit.v1.AuditCategory
-	6, // 3: admin.audit.v1.ListEventsResponse.events:type_name -> audit.event.v1.Event
+	6, // 0: admin.audit.v1.ListEventsRequest.start_time:type_name -> google.protobuf.Timestamp
+	6, // 1: admin.audit.v1.ListEventsRequest.end_time:type_name -> google.protobuf.Timestamp
+	7, // 2: admin.audit.v1.ListEventsRequest.category:type_name -> plateau.security.audit.v1.AuditCategory
+	8, // 3: admin.audit.v1.ListEventsResponse.events:type_name -> audit.event.v1.Event
 	2, // 4: admin.audit.v1.AuditService.ListEvents:input_type -> admin.audit.v1.ListEventsRequest
 	1, // 5: admin.audit.v1.AuditService.GetEvent:input_type -> admin.audit.v1.GetEventRequest
-	3, // 6: admin.audit.v1.AuditService.ListEvents:output_type -> admin.audit.v1.ListEventsResponse
-	6, // 7: admin.audit.v1.AuditService.GetEvent:output_type -> audit.event.v1.Event
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
+	4, // 6: admin.audit.v1.AuditService.ListServices:input_type -> admin.audit.v1.ListServicesRequest
+	3, // 7: admin.audit.v1.AuditService.ListEvents:output_type -> admin.audit.v1.ListEventsResponse
+	8, // 8: admin.audit.v1.AuditService.GetEvent:output_type -> audit.event.v1.Event
+	5, // 9: admin.audit.v1.AuditService.ListServices:output_type -> admin.audit.v1.ListServicesResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
 	4, // [4:4] is the sub-list for extension extendee
 	0, // [0:4] is the sub-list for field type_name
@@ -424,7 +512,7 @@ func file_admin_audit_v1_audit_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admin_audit_v1_audit_proto_rawDesc), len(file_admin_audit_v1_audit_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

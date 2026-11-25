@@ -14,8 +14,9 @@ import (
 )
 
 type stubRepo struct {
-	getFn  func(string) (*auditeventpb.Event, error)
-	listFn func(biz.ListEventsFilter) ([]*auditeventpb.Event, error)
+	getFn      func(string) (*auditeventpb.Event, error)
+	listFn     func(biz.ListEventsFilter) ([]*auditeventpb.Event, error)
+	servicesFn func() ([]string, error)
 }
 
 func (s *stubRepo) SaveBatch(context.Context, []*auditeventpb.Event) error { return nil }
@@ -24,6 +25,12 @@ func (s *stubRepo) GetByID(_ context.Context, id string) (*auditeventpb.Event, e
 }
 func (s *stubRepo) List(_ context.Context, f biz.ListEventsFilter) ([]*auditeventpb.Event, error) {
 	return s.listFn(f)
+}
+func (s *stubRepo) ListServices(context.Context) ([]string, error) {
+	if s.servicesFn != nil {
+		return s.servicesFn()
+	}
+	return []string{"//admin.service", "//iam.service"}, nil
 }
 
 func TestEventServiceValidationAndErrorMapping(t *testing.T) {
@@ -112,5 +119,10 @@ func TestEventServiceValidationAndErrorMapping(t *testing.T) {
 		PageToken: "not-a-valid-token",
 	}); !auditeventpb.IsEventErrorReasonInvalidPageToken(err) {
 		t.Fatalf("ListEvents(bad token) error = %v, want INVALID_PAGE_TOKEN", err)
+	}
+
+	svcResp, err := svc.ListServices(context.Background(), &auditeventpb.ListServicesRequest{})
+	if err != nil || len(svcResp.GetServices()) != 2 || svcResp.GetServices()[0] != "//admin.service" {
+		t.Fatalf("ListServices() = (%+v, %v)", svcResp, err)
 	}
 }

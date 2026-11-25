@@ -194,6 +194,27 @@ SETTINGS do_not_merge_across_partitions_select_final = 1`,
 	return out, nil
 }
 
+func (r *eventRepo) ListServices(ctx context.Context) ([]string, error) {
+	query := fmt.Sprintf(
+		"SELECT DISTINCT service FROM %s WHERE service != '' ORDER BY service ASC",
+		schema.TableEvents,
+	)
+	var rows []struct {
+		Service string `ch:"service"`
+	}
+	if err := r.data.ClickHouse().Select(ctx, &rows, query); err != nil {
+		if ctx.Err() != nil {
+			return nil, err
+		}
+		return nil, errors.Join(biz.ErrStorageUnavailable, err)
+	}
+	services := make([]string, len(rows))
+	for i := range rows {
+		services[i] = rows[i].Service
+	}
+	return services, nil
+}
+
 func toProto(row *schema.EventRow) *auditeventpb.Event {
 	name, err := auditeventpb.NewEventName(row.EventID).Format()
 	if err != nil {

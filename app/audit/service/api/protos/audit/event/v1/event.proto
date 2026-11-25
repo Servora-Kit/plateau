@@ -13,7 +13,7 @@ import "servora/errors/v1/errors.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1;auditeventpb";
 
-// EventService exposes read-only control-plane audit event retrieval to authorized platform services.
+// EventService exposes read-only platform audit event retrieval to authorized services.
 service EventService {
   option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
   option (plateau.security.authz.v1.service_default) = {
@@ -24,15 +24,18 @@ service EventService {
   };
   option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
 
-  // GetEvent returns a single control-plane audit event by canonical resource name.
+  // GetEvent returns a single platform audit event by canonical resource name.
   rpc GetEvent(GetEventRequest) returns (Event) {
     option (google.api.method_signature) = "name";
   }
 
-  // ListEvents returns a filtered page of control-plane audit events in reverse chronological order.
+  // ListEvents returns a filtered page of platform audit events in reverse chronological order.
   rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
     option (google.api.method_signature) = "page_size,page_token";
   }
+
+  // ListServices returns distinct producer service identifiers observed in audit storage.
+  rpc ListServices(ListServicesRequest) returns (ListServicesResponse) {}
 }
 
 // EventErrorReason classifies domain failures returned by EventService.
@@ -46,7 +49,7 @@ enum EventErrorReason {
   EVENT_ERROR_REASON_STORAGE_UNAVAILABLE = 4 [(servora.errors.v1.code) = 503];
 }
 
-// Event represents one immutable control-plane accountability record.
+// Event represents one immutable platform accountability record.
 message Event {
   option (google.api.resource) = {
     type: "audit.plateau.dev/Event"
@@ -110,4 +113,10 @@ message ListEventsRequest {
 message ListEventsResponse {
   repeated Event events = 1;
   string next_page_token = 2;
+}
+
+message ListServicesRequest {}
+
+message ListServicesResponse {
+  repeated string services = 1;
 }

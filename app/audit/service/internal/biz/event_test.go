@@ -22,6 +22,7 @@ type fakeEventRepo struct {
 	byID       map[string]*auditeventpb.Event
 	listFn     func(ListEventsFilter) ([]*auditeventpb.Event, error)
 	saveCalled int
+	services   []string
 }
 
 func (f *fakeEventRepo) SaveBatch(_ context.Context, events []*auditeventpb.Event) error {
@@ -46,6 +47,10 @@ func (f *fakeEventRepo) List(_ context.Context, filter ListEventsFilter) ([]*aud
 		return f.listFn(filter)
 	}
 	return nil, nil
+}
+
+func (f *fakeEventRepo) ListServices(_ context.Context) ([]string, error) {
+	return f.services, nil
 }
 
 func TestIngestEventsNormalizationAndPoisonIsolation(t *testing.T) {
@@ -232,5 +237,11 @@ func TestListEventsPaginationAndFilterFingerprintBinding(t *testing.T) {
 		EndTime:   &t3,
 	}); !errors.Is(err, ErrInvalidArgument) {
 		t.Fatalf("inverted time range error = %v, want ErrInvalidArgument", err)
+	}
+
+	repo.services = []string{"//admin.service", "//cms.service", "//iam.service"}
+	gotServices, err := uc.ListServices(context.Background())
+	if err != nil || len(gotServices) != 3 || gotServices[1] != "//cms.service" {
+		t.Fatalf("ListServices() = (%v, %v)", gotServices, err)
 	}
 }

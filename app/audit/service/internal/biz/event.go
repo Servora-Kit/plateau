@@ -71,6 +71,7 @@ type EventRepo interface {
 	SaveBatch(ctx context.Context, events []*auditeventpb.Event) error
 	GetByID(ctx context.Context, eventID string) (*auditeventpb.Event, error)
 	List(ctx context.Context, filter ListEventsFilter) ([]*auditeventpb.Event, error)
+	ListServices(ctx context.Context) ([]string, error)
 }
 
 // EventUsecase coordinates CloudEvents ingestion projection and read-only event retrieval.
@@ -327,6 +328,11 @@ func (uc *EventUsecase) ListEvents(ctx context.Context, q ListEventsQuery) ([]*a
 		}
 	}
 	return rows, nextToken, nil
+}
+
+// ListServices returns distinct non-empty producer service identifiers observed in storage.
+func (uc *EventUsecase) ListServices(ctx context.Context) ([]string, error) {
+	return uc.repo.ListServices(ctx)
 }
 
 func extString(ev *cloudevents.Event, key string) string {

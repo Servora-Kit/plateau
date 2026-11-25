@@ -78,7 +78,7 @@ export type ListEventsResponse = {
   nextPageToken?: string;
 };
 
-// Event represents one immutable control-plane accountability record.
+// Event represents one immutable platform accountability record.
 export type auditeventv1_Event = {
   //
   // Behaviors: OUTPUT_ONLY
@@ -140,9 +140,16 @@ export type auditeventv1_Event = {
   userAgent?: string;
 };
 
-// AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
+export type ListServicesRequest = {
+};
+
+export type ListServicesResponse = {
+  services?: string[];
+};
+
+// AuditService 面向平台管理员提供全平台审计事件的只读查询编排接口。
 export interface AuditService {
-  // ListEvents 分页检索平台控制面审计事件。
+  // ListEvents 分页检索全平台审计事件。
   ListEvents(
     request: ListEventsRequest,
   ): Promise<ListEventsResponse>;
@@ -150,6 +157,10 @@ export interface AuditService {
   GetEvent(
     request: GetEventRequest,
   ): Promise<auditeventv1_Event>;
+  // ListServices 返回已观测到的不重复生产服务标识列表。
+  ListServices(
+    request: ListServicesRequest,
+  ): Promise<ListServicesResponse>;
 }
 
 export function createAuditServiceClient(
@@ -248,6 +259,14 @@ export function createAuditServiceClient(
       return transport.unary<auditeventv1_Event>(path, 'GET', body, {
         service: 'AuditService',
         method: 'GetEvent',
+      });
+    },
+    ListServices(_request) {
+      const path = `v1/admin/audit/services`;
+      const body = null;
+      return transport.unary<ListServicesResponse>(path, 'GET', body, {
+        service: 'AuditService',
+        method: 'ListServices',
       });
     },
   };

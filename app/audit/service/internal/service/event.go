@@ -31,7 +31,7 @@ func (s *EventService) IngestEvents(ctx context.Context, events []cloudevents.Ev
 	return s.uc.IngestEvents(ctx, events)
 }
 
-// GetEvent retrieves a single control-plane audit event by canonical resource name ("events/{event}").
+// GetEvent retrieves a single platform audit event by canonical resource name ("events/{event}").
 func (s *EventService) GetEvent(ctx context.Context, req *auditeventpb.GetEventRequest) (*auditeventpb.Event, error) {
 	if req == nil {
 		return nil, auditeventpb.ErrorEventErrorReasonInvalidArgument("request is required")
@@ -48,7 +48,7 @@ func (s *EventService) GetEvent(ctx context.Context, req *auditeventpb.GetEventR
 	return ev, nil
 }
 
-// ListEvents returns a filtered page of control-plane audit events.
+// ListEvents returns a filtered page of platform audit events.
 func (s *EventService) ListEvents(ctx context.Context, req *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error) {
 	if req == nil {
 		req = &auditeventpb.ListEventsRequest{}
@@ -95,6 +95,15 @@ func (s *EventService) ListEvents(ctx context.Context, req *auditeventpb.ListEve
 		Events:        items,
 		NextPageToken: nextToken,
 	}, nil
+}
+
+// ListServices returns distinct producer service identifiers observed in audit storage.
+func (s *EventService) ListServices(ctx context.Context, _ *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error) {
+	services, err := s.uc.ListServices(ctx)
+	if err != nil {
+		return nil, eventError(err)
+	}
+	return &auditeventpb.ListServicesResponse{Services: services}, nil
 }
 
 func eventError(err error) error {

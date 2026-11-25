@@ -21,6 +21,12 @@ var _authzRules = map[string]*v1.AuthzRule{
 		ResourceType: "admin",
 		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
 	},
+	"/admin.audit.v1.AuditService/ListServices": {
+		Mode:         v1.AuthzMode_AUTHZ_MODE_REQUIRED,
+		Action:       "read_audit",
+		ResourceType: "admin",
+		Target:       &v1.AuthzRule_ResourceId{ResourceId: "global"},
+	},
 }
 
 // AuthzRules returns a copy of the authorization rules for this package.

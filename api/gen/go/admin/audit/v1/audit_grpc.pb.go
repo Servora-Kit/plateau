@@ -20,20 +20,23 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuditService_ListEvents_FullMethodName = "/admin.audit.v1.AuditService/ListEvents"
-	AuditService_GetEvent_FullMethodName   = "/admin.audit.v1.AuditService/GetEvent"
+	AuditService_ListEvents_FullMethodName   = "/admin.audit.v1.AuditService/ListEvents"
+	AuditService_GetEvent_FullMethodName     = "/admin.audit.v1.AuditService/GetEvent"
+	AuditService_ListServices_FullMethodName = "/admin.audit.v1.AuditService/ListServices"
 )
 
 // AuditServiceClient is the client API for AuditService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
+// AuditService 面向平台管理员提供全平台审计事件的只读查询编排接口。
 type AuditServiceClient interface {
-	// ListEvents 分页检索平台控制面审计事件。
+	// ListEvents 分页检索全平台审计事件。
 	ListEvents(ctx context.Context, in *ListEventsRequest, opts ...grpc.CallOption) (*ListEventsResponse, error)
 	// GetEvent 按规范资源名查询单条审计事件详情。
 	GetEvent(ctx context.Context, in *GetEventRequest, opts ...grpc.CallOption) (*v1.Event, error)
+	// ListServices 返回已观测到的不重复生产服务标识列表。
+	ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error)
 }
 
 type auditServiceClient struct {
@@ -64,16 +67,28 @@ func (c *auditServiceClient) GetEvent(ctx context.Context, in *GetEventRequest, 
 	return out, nil
 }
 
+func (c *auditServiceClient) ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListServicesResponse)
+	err := c.cc.Invoke(ctx, AuditService_ListServices_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuditServiceServer is the server API for AuditService service.
 // All implementations must embed UnimplementedAuditServiceServer
 // for forward compatibility.
 //
-// AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
+// AuditService 面向平台管理员提供全平台审计事件的只读查询编排接口。
 type AuditServiceServer interface {
-	// ListEvents 分页检索平台控制面审计事件。
+	// ListEvents 分页检索全平台审计事件。
 	ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error)
 	// GetEvent 按规范资源名查询单条审计事件详情。
 	GetEvent(context.Context, *GetEventRequest) (*v1.Event, error)
+	// ListServices 返回已观测到的不重复生产服务标识列表。
+	ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error)
 	mustEmbedUnimplementedAuditServiceServer()
 }
 
@@ -89,6 +104,9 @@ func (UnimplementedAuditServiceServer) ListEvents(context.Context, *ListEventsRe
 }
 func (UnimplementedAuditServiceServer) GetEvent(context.Context, *GetEventRequest) (*v1.Event, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetEvent not implemented")
+}
+func (UnimplementedAuditServiceServer) ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListServices not implemented")
 }
 func (UnimplementedAuditServiceServer) mustEmbedUnimplementedAuditServiceServer() {}
 func (UnimplementedAuditServiceServer) testEmbeddedByValue()                      {}
@@ -147,6 +165,24 @@ func _AuditService_GetEvent_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuditService_ListServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListServicesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuditServiceServer).ListServices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuditService_ListServices_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuditServiceServer).ListServices(ctx, req.(*ListServicesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuditService_ServiceDesc is the grpc.ServiceDesc for AuditService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -161,6 +197,10 @@ var AuditService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetEvent",
 			Handler:    _AuditService_GetEvent_Handler,
+		},
+		{
+			MethodName: "ListServices",
+			Handler:    _AuditService_ListServices_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -15,6 +15,9 @@ var _auditRules = map[string]*v1.AuditRule{
 	"/audit.event.v1.EventService/ListEvents": {
 		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
 	},
+	"/audit.event.v1.EventService/ListServices": {
+		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
+	},
 }
 
 // AuditRules returns the audit rules declared via Plateau Audit annotations.

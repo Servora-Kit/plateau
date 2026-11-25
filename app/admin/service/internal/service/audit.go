@@ -71,6 +71,14 @@ func (s *AuditService) GetEvent(ctx context.Context, req *adminauditpb.GetEventR
 	return ev, nil
 }
 
+func (s *AuditService) ListServices(ctx context.Context, _ *adminauditpb.ListServicesRequest) (*adminauditpb.ListServicesResponse, error) {
+	services, err := s.uc.ListServices(ctx)
+	if err != nil {
+		return nil, auditError(ctx, err)
+	}
+	return &adminauditpb.ListServicesResponse{Services: services}, nil
+}
+
 func auditError(ctx context.Context, err error) error {
 	var ctxErr error
 	if ctx != nil {

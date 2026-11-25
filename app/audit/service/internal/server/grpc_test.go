@@ -48,6 +48,9 @@ func (m *memoryRepo) GetByID(_ context.Context, id string) (*auditeventpb.Event,
 func (m *memoryRepo) List(context.Context, biz.ListEventsFilter) ([]*auditeventpb.Event, error) {
 	return []*auditeventpb.Event{m.event}, nil
 }
+func (m *memoryRepo) ListServices(context.Context) ([]string, error) {
+	return []string{m.event.GetService()}, nil
+}
 
 func TestGRPCServerServiceJWTAndOpenFGAAuthorization(t *testing.T) {
 	const (
@@ -253,6 +256,10 @@ func TestGRPCServerServiceJWTAndOpenFGAAuthorization(t *testing.T) {
 	listResp, err := client.ListEvents(withBearer(adminSvcTok), &auditeventpb.ListEventsRequest{})
 	if err != nil || len(listResp.GetEvents()) != 1 {
 		t.Fatalf("authorized ListEvents = (%+v, %v)", listResp, err)
+	}
+	svcResp, err := client.ListServices(withBearer(adminSvcTok), &auditeventpb.ListServicesRequest{})
+	if err != nil || len(svcResp.GetServices()) != 1 || svcResp.GetServices()[0] != gotEvent.GetService() {
+		t.Fatalf("authorized ListServices = (%+v, %v)", svcResp, err)
 	}
 }
 

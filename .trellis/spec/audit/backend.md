@@ -9,6 +9,7 @@
 - **只读 gRPC 契约（`audit.event.v1.EventService`）**：
   - `GetEvent(GetEventRequest{name: "events/{event}"}) returns (Event)`
   - `ListEvents(ListEventsRequest) returns (ListEventsResponse)`
+  - `ListServices(ListServicesRequest) returns (ListServicesResponse)`
 - **ClickHouse 一表一文件 Schema（`internal/data/schema/event.go`）**：
   - `type EventRow struct { ... ch:"<column>" }`（与表全部 19 列包含 `ingested_at` 1:1 对齐）
   - `EnsureEventsTable(ctx context.Context, conn driver.Conn, retentionDays int32) error`
@@ -28,6 +29,7 @@
   - 默认库名 `audit`、表名 `events`，采用 `ReplacingMergeTree(ingested_at)`、`PARTITION BY toYYYYMM(occurred_at)`、`ORDER BY (occurred_at, event_id)`、`GRANULARITY 1` 布隆索引及长文本 `CODEC(ZSTD(1))`；
   - `EnsureEventsTable` 建表后查询 `system.tables.engine_full`（同时匹配 `toIntervalDay(N)` 与 `INTERVAL N DAY`），仅当 `retention_days` 实际变化时执行 `ALTER TABLE events MODIFY TTL`；
   - `ListEvents` 使用 `FINAL SETTINGS do_not_merge_across_partitions_select_final = 1` 且不隐式截断未传时间范围；`GetEvent` 使用 `WHERE event_id = ? ORDER BY ingested_at DESC LIMIT 1`（不加 `FINAL`）直接命中 `idx_event_id` 跳数索引。
+  - `ListServices` 使用无 `FINAL` 的 `SELECT DISTINCT service FROM events WHERE service != '' ORDER BY service ASC` 直接扫描 `LowCardinality(String)` 分区词典元数据（重复 `event_id` 不改变服务集合），毫秒级返回已观测生产服务标识。
 - **环境配置键**：
   - `jwt_authn_config` 在 `local`（`http://127.0.0.1:10000/keys`）与 `docker`（`https://iam.plateau.local/keys`）统一使用 `jwks.uri`（支持 `IAM_JWKS_URI` 覆盖），不维护静态公钥与手工 `kid`。
 

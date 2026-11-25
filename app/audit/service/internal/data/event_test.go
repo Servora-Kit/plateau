@@ -273,6 +273,14 @@ func TestClickHouseSchemaTTLDeduplicationAndQueries(t *testing.T) {
 	if err != nil || len(failedEvents) != 1 || failedEvents[0].GetEventId() != "ev-nov-denied" {
 		t.Fatalf("failedEvents = (%+v, %v)", failedEvents, err)
 	}
+
+	services, err := uc.ListServices(context.Background())
+	if err != nil {
+		t.Fatalf("ListServices(): %v", err)
+	}
+	if len(services) != 2 || services[0] != "admin.service" || services[1] != "iam.service" {
+		t.Fatalf("ListServices() = %v, want [admin.service iam.service]", services)
+	}
 }
 
 func envOrDefault(key, fallback string) string {

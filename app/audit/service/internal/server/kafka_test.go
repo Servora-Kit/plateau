@@ -52,6 +52,10 @@ func (c *captureRepo) List(context.Context, biz.ListEventsFilter) ([]*auditevent
 	return nil, nil
 }
 
+func (c *captureRepo) ListServices(context.Context) ([]string, error) {
+	return nil, nil
+}
+
 func (c *captureRepo) snapshot() []*auditeventpb.Event {
 	c.mu.Lock()
 	defer c.mu.Unlock()

@@ -33,8 +33,9 @@ import (
 )
 
 type fakeAuditRepo struct {
-	listFn func(context.Context, *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error)
-	getFn  func(context.Context, *auditeventpb.GetEventRequest) (*auditeventpb.Event, error)
+	listFn     func(context.Context, *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error)
+	getFn      func(context.Context, *auditeventpb.GetEventRequest) (*auditeventpb.Event, error)
+	servicesFn func(context.Context, *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error)
 }
 
 func (f *fakeAuditRepo) ListEvents(ctx context.Context, req *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error) {
@@ -49,6 +50,13 @@ func (f *fakeAuditRepo) GetEvent(ctx context.Context, req *auditeventpb.GetEvent
 		return f.getFn(ctx, req)
 	}
 	return &auditeventpb.Event{}, nil
+}
+
+func (f *fakeAuditRepo) ListServices(ctx context.Context, req *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error) {
+	if f.servicesFn != nil {
+		return f.servicesFn(ctx, req)
+	}
+	return &auditeventpb.ListServicesResponse{Services: []string{"//admin.service", "//iam.service"}}, nil
 }
 
 func TestAuditServiceErrorMappingShieldsHumanSession(t *testing.T) {
@@ -116,6 +124,13 @@ func TestAuditServiceErrorMappingShieldsHumanSession(t *testing.T) {
 			_, gotErr := svc.ListEvents(adminCtx, &adminauditpb.ListEventsRequest{})
 			if !adminauditpb.IsAdminAuditErrorReasonDownstreamUnavailable(gotErr) {
 				t.Fatalf("ListEvents(%s) err = %v (kratos=%+v), want 503 ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE", tc.name, gotErr, kerrors.FromError(gotErr))
+			}
+			repo.servicesFn = func(context.Context, *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error) {
+				return nil, tc.err
+			}
+			_, gotSvcErr := svc.ListServices(adminCtx, &adminauditpb.ListServicesRequest{})
+			if !adminauditpb.IsAdminAuditErrorReasonDownstreamUnavailable(gotSvcErr) {
+				t.Fatalf("ListServices(%s) err = %v, want 503 ADMIN_AUDIT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE", tc.name, gotSvcErr)
 			}
 		})
 	}

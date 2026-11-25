@@ -58,3 +58,8 @@ func (r *auditEventRepo) GetEvent(ctx context.Context, req *auditeventpb.GetEven
 	r.recoverTransientFailure(ctx)
 	return r.client.GetEvent(ctx, req)
 }
+
+func (r *auditEventRepo) ListServices(ctx context.Context, req *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error) {
+	r.recoverTransientFailure(ctx)
+	return r.client.ListServices(ctx, req)
+}

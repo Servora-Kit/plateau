@@ -15,6 +15,9 @@ var _authnRules = map[string]*v1.AuthnRule{
 	"/admin.audit.v1.AuditService/ListEvents": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
+	"/admin.audit.v1.AuditService/ListServices": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
 }
 
 // AuthnRules returns the authentication rules declared via Plateau AuthN annotations.

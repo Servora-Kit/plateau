@@ -20,18 +20,22 @@ const _ = http.SupportPackageIsVersion3
 
 const OperationAuditServiceGetEvent = "/admin.audit.v1.AuditService/GetEvent"
 const OperationAuditServiceListEvents = "/admin.audit.v1.AuditService/ListEvents"
+const OperationAuditServiceListServices = "/admin.audit.v1.AuditService/ListServices"
 
 type AuditServiceHTTPServer interface {
 	// GetEvent GetEvent 按规范资源名查询单条审计事件详情。
 	GetEvent(context.Context, *GetEventRequest) (*v1.Event, error)
-	// ListEvents ListEvents 分页检索平台控制面审计事件。
+	// ListEvents ListEvents 分页检索全平台审计事件。
 	ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error)
+	// ListServices ListServices 返回已观测到的不重复生产服务标识列表。
+	ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error)
 }
 
 func RegisterAuditServiceHTTPServer(s *http.Server, srv AuditServiceHTTPServer) {
 	r := s.Route("/")
 	r.Handle("GET", "/v1/admin/audit/events", _AuditService_ListEvents0_HTTP_Handler(srv))
 	r.Handle("GET", "/v1/admin/audit/{name:events/[^/]+}", _AuditService_GetEvent0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/admin/audit/services", _AuditService_ListServices0_HTTP_Handler(srv))
 }
 
 func _AuditService_ListEvents0_HTTP_Handler(srv AuditServiceHTTPServer) func(ctx http.Context) error {
@@ -75,11 +79,32 @@ func _AuditService_GetEvent0_HTTP_Handler(srv AuditServiceHTTPServer) func(ctx h
 	}
 }
 
+func _AuditService_ListServices0_HTTP_Handler(srv AuditServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListServicesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuditServiceListServices)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListServices(ctx, req.(*ListServicesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListServicesResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AuditServiceHTTPClient interface {
 	// GetEvent GetEvent 按规范资源名查询单条审计事件详情。
 	GetEvent(ctx context.Context, req *GetEventRequest, opts ...http.CallOption) (rsp *v1.Event, err error)
-	// ListEvents ListEvents 分页检索平台控制面审计事件。
+	// ListEvents ListEvents 分页检索全平台审计事件。
 	ListEvents(ctx context.Context, req *ListEventsRequest, opts ...http.CallOption) (rsp *ListEventsResponse, err error)
+	// ListServices ListServices 返回已观测到的不重复生产服务标识列表。
+	ListServices(ctx context.Context, req *ListServicesRequest, opts ...http.CallOption) (rsp *ListServicesResponse, err error)
 }
 
 type AuditServiceHTTPClientImpl struct {
@@ -107,7 +132,7 @@ func (c *AuditServiceHTTPClientImpl) GetEvent(ctx context.Context, in *GetEventR
 	return &out, nil
 }
 
-// ListEvents ListEvents 分页检索平台控制面审计事件。
+// ListEvents ListEvents 分页检索全平台审计事件。
 func (c *AuditServiceHTTPClientImpl) ListEvents(ctx context.Context, in *ListEventsRequest, opts ...http.CallOption) (*ListEventsResponse, error) {
 	var out ListEventsResponse
 	pattern := "/v1/admin/audit/events"
@@ -115,6 +140,23 @@ func (c *AuditServiceHTTPClientImpl) ListEvents(ctx context.Context, in *ListEve
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
 		http.Operation(OperationAuditServiceListEvents),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ListServices ListServices 返回已观测到的不重复生产服务标识列表。
+func (c *AuditServiceHTTPClientImpl) ListServices(ctx context.Context, in *ListServicesRequest, opts ...http.CallOption) (*ListServicesResponse, error) {
+	var out ListServicesResponse
+	pattern := "/v1/admin/audit/services"
+	path := http.BuildPath(pattern, in, http.WithQueryParams())
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.Operation(OperationAuditServiceListServices),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)

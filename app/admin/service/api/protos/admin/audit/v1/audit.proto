@@ -15,7 +15,7 @@ import "servora/errors/v1/errors.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1;adminauditv1";
 
-// AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
+// AuditService 面向平台管理员提供全平台审计事件的只读查询编排接口。
 service AuditService {
   option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
   option (plateau.security.authz.v1.service_default) = {
@@ -26,7 +26,7 @@ service AuditService {
   };
   option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
 
-  // ListEvents 分页检索平台控制面审计事件。
+  // ListEvents 分页检索全平台审计事件。
   rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
     option (google.api.http) = {get: "/v1/admin/audit/events"};
     option (google.api.method_signature) = "page_size,page_token";
@@ -36,6 +36,11 @@ service AuditService {
   rpc GetEvent(GetEventRequest) returns (.audit.event.v1.Event) {
     option (google.api.http) = {get: "/v1/admin/audit/{name=events/*}"};
     option (google.api.method_signature) = "name";
+  }
+
+  // ListServices 返回已观测到的不重复生产服务标识列表。
+  rpc ListServices(ListServicesRequest) returns (ListServicesResponse) {
+    option (google.api.http) = {get: "/v1/admin/audit/services"};
   }
 }
 
@@ -77,4 +82,10 @@ message ListEventsRequest {
 message ListEventsResponse {
   repeated .audit.event.v1.Event events = 1;
   string next_page_token = 2;
+}
+
+message ListServicesRequest {}
+
+message ListServicesResponse {
+  repeated string services = 1;
 }

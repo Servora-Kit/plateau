@@ -8,7 +8,7 @@ export type EventErrorReason =
   | 'EVENT_ERROR_REASON_NOT_FOUND'
   | 'EVENT_ERROR_REASON_STORAGE_UNAVAILABLE'
   | 'EVENT_ERROR_REASON_UNSPECIFIED';
-// Event represents one immutable control-plane accountability record.
+// Event represents one immutable platform accountability record.
 export type Event = {
   //
   // Behaviors: OUTPUT_ONLY
@@ -135,6 +135,13 @@ export type ListEventsRequest = {
 export type ListEventsResponse = {
   events?: Event[];
   nextPageToken?: string;
+};
+
+export type ListServicesRequest = {
+};
+
+export type ListServicesResponse = {
+  services?: string[];
 };
 
 

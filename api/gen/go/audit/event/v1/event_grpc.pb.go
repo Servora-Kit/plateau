@@ -19,20 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	EventService_GetEvent_FullMethodName   = "/audit.event.v1.EventService/GetEvent"
-	EventService_ListEvents_FullMethodName = "/audit.event.v1.EventService/ListEvents"
+	EventService_GetEvent_FullMethodName     = "/audit.event.v1.EventService/GetEvent"
+	EventService_ListEvents_FullMethodName   = "/audit.event.v1.EventService/ListEvents"
+	EventService_ListServices_FullMethodName = "/audit.event.v1.EventService/ListServices"
 )
 
 // EventServiceClient is the client API for EventService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// EventService exposes read-only control-plane audit event retrieval to authorized platform services.
+// EventService exposes read-only platform audit event retrieval to authorized services.
 type EventServiceClient interface {
-	// GetEvent returns a single control-plane audit event by canonical resource name.
+	// GetEvent returns a single platform audit event by canonical resource name.
 	GetEvent(ctx context.Context, in *GetEventRequest, opts ...grpc.CallOption) (*Event, error)
-	// ListEvents returns a filtered page of control-plane audit events in reverse chronological order.
+	// ListEvents returns a filtered page of platform audit events in reverse chronological order.
 	ListEvents(ctx context.Context, in *ListEventsRequest, opts ...grpc.CallOption) (*ListEventsResponse, error)
+	// ListServices returns distinct producer service identifiers observed in audit storage.
+	ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error)
 }
 
 type eventServiceClient struct {
@@ -63,16 +66,28 @@ func (c *eventServiceClient) ListEvents(ctx context.Context, in *ListEventsReque
 	return out, nil
 }
 
+func (c *eventServiceClient) ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListServicesResponse)
+	err := c.cc.Invoke(ctx, EventService_ListServices_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EventServiceServer is the server API for EventService service.
 // All implementations must embed UnimplementedEventServiceServer
 // for forward compatibility.
 //
-// EventService exposes read-only control-plane audit event retrieval to authorized platform services.
+// EventService exposes read-only platform audit event retrieval to authorized services.
 type EventServiceServer interface {
-	// GetEvent returns a single control-plane audit event by canonical resource name.
+	// GetEvent returns a single platform audit event by canonical resource name.
 	GetEvent(context.Context, *GetEventRequest) (*Event, error)
-	// ListEvents returns a filtered page of control-plane audit events in reverse chronological order.
+	// ListEvents returns a filtered page of platform audit events in reverse chronological order.
 	ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error)
+	// ListServices returns distinct producer service identifiers observed in audit storage.
+	ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error)
 	mustEmbedUnimplementedEventServiceServer()
 }
 
@@ -88,6 +103,9 @@ func (UnimplementedEventServiceServer) GetEvent(context.Context, *GetEventReques
 }
 func (UnimplementedEventServiceServer) ListEvents(context.Context, *ListEventsRequest) (*ListEventsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListEvents not implemented")
+}
+func (UnimplementedEventServiceServer) ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListServices not implemented")
 }
 func (UnimplementedEventServiceServer) mustEmbedUnimplementedEventServiceServer() {}
 func (UnimplementedEventServiceServer) testEmbeddedByValue()                      {}
@@ -146,6 +164,24 @@ func _EventService_ListEvents_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EventService_ListServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListServicesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EventServiceServer).ListServices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EventService_ListServices_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EventServiceServer).ListServices(ctx, req.(*ListServicesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EventService_ServiceDesc is the grpc.ServiceDesc for EventService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -160,6 +196,10 @@ var EventService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListEvents",
 			Handler:    _EventService_ListEvents_Handler,
+		},
+		{
+			MethodName: "ListServices",
+			Handler:    _EventService_ListServices_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

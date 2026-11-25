@@ -12,11 +12,12 @@ import (
 )
 
 type stubAuditEventRepo struct {
-	lastListReq *auditeventpb.ListEventsRequest
-	lastGetReq  *auditeventpb.GetEventRequest
-	listResp    *auditeventpb.ListEventsResponse
-	getResp     *auditeventpb.Event
-	err         error
+	lastListReq  *auditeventpb.ListEventsRequest
+	lastGetReq   *auditeventpb.GetEventRequest
+	listResp     *auditeventpb.ListEventsResponse
+	getResp      *auditeventpb.Event
+	servicesResp *auditeventpb.ListServicesResponse
+	err          error
 }
 
 func (s *stubAuditEventRepo) ListEvents(_ context.Context, req *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error) {
@@ -35,6 +36,13 @@ func (s *stubAuditEventRepo) GetEvent(_ context.Context, req *auditeventpb.GetEv
 	return s.getResp, nil
 }
 
+func (s *stubAuditEventRepo) ListServices(_ context.Context, _ *auditeventpb.ListServicesRequest) (*auditeventpb.ListServicesResponse, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.servicesResp, nil
+}
+
 func TestAuditUsecaseValidationAndPassThrough(t *testing.T) {
 	if _, err := NewAuditUsecase(nil); err == nil {
 		t.Fatal("NewAuditUsecase(nil) succeeded, want error")
@@ -46,6 +54,9 @@ func TestAuditUsecaseValidationAndPassThrough(t *testing.T) {
 			NextPageToken: "next-tok",
 		},
 		getResp: &auditeventpb.Event{Name: "events/ev-1", EventId: "ev-1"},
+		servicesResp: &auditeventpb.ListServicesResponse{
+			Services: []string{"//admin.service", "//cms.service", "//iam.service"},
+		},
 	}
 	uc, err := NewAuditUsecase(repo)
 	if err != nil {
@@ -59,6 +70,9 @@ func TestAuditUsecaseValidationAndPassThrough(t *testing.T) {
 	svcCtx := security.WithActor(context.Background(), security.Actor{Type: security.ActorTypeService, ID: "admin"})
 	if _, err := uc.GetEvent(svcCtx, auditeventpb.NewEventName("ev-1")); !errors.Is(err, ErrUnauthenticated) {
 		t.Fatalf("GetEvent(service actor) err = %v, want ErrUnauthenticated", err)
+	}
+	if _, err := uc.ListServices(svcCtx); !errors.Is(err, ErrUnauthenticated) {
+		t.Fatalf("ListServices(service actor) err = %v, want ErrUnauthenticated", err)
 	}
 
 	adminCtx := security.WithActor(context.Background(), security.Actor{Type: security.ActorTypeHuman, ID: "admin-1"})
@@ -99,5 +113,10 @@ func TestAuditUsecaseValidationAndPassThrough(t *testing.T) {
 	ev, err := uc.GetEvent(adminCtx, auditeventpb.NewEventName("ev-1"))
 	if err != nil || ev.GetName() != "events/ev-1" || repo.lastGetReq.GetName() != "events/ev-1" {
 		t.Fatalf("GetEvent(ev-1) ev=%+v req=%+v err=%v", ev, repo.lastGetReq, err)
+	}
+
+	services, err := uc.ListServices(adminCtx)
+	if err != nil || len(services) != 3 || services[1] != "//cms.service" {
+		t.Fatalf("ListServices(admin) = (%v, %v)", services, err)
 	}
 }

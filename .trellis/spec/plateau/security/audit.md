@@ -52,7 +52,7 @@
 ### 5. Good / Base / Bad Cases
 
 - **Good**：服务通过 `audit.New(emitterCfg, logger, auditkafka.Backend(kafkaClient))` 构造 `Auditor`，声明 `service_default = {mode: AUDIT_MODE_ENABLED, category: AUDIT_CATEGORY_RESOURCE}` 并将只读 `Get*` / `List*` 覆盖为 `AUDIT_MODE_DISABLED`；`Login` 等 `PUBLIC` 接口核验通过后调用 `audit.SetActor(ctx, actor)` 与 `audit.SetResource(ctx, "iam.plateau.dev/User", user.Name)`。
-- **Base**：开发环境 `audit_emitter.backend: stdout` 或 `log`，生产环境 `audit_emitter.backend: kafka` 投向 `plateau.audit.events`；未来独立业务服务配置自有业务 Topic 即可与平台控制面审计物理隔离。
+- **Base**：开发环境 `audit_emitter.backend: stdout` 或 `log`，生产环境 `audit_emitter.backend: kafka` 统一投向 `plateau.audit.events`，平台核心服务与后续业务微服务的管控变更及鉴权拒绝事件共享同一审计存储与全局管理检索。
 - **Bad**：将 `audit.Server` 放在 `openfga.Server` 之后（导致 403 鉴权拒绝绕过审计中间件），或仅在 `sc.IsSampled()` 为真时写入 `traceparent`（导致低采样率下跨服务审计记录无法通过 `trace_id` 关联）。
 
 ### 6. Tests Required

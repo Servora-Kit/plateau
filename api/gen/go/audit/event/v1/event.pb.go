@@ -83,7 +83,7 @@ func (EventErrorReason) EnumDescriptor() ([]byte, []int) {
 	return file_audit_event_v1_event_proto_rawDescGZIP(), []int{0}
 }
 
-// Event represents one immutable control-plane accountability record.
+// Event represents one immutable platform accountability record.
 type Event struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	Name         string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -517,6 +517,86 @@ func (x *ListEventsResponse) GetNextPageToken() string {
 	return ""
 }
 
+type ListServicesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListServicesRequest) Reset() {
+	*x = ListServicesRequest{}
+	mi := &file_audit_event_v1_event_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListServicesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListServicesRequest) ProtoMessage() {}
+
+func (x *ListServicesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_audit_event_v1_event_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListServicesRequest.ProtoReflect.Descriptor instead.
+func (*ListServicesRequest) Descriptor() ([]byte, []int) {
+	return file_audit_event_v1_event_proto_rawDescGZIP(), []int{4}
+}
+
+type ListServicesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Services      []string               `protobuf:"bytes,1,rep,name=services,proto3" json:"services,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListServicesResponse) Reset() {
+	*x = ListServicesResponse{}
+	mi := &file_audit_event_v1_event_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListServicesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListServicesResponse) ProtoMessage() {}
+
+func (x *ListServicesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_audit_event_v1_event_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListServicesResponse.ProtoReflect.Descriptor instead.
+func (*ListServicesResponse) Descriptor() ([]byte, []int) {
+	return file_audit_event_v1_event_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ListServicesResponse) GetServices() []string {
+	if x != nil {
+		return x.Services
+	}
+	return nil
+}
+
 var File_audit_event_v1_event_proto protoreflect.FileDescriptor
 
 const file_audit_event_v1_event_proto_rawDesc = "" +
@@ -577,17 +657,21 @@ const file_audit_event_v1_event_proto_rawDesc = "" +
 	"\b_success\"k\n" +
 	"\x12ListEventsResponse\x12-\n" +
 	"\x06events\x18\x01 \x03(\v2\x15.audit.event.v1.EventR\x06events\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\xfb\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x15\n" +
+	"\x13ListServicesRequest\"2\n" +
+	"\x14ListServicesResponse\x12\x1a\n" +
+	"\bservices\x18\x01 \x03(\tR\bservices*\xfb\x01\n" +
 	"\x10EventErrorReason\x12\"\n" +
 	"\x1eEVENT_ERROR_REASON_UNSPECIFIED\x10\x00\x12'\n" +
 	"\x1cEVENT_ERROR_REASON_NOT_FOUND\x10\x01\x1a\x05\xa8\xd4\x18\x94\x03\x12.\n" +
 	"#EVENT_ERROR_REASON_INVALID_ARGUMENT\x10\x02\x1a\x05\xa8\xd4\x18\x90\x03\x120\n" +
 	"%EVENT_ERROR_REASON_INVALID_PAGE_TOKEN\x10\x03\x1a\x05\xa8\xd4\x18\x90\x03\x121\n" +
-	"&EVENT_ERROR_REASON_STORAGE_UNAVAILABLE\x10\x04\x1a\x05\xa8\xd4\x18\xf7\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xf9\x01\n" +
+	"&EVENT_ERROR_REASON_STORAGE_UNAVAILABLE\x10\x04\x1a\x05\xa8\xd4\x18\xf7\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xd6\x02\n" +
 	"\fEventService\x12K\n" +
 	"\bGetEvent\x12\x1f.audit.event.v1.GetEventRequest\x1a\x15.audit.event.v1.Event\"\a\xdaA\x04name\x12l\n" +
 	"\n" +
-	"ListEvents\x12!.audit.event.v1.ListEventsRequest\x1a\".audit.event.v1.ListEventsResponse\"\x17\xdaA\x14page_size,page_token\x1a.\xaa\xbb\x18\x02\b\x01\xca\xc1\x18\x1e\b\x02\x12\vread_events\x1a\x05audit\"\x06global\xea\xc7\x18\x02\b\x02BGZEgithub.com/Servora-Kit/plateau/api/gen/go/audit/event/v1;auditeventpbb\x06proto3"
+	"ListEvents\x12!.audit.event.v1.ListEventsRequest\x1a\".audit.event.v1.ListEventsResponse\"\x17\xdaA\x14page_size,page_token\x12[\n" +
+	"\fListServices\x12#.audit.event.v1.ListServicesRequest\x1a$.audit.event.v1.ListServicesResponse\"\x00\x1a.\xaa\xbb\x18\x02\b\x01\xca\xc1\x18\x1e\b\x02\x12\vread_events\x1a\x05audit\"\x06global\xea\xc7\x18\x02\b\x02BGZEgithub.com/Servora-Kit/plateau/api/gen/go/audit/event/v1;auditeventpbb\x06proto3"
 
 var (
 	file_audit_event_v1_event_proto_rawDescOnce sync.Once
@@ -602,29 +686,33 @@ func file_audit_event_v1_event_proto_rawDescGZIP() []byte {
 }
 
 var file_audit_event_v1_event_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_audit_event_v1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_audit_event_v1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_audit_event_v1_event_proto_goTypes = []any{
 	(EventErrorReason)(0),         // 0: audit.event.v1.EventErrorReason
 	(*Event)(nil),                 // 1: audit.event.v1.Event
 	(*GetEventRequest)(nil),       // 2: audit.event.v1.GetEventRequest
 	(*ListEventsRequest)(nil),     // 3: audit.event.v1.ListEventsRequest
 	(*ListEventsResponse)(nil),    // 4: audit.event.v1.ListEventsResponse
-	(v1.AuditCategory)(0),         // 5: plateau.security.audit.v1.AuditCategory
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*ListServicesRequest)(nil),   // 5: audit.event.v1.ListServicesRequest
+	(*ListServicesResponse)(nil),  // 6: audit.event.v1.ListServicesResponse
+	(v1.AuditCategory)(0),         // 7: plateau.security.audit.v1.AuditCategory
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
 }
 var file_audit_event_v1_event_proto_depIdxs = []int32{
-	5, // 0: audit.event.v1.Event.category:type_name -> plateau.security.audit.v1.AuditCategory
-	6, // 1: audit.event.v1.Event.occurred_time:type_name -> google.protobuf.Timestamp
-	6, // 2: audit.event.v1.ListEventsRequest.start_time:type_name -> google.protobuf.Timestamp
-	6, // 3: audit.event.v1.ListEventsRequest.end_time:type_name -> google.protobuf.Timestamp
-	5, // 4: audit.event.v1.ListEventsRequest.category:type_name -> plateau.security.audit.v1.AuditCategory
+	7, // 0: audit.event.v1.Event.category:type_name -> plateau.security.audit.v1.AuditCategory
+	8, // 1: audit.event.v1.Event.occurred_time:type_name -> google.protobuf.Timestamp
+	8, // 2: audit.event.v1.ListEventsRequest.start_time:type_name -> google.protobuf.Timestamp
+	8, // 3: audit.event.v1.ListEventsRequest.end_time:type_name -> google.protobuf.Timestamp
+	7, // 4: audit.event.v1.ListEventsRequest.category:type_name -> plateau.security.audit.v1.AuditCategory
 	1, // 5: audit.event.v1.ListEventsResponse.events:type_name -> audit.event.v1.Event
 	2, // 6: audit.event.v1.EventService.GetEvent:input_type -> audit.event.v1.GetEventRequest
 	3, // 7: audit.event.v1.EventService.ListEvents:input_type -> audit.event.v1.ListEventsRequest
-	1, // 8: audit.event.v1.EventService.GetEvent:output_type -> audit.event.v1.Event
-	4, // 9: audit.event.v1.EventService.ListEvents:output_type -> audit.event.v1.ListEventsResponse
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
+	5, // 8: audit.event.v1.EventService.ListServices:input_type -> audit.event.v1.ListServicesRequest
+	1, // 9: audit.event.v1.EventService.GetEvent:output_type -> audit.event.v1.Event
+	4, // 10: audit.event.v1.EventService.ListEvents:output_type -> audit.event.v1.ListEventsResponse
+	6, // 11: audit.event.v1.EventService.ListServices:output_type -> audit.event.v1.ListServicesResponse
+	9, // [9:12] is the sub-list for method output_type
+	6, // [6:9] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name
 	6, // [6:6] is the sub-list for extension extendee
 	0, // [0:6] is the sub-list for field type_name
@@ -642,7 +730,7 @@ func file_audit_event_v1_event_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_audit_event_v1_event_proto_rawDesc), len(file_audit_event_v1_event_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

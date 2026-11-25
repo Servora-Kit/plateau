@@ -10,7 +10,7 @@ paths:
         get:
             tags:
                 - AuditService
-            description: ListEvents 分页检索平台控制面审计事件。
+            description: ListEvents 分页检索全平台审计事件。
             operationId: AuditService_ListEvents
             parameters:
                 - name: startTime
@@ -105,6 +105,19 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Event'
+    /v1/admin/audit/services:
+        get:
+            tags:
+                - AuditService
+            description: ListServices 返回已观测到的不重复生产服务标识列表。
+            operationId: AuditService_ListServices
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListServicesResponse'
     /v1/admin/auth/logout:
         post:
             tags:
@@ -553,7 +566,7 @@ components:
                     readOnly: true
                     type: string
                     description: Normalized JSON object string ("{}" when empty).
-            description: Event represents one immutable control-plane accountability record.
+            description: Event represents one immutable platform accountability record.
         ExpungeUserRequest:
             required:
                 - name
@@ -579,6 +592,13 @@ components:
                         $ref: '#/components/schemas/Event'
                 nextPageToken:
                     type: string
+        ListServicesResponse:
+            type: object
+            properties:
+                services:
+                    type: array
+                    items:
+                        type: string
         ListUsersResponse:
             type: object
             properties:
@@ -720,7 +740,7 @@ components:
             description: UserProfile contains the OIDC standard profile fields supported by IAM.
 tags:
     - name: AuditService
-      description: AuditService 面向平台管理员提供控制面审计事件的只读查询编排接口。
+      description: AuditService 面向平台管理员提供全平台审计事件的只读查询编排接口。
     - name: AuthService
       description: AuthService 提供 Admin BFF 会话查询与独立本地登出接口。
     - name: UserService

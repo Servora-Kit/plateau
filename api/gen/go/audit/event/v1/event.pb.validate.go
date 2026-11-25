@@ -627,3 +627,207 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListEventsResponseValidationError{}
+
+// Validate checks the field values on ListServicesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListServicesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListServicesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListServicesRequestMultiError, or nil if none found.
+func (m *ListServicesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListServicesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ListServicesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListServicesRequestMultiError is an error wrapping multiple validation
+// errors returned by ListServicesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListServicesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListServicesRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListServicesRequestMultiError) AllErrors() []error { return m }
+
+// ListServicesRequestValidationError is the validation error returned by
+// ListServicesRequest.Validate if the designated constraints aren't met.
+type ListServicesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListServicesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListServicesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListServicesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListServicesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListServicesRequestValidationError) ErrorName() string {
+	return "ListServicesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListServicesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListServicesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListServicesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListServicesRequestValidationError{}
+
+// Validate checks the field values on ListServicesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListServicesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListServicesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListServicesResponseMultiError, or nil if none found.
+func (m *ListServicesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListServicesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ListServicesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListServicesResponseMultiError is an error wrapping multiple validation
+// errors returned by ListServicesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListServicesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListServicesResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListServicesResponseMultiError) AllErrors() []error { return m }
+
+// ListServicesResponseValidationError is the validation error returned by
+// ListServicesResponse.Validate if the designated constraints aren't met.
+type ListServicesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListServicesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListServicesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListServicesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListServicesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListServicesResponseValidationError) ErrorName() string {
+	return "ListServicesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListServicesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListServicesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListServicesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListServicesResponseValidationError{}
