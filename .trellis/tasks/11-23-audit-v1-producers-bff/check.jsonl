@@ -1,0 +1,8 @@
+{"file":".trellis/tasks/11-23-audit-v1-producers-bff/prd.md","reason":"逐条核对 AC-P1~AC-P3 验收标准"}
+{"file":".trellis/tasks/11-23-audit-v1-producers-bff/design.md","reason":"核对 IAM/Admin 规则矩阵、OIDC 无侵入审计、read_audit 权限及 503 转换"}
+{"file":".trellis/tasks/11-23-audit-v1-producers-bff/implement.md","reason":"核对执行步骤、脱敏防泄漏断言与 GOWORK=off 全仓门禁"}
+{"file":".trellis/spec/plateau/security/audit.md","reason":"核对 AuthN->Audit->AuthZ 顺序与原生 HTTP 审计无敏感参数残留"}
+{"file":".trellis/spec/admin/backend.md","reason":"核对零重复结构体、共享 Dialer 及下游异常 503 不清空管理员会话"}
+{"file":".trellis/spec/iam/oidc.md","reason":"核对 internal/oidc 协议层零侵入与 admin 客户端双受众配置"}
+{"file":".trellis/spec/plateau/security/authZ.md","reason":"核对 admin.fga read_audit 模型校验与单测通过"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核对 Proto lint、OpenAPI 与 @plateau/api TS 生成物幂等无漂移"}

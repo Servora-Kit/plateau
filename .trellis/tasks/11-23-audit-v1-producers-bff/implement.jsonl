@@ -1,0 +1,12 @@
+{"file":".trellis/tasks/11-23-audit-v1/prd.md","reason":"平台控制面审计定位、跨服务真实 Actor 双跳原则与投递不阻断主业务不变量"}
+{"file":".trellis/tasks/11-23-audit-v1-producers-bff/prd.md","reason":"子任务 3 范围与 AC-P1~AC-P3 验收标准"}
+{"file":".trellis/tasks/11-23-audit-v1-producers-bff/design.md","reason":"IAM/Admin 审计规则矩阵、原生 HTTP 无侵入包装、admin.audit.v1 查询契约与 503 隔离设计"}
+{"file":".trellis/tasks/11-23-audit-v1-producers-bff/implement.md","reason":"分步执行计划、改动清单与验证门禁"}
+{"file":".trellis/spec/plateau/security/audit.md","reason":"审计运行时中间件顺序、上下文富化、脱敏与 CloudEvents 属性约定"}
+{"file":".trellis/spec/plateau/infra/kafka.md","reason":"Kafka 客户端启动期连接校验与生命周期管理约定"}
+{"file":".trellis/spec/iam/backend.md","reason":"IAM 服务实现、认证会话与账户安全约定"}
+{"file":".trellis/spec/iam/oidc.md","reason":"IAM 原生 OIDC 端点与服务访问令牌受众约定"}
+{"file":".trellis/spec/admin/backend.md","reason":"Admin 跨服务公开契约复用、共享 Dialer 与下游故障 503 转换保护本地会话约定"}
+{"file":".trellis/spec/audit/backend.md","reason":"下游 audit.event.v1.EventService 查询与鉴权契约"}
+{"file":".trellis/spec/service/backend/layers.md","reason":"微服务四层职责划分与依赖方向"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"AIP 资源复用、HTTP 映射、OpenAPI 与 TS 客户端生成约定"}
