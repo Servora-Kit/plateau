@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/password"
 )
 
@@ -19,11 +21,12 @@ type InitialUserCreator interface {
 
 // UserInitializer creates the configured initial active user.
 type UserInitializer struct {
-	email   string
-	users   UserRepo
-	creator InitialUserCreator
-	log     *slog.Logger
-	now     func() time.Time
+	displayEmail   string
+	canonicalEmail string
+	users          UserRepo
+	creator        InitialUserCreator
+	log            *slog.Logger
+	now            func() time.Time
 }
 
 // NewUserInitializer validates immutable initialization dependencies.
@@ -34,36 +37,36 @@ func NewUserInitializer(config *iamconfpb.IAM, users UserRepo, creator InitialUs
 	if err := config.Apply(); err != nil {
 		return nil, fmt.Errorf("user initializer config: %w", err)
 	}
-	email := config.GetBootstrapUserEmail()
-	if email == "" {
+	displayEmail := strings.TrimSpace(config.GetBootstrapUserEmail())
+	canonicalEmail := security.NormalizeEmail(displayEmail)
+	if canonicalEmail == "" {
 		return nil, fmt.Errorf("user initializer: email is empty")
 	}
 	if logger == nil {
 		logger = slog.Default()
 	}
 	return &UserInitializer{
-		email: email, users: users, creator: creator,
-		log: logger.With("scope", "iam/startup"), now: time.Now,
+		displayEmail:   displayEmail,
+		canonicalEmail: canonicalEmail,
+		users:          users,
+		creator:        creator,
+		log:            logger.With("scope", "iam/startup"),
+		now:            time.Now,
 	}, nil
 }
 
 // Initialize creates the initial user and emits its password only on first creation.
 func (initializer *UserInitializer) Initialize(ctx context.Context) error {
-	canonicalEmail, displayEmail, err := NormalizeEmail(initializer.email)
-	if err != nil {
-		return fmt.Errorf("normalize bootstrap user email: %w", err)
-	}
-
-	user, err := initializer.users.FindByEmailIncludingDeleted(ctx, canonicalEmail)
+	user, err := initializer.users.FindByEmailIncludingDeleted(ctx, initializer.canonicalEmail)
 	switch {
 	case err == nil:
 	case errors.Is(err, ErrNotFound):
-		user, err = initializer.create(ctx, displayEmail, canonicalEmail)
+		user, err = initializer.create(ctx)
 		if err != nil {
 			if !errors.Is(err, ErrAlreadyExists) {
 				return err
 			}
-			user, err = initializer.users.FindByEmailIncludingDeleted(ctx, canonicalEmail)
+			user, err = initializer.users.FindByEmailIncludingDeleted(ctx, initializer.canonicalEmail)
 			if err != nil {
 				return fmt.Errorf("load concurrently created bootstrap user: %w", err)
 			}
@@ -72,16 +75,16 @@ func (initializer *UserInitializer) Initialize(ctx context.Context) error {
 		return fmt.Errorf("find bootstrap user: %w", err)
 	}
 	if user.GetDeleteTime() != nil {
-		initializer.log.WarnContext(ctx, "bootstrap user exists in soft-deleted state; skipping creation", "email", displayEmail, "user_id", user.GetUserId())
+		initializer.log.WarnContext(ctx, "bootstrap user exists in soft-deleted state; skipping creation", "email", initializer.displayEmail, "user_id", user.GetUserId())
 		return nil
 	}
 	if user.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !user.GetEmailVerified() {
-		initializer.log.WarnContext(ctx, "bootstrap user exists in inactive or unverified state; skipping creation", "email", displayEmail, "user_id", user.GetUserId(), "status", user.GetStatus().String(), "email_verified", user.GetEmailVerified())
+		initializer.log.WarnContext(ctx, "bootstrap user exists in inactive or unverified state; skipping creation", "email", initializer.displayEmail, "user_id", user.GetUserId(), "status", user.GetStatus().String(), "email_verified", user.GetEmailVerified())
 		return nil
 	}
 	return nil
 }
-func (initializer *UserInitializer) create(ctx context.Context, displayEmail, canonicalEmail string) (*userpb.User, error) {
+func (initializer *UserInitializer) create(ctx context.Context) (*userpb.User, error) {
 	userID, err := NewUserID()
 	if err != nil {
 		return nil, err
@@ -94,14 +97,15 @@ func (initializer *UserInitializer) create(ctx context.Context, displayEmail, ca
 	if err != nil {
 		return nil, fmt.Errorf("hash bootstrap user password: %w", err)
 	}
-	if err := initializer.creator.CreateInitialUser(ctx, userID, displayEmail, canonicalEmail, passwordHash, initializer.now()); err != nil {
+	if err := initializer.creator.CreateInitialUser(ctx, userID, initializer.displayEmail, initializer.canonicalEmail, passwordHash, initializer.now()); err != nil {
 		return nil, fmt.Errorf("create bootstrap user: %w", err)
 	}
 
 	// This is intentionally a startup-only credential handoff. Request logging remains redacted.
-	initializer.log.WarnContext(ctx, "bootstrap user created; initial password is emitted once", "email", displayEmail, "initial_password", plaintext)
+	initializer.log.WarnContext(ctx, "bootstrap user created; initial password is emitted once", "email", initializer.displayEmail, "initial_password", plaintext)
+	email := initializer.displayEmail
 	return &userpb.User{
-		Name: "users/" + userID, UserId: userID, Email: &displayEmail,
+		Name: "users/" + userID, UserId: userID, Email: &email,
 		Status:          userpb.UserStatus_USER_STATUS_ACTIVE,
 		EmailVerified:   true,
 		RequiredActions: []userpb.UserRequiredAction{userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD},

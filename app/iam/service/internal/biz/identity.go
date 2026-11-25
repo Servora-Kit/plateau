@@ -2,9 +2,7 @@ package biz
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/Servora-Kit/plateau/security"
 	"github.com/google/uuid"
 )
 
@@ -12,15 +10,6 @@ const (
 	MinPasswordBytes = 8
 	MaxPasswordBytes = 128
 )
-
-// NormalizeEmail returns the globally comparable value and the trimmed display value.
-func NormalizeEmail(raw string) (canonical, display string, err error) {
-	display = strings.TrimSpace(raw)
-	if display == "" {
-		return "", "", fmt.Errorf("email is empty")
-	}
-	return security.NormalizeEmail(display), display, nil
-}
 
 // NewUserID returns a time-ordered UUIDv7 identity that callers cannot supply or reuse.
 func NewUserID() (string, error) {

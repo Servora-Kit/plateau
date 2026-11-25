@@ -7,6 +7,7 @@ import (
 	"time"
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/password"
 )
 
@@ -43,8 +44,8 @@ func NewAuthenticationUsecase(users UserRepo, credentials CredentialRepo, sessio
 
 // Login verifies email/password and creates one independent opaque session.
 func (uc *AuthenticationUsecase) Login(ctx context.Context, email, plaintextPassword string) (*userpb.User, *LoginSession, error) {
-	canonical, _, err := NormalizeEmail(email)
-	if err != nil {
+	canonical := security.NormalizeEmail(email)
+	if canonical == "" {
 		return nil, nil, ErrInvalidCredentials
 	}
 	user, err := uc.users.FindByEmail(ctx, canonical)

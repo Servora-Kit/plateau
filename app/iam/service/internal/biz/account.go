@@ -9,6 +9,7 @@ import (
 	"time"
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/password"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
 )
@@ -103,9 +104,10 @@ func (uc *AccountUsecase) Register(ctx context.Context, email, plaintextPassword
 
 // CreatePendingUser creates the pending User aggregate without generating tokens or sending mail.
 func (uc *AccountUsecase) CreatePendingUser(ctx context.Context, userID, email, plaintextPassword string, profile *userpb.UserProfile, requirePasswordChange bool) (*userpb.User, error) {
-	canonical, display, err := NormalizeEmail(email)
-	if err != nil {
-		return nil, err
+	display := strings.TrimSpace(email)
+	canonical := security.NormalizeEmail(display)
+	if canonical == "" {
+		return nil, fmt.Errorf("email is empty")
 	}
 	if err := ValidatePassword(plaintextPassword); err != nil {
 		return nil, err
@@ -116,6 +118,7 @@ func (uc *AccountUsecase) CreatePendingUser(ctx context.Context, userID, email, 
 		return nil, fmt.Errorf("check registered email: %w", err)
 	}
 	if userID == "" {
+		var err error
 		userID, err = NewUserID()
 		if err != nil {
 			return nil, err
@@ -216,8 +219,8 @@ func (uc *AccountUsecase) ResendVerification(ctx context.Context, email, capToke
 	if !valid {
 		return ErrInvalidToken
 	}
-	canonical, _, err := NormalizeEmail(email)
-	if err != nil {
+	canonical := security.NormalizeEmail(email)
+	if canonical == "" {
 		return nil
 	}
 	user, err := uc.users.FindByEmail(ctx, canonical)
@@ -248,8 +251,8 @@ func (uc *AccountUsecase) RequestPasswordReset(ctx context.Context, email, capTo
 	if !valid {
 		return ErrInvalidToken
 	}
-	canonical, _, err := NormalizeEmail(email)
-	if err != nil {
+	canonical := security.NormalizeEmail(email)
+	if canonical == "" {
 		return nil
 	}
 	user, err := uc.users.FindByEmail(ctx, canonical)
@@ -342,8 +345,8 @@ func (uc *AccountUsecase) ChangePassword(ctx context.Context, userID, currentSes
 
 // ChangeInitialPassword verifies the initial password without a prior session, clears UPDATE_PASSWORD, and creates a normal login session.
 func (uc *AccountUsecase) ChangeInitialPassword(ctx context.Context, email, currentPassword, newPassword string) (*LoginSession, error) {
-	canonical, _, err := NormalizeEmail(email)
-	if err != nil || currentPassword == "" {
+	canonical := security.NormalizeEmail(email)
+	if canonical == "" || currentPassword == "" {
 		return nil, ErrUnauthenticated
 	}
 	user, err := uc.users.FindByEmail(ctx, canonical)
