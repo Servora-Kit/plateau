@@ -1,6 +1,6 @@
 # 公共 CRUD 消费机制
 
-适用于使用生成 CRUD descriptor 的服务。descriptor、资源名、字段行为、FieldMask、错误、过滤、排序和分页契约以 [Servora CRUD 框架规范](../../servora/framework/crud.md) 为准；这里只定义应用消费边界。
+适用于使用生成 CRUD descriptor 的服务。descriptor、资源名、字段行为、FieldMask、错误、过滤、排序和分页契约以 [Plateau CRUD 规范](../../plateau/crud/index.md) 为准；这里只定义应用消费方式。
 
 ## 一次构造，逐请求使用
 

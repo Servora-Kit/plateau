@@ -1,6 +1,6 @@
 # Servora web
 
-适用于 `../servora/web/packages/proto-utils`。`@servora/proto-utils` 提供跨应用稳定复用的 Proto/transport/CRUD/error 契约，不是应用 HTTP client、认证或 UI 层。
+适用于 `../servora/web/packages/proto-utils`。`@servora/proto-utils`（`0.2.0+`）提供跨仓库复用的微内核 ProtoJSON、transport 与 Kratos error 契约；CRUD 与平台错误原因已迁入 [plateau-utils](../../web/plateau-utils/index.md)。
 
 开发前读取 [proto-utils](proto-utils.md)，确认新 API 至少具有跨业务复用价值。Node 与 pnpm 版本由 [`../servora/mise.toml`](../../../../../servora/mise.toml) 统一固定（`web/package.json` 不再声明 `packageManager`）；[`../servora/web/pnpm-workspace.yaml`](../../../../../servora/web/pnpm-workspace.yaml) 显式启用 `minimumReleaseAge: 1440`（1 天发布冷却期）并由 `renovate.json5` 自动同步；[`../servora/web/biome.json`](../../../../../servora/web/biome.json) 排除 `src/gen`，避免格式化改写生成产物。
 

@@ -1,6 +1,6 @@
 # 启动、配置扫描与生命周期
 
-适用于 `core/bootstrap`。应用使用显式链路 `NewRuntime → Scan → rt.Run(wireApp closure)`；不要把 runtime、扫描和应用装配藏在一行启动入口中。公开接口见 [`core/bootstrap/AGENTS.md`](../../../../../servora/core/bootstrap/AGENTS.md)。
+适用于 `core/bootstrap`。应用使用显式链路 `NewRuntime → Scan → rt.Run(wireApp closure)`；不要把 runtime、扫描和应用装配藏在一行启动入口中。公开接口见 [`core/bootstrap/bootstrap.go`](../../../../../servora/core/bootstrap/bootstrap.go)。
 
 - `NewRuntime` 读取配置、建立日志/trace 和 runtime 资源；`Runtime.NewApp` 注入应用 identity；`Runtime.Run` 执行业务 Wire closure 并在运行结束后关闭；`Runtime.Close` 仅关闭 runtime 自有资源。
 - 业务 Wire cleanup 不登记到 runtime。`Run` 保证业务 cleanup 先于 runtime cleanup；新增 runtime 资源必须明确 LIFO 关闭顺序。

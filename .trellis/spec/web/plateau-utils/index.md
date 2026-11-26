@@ -1,6 +1,6 @@
-# 共享 Web Client
+# 平台前端工具包 `@servora/plateau-utils`
 
-适用于修改 `web/packages/client/`，或在应用中接入该包的任务。这里定义共享浏览器通信能力；应用自身的路由、状态和业务错误文案仍由各应用规范负责。
+适用于修改 `web/packages/plateau-utils/`，或在应用中接入 `@servora/plateau-utils`（`.` / `./client`、`./crud`、`./error-reasons/*`）的任务。这里定义共享浏览器通信、AIP CRUD 查询构建与平台公共错误枚举导出；应用自身的路由、状态和业务错误文案仍由各应用规范负责。
 
 ## 开发前检查
 
@@ -10,7 +10,7 @@
 
 ## 质量检查
 
-- 修改 HTTP 行为时运行 `pnpm --filter @plateau/client test` 与 `pnpm --filter @plateau/client typecheck`。
+- 修改源码后运行 `pnpm --filter @servora/plateau-utils test`、`pnpm --filter @servora/plateau-utils typecheck` 与 `pnpm --filter @servora/plateau-utils pack --dry-run`。
 - 修改应用调用契约时，同时检查消费应用；流式协议须按真实端点进行浏览器或集成验证，HTTP 单测不替代流式端到端检查。
 
 ## 主题索引

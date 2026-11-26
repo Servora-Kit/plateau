@@ -16,15 +16,15 @@
 
 按实际职责建立文件，不建空白占位；架构规范不重复两端实现，通用规则不复制到应用目录。
 
-共享包继续按实际职责分组，例如 `service/backend`、`plateau/security`、`web/client`。索引与上下文清单按实际工作显式引用入口或专题，不能假定读一个索引就自动加载全部规则。
+共享包继续按实际职责分组，例如 `service/backend`、`plateau/security`、`web/plateau-utils`。索引与上下文清单按实际工作显式引用入口或专题，不能假定读一个索引就自动加载全部规则。
 
 ## Package 导航
 
 | Package | 入口与职责 |
 | --- | --- |
-| plateau | [project](plateau/project/index.md)、[security](plateau/security/index.md)、[infra](plateau/infra/index.md)、[codegen](plateau/codegen/index.md) |
+| plateau | [project](plateau/project/index.md)、[crud](plateau/crud/index.md)、[security](plateau/security/index.md)、[infra](plateau/infra/index.md)、[codegen](plateau/codegen/index.md) |
 | api | [Proto 契约与生成](api/proto/index.md) |
-| web | [共享 client](web/client/index.md) |
+| web | [前端工具包 `@servora/plateau-utils`](web/plateau-utils/index.md) |
 | service | [共通微服务](service/backend/index.md) |
 | servora | [framework](servora/framework/index.md)、[proto](servora/proto/index.md)、[cmd](servora/cmd/index.md)、[web](servora/web/index.md) |
 | 应用 | 按 `app/<应用>` 选择同名规范目录，以 `<应用>/index.md` 为入口 |

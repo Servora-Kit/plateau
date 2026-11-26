@@ -1,6 +1,6 @@
 # 日志、追踪与指标
 
-`obs` 从 Bootstrap Proto 装配 `slog`、OpenTelemetry trace/metric 和 Prometheus handler，见 [`obs/AGENTS.md`](../../../../../servora/obs/AGENTS.md)。配置结构属于 `servora.core.v1.Bootstrap`，不要为单个 backend 发明绕过 Bootstrap 的独立配置。
+`obs` 从 Bootstrap Proto 装配 `slog`、OpenTelemetry trace/metric 和 Prometheus handler，见 [`obs/`](../../../../../servora/obs)。配置结构属于 `servora.core.v1.Bootstrap`，不要为单个 backend 发明绕过 Bootstrap 的独立配置。
 
 - `logger.New` 返回 `(*slog.Logger, func(context.Context) error, error)`，在创建日志资源前调用配置的 Apply；调用方先处理错误，并在退出时执行关闭函数。实现见 [`logger/logger.go`](../../../../../servora/obs/logger/logger.go)。bootstrap 负责绑定 Kratos v3 默认日志。
 - `tracing.InitTracerProvider` 在 endpoint 为空时返回 noop cleanup，实现在 [`tracing/tracing.go`](../../../../../servora/obs/tracing/tracing.go)。

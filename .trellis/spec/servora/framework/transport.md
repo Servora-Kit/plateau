@@ -1,6 +1,6 @@
 # Transport 装配
 
-`transport` 只提供协议、连接、endpoint 与 middleware 装配；service handler 和领域规则属于业务服务。目录与边界由 [`transport/AGENTS.md`](../../../../../servora/transport/AGENTS.md) 规定。
+`transport` 只提供协议、连接、endpoint 与 middleware 装配；service handler 和领域规则属于业务服务。目录职责见 [`servora/AGENTS.md`](../../../../../servora/AGENTS.md) 与 [`transport/`](../../../../../servora/transport)。
 
 - client 通过 `endpoint.IndexByProtocol` 规范化 protocol 并拒绝空 service 或重复配置；gRPC/HTTP dialer 复用索引，不各自重复扫描 `Data.Client.Services`。
 - client 默认 middleware 链为 recovery、可选 tracing、logging、默认 circuitbreaker、可选 metrics。

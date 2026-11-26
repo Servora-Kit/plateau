@@ -1,6 +1,6 @@
 # WebSocket 双向流
 
-`createDuplexStream` 在 [`websocket.ts`](../../../../web/packages/client/src/websocket.ts) 中实现，供生成 transport 的 `duplexStream` 调用。它在浏览器中把 HTTP(S) 地址转换为 WS(S)，并以 JSON 文本帧传输数据。
+`createDuplexStream` 在 [`websocket.ts`](../../../../web/packages/plateau-utils/src/client/websocket.ts) 中实现，供生成 transport 的 `duplexStream` 调用。它在浏览器中把 HTTP(S) 地址转换为 WS(S)，并以 JSON 文本帧传输数据。
 
 ## 使用约束
 

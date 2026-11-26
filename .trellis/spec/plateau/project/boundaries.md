@@ -4,11 +4,11 @@ Plateau 承载平台业务、主要参考应用和具体安全生态；Servora �
 
 | 内容 | 权威归属 |
 | --- | --- |
-| 平台总体结构、具体 AuthN/AuthZ/Audit、OpenFGA/Kafka 适配、安全插件 | `plateau` |
+| 平台总体结构、AIP CRUD 生态、AuthN/AuthZ/Audit、数据库/缓存/队列/OpenFGA `infra`、平台插件 | `plateau` |
 | 平台源 Proto、注解声明、共享生成产物 | `api` |
-| 平台共享 client | `web` |
-| 微服务如何分层和使用 Servora | `service` |
-| 母框架自身 CRUD、启动、transport、provider、CLI | `servora` |
+| 平台前端工具包 `@servora/plateau-utils` | `web` |
+| 微服务如何分层和使用 Servora / Plateau 能力 | `service` |
+| 微内核启动、transport、observability、`contrib/k8s`、通用插件与 `@servora/proto-utils` | `servora` |
 | 应用定位、领域模型、业务流程与前后端 | `<应用>/architecture.md`、`backend.md`、`frontend.md` |
 
 ## Servora 协同迭代
@@ -29,7 +29,7 @@ Plateau 开发和 dogfood 中发现 Servora 的缺陷、通用能力缺口或可
 
 ## 生成与消费
 
-`@plateau/api` 承载可再生成契约，`@plateau/client` 承载手写 transport 与框架中立错误事实。Cookie/token 持久化、登录跳转和业务文案属于应用；生成目录不容纳手写 runtime。框架内部与业务消费规范通过链接组合，不复制两套规则。
+`@plateau/api` 承载可再生成契约，`@servora/plateau-utils` 承载手写 HTTP/流式 transport、AIP CRUD 前端辅助工具与平台公共错误原因枚举，`@servora/proto-utils` 提供微内核 `ApiError` 与传输类型。Cookie/token 持久化、登录跳转和业务文案属于应用；生成目录不容纳手写 runtime。框架内部与业务消费规范通过链接组合，不复制两套规则。
 
 新增服务遵循共通规范，不把停止维护实现或独立参考仓库的现状推广为推荐架构。
 

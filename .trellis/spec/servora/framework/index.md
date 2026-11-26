@@ -1,6 +1,6 @@
 # Servora framework
 
-适用于修改 `../servora/core/`、`transport/`、`obs/`、`contrib/` 或 `security/tls/` 的框架运行时代码。
+适用于修改 `../servora/core/`、`transport/`、`obs/`、`contrib/k8s/` 或 `security/tls/` 的微内核框架运行时代码。
 
 开发前按 [架构准入](architecture.md) 确认复用与协议边界。单一 capability 的工具留在该 capability，不创建 `util`、`helper` 或 `common` 聚合包。
 
@@ -8,7 +8,6 @@
 | --- | --- |
 | [architecture](architecture.md) | 调整 core 边界、依赖或共享协议 |
 | [bootstrap](bootstrap.md) | 启动、扫描、Wire、配置和关闭顺序 |
-| [crud](crud.md) | 框架 CRUD plan、列表、映射或 Ent adapter |
 | [transport](transport.md) | HTTP/gRPC client/server、endpoint 或 middleware |
 | [observability](observability.md) | 日志、trace、metric 运行时 |
 | [providers](providers.md) | `contrib` provider、生命周期或 adapter |

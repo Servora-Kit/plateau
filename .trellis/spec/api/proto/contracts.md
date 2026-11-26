@@ -14,7 +14,7 @@
 - 列表扩展须明确声明；未计算的统计值与零值区分，删除可见性与分页语义一致。
 - 可选字段及其设置状态、INPUT_ONLY、OUTPUT_ONLY、IMMUTABLE 与字段更新共同组成契约。update_mask 选择字段，省略与显式清除不可混淆。
 - 并发控制、软删与恢复由业务实现，不由注解自动保证。
-- 生成描述和字段常量、ResourcePlan、数据映射须保持同一语义；使用流程见 [service CRUD](../../service/backend/crud.md)，框架内部见 [framework CRUD](../../servora/framework/crud.md)。
+- 生成描述和字段常量、ResourcePlan、数据映射须保持同一语义；使用流程见 [service CRUD](../../service/backend/crud.md)，运行时内部契约见 [plateau CRUD](../../plateau/crud/index.md)。
 
 ## 错误与兼容性
 

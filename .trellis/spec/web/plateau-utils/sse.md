@@ -1,6 +1,6 @@
 # SSE 服务端流
 
-`createServerStream` 在 [`sse.ts`](../../../../web/packages/client/src/sse.ts) 中实现，供生成 transport 的 `serverStream` 调用。它只能在浏览器运行：创建时检查 `window` 与 `document`，并在 `pagehide`、显式 `close()` 或传入 signal 取消时释放连接。
+`createServerStream` 在 [`sse.ts`](../../../../web/packages/plateau-utils/src/client/sse.ts) 中实现，供生成 transport 的 `serverStream` 调用。它只能在浏览器运行：创建时检查 `window` 与 `document`，并在 `pagehide`、显式 `close()` 或传入 signal 取消时释放连接。
 
 ## 协议和失败处理
 
