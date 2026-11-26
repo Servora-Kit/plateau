@@ -13,10 +13,10 @@ managed:
 inputs:
     - directory: .
       paths:
-          - app/iam/service/api/protos/iam/user/v1
-          - app/iam/service/api/protos/iam/account/v1
-          - app/iam/service/api/protos/iam/authn/v1
-          - app/iam/service/api/protos/iam/session/v1
+          - api/protos/iam/user/v1
+          - api/protos/iam/account/v1
+          - api/protos/iam/authn/v1
+          - api/protos/iam/session/v1
 
 plugins:
     - local: ["go", "tool", "protoc-gen-openapi"]

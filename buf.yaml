@@ -2,9 +2,7 @@ version: v2
 
 modules:
   - path: api/protos
-  - path: app/audit/service/api/protos
-  - path: app/iam/service/api/protos
-  - path: app/admin/service/api/protos
+    name: buf.build/servora/plateau
 
 deps:
   - buf.build/servora/servora

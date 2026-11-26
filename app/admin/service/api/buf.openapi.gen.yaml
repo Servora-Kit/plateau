@@ -12,9 +12,9 @@ managed:
 inputs:
     - directory: .
       paths:
-          - app/admin/service/api/protos/admin/audit/v1
-          - app/admin/service/api/protos/admin/auth/v1
-          - app/admin/service/api/protos/admin/user/v1
+          - api/protos/admin/audit/v1
+          - api/protos/admin/auth/v1
+          - api/protos/admin/user/v1
 
 plugins:
     - local: ["go", "tool", "protoc-gen-openapi"]
