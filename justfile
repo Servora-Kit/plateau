@@ -168,7 +168,7 @@ fmt-proto-check *args:
 
 [working-directory(ROOT_DIR)]
 breaking *args:
-    @buf breaking --against "{{ BUF_BREAKING_AGAINST }}" {{ args }}
+    @buf breaking --exclude-imports --against "{{ BUF_BREAKING_AGAINST }}" {{ args }}
 
 clean: service::clean
 
