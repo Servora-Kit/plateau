@@ -462,3 +462,27 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 15: 阶段一：Servora 工具链与工程化门禁统一
+<!-- trellis-session: v=2 fp=69bc58e340d8f28d -->
+
+**Date**: 2026-11-26
+**Task**: 阶段一：Servora 工具链与工程化门禁统一
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 ../servora 遗留 Makefile/cmd/svr/docker-compose 清理，落地 mise.toml、go.mod tool、prek 三阶段钩子、ci-ok 路径分流门禁、govulncheck 与 Renovate 配置且远端 CI 全绿；同步更新本仓 .trellis/spec/servora 规范与长期工程化路线图。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `52586d83` | docs(spec): 同步 servora 单一来源工具链、prek 钩子与 CI 门禁规范 |
+| `345a719f` | docs(task): 新增 servora-kit 工程化路线图并记录阶段一门禁交付 |
+
+### Status
+
+[OK] **Completed**
