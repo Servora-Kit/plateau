@@ -38,7 +38,7 @@
 
 - Go 版本由根 `go.mod` 管理：`go` 指令表示最低支持版本，不为补丁版本抬高，避免强制依赖方和本地 `go.work` 跟着升级；需要标准库安全补丁时用 `toolchain` 指令固定补丁版本，CI 通过 `actions/setup-go` 读取 `go.mod`。
 - `buf`、`golangci-lint`、`just`、`fga`（`aqua:openfga/cli`）、`process-compose`（`aqua:F1bonacc1/process-compose`）、`prek`、`node`、`pnpm`、`air` 由根 `mise.toml` 固定版本；本地通过 `mise install`、CI 通过 `jdx/mise-action` 使用同一份版本。
-- 所有 protoc 插件（含 Plateau AuthN/AuthZ 与 Servora 插件）及 Wire/Ent 均在根 `go.mod` 的 `tool` 块声明并通过 `go tool` 执行；不再使用 `just plugin`/`just cli` 安装，Servora 插件版本随 `go.mod` 中的 `github.com/Servora-Kit/servora` 同步。生成路径与入口详见 [generation](../../api/proto/generation.md)。
+- 所有 protoc 插件（含 Plateau AuthN/AuthZ/Audit/CRUD 与 Servora 插件）及 Wire/Ent 均在根 `go.mod` 的 `tool` 块声明并通过 `go tool` 执行；不再使用 `just plugin`/`just cli` 安装，Servora 插件版本随 `go.mod` 中的 `github.com/Servora-Kit/servora` 同步。生成路径与入口详见 [generation](../../api/proto/generation.md)。
 - 依赖与工具版本由 Renovate 跟踪更新。
 - 根 justfile 启用了 `set export` 与 `set dotenv-override`：所有 Just 变量都会导出给 recipe 及其子进程，读取外部环境变量的 Just 变量不能与服务配置、测试使用的环境变量同名，否则空默认值会覆盖配置里的 `${VAR:默认值}`；支持自定义 `ENV_FILE` 的 recipe 在嵌套调用 `just` 时须显式透传 `--dotenv-path "{{ ENV_FILE }}"`，防止子 `just` 重新加载默认 `.env` 覆盖目标文件变量。
 
@@ -54,9 +54,9 @@
 ## Go module 与 CI 门禁
 
 - 根 `go.mod`、`go.sum` 统一管理共享代码和服务，不在生成目录或应用目录新增 Go module，也不提交 `go.work`。
-- 受影响代码须通过 `GOWORK=off` 的构建、lint 和测试；根门禁覆盖全仓，服务级检查只提供定向反馈，不能互相替代。
+- 受影响代码须通过 `GOWORK=off` 的构建、lint 和测试；生产代码须保持 `CGO_ENABLED=0` 可编译（`mattn/go-sqlite3` 仅限 `*_test.go` 使用，CI `go` 任务显式执行 `CGO_ENABLED=0 go build ./...`）。根门禁覆盖全仓，服务级检查只提供定向反馈，不能互相替代。
 - 依赖变更执行 `GOWORK=off go mod tidy` 并确认结果稳定；父级工作区通过而独立检查失败时，不视为验收通过。
-- CI 门禁在 `GOWORK=off` 下按路径分流运行各领域检查，并由聚合检查 `ci-ok` 作为唯一必过检查；工作流与门禁配置不硬编码服务名或 Web 包名。
+- CI 门禁在 `GOWORK=off` 下按路径分流运行各领域检查，并由聚合检查 `ci-ok` 作为唯一必过检查；对外发布由 `buf-ci.yml`（BSR `buf.build/servora/plateau`）、`release.yml`（`v*` Go Release）与 `publish-plateau-utils.yml`（`plateau-utils/v*` NPM OIDC Provenance）分别承载。工作流与门禁配置不硬编码服务名或 Web 包名。
 - 开发或审查时先选择受影响模块和检查命令；基础设施 provider 的业务日志由 data/bootstrap 边界决定，不在构造函数中重复记录成功或失败。验证记录留在任务或变更说明，不写入规范。
 
 入口：[根命令](../../../../justfile)、[进程编排](../../../../process-compose.yaml)、[工具版本](../../../../mise.toml)、[本地钩子](../../../../prek.toml)、[服务注册](../../../../just/services.just)、[服务命令](../../../../just/service.just)。

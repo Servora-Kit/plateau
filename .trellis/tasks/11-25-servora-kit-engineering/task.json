@@ -20,7 +20,8 @@
   "subtasks": [],
   "children": [
     "11-25-servora-ci-prek",
-    "11-26-crud-infra-migration"
+    "11-26-crud-infra-migration",
+    "11-26-plateau-release-pipeline"
   ],
   "parent": null,
   "relatedFiles": [],

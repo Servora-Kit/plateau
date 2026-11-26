@@ -4,7 +4,7 @@
 
 ## 源码与资源
 
-平台共享 Proto 在 `api/protos/plateau/<domain>/<version>`，业务 Proto 在 `app/<应用>/service/api/protos`。go_package 指向共享生成模块对应路径，生成布局见 [generation](generation.md)。
+所有源 Proto 集中位于根 `api/protos/`（单一 BSR 模块 `buf.build/servora/plateau`）：平台共享契约位于 `api/protos/plateau/<domain>/<version>`，各平台核心服务契约与私有配置位于 `api/protos/<service>/**`（不在 `app/*/service/` 下分散存放 `.proto`）。`go_package` 指向共享生成模块对应路径，生成布局见 [generation](generation.md)。
 
 资源名由 Proto resource pattern 定义，不能与数据库 ID 或 URL 编码片段混用；租户与父子资源结构由领域决定，不推广业务实例。
 

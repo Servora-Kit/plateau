@@ -4,13 +4,13 @@
 
 ## 现有流程
 
-根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。所有注册在根 `buf.yaml` 的平台与应用模块（含 `iam`、`admin`、`audit`）统一生成至共享目录，不再为单个服务重复维护独立的 `buf.typescript.gen.yaml` 产物。
+根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。根 `api/protos/` 作为单一模块（`buf.build/servora/plateau`）包含平台共享契约与平台服务（`iam`、`admin`、`audit`）契约，统一生成至共享目录，不再为单个服务重复维护独立的 Proto 目录或 `buf.typescript.gen.yaml` 产物。
 
 | 源／模板 | 输出与维护方 |
 | --- | --- |
-| `buf.yaml` 中平台与应用 Proto 模块 + `buf.go.gen.yaml` | `api/gen/go`：统一 Go 生成产物 |
-| 同一 workspace + `buf.typescript.gen.yaml` | `api/gen/ts`（`@plateau/api` 全量客户端/sidecar）与 `web/packages/plateau-utils/src/gen`（通过插件级 `types` 过滤生成 `@servora/plateau-utils/error-reasons/*` 公共错误枚举） |
-| 服务级 `api/buf.openapi.gen.yaml` | 各服务自己的 `internal/assets/openapi.yaml` |
+| 根 `buf.yaml` 单一模块 `api/protos` + `buf.go.gen.yaml` | `api/gen/go`：统一 Go 生成产物 |
+| 同一模块 + `buf.typescript.gen.yaml` | `api/gen/ts`（`@plateau/api` 全量客户端/sidecar）与 `web/packages/plateau-utils/src/gen`（通过插件级 `types` 过滤生成 `@servora/plateau-utils/error-reasons/*` 公共错误枚举） |
+| 服务级 `api/buf.openapi.gen.yaml`（按路径筛选 `api/protos/<service>/**`） | 各服务自己的 `internal/assets/openapi.yaml` |
 | 服务 Wire／Ent 源 | 相应服务 `cmd/server`、`internal/data` 中的生成输出 |
 
 生成模板只清理自身输出目录；停用的参考模板（如 `buf.es.gen.yaml`）不属于实际生成链。

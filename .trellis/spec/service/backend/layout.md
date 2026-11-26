@@ -2,7 +2,7 @@
 
 服务位于 `app/*/service/`，共享根 Go module，但各自是独立二进制与部署单元。目录职责见 [app 服务结构](../../../../app/AGENTS.md)：
 
-- `api/protos/` 按领域组织业务 Proto 和私有配置；`api/buf.openapi.gen.yaml` 管理服务 OpenAPI 生成。
+- 源 Proto（业务接口与私有配置）统一集中在根 `api/protos/<service>/**`；对外提供 HTTP 接口的服务在自身 `api/buf.openapi.gen.yaml` 中按路径筛选生成 OpenAPI（纯内部服务无需 `api/` 目录）。
 - `cmd/server/` 是启动入口；`configs/local/` 与 `configs/docker/` 分别承载本地和容器配置。
 - `internal/assets/` 放 OpenAPI 等内嵌产物；`internal/server`、`service`、`biz`、`data` 承担通用四层。
 - Ent schema 属于手写持久化模型；Ent/Wire 产物通过根 module 固定版本的 `go tool ent`、`go tool wire` 生成，不手改。

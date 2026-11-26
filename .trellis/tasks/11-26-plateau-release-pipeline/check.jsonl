@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "核查集中式 Proto 迁移与跨层生成零漂移"}
+{"file": ".trellis/spec/api/proto/contracts.md", "reason": "核查单一 BSR 模块配置与契约规范同步"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "核查 GOWORK=off just gen-check 与 OpenAPI 输出一致性"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "核查根目录结构与文档同步无旧路径残留"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "核查 CI 门禁、CGO_ENABLED=0 构建与全栈校验命令"}
+{"file": ".trellis/spec/web/plateau-utils/index.md", "reason": "核查 @servora/plateau-utils 打包、单测与 OIDC 发布工作流"}

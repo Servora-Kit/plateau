@@ -1,7 +1,7 @@
 # AGENTS.md - app/
 
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-03-15 | Updated: 2026-08-22 -->
+<!-- Generated: 2026-03-15 | Updated: 2026-11-26 -->
 
 ## 目录概览
 
@@ -13,10 +13,9 @@
 
 各服务目录可包含：
 
-- `service/`：后端
+- `service/`：后端（对外暴露 HTTP 接口的服务在 `internal/assets/openapi.yaml` 内嵌 OpenAPI 产物）
 - `web/`：前端（如有）
-- `manifests/`：服务专属补充资源
-- `openapi.yaml`：服务 OpenAPI 产物（由 buf 生成）
+- `manifests/`：服务专属补充资源（如有）
 
 ## 服务结构
 
@@ -26,10 +25,8 @@
 
 ```text
 {ServiceName}/service/         后端（根 Go module 内的独立服务）
-├── api/                       本微服务 proto 接口定义和私有配置文件 proto 定义
-│   ├── protos/{DomainName}/service/   该微服务各个领域的 Proto API 定义
-│   ├── protos/{ConfigName}/conf.proto 该微服务自己的业务配置 proto
-│   └── buf.openapi.gen.yaml   该服务的 OpenAPI buf 生成配置
+├── api/                       服务级 API 生成配置（纯内部 gRPC/消费服务如 audit 无此目录）
+│   └── buf.openapi.gen.yaml   该服务的 OpenAPI buf 生成配置（按路径筛选根 api/protos/{ServiceName}/**）
 ├── cmd/                       启动入口，一般只包含 server/
 ├── configs/                   运行时配置
 │   ├── local/                 本地开发环境（数据库、消息队列指向 127.0.0.1）
@@ -86,4 +83,4 @@ just lint                     # 全项目只读质量检查
   - 使用 `just service::<name>::dev` 或 `just service::<name>::run` 启动时，服务读取此目录。
 - `configs/docker/`：**容器化环境**。数据库、缓存、消息队列地址指向容器网络中的服务名（如 `postgres:5432`、`redis:6379`、`kafka:9092`）。
 
-在 `configs/` 中定义的 `.yaml` 在代码中通过 `conf.Bootstrap` 结构体映射，使用 Protobuf 结构定义在各自的 `api/` 目录下。
+在 `configs/` 中定义的 `.yaml` 在代码中通过配置结构体映射，对应的 Protobuf 配置消息统一定义在根 `api/protos/{ServiceName}/conf/`（及子模块 `conf/`）下。

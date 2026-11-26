@@ -17,7 +17,7 @@
 ## 目录结构
 
 - `api/` 平台领域 Proto 与生成产物（详见 [api/AGENTS.md](api/AGENTS.md)）
-  - `protos/` 领域 Proto 定义（`api/protos/plateau/**`）
+  - `protos/` 全平台集中式 Proto 定义（单一 BSR 模块 `buf.build/servora/plateau`，含 `plateau/**` 共享契约及 `iam/**`、`admin/**`、`audit/**` 服务与配置契约）
   - `gen/go/` 所有微服务的 Go Proto 生成输出目录
   - `gen/ts/` 所有微服务的 TypeScript Proto 生成输出目录
   - `gen/package.json` 管理共享 TS 包依赖与 exports
@@ -38,7 +38,7 @@
 - `prek.toml` 根 Git 钩子配置（`pre-commit` / `pre-push` / `commit-msg`）；`app/admin/web/prek.toml` 为 Vben 子项目钩子配置
 - `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 独立 workspace 和 lockfile，并通过 `link:` 引用 `@plateau/api`、`@servora/plateau-utils`
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
-- `buf.yaml` buf 总配置，依赖以及 lint 规则
+- `buf.yaml` 单一模块（`buf.build/servora/plateau`）、依赖以及 lint / breaking 规则
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
 - `buf.typescript.gen.yaml` 项目级统一 TypeScript 生成配置（输出 `@plateau/api` 的 `api/gen/ts` 及 `@servora/plateau-utils` 的 `web/packages/plateau-utils/src/gen`）
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考

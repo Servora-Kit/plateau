@@ -191,11 +191,21 @@ just web::admin::dev
 | **Jaeger / Prometheus** | `http://localhost:16686` · `http://localhost:9090` | 链路追踪与指标查询 |
 | **Consul / Traefik** | `http://localhost:8500` · `http://localhost:8081` | 服务发现与 Traefik 路由调试面板 |
 
+## 对外发布与下游接入
+
+外部业务微服务无需复制平台基础设施，直接按版本引用以下三项官方产物：
+
+| 产物 | 坐标 | 发布触发 | 核心内容 |
+| --- | --- | --- | --- |
+| **Go 平台模块** | `github.com/Servora-Kit/plateau` | Git tag `v*`（`release.yml`） | `security`、`crud`、`infra`、`transport/server/kafka` 与 `api/gen/go/**`（生产代码 `CGO_ENABLED=0`） |
+| **BSR Proto 模块** | `buf.build/servora/plateau` | `main` 推送与 `v*` tag（`buf-ci.yml`） | 平台安全/CRUD/基础设施注解与配置契约，以及 `iam`、`admin`、`audit` 服务契约 |
+| **前端工具包** | `@servora/plateau-utils` | Git tag `plateau-utils/v*`（OIDC Provenance） | HTTP/SSE/WebSocket 传输客户端、AIP CRUD 查询构建与平台错误码枚举 |
+
 ## 仓库结构
 
 ```text
 plateau/
-├── api/                     # 共享 Proto 定义与 Go / TypeScript 生成产物（@plateau/api）
+├── api/                     # 单一 BSR 模块源 Proto（buf.build/servora/plateau）与 Go / TS 生成产物
 ├── app/
 │   ├── iam/                 # 身份与认证中心（Go service + Next.js web）
 │   ├── admin/               # 平台管理控制面（Go service + Vue Vben web）

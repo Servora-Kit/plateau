@@ -11,6 +11,7 @@
 ## 质量检查
 
 - 修改源码后运行 `pnpm --filter @servora/plateau-utils test`、`pnpm --filter @servora/plateau-utils typecheck` 与 `pnpm --filter @servora/plateau-utils pack --dry-run`。
+- 对外发布通过 Git tag `plateau-utils/v<version>` 触发 `.github/workflows/publish-plateau-utils.yml`：校验提交位于 `origin/main`、已通过 `ci.yml` 且与 `package.json` `version` 一致后，通过 NPM OIDC `--provenance` 发布（`prepublishOnly` 保持 `npm run clean && npm run build`）。
 - 修改应用调用契约时，同时检查消费应用；流式协议须按真实端点进行浏览器或集成验证，HTTP 单测不替代流式端到端检查。
 
 ## 主题索引

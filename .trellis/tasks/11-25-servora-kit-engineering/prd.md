@@ -50,9 +50,9 @@
 - [x] **R3.2 统一 `infra/` 基础设施与双 ORM 支持**：将迁入的 `entgo`（与既有软删除 mixin 合并）、`gorm`、`redis`、`cache/redis` 及对应配置 Proto 整合进 `plateau/infra/`，保留完整的 Ent 与 GORM CRUD 适配能力以支撑后续多样化微服务需求。
 - [x] **R3.3 整合单一前端工具包**：将 `web/packages/client` 与迁入的 `crud` TS 模块合并为单个公开 NPM 工具包（划分 `./client` 与 `./crud` 子路径导出），切换 `api/gen`、`app/iam/web` 与 `app/admin/web` 引用。
 
-### 阶段四：Plateau 单一 BSR、Go 包与 NPM 自动化发布闭环
+### 阶段四：Plateau 单一 BSR、Go 包与 NPM 自动化发布闭环（子任务：[11-26-plateau-release-pipeline](../11-26-plateau-release-pipeline/prd.md)）
 
-- [ ] **R4.1 全集中式 `api/protos/` 与单一 BSR 模块 `buf.build/servora/plateau`**：将 `app/{iam,admin,audit}/service/api/protos/**`（含 `conf`）全部迁入根 `api/protos/` 并声明单一模块 `name: buf.build/servora/plateau`，移除服务子目录下的 `api/protos/` 并调整各服务 OpenAPI 生成配置路径。
+- [x] **R4.1 全集中式 `api/protos/` 与单一 BSR 模块 `buf.build/servora/plateau`**：将 `app/{iam,admin,audit}/service/api/protos/**`（含 `conf`）全部迁入根 `api/protos/` 并声明单一模块 `name: buf.build/servora/plateau`，移除服务子目录下的 `api/protos/` 并调整各服务 OpenAPI 生成配置路径。
 - [ ] **R4.2 落地自动化发布工作流与文档同步**：参照 `servora` 为 `plateau` 新增 `buf-ci.yml`（推送至 `buf.build/servora/plateau`）、`release.yml`（校验 `main` `ci-ok` 通过后发布 Go Release 与 BSR 版本标签）及前端工具包 NPM OIDC 自动发布工作流；清理生产代码路径中的 CGO 依赖，更新两仓 `README.md`、`AGENTS.md` 与 `.trellis/spec/`。
 
 ## 验收标准
