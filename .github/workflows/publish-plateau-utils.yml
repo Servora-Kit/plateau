@@ -1,0 +1,70 @@
+name: Publish @servora/plateau-utils
+
+on:
+  push:
+    tags:
+      - "plateau-utils/v*"
+
+concurrency:
+  group: publish-plateau-utils-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag commit passed CI on main and matches package.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Tag commit $GITHUB_SHA is not contained in origin/main." >&2
+            echo "Push the commit to main before creating a publish tag." >&2
+            exit 1
+          fi
+
+          EXPECTED_TAG="plateau-utils/v$(jq -r .version web/packages/plateau-utils/package.json)"
+          if [ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match web/packages/plateau-utils/package.json ($EXPECTED_TAG)." >&2
+            exit 1
+          fi
+
+          RUN_COUNT=$(gh api \
+            -X GET \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs" \
+            -f branch=main \
+            -f event=push \
+            -f per_page=100 \
+            --jq ".workflow_runs | map(select(.head_sha == \"${GITHUB_SHA}\" and .conclusion == \"success\")) | length")
+
+          if [ "$RUN_COUNT" = "0" ]; then
+            echo "No successful CI run found for $GITHUB_SHA on main." >&2
+            echo "Push the commit to main and wait for CI before tagging." >&2
+            exit 1
+          fi
+
+      - uses: jdx/mise-action@v5
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile --filter @servora/plateau-utils...
+
+      - name: Typecheck and test
+        working-directory: web/packages/plateau-utils
+        run: |
+          pnpm run typecheck
+          pnpm run test
+
+      - name: Publish to npm
+        working-directory: web/packages/plateau-utils
+        run: npm publish --provenance --access public --registry=https://registry.npmjs.org

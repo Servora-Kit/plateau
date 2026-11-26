@@ -130,7 +130,9 @@ jobs:
           restore-keys: |
             golangci-lint-${{ runner.os }}-
 
-      - name: Build
+      - name: Build (CGO disabled)
+        env:
+          CGO_ENABLED: "0"
         run: go build ./...
 
       - name: Lint Go
