@@ -486,3 +486,38 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 16: 阶段二+三：Servora 瘦身发版与 Plateau 承接 CRUD、基础设施及前端工具包
+<!-- trellis-session: v=2 fp=a06050051a5984f2 -->
+
+**Date**: 2026-11-26
+**Task**: 阶段二+三：Servora 瘦身发版与 Plateau 承接 CRUD、基础设施及前端工具包
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 ../servora 剥离 CRUD 与数据缓存 contrib 并发布 v0.12.0 及 @servora/proto-utils@0.2.0；在 plateau 落位 crud、protoc-gen-plateau-crud、infra/{entgo,gorm,redis,cache} 与统一前端包 @servora/plateau-utils，完成全仓引用切换、规范同步与独立门禁验收。
+
+### Main Changes
+
+- 从 ../servora 移除 core/crud、conformance、protoc-gen-servora-crud、contrib/{db,cache} 与对应 Proto/TS 模块，正式发布 servora v0.12.0、BSR v0.12.0 与 @servora/proto-utils@0.2.0
+- 在 plateau 迁入 plateau.crud.v1 / plateau.infra.redis.v1 契约、crud 运行时（含跨语言测试向量）、protoc-gen-plateau-crud 与 infra/{entgo,gorm,redis,cache}
+- 合并构建公开前端包 @servora/plateau-utils（导出 . / ./client / ./crud / ./error-reasons/*），升级上游依赖并同步 AGENTS.md、README.md、docs/crud.md 与 .trellis/spec 规范
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `32d99332` | feat: 承接 CRUD 与数据缓存生态、合并 @servora/plateau-utils 并升级 servora v0.12.0 |
+| `91de2a1b` | docs(spec): 同步 servora 微内核裁剪与 plateau CRUD、基础设施及前端工具包规范 |
+| `2a579188` | docs(task): 新增 CRUD 与基础设施迁移子任务并更新工程化路线图进度 |
+
+### Testing
+
+- [OK] [OK] GOWORK=off 全量 Go/Proto/Web 门禁、gofmt 后定向包单测（324 passed）、GitNexus 图变更分析与本地 go.work 编译验证通过
+
+### Status
+
+[OK] **Completed**
