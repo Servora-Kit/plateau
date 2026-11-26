@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "两仓 mise、go.mod tool、prek 三阶段钩子、GOWORK=off just gen-check 与 ci-ok 门禁规范"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "Plateau 顶层目录职责（crud、infra、cmd、web/packages）与模块组织规范"}
+{"file": ".trellis/spec/plateau/codegen/index.md", "reason": "Plateau protoc 插件（protoc-gen-plateau-*）与 internal/codegen 共享包规范"}
+{"file": ".trellis/spec/plateau/infra/index.md", "reason": "Plateau infra 配置映射、资源清理责任与 entgo/gorm/redis/cache 整合规范"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "Plateau Go/TS Proto 生成配置、buf 模板与 gen-check 幂等检查规范"}
+{"file": ".trellis/spec/service/backend/crud.md", "reason": "平台微服务消费 AIP CRUD、mapper 与 Ent adapter 的调用规范"}
+{"file": ".trellis/spec/web/client/index.md", "reason": "共享前端通信包架构与 HTTP/SSE/WebSocket 契约（合并至 @servora/plateau-utils 时保持行为不变）"}
+{"file": ".trellis/spec/servora/index.md", "reason": "Servora 微内核规范索引，瘦身发版后同步移除 CRUD 与非核心 contrib 引用"}
+{"file": ".trellis/spec/servora/framework/crud.md", "reason": "原 Servora AIP CRUD 运行时规范（迁入 Plateau 后转移归属并更新包路径）"}
+{"file": ".trellis/spec/servora/web/proto-utils.md", "reason": "@servora/proto-utils 导出契约与 @servora/plateau-utils/crud 拆分目标参照"}

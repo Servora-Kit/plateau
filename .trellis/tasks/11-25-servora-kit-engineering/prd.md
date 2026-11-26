@@ -39,16 +39,16 @@
 - [x] **R1.2 工具版本与生成器固定**：在 `servora` 新增 `mise.toml`（对齐 `plateau` 工具版本策略）并在 `go.mod` 通过 `tool` 指令固定 `protoc` 插件，移除 `@latest` 安装脚本。
 - [x] **R1.3 本地钩子与 Plateau 同款 CI 门禁**：新增 `servora/prek.toml`；升级 `servora/.github/workflows/ci.yml`（含 `changes` 路径分流、`prek`、`go`、`proto`、`gen`、`web` 及 `ci-ok` 聚合门禁），新增 `security.yml`（`govulncheck`）与 `renovate.json5`，并与既有 `buf-ci.yml`、`release.yml`、`publish-proto-utils.yml` 兼容衔接。
 
-### 阶段二：Servora 瘦身（剥离 CRUD 与数据/缓存适配）
+### 阶段二：Servora 瘦身（剥离 CRUD 与数据/缓存适配）（合并子任务：[11-26-crud-infra-migration](../11-26-crud-infra-migration/prd.md)）
 
-- [ ] **R2.1 剥离 CRUD 与非核心 `contrib`**：从 `servora` 移出 `core/crud`、`conformance/crud`、`cmd/protoc-gen-servora-crud`、`api/protos/servora/{crud,example,contrib}`、`contrib/{db,cache}`（`entgo`、`gorm`、`redis`、`cache/redis`）及 `web/packages/proto-utils/src/crud`；保留 `contrib/k8s`（供 `core/registry` 使用）及 `conf`、`go-errors`、`redact`、`typescript-http` 4 款插件。
-- [ ] **R2.2 精简依赖与发版**：清理 `servora/go.mod` 中随上述模块移出的 `ent`、`gorm`、`redis`、`copier`、`aip` 等外部依赖，发布瘦身后的 `servora` Go 版本、`buf.build/servora/servora` 与 `@servora/proto-utils`。
+- [x] **R2.1 剥离 CRUD 与非核心 `contrib`**：从 `servora` 移出 `core/crud`、`conformance/crud`、`cmd/protoc-gen-servora-crud`、`api/protos/servora/{crud,example,contrib}`、`contrib/{db,cache}`（`entgo`、`gorm`、`redis`、`cache/redis`）及 `web/packages/proto-utils/src/crud`；保留 `contrib/k8s`（供 `core/registry` 使用）及 `conf`、`go-errors`、`redact`、`typescript-http` 4 款插件。
+- [x] **R2.2 精简依赖与发版**：清理 `servora/go.mod` 中随上述模块移出的 `ent`、`gorm`、`redis`、`copier`、`aip` 等外部依赖，发布瘦身后的 `servora` Go 版本、`buf.build/servora/servora` 与 `@servora/proto-utils`。
 
-### 阶段三：Plateau 承接 CRUD、基础设施与合并前端工具包
+### 阶段三：Plateau 承接 CRUD、基础设施与合并前端工具包（合并子任务：[11-26-crud-infra-migration](../11-26-crud-infra-migration/prd.md)）
 
-- [ ] **R3.1 承接 AIP CRUD 全栈生态**：在 `plateau` 落位 `crud/`（含 `conformance/crud`）、`api/protos/plateau/crud/v1` 与 `cmd/protoc-gen-plateau-crud`（复用 `internal/codegen`），更新本仓资源 Proto 与生成模板。
-- [ ] **R3.2 统一 `infra/` 基础设施与双 ORM 支持**：将迁入的 `entgo`（与既有软删除 mixin 合并）、`gorm`、`redis`、`cache/redis` 及对应配置 Proto 整合进 `plateau/infra/`，保留完整的 Ent 与 GORM CRUD 适配能力以支撑后续多样化微服务需求。
-- [ ] **R3.3 整合单一前端工具包**：将 `web/packages/client` 与迁入的 `crud` TS 模块合并为单个公开 NPM 工具包（划分 `./client` 与 `./crud` 子路径导出），切换 `api/gen`、`app/iam/web` 与 `app/admin/web` 引用。
+- [x] **R3.1 承接 AIP CRUD 全栈生态**：在 `plateau` 落位 `crud/`（含 `crud/testdata` 跨语言向量）、`api/protos/plateau/crud/v1` 与 `cmd/protoc-gen-plateau-crud`（复用 `internal/codegen`），更新本仓资源 Proto 与生成模板。
+- [x] **R3.2 统一 `infra/` 基础设施与双 ORM 支持**：将迁入的 `entgo`（与既有软删除 mixin 合并）、`gorm`、`redis`、`cache/redis` 及对应配置 Proto 整合进 `plateau/infra/`，保留完整的 Ent 与 GORM CRUD 适配能力以支撑后续多样化微服务需求。
+- [x] **R3.3 整合单一前端工具包**：将 `web/packages/client` 与迁入的 `crud` TS 模块合并为单个公开 NPM 工具包（划分 `./client` 与 `./crud` 子路径导出），切换 `api/gen`、`app/iam/web` 与 `app/admin/web` 引用。
 
 ### 阶段四：Plateau 单一 BSR、Go 包与 NPM 自动化发布闭环
 
@@ -57,8 +57,8 @@
 
 ## 验收标准
 
-- [ ] `servora` 已移除 `Makefile`、`cmd/svr`、`crud` 及 `contrib/{db,cache}`，仅保留 4 款通用 `protoc` 插件（`conf`、`go-errors`、`redact`、`typescript-http`）、`core`（含 `k8s` 注册发现）、`obs`、`transport/{http,grpc}`、`security/tls` 与极简 `@servora/proto-utils`，且具备与 `plateau` 一致的 `mise + prek + ci-ok + govulncheck + Renovate` 门禁（R1.1–R2.2）。
-- [ ] `plateau` 完整承载 `security`、AIP `crud`、`infra`（含 `entgo`、`gorm`、`redis`、`cache`、`openfga`、`clickhouse`、`kafka`、`mail`）、`transport/server/kafka` 及 4 款平台 `protoc` 插件（`crud`、`authn`、`authz`、`audit`）（R3.1–R3.2）。
+- [x] `servora` 已移除 `Makefile`、`cmd/svr`、`crud` 及 `contrib/{db,cache}`，仅保留 4 款通用 `protoc` 插件（`conf`、`go-errors`、`redact`、`typescript-http`）、`core`（含 `k8s` 注册发现）、`obs`、`transport/{http,grpc}`、`security/tls` 与极简 `@servora/proto-utils`，且具备与 `plateau` 一致的 `mise + prek + ci-ok + govulncheck + Renovate` 门禁（R1.1–R2.2）。
+- [x] `plateau` 完整承载 `security`、AIP `crud`、`infra`（含 `entgo`、`gorm`、`redis`、`cache`、`openfga`、`clickhouse`、`kafka`、`mail`）、`transport/server/kafka` 及 4 款平台 `protoc` 插件（`crud`、`authn`、`authz`、`audit`）（R3.1–R3.2）。
 - [ ] `plateau` 前端基础能力收敛为单一公开 NPM 工具包（含 `./client` 与 `./crud`），配置完成基于 Git tag 的 NPM OIDC 自动发布流水线（R3.3、R4.2）。
 - [ ] `plateau` 全部公共与服务 `.proto` 统一归属单一模块 `buf.build/servora/plateau` 并配置自动推送；外部最小服务仅依赖 `github.com/Servora-Kit/plateau`、`buf.build/servora/plateau` 与该单一 NPM 包即可在 `CGO_ENABLED=0` 下完成构建并调用 `iam` / `audit` / `admin` 契约（R4.1–R4.2）。
 - [ ] 在 `GOWORK=off` 且无父级 `pnpm-workspace.yaml` 条件下，`servora` 与 `plateau` 各自独立执行全量门禁与集成测试全部通过，IAM / Admin / Audit 前后端全链路行为零回归（R1–R4）。

@@ -19,7 +19,8 @@
   "pr_url": null,
   "subtasks": [],
   "children": [
-    "11-25-servora-ci-prek"
+    "11-25-servora-ci-prek",
+    "11-26-crud-infra-migration"
   ],
   "parent": null,
   "relatedFiles": [],
