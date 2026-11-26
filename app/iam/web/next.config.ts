@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   outputFileTracingRoot: workspaceRoot,
-  transpilePackages: ["@plateau/api", "@plateau/client"],
+  transpilePackages: ["@plateau/api", "@servora/plateau-utils"],
   logging: {
     incomingRequests: {
       ignore: [/^\/login\/?(?:\?|$)/u, /^\/authorize\/callback\/?(?:\?|$)/u],

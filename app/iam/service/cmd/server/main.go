@@ -11,12 +11,12 @@ import (
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	mailpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
+	redispb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/redis/v1"
 	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	capv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/startup"
-	redispb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 
 	"github.com/go-kratos/kratos/v3"

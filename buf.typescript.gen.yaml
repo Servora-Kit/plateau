@@ -10,8 +10,23 @@ plugins:
     opt:
       - target=ts
       - paths=source_relative
-  - local: ["go", "tool", "protoc-gen-servora-crud"]
+  - local: ["go", "tool", "protoc-gen-plateau-crud"]
     out: api/gen/ts
+    opt:
+      - target=ts
+      - paths=source_relative
+
+  # Public error-reason sidecars exported by @servora/plateau-utils/error-reasons/*
+  - local: ["go", "tool", "protoc-gen-typescript-http"]
+    out: web/packages/plateau-utils/src/gen
+    types:
+      - plateau.crud.v1.CrudErrorReason
+      - plateau.security.errors.v1.SecurityErrorReason
+  - local: ["go", "tool", "protoc-gen-go-errors"]
+    out: web/packages/plateau-utils/src/gen
+    types:
+      - plateau.crud.v1.CrudErrorReason
+      - plateau.security.errors.v1.SecurityErrorReason
     opt:
       - target=ts
       - paths=source_relative

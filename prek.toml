@@ -3,6 +3,7 @@ default_stages = ["pre-commit"]
 
 exclude = { glob = [
   "api/gen/**",
+  "web/packages/plateau-utils/src/gen/**",
   "**/wire_gen.go",
   "app/*/service/internal/data/ent/**",
   "**/openapi.yaml",

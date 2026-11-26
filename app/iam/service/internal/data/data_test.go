@@ -9,11 +9,11 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	redispb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/redis/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
 	"github.com/Servora-Kit/plateau/security/password"
-	redispb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"

@@ -16,8 +16,8 @@
   "dependencies": {
     "@cap.js/wasm": "0.0.8",
     "@plateau/api": "workspace:*",
-    "@plateau/client": "workspace:*",
-    "@servora/proto-utils": "^0.1.11",
+    "@servora/plateau-utils": "workspace:*",
+    "@servora/proto-utils": "^0.2.0",
     "cap-widget": "0.1.63",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

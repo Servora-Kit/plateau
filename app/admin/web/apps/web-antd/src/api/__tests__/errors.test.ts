@@ -1,7 +1,7 @@
 import { AdminAuditErrorReason } from '@plateau/api/admin/audit/v1/audit.errors';
 import { AdminUserErrorReason } from '@plateau/api/admin/user/v1/user.errors';
-import { SecurityErrorReason } from '@plateau/api/plateau/security/errors/v1/errors.errors';
-import { CrudErrorReason } from '@servora/proto-utils/error-reasons/servora/crud/v1/errors';
+import { CrudErrorReason } from '@servora/plateau-utils/error-reasons/plateau/crud/v1/errors';
+import { SecurityErrorReason } from '@servora/plateau-utils/error-reasons/plateau/security/errors/v1/errors';
 import { ApiError } from '@servora/proto-utils/errors';
 import { describe, expect, it } from 'vitest';
 

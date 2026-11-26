@@ -21,6 +21,7 @@ coverage.out
 # 共享前端依赖；应用构建产物由各自的 .gitignore 管理
 node_modules/
 *.tsbuildinfo
+/web/packages/*/dist/
 
 # 本地工具与运行缓存
 .cache/

@@ -8,9 +8,12 @@ importers:
 
   api/gen:
     dependencies:
+      '@servora/plateau-utils':
+        specifier: workspace:*
+        version: link:../../web/packages/plateau-utils
       '@servora/proto-utils':
-        specifier: ^0.1.11
-        version: 0.1.11
+        specifier: ^0.2.0
+        version: 0.2.0
     devDependencies:
       '@typescript/native':
         specifier: npm:typescript@^7.0.2
@@ -27,12 +30,12 @@ importers:
       '@plateau/api':
         specifier: workspace:*
         version: link:../../../api/gen
-      '@plateau/client':
+      '@servora/plateau-utils':
         specifier: workspace:*
-        version: link:../../../web/packages/client
+        version: link:../../../web/packages/plateau-utils
       '@servora/proto-utils':
-        specifier: ^0.1.11
-        version: 0.1.11
+        specifier: ^0.2.0
+        version: 0.2.0
       cap-widget:
         specifier: 0.1.63
         version: 0.1.63
@@ -104,14 +107,14 @@ importers:
         specifier: npm:@typescript/typescript6@^6.0.2
         version: '@typescript/typescript6@6.0.2'
 
-  web/packages/client:
+  web/packages/plateau-utils:
     dependencies:
       '@microsoft/fetch-event-source':
         specifier: ^2.0.1
         version: 2.0.1
       '@servora/proto-utils':
-        specifier: ^0.1.11
-        version: 0.1.11
+        specifier: ^0.2.0
+        version: 0.2.0
       ofetch:
         specifier: ^1.5.1
         version: 1.5.1
@@ -1326,8 +1329,8 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
-  '@servora/proto-utils@0.1.11':
-    resolution: {integrity: sha512-R16wmGtbCSVUI/BCr6/hQJYlUEYsaQrEuc11Z8gMR4Z1Up1wRxGVdq5x5pPk0NM3FRpQkk+LVJm8ZWkh7kjqpw==}
+  '@servora/proto-utils@0.2.0':
+    resolution: {integrity: sha512-/jfi9Ha1QKiD/liEYkMsh4bewpRQiLbCNF164RkBqihugO6sypn0gOT+VI6niWoFZh0OIPuM1Rxp6nk9TohGUg==}
 
   '@shadcn/registry@0.2.1':
     resolution: {integrity: sha512-wMvZ3DGdnhCwtpeFbwKybSGfCcP52bZX77jMKgZvupmirgyA5KRLlkeQXkI2RGHIaD8TX2iWe2wcIEjjqzg2FQ==}
@@ -4943,7 +4946,7 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@servora/proto-utils@0.1.11': {}
+  '@servora/proto-utils@0.2.0': {}
 
   '@shadcn/registry@0.2.1(supports-color@7.1.0)':
     dependencies:

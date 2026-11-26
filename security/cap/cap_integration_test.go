@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	redispb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/redis/v1"
 	capv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
-	redispb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
-	rediscontrib "github.com/Servora-Kit/servora/contrib/db/redis"
+	infraredis "github.com/Servora-Kit/plateau/infra/redis"
 	"github.com/alicebob/miniredis/v2"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -25,7 +25,7 @@ func newTestCAP(t *testing.T) (*Cap, *Cap, *miniredis.Miniredis) {
 func newTestCAPWithConfig(t *testing.T, config *capv1.CAP) (*Cap, *Cap, *miniredis.Miniredis) {
 	t.Helper()
 	server := miniredis.RunT(t)
-	client, cleanup, err := rediscontrib.New(&redispb.Redis{
+	client, cleanup, err := infraredis.New(&redispb.Redis{
 		Addr:         server.Addr(),
 		DialTimeout:  durationpb.New(time.Second),
 		ReadTimeout:  durationpb.New(time.Second),

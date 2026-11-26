@@ -10,6 +10,7 @@ packages:
 # without relying on a root package.json to infer the pnpm major version.
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
+  - "@servora/plateau-utils"
   - "@servora/proto-utils"
 
 allowBuilds:

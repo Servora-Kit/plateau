@@ -127,6 +127,7 @@ admin_db="${ADMIN_DATABASE_NAME:-admin}"
 
 iam_dsn="${IAM_TEST_POSTGRES_DSN:-postgres://${pg_user}:${pg_password}@127.0.0.1:${pg_port}/${iam_db}?sslmode=disable}"
 admin_dsn="${ADMIN_TEST_POSTGRES_DSN:-postgres://${pg_user}:${pg_password}@127.0.0.1:${pg_port}/${admin_db}?sslmode=disable}"
+ent_dsn="${PLATEAU_ENT_POSTGRES_DSN:-${iam_dsn}}"
 
 emit_var() {
   local key="$1" value="$2"
@@ -140,6 +141,7 @@ emit_var() {
 
 emit_var "IAM_TEST_POSTGRES_DSN" "$iam_dsn"
 emit_var "ADMIN_TEST_POSTGRES_DSN" "$admin_dsn"
+emit_var "PLATEAU_ENT_POSTGRES_DSN" "$ent_dsn"
 emit_var "FGA_API_URL" "$api_url"
 emit_var "IAM_TEST_FGA_URL" "$api_url"
 emit_var "IAM_TEST_FGA_STORE_ID" "$store_id"

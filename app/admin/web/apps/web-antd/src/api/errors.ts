@@ -6,11 +6,11 @@ import {
   AdminUserErrorReason,
   isAdminUserErrorReason,
 } from '@plateau/api/admin/user/v1/user.errors';
+import { isCrudErrorReason } from '@servora/plateau-utils/error-reasons/plateau/crud/v1/errors';
 import {
   isSecurityErrorReason,
   SecurityErrorReason,
-} from '@plateau/api/plateau/security/errors/v1/errors.errors';
-import { isCrudErrorReason } from '@servora/proto-utils/error-reasons/servora/crud/v1/errors';
+} from '@servora/plateau-utils/error-reasons/plateau/security/errors/v1/errors';
 import { ApiError, parseKratosErrorBody } from '@servora/proto-utils/errors';
 
 export type AdminErrorAction =

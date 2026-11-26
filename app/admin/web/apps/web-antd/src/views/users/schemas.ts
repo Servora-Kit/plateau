@@ -4,7 +4,7 @@ import type {
   UpdateUserRequest,
 } from '@plateau/api/admin/user/v1';
 import type { User, UserProfile, UserStatus } from '@plateau/api/iam/user/v1';
-import type { FilterExpression } from '@servora/proto-utils/crud';
+import type { FilterExpression } from '@servora/plateau-utils/crud';
 
 import type { VbenFormSchema } from '#/adapter/form';
 import type { VxeTableGridOptions } from '#/adapter/vxe-table';
@@ -20,7 +20,7 @@ import {
   filterContains,
   makeUpdateMask,
   rawFilterValue,
-} from '@servora/proto-utils/crud';
+} from '@servora/plateau-utils/crud';
 
 import { z } from '#/adapter/form';
 

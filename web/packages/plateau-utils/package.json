@@ -1,0 +1,57 @@
+{
+  "name": "@servora/plateau-utils",
+  "version": "0.1.0",
+  "description": "Plateau 前端工具包：HTTP/SSE/WebSocket 传输客户端、AIP CRUD 查询构建与平台错误聚合",
+  "type": "module",
+  "sideEffects": false,
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    },
+    "./crud": {
+      "types": "./dist/crud/index.d.ts",
+      "import": "./dist/crud/index.js"
+    },
+    "./error-reasons/*": {
+      "types": "./dist/gen/*.errors.d.ts",
+      "import": "./dist/gen/*.errors.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run build && node --experimental-strip-types --test test/*.test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Servora-Kit/plateau.git",
+    "directory": "web/packages/plateau-utils"
+  },
+  "homepage": "https://github.com/Servora-Kit/plateau/tree/main/web/packages/plateau-utils",
+  "bugs": {
+    "url": "https://github.com/Servora-Kit/plateau/issues"
+  },
+  "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
+    "@servora/proto-utils": "^0.2.0",
+    "ofetch": "^1.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

@@ -80,7 +80,17 @@ wire: service::wire
 
 gen: api service::_gen
 
-gen-fresh: gen-clean gen
+[unix]
+[working-directory(ROOT_DIR)]
+_gen-go-pb:
+    @buf generate --template '{"version":"v2","plugins":[{"local":["go","tool","protoc-gen-go"],"out":"api/gen/go","opt":"paths=source_relative"}]}'
+
+[windows]
+[working-directory(ROOT_DIR)]
+_gen-go-pb:
+    @buf generate --template '{\"version\":\"v2\",\"plugins\":[{\"local\":[\"go\",\"tool\",\"protoc-gen-go\"],\"out\":\"api/gen/go\",\"opt\":\"paths=source_relative\"}]}'
+
+gen-fresh: gen-clean _gen-go-pb gen
 
 [unix]
 [working-directory(ROOT_DIR)]
@@ -91,6 +101,7 @@ gen-check:
     paths=(
         'api/gen/go'
         'api/gen/ts'
+        'web/packages/plateau-utils/src/gen'
         ':(glob)**/wire_gen.go'
         ':(glob)app/*/service/internal/data/ent'
         ':(glob)app/*/service/**/openapi.yaml'
@@ -119,6 +130,7 @@ gen-check:
     $paths = @(
         "api/gen/go",
         "api/gen/ts",
+        "web/packages/plateau-utils/src/gen",
         ":(glob)**/wire_gen.go",
         ":(glob)app/*/service/internal/data/ent",
         ":(glob)app/*/service/**/openapi.yaml"
@@ -138,11 +150,11 @@ gen-check:
 
 [unix]
 _gen-clean-files:
-    rm -rf -- "{{ join(ROOT_DIR, "api/gen/go") }}" "{{ join(ROOT_DIR, "api/gen/ts") }}"
+    rm -rf -- "{{ join(ROOT_DIR, "api/gen/go") }}" "{{ join(ROOT_DIR, "api/gen/ts") }}" "{{ join(ROOT_DIR, "web/packages/plateau-utils/src/gen") }}"
 
 [windows]
 _gen-clean-files:
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue @("{{ join(ROOT_DIR, "api/gen/go") }}", "{{ join(ROOT_DIR, "api/gen/ts") }}")
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue @("{{ join(ROOT_DIR, "api/gen/go") }}", "{{ join(ROOT_DIR, "api/gen/ts") }}", "{{ join(ROOT_DIR, "web/packages/plateau-utils/src/gen") }}")
 
 gen-clean: _gen-clean-files
 

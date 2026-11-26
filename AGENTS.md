@@ -23,23 +23,24 @@
   - `gen/package.json` 管理共享 TS 包依赖与 exports
 - `app/` 平台微服务，均在 `app/{ServiceName}/` 下（服务结构见 [app/AGENTS.md](app/AGENTS.md)）
 - `cmd/` 平台级命令工具
-  - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/`、`protoc-gen-plateau-audit/` AuthN/AuthZ/Audit 代码生成插件；与其余 protoc 插件统一在根 `go.mod` `tool` 声明，由 buf 模板经 `go tool` 调用
-- `internal/codegen/` 共享代码生成实现
+  - `protoc-gen-plateau-authz/`、`protoc-gen-plateau-authn/`、`protoc-gen-plateau-audit/`、`protoc-gen-plateau-crud/` 安全与 CRUD 代码生成插件；与其余 protoc 插件统一在根 `go.mod` `tool` 声明，由 buf 模板经 `go tool` 调用
+- `crud/` 后端中立的 AIP CRUD 生命周期、FieldMask、List 预处理、分页令牌、`crud/mapper/` 读投影及 `crud/testdata/` 跨语言测试向量（详见 [`docs/crud.md`](docs/crud.md)）
+- `internal/codegen/` 共享代码生成实现（`optionmerge`、`ruleplan`、`plugintest`、`protoreach`）
 - `security/` 共享安全生态：`actor.go`、`identity.go`、`loopback.go`、`rules.go`、`authn/<implementation>`、`authz/<engine>`、`audit/`（含 `audit/kafka/`）、`oidc/`、`cap/`、`password/`、`jwt/`、`session/`；共享错误源在 `api/protos/plateau/security/errors/v1/`
-- `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`kafka/`、`entgo/mixin/` 软删除便利层；通用 Ent driver 与 CRUD adapter 归 Servora 的 `contrib/db/entgo/`
+- `infra/` 共享基础设施：`openfga/`、`clickhouse/`、`kafka/`、`redis/`（客户端与分布式锁）、`cache/`（内存与 `cache/redis/`）、`entgo/`（通用 SQL driver、tracing、`crud/` adapter 与 `mixin/` 软删除便利层）、`gorm/`（slog 适配与 `crud/` 扩展位）
 - `transport/` 平台传输扩展：`server/kafka/` 非泛型 Kafka 入站批消费 `transport.Server`
-- `web/packages/client/` 平台共享前端通信能力（见 [web/client 规范](.trellis/spec/web/client/index.md)）
+- `web/packages/plateau-utils/` 平台统一前端工具包 `@servora/plateau-utils`（导出 `.` / `./client`、`./crud`、`./error-reasons/*`，见 [plateau-utils 规范](.trellis/spec/web/plateau-utils/index.md)）
 - `just/` 平台共享 Just settings、registry 与 service 实现
 - `manifests/` 部署资源文件（`scripts/`、`openfga/`、`grafana/`、`prometheus/`、`otel/`、`traefik/`、`loki/`）
 - `docs/adr/` 架构决策记录
 - `justfile` 项目级 Just 命令入口
 - `mise.toml` 固定 CLI 工具版本（buf、golangci-lint、just、fga、process-compose、prek、node、pnpm、air）；Go 版本以 `go.mod` 为准
 - `prek.toml` 根 Git 钩子配置（`pre-commit` / `pre-push` / `commit-msg`）；`app/admin/web/prek.toml` 为 Vben 子项目钩子配置
-- `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 独立 workspace 和 lockfile，并通过 `link:` 引用 `@plateau/api`、`@plateau/client`
+- `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 独立 workspace 和 lockfile，并通过 `link:` 引用 `@plateau/api`、`@servora/plateau-utils`
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
 - `buf.yaml` buf 总配置，依赖以及 lint 规则
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
-- `buf.typescript.gen.yaml` 项目级统一 TypeScript HTTP、error reason 与 CRUD helper 生成配置
+- `buf.typescript.gen.yaml` 项目级统一 TypeScript 生成配置（输出 `@plateau/api` 的 `api/gen/ts` 及 `@servora/plateau-utils` 的 `web/packages/plateau-utils/src/gen`）
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
 - `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与各服务 Go 后端的依赖
 - 跨仓源码联调（如与 Servora）可在本地共同父目录自建 `go.work` / `pnpm-workspace.yaml`，不提交到仓库；父级 pnpm workspace 需排除 `plateau/app/admin/web`。仓库门禁以 `GOWORK=off` 的独立检查为准，联调通过不代表门禁通过

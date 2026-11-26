@@ -19,8 +19,8 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordauthenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/predicate"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
+	crudmapper "github.com/Servora-Kit/plateau/crud/mapper"
 	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
-	crudmapper "github.com/Servora-Kit/servora/core/crud/mapper"
 )
 
 type credentialRepository struct{ ent *entmodel.Client }

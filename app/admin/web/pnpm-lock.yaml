@@ -201,8 +201,8 @@ catalogs:
       specifier: ^1000.3.1
       version: 1000.3.1
     '@servora/proto-utils':
-      specifier: ^0.1.11
-      version: 0.1.11
+      specifier: ^0.2.0
+      version: 0.2.0
     '@stylistic/stylelint-plugin':
       specifier: ^5.2.1
       version: 5.3.0
@@ -638,12 +638,12 @@ importers:
       '@plateau/api':
         specifier: link:../../../../../api/gen
         version: link:../../../../../api/gen
-      '@plateau/client':
-        specifier: link:../../../../../web/packages/client
-        version: link:../../../../../web/packages/client
+      '@servora/plateau-utils':
+        specifier: link:../../../../../web/packages/plateau-utils
+        version: link:../../../../../web/packages/plateau-utils
       '@servora/proto-utils':
         specifier: 'catalog:'
-        version: 0.1.11
+        version: 0.2.0
       '@vben/access':
         specifier: workspace:*
         version: link:../../packages/effects/access
@@ -4100,8 +4100,8 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
-  '@servora/proto-utils@0.1.11':
-    resolution: {integrity: sha512-R16wmGtbCSVUI/BCr6/hQJYlUEYsaQrEuc11Z8gMR4Z1Up1wRxGVdq5x5pPk0NM3FRpQkk+LVJm8ZWkh7kjqpw==}
+  '@servora/proto-utils@0.2.0':
+    resolution: {integrity: sha512-/jfi9Ha1QKiD/liEYkMsh4bewpRQiLbCNF164RkBqihugO6sypn0gOT+VI6niWoFZh0OIPuM1Rxp6nk9TohGUg==}
 
   '@simonwep/pickr@1.8.2':
     resolution: {integrity: sha512-/l5w8BIkrpP6n1xsetx9MWPWlU6OblN5YgZZphxan0Tq4BByTCETL6lyIeY8lagalS2Nbt4F2W034KHLIiunKA==}
@@ -11102,7 +11102,7 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@servora/proto-utils@0.1.11': {}
+  '@servora/proto-utils@0.2.0': {}
 
   '@simonwep/pickr@1.8.2':
     dependencies:

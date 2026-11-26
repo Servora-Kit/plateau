@@ -6,6 +6,7 @@ import (
 	"time"
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	crudpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/crud/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
@@ -18,10 +19,9 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordresettoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
+	corecrud "github.com/Servora-Kit/plateau/crud"
 	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
 	"github.com/Servora-Kit/plateau/security/password"
-	crudpb "github.com/Servora-Kit/servora/api/gen/go/servora/crud/v1"
-	corecrud "github.com/Servora-Kit/servora/core/crud"
 )
 
 func TestUserVisibilityPaginationRequiredActionsAndCredentialSnapshotsSQLite(t *testing.T) {

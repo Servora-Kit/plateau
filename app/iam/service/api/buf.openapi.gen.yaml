@@ -8,12 +8,10 @@ managed:
     disable:
         - module: buf.build/googleapis/googleapis
         - module: buf.build/bufbuild/protovalidate
-        - module: buf.build/kratos/apis
-        - module: buf.build/gnostic/gnostic
-        - module: buf.build/gogo/protobuf
+        - module: buf.build/servora/servora
 
 inputs:
-    - directory: app/iam/service/api/protos
+    - directory: .
       paths:
           - app/iam/service/api/protos/iam/user/v1
           - app/iam/service/api/protos/iam/account/v1
@@ -23,7 +21,7 @@ inputs:
 plugins:
     - local: ["go", "tool", "protoc-gen-openapi"]
       strategy: all
-      out: app/iam/service/api/internal/assets
+      out: app/iam/service/internal/assets
       opt:
           - naming=json
           - depth=2

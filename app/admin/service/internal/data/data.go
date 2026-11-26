@@ -13,12 +13,12 @@ import (
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	entmodel "github.com/Servora-Kit/plateau/app/admin/service/internal/data/ent"
 	_ "github.com/Servora-Kit/plateau/app/admin/service/internal/data/ent/runtime"
+	entdriver "github.com/Servora-Kit/plateau/infra/entgo"
 	infrakafka "github.com/Servora-Kit/plateau/infra/kafka"
 	fgapkg "github.com/Servora-Kit/plateau/infra/openfga"
 	securityoidc "github.com/Servora-Kit/plateau/security/oidc"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
-	entdriver "github.com/Servora-Kit/servora/contrib/db/entgo"
 	"github.com/Servora-Kit/servora/obs/metrics"
 	grpcclient "github.com/Servora-Kit/servora/transport/client/grpc"
 	clientmw "github.com/Servora-Kit/servora/transport/client/middleware"
@@ -88,7 +88,7 @@ func NewSQLDB(config *corepb.Data) (*sql.DB, func(), error) {
 	return db, func() { _ = db.Close() }, nil
 }
 
-// NewEntDriver resolves the configured SQL driver through Servora's Ent integration.
+// NewEntDriver resolves the configured SQL driver through Plateau's Ent integration.
 func NewEntDriver(config *corepb.Data, db *sql.DB) (dialect.Driver, error) {
 	return entdriver.NewDriver(config, entdriver.WithDB(db))
 }

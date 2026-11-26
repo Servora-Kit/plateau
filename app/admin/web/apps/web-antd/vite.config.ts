@@ -20,7 +20,7 @@ export default defineConfig(async () => {
         },
       },
       resolve: {
-        dedupe: ['@servora/proto-utils'],
+        dedupe: ['@servora/plateau-utils', '@servora/proto-utils'],
       },
       server: {
         port: 10_012,

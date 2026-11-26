@@ -83,7 +83,7 @@ flowchart TB
 
 ### 声明式安全与审计契约
 
-Plateau 在 [`cmd/`](./cmd) 下内置三款 `protoc` 插件（`protoc-gen-plateau-authn`、`protoc-gen-plateau-authz`、`protoc-gen-plateau-audit`），配合 [`security/`](./security) 共享中间件，直接通过 `.proto` 注解声明接口级认证、OpenFGA 授权与异步审计策略：
+Plateau 在 [`cmd/`](./cmd) 下内置四款 `protoc` 插件（`protoc-gen-plateau-authn`、`protoc-gen-plateau-authz`、`protoc-gen-plateau-audit`、`protoc-gen-plateau-crud`），配合 [`security/`](./security) 共享中间件与 [`crud/`](./crud) 运行时，直接通过 `.proto` 注解声明接口级认证、OpenFGA 授权、异步审计策略及 AIP 资源契约：
 
 ```proto
 service UserService {
@@ -118,7 +118,7 @@ service UserService {
 
 ### 前后端契约一体化
 
-- 通过 [`buf.go.gen.yaml`](./buf.go.gen.yaml) 与 [`buf.typescript.gen.yaml`](./buf.typescript.gen.yaml) 同步生成 Go 代码与 TypeScript 客户端包（`@plateau/api`），配合共享通信库 `@plateau/client`（HTTP / SSE / WebSocket），同时驱动 Next.js 16（IAM Web）与 Vue Vben Admin（Admin Web）。
+- 通过 [`buf.go.gen.yaml`](./buf.go.gen.yaml) 与 [`buf.typescript.gen.yaml`](./buf.typescript.gen.yaml) 同步生成 Go 代码、TypeScript 客户端包（`@plateau/api`）及公共错误枚举，配合统一前端工具包 `@servora/plateau-utils`，同时驱动 Next.js 16（IAM Web）与 Vue Vben Admin（Admin Web）。
 
 ### 开箱即用的本地基础设施与可观测栈
 
@@ -200,12 +200,13 @@ plateau/
 │   ├── iam/                 # 身份与认证中心（Go service + Next.js web）
 │   ├── admin/               # 平台管理控制面（Go service + Vue Vben web）
 │   └── audit/               # 平台问责审计服务（Go service）
-├── cmd/                     # 自研 protoc 插件（authn / authz / audit）
+├── cmd/                     # 自研 protoc 插件（authn / authz / audit / crud）
+├── crud/                    # AIP 标准 CRUD 运行时、ResourceMapper 读投影与跨语言测试向量
 ├── internal/codegen/        # 代码生成共享实现
 ├── security/                # 共享安全能力（actor、authn、authz、audit、oidc、session、cap、jwt、password）
-├── infra/                   # 共享基础设施封装（openfga、clickhouse、kafka、entgo mixin）
+├── infra/                   # 共享基础设施封装（openfga、clickhouse、kafka、redis、cache、entgo、gorm）
 ├── transport/               # 平台传输扩展（非泛型 Kafka 批消费 Server）
-├── web/packages/client/     # 共享前端通信包（@plateau/client：HTTP / SSE / WebSocket）
+├── web/packages/plateau-utils/ # 统一前端工具包（@servora/plateau-utils：client / crud / error-reasons）
 ├── manifests/               # OpenFGA 模型、初始化脚本与网关/可观测配置
 ├── just/                    # 共享 Just 任务与服务注册表
 ├── process-compose.yaml     # 本地全栈进程编排与内置 SSE MCP Server 配置

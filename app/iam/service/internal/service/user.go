@@ -8,7 +8,7 @@ import (
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
-	corecrud "github.com/Servora-Kit/servora/core/crud"
+	corecrud "github.com/Servora-Kit/plateau/crud"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

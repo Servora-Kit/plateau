@@ -12,7 +12,7 @@
 #       - target=ts
 #       - import_extension=js
 #
-#   - local: protoc-gen-servora-crud
+#   - local: protoc-gen-plateau-crud
 #     out: api/gen/ts
 #     opt:
 #       - target=ts

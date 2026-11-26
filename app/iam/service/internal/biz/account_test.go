@@ -7,9 +7,9 @@ import (
 	"time"
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	corecrud "github.com/Servora-Kit/plateau/crud"
 	"github.com/Servora-Kit/plateau/security/password"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
-	corecrud "github.com/Servora-Kit/servora/core/crud"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

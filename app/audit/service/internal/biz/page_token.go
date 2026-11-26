@@ -7,14 +7,14 @@ import (
 	"time"
 
 	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
-	crudpb "github.com/Servora-Kit/servora/api/gen/go/servora/crud/v1"
-	"github.com/Servora-Kit/servora/core/crud"
+	crudpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/crud/v1"
+	"github.com/Servora-Kit/plateau/crud"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// TODO(servora-crud): 待 servora/contrib/db 提供 ClickHouse 分页与过滤适配器后，
-// 将此处的强类型过滤指纹及游标编解码统一收归共享 CRUD 管线（对标 servora/contrib/db/entgo/crud）。
+// TODO(plateau-crud): 待 infra/clickhouse 提供分页与过滤适配器后，
+// 将此处的强类型过滤指纹及游标编解码统一收归共享 CRUD 管线（对标 infra/entgo/crud）。
 
 func encodeEventPageToken(fingerprint []byte, last *auditeventpb.Event) (string, error) {
 	codec := crud.NewUnsignedPageTokenCodec()

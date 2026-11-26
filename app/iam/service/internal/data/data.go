@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
+	redispb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/redis/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	_ "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/runtime"
+	entdriver "github.com/Servora-Kit/plateau/infra/entgo"
 	infrakafka "github.com/Servora-Kit/plateau/infra/kafka"
 	fgapkg "github.com/Servora-Kit/plateau/infra/openfga"
+	infraredis "github.com/Servora-Kit/plateau/infra/redis"
 	"github.com/Servora-Kit/plateau/security/cap"
 	sessions "github.com/Servora-Kit/plateau/security/session"
-	redispb "github.com/Servora-Kit/servora/api/gen/go/servora/contrib/db/redis/v1"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
-	entdriver "github.com/Servora-Kit/servora/contrib/db/entgo"
-	rediscontrib "github.com/Servora-Kit/servora/contrib/db/redis"
 	"github.com/alexedwards/scs/v2"
 	"github.com/google/wire"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -60,7 +60,7 @@ func NewCAPVerifier(captcha *cap.Cap) biz.CAPVerifier {
 	return captcha
 }
 
-// NewEntDriver resolves the configured SQL driver through Servora's Ent integration.
+// NewEntDriver resolves the configured SQL driver through Plateau's Ent integration.
 func NewEntDriver(config *corepb.Data, db *sql.DB) (dialect.Driver, error) {
 	return entdriver.NewDriver(config, entdriver.WithDB(db))
 }
@@ -81,7 +81,7 @@ func NewDBClient(driver dialect.Driver) (*entmodel.Client, func(), error) {
 
 // NewRedisClient creates and verifies the shared Redis client.
 func NewRedisClient(config *redispb.Redis) (*redis.Client, func(), error) {
-	client, cleanup, err := rediscontrib.New(config)
+	client, cleanup, err := infraredis.New(config)
 	if err != nil {
 		return nil, nil, err
 	}

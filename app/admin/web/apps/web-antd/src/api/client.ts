@@ -5,7 +5,10 @@ import type { UserService } from '@plateau/api/admin/user/v1';
 import { createAuditServiceClient } from '@plateau/api/admin/audit/v1';
 import { createAuthServiceClient } from '@plateau/api/admin/auth/v1';
 import { createUserServiceClient } from '@plateau/api/admin/user/v1';
-import { createHttpClient, createTransport } from '@plateau/client';
+import {
+  createHttpClient,
+  createTransport,
+} from '@servora/plateau-utils/client';
 
 const DEFAULT_RETURN_PATH = '/overview';
 

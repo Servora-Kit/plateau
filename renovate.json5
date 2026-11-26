@@ -18,7 +18,7 @@
   },
   // Experimental (Renovate 44.236+): sync minimumReleaseAge and minimumReleaseAgeExclude
   // from each workspace's pnpm-workspace.yaml (root: 1440 min / 1 day excluding
-  // @servora/proto-utils; app/admin/web: 0) so lockfile updates match pnpm v12 checks in CI.
+  // @servora/plateau-utils and @servora/proto-utils; app/admin/web: 0) so lockfile updates match pnpm v12 checks in CI.
   // Revisit once Renovate stabilizes or enables this behavior by default.
   "minimumReleaseAgePackageManagerSync": true,
   "packageRules": [

@@ -44,6 +44,7 @@ jobs:
               - '**/*.go'
               - 'app/*/service/**'
               - 'cmd/**'
+              - 'crud/**'
               - 'infra/**'
               - 'internal/**'
               - 'security/**'
@@ -64,6 +65,7 @@ jobs:
               - 'api/gen/ts/**'
               - 'api/gen/package.json'
               - 'api/gen/tsconfig.json'
+              - 'crud/testdata/*.json'
               - 'web/**'
               - 'app/*/web/**'
               - '!app/admin/web/**'
@@ -233,7 +235,7 @@ jobs:
       - name: Run integration tests
         run: |
           set -o pipefail
-          go test -count=1 -v ./app/... 2>&1 | tee integration-test.log
+          go test -count=1 -v ./app/... ./infra/entgo/crud 2>&1 | tee integration-test.log
 
       - name: Integration test summary
         if: always()
@@ -302,6 +304,9 @@ jobs:
 
       - name: Build
         run: pnpm -r --if-present run build
+
+      - name: Test
+        run: pnpm -r --if-present run test
 
   admin-web:
     name: admin-web

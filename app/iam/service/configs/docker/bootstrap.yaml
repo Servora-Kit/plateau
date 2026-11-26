@@ -2,6 +2,7 @@ server:
   http:
     api_docs:
       enable: true
+      path: "./internal/assets/openapi.yaml"
     listen:
       addr: "0.0.0.0:10000"
       timeout: 30s
