@@ -8,4 +8,4 @@
 
 `protoc-gen-go-errors target=ts` 只为显式 Servora error option 的顶层 enum 生成 source-relative `*.errors.ts`；以 `import type ... from './index.js'` 复用同目录 enum，输出同名 membership object 与 `isXxx` guard，不生成 HTTP client、Kratos runtime、message、重试或 UI 行为。Go/TS target 都拒绝 100..599 以外的 HTTP code。
 
-插件实现改动先运行本插件 Go 测试，再运行 `just plugin` 与受影响的 Go/TS 生成；CRUD 还需 `just gen`、`just gen-ts`，TypeScript HTTP/error 输出再运行 web typecheck/build。保持错误包含方法或字段路径，便于定位不合法 Proto。
+所有插件均由 `go.mod` 的 `tool` 块固定版本并经 `go tool` 调用，禁止通过 `@latest` 或手动 `go install` 覆盖插件二进制。插件实现改动先运行本插件 Go 测试（`GOWORK=off go test -race ./cmd/<plugin>/...`），再运行 `just gen` 与 `GOWORK=off just gen-check`；涉及 TypeScript HTTP、error 或 CRUD 输出时还需运行 `just web-check`、`just web-typecheck`、`just web-test`。保持错误包含方法或字段路径，便于定位不合法 Proto。

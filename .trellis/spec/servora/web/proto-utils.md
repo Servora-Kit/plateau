@@ -8,4 +8,4 @@
 
 包为 ESM，`./error-reasons/*` 指向生成的 `*.errors.js` sidecar。TypeScript 使用 `moduleResolution: bundler`，非 NodeNext；生成器保持 package-relative `.js` type-only import，并由 build/typecheck 检查。HTTP 生成器将全部 64 位整数字段映射为 `string`，保持 ProtoJSON wire 契约。
 
-`src/gen` 由 Buf 写入，禁止手改；业务仓库的 HTTP client、认证和 transport composition root 仍由各业务仓库维护。修改源码运行 `just web-typecheck`、`just web-build`；改动导出或序列化行为还应运行对应 Node 测试。
+`src/gen` 由 Buf 写入，禁止手改；业务仓库的 HTTP client、认证和 transport composition root 仍由各业务仓库维护。修改源码后运行 `just web-check`、`just web-typecheck` 与 `just web-test`（含 `just web-build` 与 Node 单元测试）。
