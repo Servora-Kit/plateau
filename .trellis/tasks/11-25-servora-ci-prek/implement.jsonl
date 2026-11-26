@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "参照 Plateau 已落地的 mise.toml、go.mod tool、prek 三阶段钩子、just gen-check 与 ci-ok 聚合门禁约定"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "参照 go.mod tool 固定 protoc 插件与 GOWORK=off just gen-check 生成漂移检查规范"}
+{"file": ".trellis/spec/servora/index.md", "reason": "Servora 母框架规范总索引，实施完成时需同步更新命令与层次说明"}
+{"file": ".trellis/spec/servora/cmd/index.md", "reason": "Servora cmd 目录规范，实施时需移除废弃 svr CLI 引用并更新插件调用方式"}
+{"file": ".trellis/spec/servora/cmd/plugins.md", "reason": "Servora protoc 插件输入输出契约与测试规范"}
+{"file": ".trellis/spec/servora/proto/generation.md", "reason": "Servora Go 与 TypeScript Proto 生成物目录与检查规范"}
+{"file": ".trellis/spec/servora/web/index.md", "reason": "@servora/proto-utils 构建、类型检查与测试要求"}
+{"file": ".trellis/spec/guides/index.md", "reason": "跨包工程规范与代码复用思考指南"}

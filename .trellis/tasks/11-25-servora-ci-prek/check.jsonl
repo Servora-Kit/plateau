@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "核对 Servora 工具链单一来源、prek 钩子分层与 GitHub Actions ci-ok 门禁是否与 Plateau 完全同构"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "核对 buf 模板是否全部通过 go tool 调用插件且 GOWORK=off just gen-check 幂等无漂移"}
+{"file": ".trellis/spec/servora/index.md", "reason": "检查 Servora 顶层规范索引是否已同步更新"}
+{"file": ".trellis/spec/servora/cmd/index.md", "reason": "检查失效 svr CLI 规范是否已清理且插件校验说明准确"}
+{"file": ".trellis/spec/servora/proto/generation.md", "reason": "检查 Servora Go/TS 生成产物校验与命令描述是否同步"}
+{"file": ".trellis/spec/servora/web/index.md", "reason": "核对 @servora/proto-utils 锁文件冷却期、Biome 检查、类型检查与单测门禁"}
