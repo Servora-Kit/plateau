@@ -1,6 +1,6 @@
-{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "核查集中式 Proto 迁移与跨层生成零漂移"}
-{"file": ".trellis/spec/api/proto/contracts.md", "reason": "核查单一 BSR 模块配置与契约规范同步"}
-{"file": ".trellis/spec/api/proto/generation.md", "reason": "核查 GOWORK=off just gen-check 与 OpenAPI 输出一致性"}
-{"file": ".trellis/spec/plateau/project/structure.md", "reason": "核查根目录结构与文档同步无旧路径残留"}
-{"file": ".trellis/spec/plateau/project/development.md", "reason": "核查 CI 门禁、CGO_ENABLED=0 构建与全栈校验命令"}
-{"file": ".trellis/spec/web/plateau-utils/index.md", "reason": "核查 @servora/plateau-utils 打包、单测与 OIDC 发布工作流"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "核查服务 Proto 迁入 plateau.{iam,admin,audit}.*.v1 后跨层生成零漂移"}
+{"file": ".trellis/spec/api/proto/contracts.md", "reason": "核查单一 BSR 模块、29 个 plateau.*.*.v1 契约及 0.x breaking 策略"}
+{"file": ".trellis/spec/api/proto/generation.md", "reason": "核查根级唯一 buf.openapi.gen.yaml 与 GOWORK=off just gen-check 一致性"}
+{"file": ".trellis/spec/plateau/project/structure.md", "reason": "核查根目录结构与文档同步无裸 iam/admin/audit 顶层 Proto 残留"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "核查三处 CGO_ENABLED=0 门禁、关闭自动 breaking 拦截与原子 Tag 发布工作流"}
+{"file": ".trellis/spec/web/plateau-utils/index.md", "reason": "核查 @servora/plateau-utils@0.1.0 .v1 错误原因子路径导出未受破坏"}

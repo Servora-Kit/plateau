@@ -16,7 +16,7 @@ flowchart TB
   end
 
   subgraph Plateau["github.com/Servora-Kit/plateau（企业级业务应用平台超集）"]
-    pProto["全集中式 api/protos/<br/>单一 BSR：buf.build/servora/plateau<br/>plateau/{security,crud,infra} + iam + admin + audit（含 conf）"]
+    pProto["全集中式 api/protos/plateau/<br/>单一 BSR：buf.build/servora/plateau<br/>plateau/{security,crud,infra,iam,admin,audit}/**/v1（含 conf）"]
     pCmd["4 款平台 protoc 插件<br/>plateau-crud · plateau-authn · plateau-authz · plateau-audit"]
     pSDK["平台运行库（单根 go.mod）<br/>security/*（Actor/AuthN/AuthZ/Audit/OIDC/Session/CAP/JWT/Password）<br/>crud/*（AIP 资源运行时）<br/>infra/*（entgo · gorm · redis · cache · openfga · clickhouse · kafka · mail）<br/>transport/server/kafka"]
     pWeb["@servora/plateau-utils（单一公开 NPM 工具包）<br/>./client（HTTP/SSE/WS） · ./crud（AIP 查询/FieldMask）"]
@@ -44,7 +44,7 @@ flowchart TB
 | 方案 | 核心思路 | 评估结论与放弃/采纳理由 |
 | --- | --- | --- |
 | 方案 A：两仓合一改名 `servora` | 将 `servora` 直接并入含 `app/` 的 `plateau` 后对外发库 | **放弃**。`plateau` 含 Next.js 16、Vue Vben 两套重前端及三个完整微服务，外部轻量项目（如 `servora-example`）仅需 Kratos 基础传输封装时会被迫拉取整棵业务依赖树与前端工程资产 |
-| 方案 B：重 `servora`（拆多 `go.mod`）+ 纯业务 `plateau` | 把 `security`、`infra`、安全插件全部下沉进 `servora/contrib/*`，`plateau` 只留 `app/` | **放弃**。源码核查证实 `Actor`、`oidc/rp.go`（直接产出 `iam.user.v1.User`）、`authn/session/user.go` 与平台身份领域紧密咬合；强行下沉不仅要拆解业务映射，还会让高频演进的 CRUD / 安全 / 基础设施每次改动都经历“改 `servora` → 发版推 BSR → 回 `plateau` 升版本”的跨仓往返，并引入 ~10 个子 `go.mod` 的锁步打标复杂度 |
+| 方案 B：重 `servora`（拆多 `go.mod`）+ 纯业务 `plateau` | 把 `security`、`infra`、安全插件全部下沉进 `servora/contrib/*`，`plateau` 只留 `app/` | **放弃**。源码核查证实 `Actor`、`oidc/rp.go`（直接产出 `plateau.iam.user.v1.User`）、`authn/session/user.go` 与平台身份领域紧密咬合；强行下沉不仅要拆解业务映射，还会让高频演进的 CRUD / 安全 / 基础设施每次改动都经历“改 `servora` → 发版推 BSR → 回 `plateau` 升版本”的跨仓往返，并引入 ~10 个子 `go.mod` 的锁步打标复杂度 |
 | **方案 C（采纳）：轻 `servora` 微内核 + 重 `plateau` 业务平台超集** | `servora` 收缩为极少变动的 Kratos v3 协议与启动微内核；`crud` 与数据库/缓存 `contrib` 上移至 `plateau`，由 `plateau` 对外发布自己的 BSR、Go 包与 NPM 包 | **采纳**。1) `servora` 自然瘦身，单根 `go.mod` 即可保持极简稳定；2) `Actor`、`oidc`、`crud`、`entgo`/`gorm`、`openfga`、`kafka`、`clickhouse` 与 `iam`/`admin`/`audit` 在同一仓内零摩擦闭环演进；3) `plateau` 自身发布 BSR 与 Go/NPM 包后，下游独立微服务照样能直接引用平台能力与 `iam`/`audit` 契约 |
 
 ### D2：多业务与垂类扩展（CMS / OA / IoT）——拒绝长期 Git 分支
@@ -58,10 +58,10 @@ flowchart TB
 ### D3：全集中式 `api/protos/` 与单一 BSR 源 `buf.build/servora/plateau`
 
 - **实测约束**：经 `buf 1.75.0` 实测，Buf v2 不允许在 `buf.yaml` 的多个 `modules` 条目上声明相同的 `name: buf.build/servora/plateau`（报错 `duplicate full names in input`），且 `STANDARD` lint 要求文件路径严格匹配 Proto `package` 层级。
-- **决策（全集中式）**：将 `app/{iam,admin,audit}/service/api/protos/**`（含各服务自身的 `conf/v1/config.proto` 与 `iam/oidc/conf/v1/config.proto`）全部集中迁入根 `api/protos/` 下，彻底移除 `app/*/service/api/protos/` 目录。
-- **工程影响极小**：
-  - `buf.go.gen.yaml` 与 `buf.typescript.gen.yaml` 均采用 `paths=source_relative`（相对于模块根目录），源文件从 `app/iam/service/api/protos/iam/user/v1/user.proto` 移至 `api/protos/iam/user/v1/user.proto` 后，生成的 `api/gen/go/iam/user/v1/` 与 `api/gen/ts/iam/user/v1/` 路径**完全不变**，全仓 Go 与前端业务代码零 `import` 修改；
-  - 未来开发平台脚手架生成新服务 Proto 时，也统一向唯一入口 `api/protos/<service>/` 写入。
+- **决策（全集中式与统一命名空间）**：将 `app/{iam,admin,audit}/service/api/protos/**`（含各服务自身的 `conf/v1/config.proto` 与 `iam/oidc/conf/v1/config.proto`）全部集中迁入根 `api/protos/plateau/{iam,admin,audit}/.../v1/` 下（全仓 29 个公开 `.proto` 统一采用 `plateau.*.*.v1` 命名空间），彻底移除 `app/*/service/api/` 目录，并以根级唯一 `buf.openapi.gen.yaml` 统一生成各服务 `internal/assets/openapi.yaml`。
+- **命名隔离与目录归属**：
+  - `buf.go.gen.yaml` 与 `buf.typescript.gen.yaml` 均采用 `paths=source_relative`（相对于模块根目录），源文件迁至 `api/protos/plateau/{iam,admin,audit}/.../v1/` 后，生成的 `api/gen/go/plateau/{iam,admin,audit}/.../v1/` 与 `api/gen/ts/plateau/{iam,admin,audit}/.../v1/` 均带顶层 `plateau` 前缀，避免单一 BSR 模块导出裸包名时与下游业务仓命名冲突，同时全栈 `/v1/...` HTTP 路由保持不变；
+  - 未来开发平台脚手架生成新服务 Proto 时，也统一向唯一入口 `api/protos/plateau/<service>/` 写入。
 
 ### D4：前端收敛为单一公开 NPM 工具包（`@servora/plateau-utils`）
 
@@ -123,16 +123,15 @@ servora/
 
 ### 4.1 全集中式 `api/protos/` 与 Buf 配置
 
-1. **目录合并**：
+1. **目录合并（全仓 29 个契约统一归属 `api/protos/plateau/.../v1/`）**：
    ```text
-   plateau/api/protos/
-   ├── plateau/
-   │   ├── crud/v1/             # 迁自 servora
-   │   ├── infra/               # clickhouse · kafka · mail · openfga · redis（迁自 servora）
-   │   └── security/            # audit · authn · authz · cap · errors · jwt · oidc · session
-   ├── iam/                     # account · authn · conf · oidc/conf · session · user
-   ├── admin/                   # audit · auth · conf · user
-   └── audit/                   # conf · event
+   plateau/api/protos/plateau/
+   ├── crud/v1/             # 迁自 servora
+   ├── infra/               # clickhouse · kafka · mail · openfga · redis（迁自 servora）
+   ├── security/            # audit · authn · authz · cap · errors · jwt · oidc · session
+   ├── iam/                 # account · authn · conf · oidc/conf · session · user
+   ├── admin/               # audit · auth · conf · user
+   └── audit/               # conf · event
    ```
 2. **`buf.yaml` 简化为单一命名模块**：
    ```yaml
@@ -147,8 +146,8 @@ servora/
      - buf.build/googleapis/googleapis
      - buf.build/bufbuild/protovalidate
    ```
-3. **服务级 OpenAPI 生成模板适配**：
-   - `app/iam/service/api/buf.openapi.gen.yaml` 与 `app/admin/service/api/buf.openapi.gen.yaml` 的 `inputs` 统一指向 `directory: api/protos`，`paths` 前缀改为 `api/protos/iam/...` 与 `api/protos/admin/...`；删除已空的 `app/{iam,admin,audit}/service/api/protos/` 目录。
+3. **根级唯一 OpenAPI 生成模板**：
+   - 移除 `app/{iam,admin}/service/api/buf.openapi.gen.yaml` 与已空的 `app/{iam,admin,audit}/service/api/` 目录，在仓库根目录保留唯一 `buf.openapi.gen.yaml`（`out: internal/assets`），由 `just/service.just` 单行参数化生成 `buf generate --template buf.openapi.gen.yaml --path "api/protos/plateau/{{ SERVICE_NAME }}" -o "{{ SERVICE_MODULE }}"`。
 
 ### 4.2 单一公开 NPM 工具包 `@servora/plateau-utils`
 
@@ -167,8 +166,8 @@ servora/
 | `mise.toml` + `prek.toml` + `renovate.json5` | 新增，与 `plateau` 同构（省去 OpenFGA CLI 与 Vben 独立子仓规则） | 已有，更新包名与路径规则 |
 | `.github/workflows/ci.yml` | 重构为 `changes` → `prek` / `go` / `proto` / `gen` / `web` → `ci-ok` 唯一必过门禁 | 已有，随目录调整更新 `changes` 过滤规则（加入 `crud/**`） |
 | `.github/workflows/security.yml` | 新增 `govulncheck ./...`（`go.mod`/`go.sum` 变更及每周定时） | 已有 |
-| `.github/workflows/buf-ci.yml` | 已有（推送 `buf.build/servora/servora`） | 新增（推送 `buf.build/servora/plateau`） |
-| `.github/workflows/release.yml` | 已有（校验 tag 位于 `main` 且 `ci.yml` 通过后创建 GitHub Release） | 新增同款机制（校验 `ci-ok` 通过后发布 `github.com/Servora-Kit/plateau` `v*` Release） |
+| `.github/workflows/buf-ci.yml` | 已有（推送 `buf.build/servora/servora`） | 新增（PR 校验与 `main` 推送 `buf.build/servora/plateau`） |
+| `.github/workflows/release.yml` | 已有（校验 tag 位于 `main` 且 `ci.yml` 通过后创建 GitHub Release） | 新增同款机制（校验 `ci-ok` 通过后串行推送 BSR `v*` 标签并创建 GitHub Release） |
 | `.github/workflows/publish-*.yml` | 已有 `publish-proto-utils.yml`（tag `proto-utils/v*`） | 新增 `publish-plateau-utils.yml`（tag `plateau-utils/v*`，OIDC `--provenance`） |
 
 ---
@@ -180,7 +179,7 @@ servora/
 1. **阶段一（仅改 `servora`，零破坏性）**：删除 `Makefile` 与 `cmd/svr`，落地 `mise.toml`、`go.mod tool`、`prek.toml`、`ci.yml` (`ci-ok`)、`security.yml` 与 `renovate.json5`。验收标准：`servora` 新 CI 全绿。
 2. **阶段二（仅改 `servora`，发布新 minor 版本）**：在 `servora` 移除 `crud` 与 `contrib/{db,cache}`，发布新版 `servora` Go tag（如 `v0.12.0`）、BSR 与精简后的 `@servora/proto-utils`（如 `v0.2.0`）。此时 `plateau` 仍锁定旧版 `servora v0.11.0` 与 `@servora/proto-utils v0.1.11`，不受任何破坏性影响。
 3. **阶段三（改 `plateau`，一次性完成承接与升级）**：在 `plateau` 迁入 `crud`、`protoc-gen-plateau-crud`、`infra/{entgo,gorm,redis,cache}`，合并 `web/packages/plateau-utils`，同时在同一个 PR 内将 `plateau` 升级至阶段二发布的瘦身版 `servora` 与 `@servora/proto-utils`。验收标准：`GOWORK=off` 下 `plateau` 全量单测、生成校验、前端构建与集成测试全绿。
-4. **阶段四（改 `plateau`，打通对外发布）**：将 `app/{iam,admin,audit}/service/api/protos/**` 集中迁入根 `api/protos/`，配置 `name: buf.build/servora/plateau`，隔离非测试代码的 CGO 依赖，落地 `buf-ci.yml`、`release.yml` 与 `publish-plateau-utils.yml`，首次完成 `buf.build/servora/plateau`、`@servora/plateau-utils` 与 `plateau` Go Release 实发验证，最后刷新两仓文档与 `.trellis/spec/`。
+4. **阶段四（改 `plateau`，打通对外发布）**：将 `app/{iam,admin,audit}/service/api/protos/**` 集中迁入根 `api/protos/plateau/{iam,admin,audit}/.../v1/`，配置 `name: buf.build/servora/plateau`，隔离非测试代码的 CGO 依赖，落地 `buf-ci.yml`、`release.yml` 与 `publish-plateau-utils.yml`，首次完成 `buf.build/servora/plateau`、`@servora/plateau-utils` 与 `plateau` Go Release 实发验证，最后刷新两仓文档与 `.trellis/spec/`。
 
 ### 关键风险与应对
 

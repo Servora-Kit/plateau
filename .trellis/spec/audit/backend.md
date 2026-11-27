@@ -6,7 +6,7 @@
 
 ## 2. 核心签名
 
-- **只读 gRPC 契约（`audit.event.v1.EventService`）**：
+- **只读 gRPC 契约（`plateau.audit.event.v1.EventService`）**：
   - `GetEvent(GetEventRequest{name: "events/{event}"}) returns (Event)`
   - `ListEvents(ListEventsRequest) returns (ListEventsResponse)`
   - `ListServices(ListServicesRequest) returns (ListServicesResponse)`

@@ -26,7 +26,7 @@
 | `just test` | 在根 module 运行 `go test -race -count=1 ./...` |
 | `just lint` | API TS typecheck、Buf lint、从根 module 执行的全仓 Go lint；不等于全仓 Go 测试 |
 | `just fmt-proto-check` | `buf format -d --exit-code` 检查 Proto 格式 |
-| `just breaking` | `buf breaking --against` 检查破坏性变更（默认对比 `.git#ref=origin/main`，可用 `BUF_BREAKING_AGAINST` 覆盖） |
+| `just breaking` | 手动运行 `buf breaking --against` 检查破坏性变更（默认对比 `.git#ref=origin/main`，可用 `BUF_BREAKING_AGAINST` 覆盖；`0.x` 阶段仅手动运行，`v1.0.0` 恢复自动拦截） |
 | `just api-ts-check` | 共享生成 TS 契约检查 |
 | `just service::iam::keygen` | 幂等校验或原子生成本地 OIDC RSA-2048 签名私钥与 32B 加密密钥（`0600`），传 `-force` 强制轮换 |
 | `just web::<应用>::dev`／`build`／`lint`／`test` | 应用 Web 开发、构建、lint 与单测（根级聚合 `just web::install`／`build`／`lint`／`test`） |
@@ -47,16 +47,16 @@
 根 `prek.toml` 与子项目 `app/admin/web/prek.toml` 共同构成 workspace 钩子配置，全局排除生成产物与锁文件：
 
 - `pre-commit`：通用文件卫生（内置 Rust 钩子）、`gofmt`、`buf format`、`just --fmt --check --unstable`；`app/admin/web` 仅对暂存文件执行 `oxlint`/`oxfmt`/`eslint`/`stylelint` 自动修复，不跑全量类型检查。
-- `pre-push`：在 `GOWORK=off` 下运行 `just lint-go`、`just lint-proto`、`just breaking`、`just gen-check`；`app/admin/web` 运行 `pnpm check:type`。push 前工作区应保持干净，临时绕过可使用 `PREK_SKIP`。
+- `pre-push`：运行 `go-build-nocgo`（`CGO_ENABLED=0 GOWORK=off go build ./...`），并在 `GOWORK=off` 下运行 `just lint-go`、`just lint-proto`、`just gen-check`；`app/admin/web` 运行 `pnpm check:type`。`0.x` 阶段已关闭 `buf-breaking` 自动拦截（待 `v1.0.0` 发布前恢复）。push 前工作区应保持干净，临时绕过可使用 `PREK_SKIP`。
 - `commit-msg`：校验 Conventional Commits（允许 `feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`，描述允许中文；放行 `Merge`、`Revert`、`fixup!`、`squash!`）。
 - prek 拒绝在钩子配置文件有未暂存改动时提交；修改 `prek.toml` 时先单独提交配置，或与其他改动一起暂存。
 
 ## Go module 与 CI 门禁
 
 - 根 `go.mod`、`go.sum` 统一管理共享代码和服务，不在生成目录或应用目录新增 Go module，也不提交 `go.work`。
-- 受影响代码须通过 `GOWORK=off` 的构建、lint 和测试；生产代码须保持 `CGO_ENABLED=0` 可编译（`mattn/go-sqlite3` 仅限 `*_test.go` 使用，CI `go` 任务显式执行 `CGO_ENABLED=0 go build ./...`）。根门禁覆盖全仓，服务级检查只提供定向反馈，不能互相替代。
+- 受影响代码须通过 `GOWORK=off` 的构建、lint 和测试；生产代码须保持 `CGO_ENABLED=0` 可编译（`mattn/go-sqlite3` 仅限 `*_test.go` 使用），三处统一强制 `CGO_ENABLED=0` 构建门禁：`just/service.just` `_build` 默认值（支持环境变量覆盖）、`prek.toml` `pre-push` 的 `go-build-nocgo` 与 `.github/workflows/ci.yml` `go` 任务；`just test` 保持默认 CGO 环境以支持 `-race` 与 `go-sqlite3` 测试。根门禁覆盖全仓，服务级检查只提供定向反馈，不能互相替代。
 - 依赖变更执行 `GOWORK=off go mod tidy` 并确认结果稳定；父级工作区通过而独立检查失败时，不视为验收通过。
-- CI 门禁在 `GOWORK=off` 下按路径分流运行各领域检查，并由聚合检查 `ci-ok` 作为唯一必过检查；对外发布由 `buf-ci.yml`（BSR `buf.build/servora/plateau`）、`release.yml`（`v*` Go Release）与 `publish-plateau-utils.yml`（`plateau-utils/v*` NPM OIDC Provenance）分别承载。工作流与门禁配置不硬编码服务名或 Web 包名。
+- CI 门禁在 `GOWORK=off` 下按路径分流运行各领域检查，并由聚合检查 `ci-ok` 作为唯一必过检查（`0.x` 阶段 `ci.yml` `proto` 任务关闭自动 breaking 检查，待 `v1.0.0` 恢复）。对外发布由三条工作流分工承载：`buf-ci.yml` 处理 PR 校验（`0.x` 阶段显式 `breaking: false`，待 `v1.0.0` 恢复）与 `main` 分支推送至 BSR `buf.build/servora/plateau`；`release.yml` 监听 `v*` 标签，在校验标签提交位于 `origin/main` 且 `ci.yml == success` 后，串行推送 BSR `v*` 版本标签并创建 GitHub Release；`publish-plateau-utils.yml` 监听 `plateau-utils/v*` 标签并通过 NPM OIDC `--provenance` 发布 `@servora/plateau-utils`。工作流与门禁配置不硬编码服务名或 Web 包名。
 - 开发或审查时先选择受影响模块和检查命令；基础设施 provider 的业务日志由 data/bootstrap 边界决定，不在构造函数中重复记录成功或失败。验证记录留在任务或变更说明，不写入规范。
 
 入口：[根命令](../../../../justfile)、[进程编排](../../../../process-compose.yaml)、[工具版本](../../../../mise.toml)、[本地钩子](../../../../prek.toml)、[服务注册](../../../../just/services.just)、[服务命令](../../../../just/service.just)。

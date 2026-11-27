@@ -1,7 +1,7 @@
 # AGENTS.md - app/
 
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-03-15 | Updated: 2026-11-26 -->
+<!-- Generated: 2026-03-15 | Updated: 2026-11-27 -->
 
 ## 目录概览
 
@@ -13,7 +13,7 @@
 
 各服务目录可包含：
 
-- `service/`：后端（对外暴露 HTTP 接口的服务在 `internal/assets/openapi.yaml` 内嵌 OpenAPI 产物）
+- `service/`：后端（各服务在 `internal/assets/openapi.yaml` 维护由仓库根级 `buf.openapi.gen.yaml` 生成的 OpenAPI 产物）
 - `web/`：前端（如有）
 - `manifests/`：服务专属补充资源（如有）
 
@@ -25,14 +25,12 @@
 
 ```text
 {ServiceName}/service/         后端（根 Go module 内的独立服务）
-├── api/                       服务级 API 生成配置（纯内部 gRPC/消费服务如 audit 无此目录）
-│   └── buf.openapi.gen.yaml   该服务的 OpenAPI buf 生成配置（按路径筛选根 api/protos/{ServiceName}/**）
 ├── cmd/                       启动入口，一般只包含 server/
 ├── configs/                   运行时配置
 │   ├── local/                 本地开发环境（数据库、消息队列指向 127.0.0.1）
 │   └── docker/                容器化环境（指向 Docker Compose network 中的服务名）
 ├── internal/                  业务逻辑（可额外按领域增加子包，如 iam 的 oidc/、authn/、authz/、mail/）
-│   ├── assets/                默认包含 protoc-gen-openapi 生成的 openapi.yaml
+│   ├── assets/                包含根级 buf.openapi.gen.yaml 生成的 openapi.yaml
 │   ├── server/                http/grpc 等服务层
 │   │   ├── server.go          除了 ProviderSet，一般不能有别的方法
 │   │   └── http.go|grpc.go    服务具体实现，后续若有 WebSocket、Asynq 的服务端也可以放这里
@@ -58,9 +56,9 @@
 
 - 业务分层：`service -> biz <- data`；service 只适配接口，biz 定义 Use Case/Repo，data 实现存储。
 - 服务 leaf 的 `just gen` 会执行 `api + openapi + wire + gen-ent`
-- 服务 leaf 的 `just build` 会先执行 `just gen`，再编译当前服务
+- 服务 leaf 的 `just build` 会先执行 `just gen`，再默认以 `CGO_ENABLED=0`（可通过环境变量覆盖）编译当前服务
 - 服务 leaf 的 `just api` 会回到仓库根目录生成统一 Go API；TypeScript API 统一由仓库根 `just api-ts`（`buf.typescript.gen.yaml`）生成至 `api/gen/ts`
-- 服务 leaf 的 `just openapi` 读取本目录 `api/buf.openapi.gen.yaml`
+- 服务 leaf 的 `just openapi` 调用仓库根级唯一 `buf.openapi.gen.yaml`，按 `api/protos/plateau/{ServiceName}` 过滤生成至本服务 `internal/assets/openapi.yaml`
 - root `just build` 使用隐藏 build helper，避免生成完成后重复生成
 - Wire 与 Ent CLI 由根 `go.mod` 的 `tool` 声明固定版本，服务生成入口通过 `go tool wire`／`go tool ent` 调用
 
@@ -83,4 +81,4 @@ just lint                     # 全项目只读质量检查
   - 使用 `just service::<name>::dev` 或 `just service::<name>::run` 启动时，服务读取此目录。
 - `configs/docker/`：**容器化环境**。数据库、缓存、消息队列地址指向容器网络中的服务名（如 `postgres:5432`、`redis:6379`、`kafka:9092`）。
 
-在 `configs/` 中定义的 `.yaml` 在代码中通过配置结构体映射，对应的 Protobuf 配置消息统一定义在根 `api/protos/{ServiceName}/conf/`（及子模块 `conf/`）下。
+在 `configs/` 中定义的 `.yaml` 在代码中通过配置结构体映射，对应的 Protobuf 配置消息统一定义在根 `api/protos/plateau/{ServiceName}/conf/`（及子模块 `conf/`）下。

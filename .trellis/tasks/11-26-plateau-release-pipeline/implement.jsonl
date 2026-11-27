@@ -1,10 +1,13 @@
 {"file": ".trellis/spec/guides/index.md", "reason": "跨层契约变更与复用检查入口"}
-{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Proto 路径迁移与生成物一致性检查指南"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "服务 Proto 顶层 plateau 命名空间迁移与生成物一致性检查指南"}
 {"file": ".trellis/spec/api/proto/index.md", "reason": "Proto 模块、Lint 与生成验证规范总览"}
-{"file": ".trellis/spec/api/proto/contracts.md", "reason": "平台与业务源 Proto 组织及兼容性要求"}
+{"file": ".trellis/spec/api/proto/contracts.md", "reason": "plateau.*.*.v1 统一命名空间与 0.x 阶段 breaking 策略"}
 {"file": ".trellis/spec/api/proto/generation.md", "reason": "Buf Go/TS/OpenAPI 生成链路与 just gen-check 校验规则"}
-{"file": ".trellis/spec/service/backend/layout.md", "reason": "微服务目录职责与 OpenAPI 生成约定"}
+{"file": ".trellis/spec/service/backend/layout.md", "reason": "微服务目录职责与根级 OpenAPI 产物约定"}
+{"file": ".trellis/spec/admin/backend.md", "reason": "Admin 服务下游 IAM/Audit gRPC 契约导入规范"}
+{"file": ".trellis/spec/admin/frontend.md", "reason": "Admin Web @plateau/api 导入与客户端规范"}
+{"file": ".trellis/spec/audit/backend.md", "reason": "Audit 服务契约导入与配置规范"}
 {"file": ".trellis/spec/plateau/project/structure.md", "reason": "Plateau 顶层目录与共享产物归属约定"}
-{"file": ".trellis/spec/plateau/project/development.md", "reason": "本地命令、GOWORK=off 独立门禁与工作区约定"}
-{"file": ".trellis/spec/web/plateau-utils/index.md", "reason": "@servora/plateau-utils 质量检查与导出结构规范"}
-{"file": ".trellis/tasks/11-25-servora-kit-engineering/design.md", "reason": "父级路线图架构决策（D3/D4/§4）对照"}
+{"file": ".trellis/spec/plateau/project/development.md", "reason": "三处 CGO_ENABLED=0 门禁、0.x breaking 策略与发版约定"}
+{"file": ".trellis/spec/web/plateau-utils/index.md", "reason": "@servora/plateau-utils@0.1.0 导出子路径与发布规范"}
+{"file": ".trellis/tasks/11-25-servora-kit-engineering/design.md", "reason": "父级路线图架构决策对照"}

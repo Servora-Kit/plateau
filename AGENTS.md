@@ -17,7 +17,7 @@
 ## 目录结构
 
 - `api/` 平台领域 Proto 与生成产物（详见 [api/AGENTS.md](api/AGENTS.md)）
-  - `protos/` 全平台集中式 Proto 定义（单一 BSR 模块 `buf.build/servora/plateau`，含 `plateau/**` 共享契约及 `iam/**`、`admin/**`、`audit/**` 服务与配置契约）
+  - `protos/` 全平台集中式 Proto 定义（单一 BSR 模块 `buf.build/servora/plateau`，全部 29 个公开 `.proto` 统一位于 `api/protos/plateau/{security,crud,infra,iam,admin,audit}/**/v1`，包名 `plateau.*.*.v1`）
   - `gen/go/` 所有微服务的 Go Proto 生成输出目录
   - `gen/ts/` 所有微服务的 TypeScript Proto 生成输出目录
   - `gen/package.json` 管理共享 TS 包依赖与 exports
@@ -38,11 +38,13 @@
 - `prek.toml` 根 Git 钩子配置（`pre-commit` / `pre-push` / `commit-msg`）；`app/admin/web/prek.toml` 为 Vben 子项目钩子配置
 - `pnpm-workspace.yaml` 统一纳管 `api/gen`、平台原生 Web 与 `web/packages/*`；`app/admin/web` 保留 Vben 独立 workspace 和 lockfile，并通过 `link:` 引用 `@plateau/api`、`@servora/plateau-utils`
 - `pnpm-lock.yaml` Platform workspace 共享依赖锁文件
-- `buf.yaml` 单一模块（`buf.build/servora/plateau`）、依赖以及 lint / breaking 规则
+- `buf.yaml` 单一模块（`buf.build/servora/plateau`）、依赖以及 lint / breaking 规则（`0.x` 阶段关闭 `prek.toml`、`ci.yml`、`buf-ci.yml` 三处自动 breaking 拦截，保留 `FILE` 规则供手动执行 `just breaking`，待 `v1.0.0` 发布前恢复）
 - `buf.go.gen.yaml` 项目级统一 Go 生成配置
 - `buf.typescript.gen.yaml` 项目级统一 TypeScript 生成配置（输出 `@plateau/api` 的 `api/gen/ts` 及 `@servora/plateau-utils` 的 `web/packages/plateau-utils/src/gen`）
+- `buf.openapi.gen.yaml` 仓库根级唯一 OpenAPI 生成模板（输出至各服务 `internal/assets/openapi.yaml`，由 `just/service.just` 按 `api/protos/plateau/{ServiceName}` 过滤调用）
 - `buf.es.gen.yaml` 已停用并全部注释，仅保留作 Protobuf-ES 配置参考
 - `go.mod`、`go.sum` 统一管理平台根代码、`api/gen/go` 与各服务 Go 后端的依赖
+- 生产构建统一执行 `CGO_ENABLED=0` 门禁（三处一致：`just/service.just` `_build` 默认值、`prek.toml` `pre-push` `go-build-nocgo`、`.github/workflows/ci.yml` `go` 任务）；`just test` 保持默认 CGO 环境以支持 `-race` 与测试专用 `mattn/go-sqlite3`
 - 跨仓源码联调（如与 Servora）可在本地共同父目录自建 `go.work` / `pnpm-workspace.yaml`，不提交到仓库；父级 pnpm workspace 需排除 `plateau/app/admin/web`。仓库门禁以 `GOWORK=off` 的独立检查为准，联调通过不代表门禁通过
 - `docker-compose.yaml` 本地基础设施编排
 - `process-compose.yaml` 本地全栈进程编排（REST `:18090`，内置 SSE MCP `:18091`）
@@ -61,7 +63,7 @@ just wire
 just test              # go test -race -count=1 ./...
 just lint
 just fmt-proto-check
-just breaking          # 对比 BUF_BREAKING_AGAINST（默认 .git#ref=origin/main）
+just breaking          # 手动对比 BUF_BREAKING_AGAINST（默认 .git#ref=origin/main；0.x 关闭自动拦截，v1.0.0 恢复）
 just api-ts-check
 just service::iam::keygen
 just openfga-model-validate

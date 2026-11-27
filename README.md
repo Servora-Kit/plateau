@@ -197,15 +197,15 @@ just web::admin::dev
 
 | 产物 | 坐标 | 发布触发 | 核心内容 |
 | --- | --- | --- | --- |
-| **Go 平台模块** | `github.com/Servora-Kit/plateau` | Git tag `v*`（`release.yml`） | `security`、`crud`、`infra`、`transport/server/kafka` 与 `api/gen/go/**`（生产代码 `CGO_ENABLED=0`） |
-| **BSR Proto 模块** | `buf.build/servora/plateau` | `main` 推送与 `v*` tag（`buf-ci.yml`） | 平台安全/CRUD/基础设施注解与配置契约，以及 `iam`、`admin`、`audit` 服务契约 |
+| **Go 平台模块** | `github.com/Servora-Kit/plateau` | Git tag `v*`（`release.yml`，`ci-ok` 通过后串行推送 BSR 标签并创建 GitHub Release） | `security`、`crud`、`infra`、`transport/server/kafka` 与 `api/gen/go/**`（生产构建默认 `CGO_ENABLED=0`） |
+| **BSR Proto 模块** | `buf.build/servora/plateau` | `main` 推送（`buf-ci.yml`）与 `v*` tag（`release.yml` 于 `ci-ok` 后推送） | `api/protos/plateau/**` 统一命名空间（`plateau.*.*.v1`），涵盖安全/CRUD/基础设施及 `iam`、`admin`、`audit` 服务与配置契约 |
 | **前端工具包** | `@servora/plateau-utils` | Git tag `plateau-utils/v*`（OIDC Provenance） | HTTP/SSE/WebSocket 传输客户端、AIP CRUD 查询构建与平台错误码枚举 |
 
 ## 仓库结构
 
 ```text
 plateau/
-├── api/                     # 单一 BSR 模块源 Proto（buf.build/servora/plateau）与 Go / TS 生成产物
+├── api/                     # 单一 BSR 模块源 Proto（api/protos/plateau/**，buf.build/servora/plateau）与 Go / TS 生成产物
 ├── app/
 │   ├── iam/                 # 身份与认证中心（Go service + Next.js web）
 │   ├── admin/               # 平台管理控制面（Go service + Vue Vben web）
@@ -234,7 +234,7 @@ plateau/
 | `just gen` / `just gen-check` | 生成 Proto / Ent / Wire / OpenAPI 产物并校验无漂移 |
 | `just test` | 运行全仓 Go 测试（`-race -count=1`） |
 | `just lint` | 执行 TS 类型检查、Proto lint 与 Go lint |
-| `just fmt-proto-check` / `just breaking` | 校验 Proto 格式与向后兼容性 |
+| `just fmt-proto-check` / `just breaking` | 校验 Proto 格式与手动检查向后兼容性（`0.x` 阶段关闭自动 breaking 拦截，`v1.0.0` 恢复） |
 | `just openfga-setup` / `just openfga-tuple-sync` | 初始化 OpenFGA Store+Model 并幂等同步平台静态服务元组 |
 | `just openfga-model-test` / `just openfga-model-apply` | 测试并推送 OpenFGA 授权模型（不自动写元组，保持测试隔离） |
 | `just web::build` / `just web::lint` / `just web::test` | 构建、检查与测试 IAM / Admin 前端应用 |

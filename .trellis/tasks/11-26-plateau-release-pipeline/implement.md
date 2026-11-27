@@ -1,4 +1,4 @@
-# Implement：Plateau 单一 BSR、Go 包与 NPM 自动化发布流水线
+# Implement：Plateau 单一 BSR 统一命名空间、CGO 门禁与原子发布流水线
 
 需求与技术方案见 [prd.md](prd.md) 与 [design.md](design.md)。
 
@@ -6,53 +6,53 @@
 
 ## 1. 有序执行清单
 
-### 步骤一：全集中式 `api/protos/` 与单一 BSR 模块改造（R1）
-- [x] 将 `app/iam/service/api/protos/iam/**`（6 个文件）、`app/admin/service/api/protos/admin/**`（4 个文件）、`app/audit/service/api/protos/audit/**`（2 个文件）移动至 `api/protos/{iam,admin,audit}/**`。
-- [x] 删除已空的 `app/iam/service/api/protos/`、`app/admin/service/api/protos/` 与整个 `app/audit/service/api/` 目录。
-- [x] 修改 `buf.yaml`：将 `modules` 合并为单一条目 `path: api/protos` + `name: buf.build/servora/plateau`，执行 `buf dep update`。
-- [x] 修改 `app/iam/service/api/buf.openapi.gen.yaml` 与 `app/admin/service/api/buf.openapi.gen.yaml`：保留 `directory: .`，将 `paths` 更新为 `api/protos/iam/...` 与 `api/protos/admin/...`。
+### 步骤一：清理工作区 `v1alpha1` 残留并迁移 12 个服务 `.proto` 至 `plateau.{iam,admin,audit}.*.v1`（R1、R3）
+- [x] 回退此前中止的 `v1alpha1` 改动（恢复 17 个平台公共 `.proto`、`cmd/protoc-gen-plateau-*`、`crud/`、`infra/`、`transport/`、`buf.typescript.gen.yaml`、`web/packages/plateau-utils`、`/v1/` HTTP 路由与 OIDC 配置至 `HEAD`，清理所有未跟踪 `v1alpha1` 目录）。
+- [x] 按 [design.md §1.2](design.md) 映射表，将 `api/protos/{iam,admin,audit}/.../v1/` 下共 12 个 `.proto` 迁至 `api/protos/plateau/{iam,admin,audit}/.../v1/`，删除裸顶层 `api/protos/{iam,admin,audit}/`。
+- [x] 更新这 12 个 `.proto` 的 `package` 为 `plateau.{iam,admin,audit}.*.v1`，`option go_package` 为 `"github.com/Servora-Kit/plateau/api/gen/go/plateau/<subpath>/v1;<alias>v1"`，同步内部 `import` 与类型引用，保持 `google.api.http` `/v1/...` 路由不变。
+- [x] 保留根目录唯一 `buf.openapi.gen.yaml`（`out: internal/assets`），删除 `app/{iam,admin}/service/api/` 目录，更新 `just/service.just` 为单行 `buf generate --template buf.openapi.gen.yaml --path "api/protos/plateau/{{ SERVICE_NAME }}" -o "{{ SERVICE_MODULE }}"`，运行 `just gen-clean && GOWORK=off just gen`（含生成 `app/audit/service/internal/assets/openapi.yaml`）。
 
-### 步骤二：CI `CGO_ENABLED=0` 门禁与三条发布工作流落地（R2）
-- [x] 修改 `.github/workflows/ci.yml`：在 `go` 任务的 `Build` 步骤加入 `env: { CGO_ENABLED: "0" }`。
-- [x] 修改 `web/packages/plateau-utils/package.json`：将 `prepublishOnly` 更新为 `npm run clean && npm run build`。
-- [x] 新增 `.github/workflows/buf-ci.yml`：配置 `pull_request`（按 `.proto`/`buf.yaml`/`buf.lock` 过滤）与 `push`（`branches: [main]`、`tags: ["v*"]`）执行 `bufbuild/buf-action@v1`（`token: ${{ secrets.BUF_TOKEN }}`、`push_disable_create: true`）。
-- [x] 新增 `.github/workflows/release.yml`：响应 `v*` tag，校验 `origin/main` 祖先关系与 `ci.yml` 成功记录后通过 `softprops/action-gh-release@v3` 发布 GitHub Release。
-- [x] 新增 `.github/workflows/publish-plateau-utils.yml`：响应 `plateau-utils/v*` tag，声明 `id-token: write`，校验 `origin/main` 祖先关系及 tag 与 `package.json` 版本一致，在根工作区安装依赖、在 `web/packages/plateau-utils` 执行 `typecheck` 与 `test`，最后执行 `npm publish --provenance --access public --registry=https://registry.npmjs.org`。
+### 步骤二：Go 后端与前端 `@plateau/api` 导入联动更新（R1）
+- [x] 更新 `app/{iam,admin,audit}/service` 与 `security/{authn/session,oidc,audit/kafka}` 中对 `api/gen/go/plateau/{iam,admin,audit}/.../v1` 的导入路径及单测 gRPC 全限定方法名断言（`/plateau.{iam,admin,audit}.*.v1.<Service>/<Method>`），运行 `GOWORK=off just wire`。
+- [x] 更新 `app/iam/web` 与 `app/admin/web` 中对 `@plateau/api/plateau/{iam,admin,audit}/.../v1` 的导入路径（保持 `/v1/...` HTTP 路由与 `@servora/plateau-utils@0.1.0` 不变）。
 
-### 步骤三：双仓文档、规范同步与本地全量门禁验收（R3）
-- [x] 更新 `AGENTS.md`、`api/AGENTS.md`、`app/AGENTS.md`、`README.md`，修正集中式 `api/protos/` 目录结构说明，并补充 BSR（`buf.build/servora/plateau`）、Go 模块与 `@servora/plateau-utils` 的版本发布与外部引用说明。
-- [x] 同步更新 `.trellis/spec/` 相关规范：
-  - `.trellis/spec/api/proto/contracts.md`、`.trellis/spec/api/proto/generation.md`
-  - `.trellis/spec/service/backend/layout.md`
-  - `.trellis/spec/plateau/project/structure.md`
-  - `.trellis/spec/web/plateau-utils/index.md`（补充发布校验说明）
-- [x] 运行本地全量门禁（见 §2 验证命令），运行 GitNexus 图变更检测，通过后使用 `commit` 命名空间分批提交本地变更。
-### 步骤四：交互式凭据引导、远端推送与 `v0.1.0` 实发验收（R4）
-- [ ] 基于 `wizard` 模板在会话 scratch 目录生成临时引导脚本，交由用户执行完成两项外部操作：
-  1. 配置 `Servora-Kit/plateau` 仓库 Secret `BUF_TOKEN`；
-  2. 本地临时以 `0.1.0-alpha.0` 执行 `npm publish --access public --tag alpha` 初始化 `@servora/plateau-utils` 包名（立即还原 `package.json` 为 `0.1.0`），并在 npmjs 包设置页绑定 GitHub Actions Trusted Publisher（`Servora-Kit/plateau` + `publish-plateau-utils.yml`）。
-- [ ] 推送 `../servora` `main`（含 `c12fd4fb`）并确认远端 CI 绿灯；推送 `plateau` `main`（首次模块合并推送使用 `SKIP=buf-breaking`，推送后立即运行 `just breaking` 确认对新 `origin/main` 零破坏性差异），等待远端 `CI` 与 `Buf CI` 全部成功。
-- [ ] 推送 `plateau-utils/v0.1.0` tag 并等待 `Publish @servora/plateau-utils` 成功；推送 `v0.1.0` tag 并等待 `Release` 与 `Buf CI` 成功。
-- [ ] 在临时隔离目录（无 `go.work`、`CGO_ENABLED=0`）执行外部最小消费者构建验证（`buf build` + `go get github.com/Servora-Kit/plateau@v0.1.0` + `npm view @servora/plateau-utils@0.1.0`），通过后删除临时目录与 scratch 向导脚本，勾选父任务 `11-25-servora-kit-engineering` 全部剩余验收项。
+### 步骤三：`0.x` 关闭自动 `breaking`、三处 `CGO_ENABLED=0` 与原子 Tag 发布工作流（R2、R3、R4、R5）
+- [x] 修改 `prek.toml`：在 `pre-push` 新增 `go-build-nocgo`（`CGO_ENABLED=0 GOWORK=off go build ./...`），移除 `buf-breaking` 钩子并补充 `0.x` 阶段注释。
+- [x] 修改 `.github/workflows/ci.yml`：移除 `changes` `proto` 过滤器中的 `'app/*/service/api/buf.*.gen.yaml'`，移除 `proto` 任务中的 `Check breaking changes` 步骤。
+- [x] 修改 `.github/workflows/buf-ci.yml` 与 `.github/workflows/release.yml`：`buf-ci.yml` 移除 `tags: ["v*"]` 并显式设置 `breaking: false`；`release.yml` 在 `Verify tag commit passed CI on main` 后插入 `bufbuild/buf-action@v1` 推送 BSR `v*` 标签步骤。
+- [x] 确认 `just/service.just` 的 Unix / Windows `_build` 默认启用 `CGO_ENABLED := env("CGO_ENABLED", "0")`。
+
+### 步骤四：文档与 `.trellis/spec/` 同步及本地全量门禁验证（R6）
+- [x] 更新 `AGENTS.md`、`api/AGENTS.md`、`app/AGENTS.md`、`README.md` 及 `.trellis/spec/` 相关规范，反映全仓 29 个 `plateau.*.*.v1` 契约、根级 `buf.openapi.gen.yaml`、三处 `CGO_ENABLED=0`、`0.x` 关闭自动 `breaking`（`v1.0.0` 恢复）与 `v0.1.1` 发布约定。
+- [x] 依次执行 §2 全部本地门禁、预提交钩子与 GitNexus 图变更分析，确认 100% 绿灯。
+
+### 步骤五：确认后提交推送、`v0.1.1` 实发与外部隔离消费者验收（R6）
+- [ ] 经用户确认后提交并推送 `origin/main`，等待远端 `CI`（`ci-ok`）与 `Buf CI` 全部 `success`。
+- [ ] 推送 `v0.1.1` 标签，等待 `Release` 工作流完成 BSR `v0.1.1` 标签推送与 GitHub Release 创建。
+- [ ] 在仓库外隔离临时目录（`GOWORK=off`、`CGO_ENABLED=0`）验证引用 `github.com/Servora-Kit/plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 通过 `buf generate`、`go build` 与 TS 类型检查，清理临时目录并勾选本任务与父任务验收项。
 
 ---
 
 ## 2. 验证命令
 
 ```bash
-# 1. Proto 格式、Lint 与生成零漂移校验（连续校验）
+# 1. Proto 格式、Lint 与生成零漂移校验
 GOWORK=off just lint-proto
 GOWORK=off just fmt-proto-check
 GOWORK=off just gen-check
 GOWORK=off just api-ts-check
 
-# 2. Go 零 CGO 编译、静态检查、竞态单测与漏洞扫描
+# 2. 残留裸包路径与临时 v1alpha1 扫描（均应为空）
+fd v1alpha1 api web
+rg -n 'api/gen/go/(iam|admin|audit)/|@plateau/api/(iam|admin|audit)/' app cmd crud infra internal security transport web
+
+# 3. Go 零 CGO 编译、服务构建、静态检查与竞态单测
 CGO_ENABLED=0 GOWORK=off go build ./...
+GOWORK=off just service::_build
 GOWORK=off just lint-go
 GOWORK=off just test
-GOWORK=off go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
-# 3. 前端工具包与全栈 Web 校验
+# 4. 前端工具包与全栈 Web 校验
 pnpm --filter @servora/plateau-utils typecheck
 pnpm --filter @servora/plateau-utils test
 pnpm --filter @servora/plateau-utils pack --dry-run
@@ -60,7 +60,7 @@ just web::lint
 just web::test
 just web::build
 
-# 4. 本地钩子与图变更分析
+# 5. 本地钩子与 GitNexus 图变更分析
 prek run --all-files --stage pre-commit --skip app/admin/web/
 node .gitnexus/run.cjs analyze --index-only
 mcp__gitnexus_detect_changes -j '{"scope":"all","repo":"."}'
@@ -71,10 +71,10 @@ mcp__gitnexus_detect_changes -j '{"scope":"all","repo":"."}'
 ## 3. 高关注文件与回滚检查点
 
 - **高关注文件**：
-  - `buf.yaml`、`buf.lock`、`app/{iam,admin}/service/api/buf.openapi.gen.yaml`
-  - `.github/workflows/{ci,buf-ci,release,publish-plateau-utils}.yml`
-  - `web/packages/plateau-utils/package.json`
-  - `AGENTS.md`、`api/AGENTS.md`、`app/AGENTS.md`、`README.md`
+  - `buf.openapi.gen.yaml`、`just/service.just`、`prek.toml`
+  - `.github/workflows/{ci,buf-ci,release}.yml`
+  - `api/protos/plateau/{iam,admin,audit}/**/v1/*.proto`
+  - `security/authn/session/user.go`、`security/oidc/rp.go`、`security/audit/kafka/kafka.go`
 - **回滚检查点**：
-  1. 步骤一完成后必须立即通过 `GOWORK=off just gen-check`，若 `api/gen/{go,ts}` 或 `openapi.yaml` 出现任何 diff，说明模块相对路径或 OpenAPI `paths` 有误，修正前不得进入步骤二；
-  2. 步骤四推送 `main` 前必须确认 `gh secret list -R Servora-Kit/plateau` 已包含 `BUF_TOKEN`；推送 `plateau-utils/v0.1.0` 前必须确认 `main` CI 已绿且 npmjs Trusted Publisher 已保存绑定。
+  1. 步骤一完成重生成后，立即通过 `GOWORK=off just lint-proto` 与 `GOWORK=off just fmt-proto-check`，确保 29 个 `plateau.*.*.v1` 包名、目录与 `go_package` 零违规后再推进步骤二；
+  2. 步骤四本地所有门禁与集成测试 100% 通过且经用户确认前不推送远端 `main`；远端 `main` 的 `CI` 与 `Buf CI` 全部绿灯前绝不推送 `v0.1.1` 标签。

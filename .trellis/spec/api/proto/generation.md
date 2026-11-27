@@ -4,13 +4,13 @@
 
 ## 现有流程
 
-根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。根 `api/protos/` 作为单一模块（`buf.build/servora/plateau`）包含平台共享契约与平台服务（`iam`、`admin`、`audit`）契约，统一生成至共享目录，不再为单个服务重复维护独立的 Proto 目录或 `buf.typescript.gen.yaml` 产物。
+根 `just gen` 先执行 `api`（`api-go`、`api-ts`），再执行注册服务的 `_gen`（OpenAPI、Wire、Ent）。根 `api/protos/` 作为单一模块（`buf.build/servora/plateau`）承载全部 29 个 `plateau.*.*.v1` 契约（含共享基础设施/安全/CRUD 与 `iam`、`admin`、`audit` 服务及配置），统一生成至共享目录，不再为单个服务重复维护独立的 Proto 目录、`api/buf.openapi.gen.yaml` 或 `buf.typescript.gen.yaml` 产物。
 
 | 源／模板 | 输出与维护方 |
 | --- | --- |
 | 根 `buf.yaml` 单一模块 `api/protos` + `buf.go.gen.yaml` | `api/gen/go`：统一 Go 生成产物 |
 | 同一模块 + `buf.typescript.gen.yaml` | `api/gen/ts`（`@plateau/api` 全量客户端/sidecar）与 `web/packages/plateau-utils/src/gen`（通过插件级 `types` 过滤生成 `@servora/plateau-utils/error-reasons/*` 公共错误枚举） |
-| 服务级 `api/buf.openapi.gen.yaml`（按路径筛选 `api/protos/<service>/**`） | 各服务自己的 `internal/assets/openapi.yaml` |
+| 根级唯一 `buf.openapi.gen.yaml`（`out: internal/assets`，`just/service.just` 以 `--path api/protos/plateau/<service> -o app/<service>/service` 调用） | 全部 3 个服务（`iam`、`admin`、`audit`）各自的 `internal/assets/openapi.yaml`（均纳入版本控制并由 `just gen-check` 校验） |
 | 服务 Wire／Ent 源 | 相应服务 `cmd/server`、`internal/data` 中的生成输出 |
 
 生成模板只清理自身输出目录；停用的参考模板（如 `buf.es.gen.yaml`）不属于实际生成链。
@@ -27,6 +27,6 @@
 
 ## 验证
 
-Proto 修改后运行生成（`just gen`）、生成一致性校验（`just gen-check`）、Buf lint（`just lint-proto`）、Proto 格式检查（`just fmt-proto-check`）、破坏性变更检查（`just breaking`）、API TS 检查（`just api-ts-check`）及受影响消费者检查。`just gen-check` 在 `GOWORK=off` 下重新生成并对生成路径（`api/gen/{go,ts}`、`web/packages/plateau-utils/src/gen`、`**/wire_gen.go`、`app/*/service/internal/data/ent`、`app/*/service/**/openapi.yaml`）检查 `git diff --exit-code` 与未跟踪文件。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
+Proto 修改后运行生成（`just gen`）、生成一致性校验（`just gen-check`）、Buf lint（`just lint-proto`）、Proto 格式检查（`just fmt-proto-check`）、API TS 检查（`just api-ts-check`）及受影响消费者检查，按需手动执行破坏性变更检查（`just breaking`；`0.x` 阶段关闭自动拦截，待 `v1.0.0` 恢复）。`just gen-check` 在 `GOWORK=off` 下重新生成并对生成路径（`api/gen/{go,ts}`、`web/packages/plateau-utils/src/gen`、`**/wire_gen.go`、`app/*/service/internal/data/ent`、`app/*/service/**/openapi.yaml`）检查 `git diff --exit-code` 与未跟踪文件。共享检查不能替代应用检查。只读调查不执行有写文件副作用的生成命令。
 
-入口：[根 justfile](../../../../justfile)、[服务命令](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)、[go.mod](../../../../go.mod)。
+入口：[根 justfile](../../../../justfile)、[服务命令](../../../../just/service.just)、[Go 模板](../../../../buf.go.gen.yaml)、[TS 模板](../../../../buf.typescript.gen.yaml)、[OpenAPI 模板](../../../../buf.openapi.gen.yaml)、[go.mod](../../../../go.mod)。

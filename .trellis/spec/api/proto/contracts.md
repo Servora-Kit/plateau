@@ -4,7 +4,7 @@
 
 ## 源码与资源
 
-所有源 Proto 集中位于根 `api/protos/`（单一 BSR 模块 `buf.build/servora/plateau`）：平台共享契约位于 `api/protos/plateau/<domain>/<version>`，各平台核心服务契约与私有配置位于 `api/protos/<service>/**`（不在 `app/*/service/` 下分散存放 `.proto`）。`go_package` 指向共享生成模块对应路径，生成布局见 [generation](generation.md)。
+所有 29 个公开源 Proto 集中位于根 `api/protos/plateau/{security,crud,infra,iam,admin,audit}/.../v1`（单一 BSR 模块 `buf.build/servora/plateau`，统一包名 `plateau.*.*.v1`，不在 `app/*/service/` 下分散存放 `.proto`）。HTTP 路由与 OpenAPI 路径保持 `/v1/...`，`go_package` 指向 `github.com/Servora-Kit/plateau/api/gen/go/plateau/.../v1`，生成布局见 [generation](generation.md)。
 
 资源名由 Proto resource pattern 定义，不能与数据库 ID 或 URL 编码片段混用；租户与父子资源结构由领域决定，不推广业务实例。
 
@@ -20,8 +20,8 @@
 
 领域失败使用所属 Proto error reason；共享安全错误由 [SecurityErrorReason](../../../../api/protos/plateau/security/errors/v1/errors.proto) 声明。不要将网络失败、认证失败和业务冲突压成单一成功响应字段。
 
-`buf.yaml` 当前配置 STANDARD lint 和 FILE breaking，并对标准 CRUD 响应命名及复用请求类型作例外。调整 Proto 应保留字段号与已有语义；删除或破坏兼容性需显式评估消费者、生成 diff 和迁移方式，不能靠改生成类型掩盖源契约变化。breaking 比较须使用任务确定的真实基线，不凭空选远端 ref。
+`buf.yaml` 配置 STANDARD lint 和 FILE breaking，并对标准 CRUD 响应命名及复用请求类型作例外。`0.x` 演进阶段在 `prek.toml`、`.github/workflows/ci.yml` 与 `.github/workflows/buf-ci.yml` 三处关闭自动 breaking 拦截，同时保留 `buf.yaml` 中的 `FILE` 规则供本地手动运行 `just breaking` 检查契约差异，待 `v1.0.0` 发布前恢复三处自动拦截。调整 Proto 应保留字段号与已有语义；删除或破坏兼容性需显式评估消费者、生成 diff 和迁移方式，不能靠改生成类型掩盖源契约变化。breaking 比较须使用任务确定的真实基线，不凭空选远端 ref。
 
-检查入口：`just lint-proto`、`just api-ts-check`，生成变化还需受影响 Go 服务／前端检查。配置中有 breaking 规则不等于本次已执行 breaking 比较。
+检查入口：`just lint-proto`、`just fmt-proto-check`、`just api-ts-check`（按需手动执行 `just breaking`），生成变化还需受影响 Go 服务／前端检查。配置中有 breaking 规则不等于本次已执行 breaking 比较。
 
 入口：[buf.yaml](../../../../buf.yaml)、[生成流程](generation.md)。

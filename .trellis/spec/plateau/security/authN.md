@@ -24,7 +24,7 @@
 
 先在 HTTP 边界装配 `security/session.LoadAndSave(manager)`（或 `security/session.NewFilter`），再由同一个 manager 构造 Session Authenticator。Resolver 读取应用身份，ActorMapper 转换身份；可选 ContextExtender 只附加可信状态。缺失加载标记与已加载的匿名会话是不同情况，不能拿另一 manager 的 context 充数，也不能假装这套 HTTP session 生命周期自动覆盖 gRPC。
 
-- 常规浏览器服务直接使用 [user.go](../../../../security/authn/session/user.go) 导出的 `SaveUser`、`NewUserAuthenticator`、`UserFrom`（承载 `*iam.user.v1.User`，由 `security/oidc.RelyingParty.CompleteLogin` 直接返回）：`SaveUser` 校验已加载会话与非空 `user_id` 后执行 `proto.Marshal` + `manager.RenewToken` + `manager.Put`；`NewUserAuthenticator` 将反序列化后的快照写入请求 `context.Context`，`UserFrom` 按需返回 `proto.Clone` 防篡改副本。无需自建私有 `internal/authn` 包；仅需服务端实时查表吊销的 IdP 会话（如 IAM）或自定义会话结构才直接使用底层泛型 `session.New[T]`。
+- 常规浏览器服务直接使用 [user.go](../../../../security/authn/session/user.go) 导出的 `SaveUser`、`NewUserAuthenticator`、`UserFrom`（承载 `*plateau.iam.user.v1.User`，由 `security/oidc.RelyingParty.CompleteLogin` 直接返回）：`SaveUser` 校验已加载会话与非空 `user_id` 后执行 `proto.Marshal` + `manager.RenewToken` + `manager.Put`；`NewUserAuthenticator` 将反序列化后的快照写入请求 `context.Context`，`UserFrom` 按需返回 `proto.Clone` 防篡改副本。无需自建私有 `internal/authn` 包；仅需服务端实时查表吊销的 IdP 会话（如 IAM）或自定义会话结构才直接使用底层泛型 `session.New[T]`。
 
 ## 错误与检查
 
