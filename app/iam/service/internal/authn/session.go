@@ -11,7 +11,10 @@ import (
 	"github.com/alexedwards/scs/v2"
 )
 
-const LoginReferenceKey = "iam_login_id"
+const (
+	LoginReferenceKey = "iam_login_id"
+	AuthFlowOwnerKey  = "iam_auth_flow_owner"
+)
 
 type SessionAuthenticator = session.Authenticator[*identity]
 

@@ -234,23 +234,6 @@ export type RequestPasswordResetResponse = {
 export type ConfirmPasswordResetResponse = {
 };
 
-export type ChangeInitialPasswordRequest = {
-  // Current initial password is verified independently and never logged or returned.
-  //
-  // Behaviors: REQUIRED
-  currentPassword?: string;
-  // Service canonicalizes email before locating the Login Identifier.
-  //
-  // Behaviors: REQUIRED
-  email?: string;
-  //
-  // Behaviors: REQUIRED
-  newPassword?: string;
-};
-
-export type ChangeInitialPasswordResponse = {
-};
-
 export type DeleteAccountRequest = {
   // Current password is verified before soft-deleting the authenticated user's account.
   //
@@ -295,10 +278,6 @@ export interface AccountService {
   ConfirmPasswordReset(
     request: ConfirmPasswordResetRequest,
   ): Promise<ConfirmPasswordResetResponse>;
-  // ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-  ChangeInitialPassword(
-    request: ChangeInitialPasswordRequest,
-  ): Promise<ChangeInitialPasswordResponse>;
   // DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
   DeleteAccount(
     request: DeleteAccountRequest,
@@ -420,23 +399,6 @@ export function createAccountServiceClient(
       return transport.unary<ConfirmPasswordResetResponse>(path, 'POST', body, {
         service: 'AccountService',
         method: 'ConfirmPasswordReset',
-      });
-    },
-    ChangeInitialPassword(request) {
-      if (request.email === undefined || request.email === null || request.email === '') {
-        throw new Error('missing required field request.email');
-      }
-      if (request.currentPassword === undefined || request.currentPassword === null || request.currentPassword === '') {
-        throw new Error('missing required field request.current_password');
-      }
-      if (request.newPassword === undefined || request.newPassword === null || request.newPassword === '') {
-        throw new Error('missing required field request.new_password');
-      }
-      const path = `v1/iam/account/change-initial-password`;
-      const body = JSON.stringify(request);
-      return transport.unary<ChangeInitialPasswordResponse>(path, 'POST', body, {
-        service: 'AccountService',
-        method: 'ChangeInitialPassword',
       });
     },
     DeleteAccount(request) {

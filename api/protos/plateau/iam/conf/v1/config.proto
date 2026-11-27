@@ -3,6 +3,7 @@ syntax = "proto3";
 package plateau.iam.conf.v1;
 
 import "buf/validate/validate.proto";
+import "google/protobuf/duration.proto";
 import "servora/conf/v1/annotations.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1;iamconfv1";
@@ -16,4 +17,12 @@ message IAM {
     (servora.conf.v1.field) = {required: true},
     (buf.validate.field).string.min_len = 1
   ];
+  // AuthFlow configures interactive browser authentication flow lifetimes.
+  AuthFlow auth_flow = 2;
+}
+
+// AuthFlow configures authentication flow expiration windows.
+message AuthFlow {
+  google.protobuf.Duration ttl = 1 [(servora.conf.v1.field) = {default: "30m"}];
+  google.protobuf.Duration step_ttl = 2 [(servora.conf.v1.field) = {default: "10m"}];
 }

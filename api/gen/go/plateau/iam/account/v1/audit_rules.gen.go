@@ -9,10 +9,6 @@ import (
 
 // _auditRules is the immutable backing store for AuditRules.
 var _auditRules = map[string]*v1.AuditRule{
-	"/plateau.iam.account.v1.AccountService/ChangeInitialPassword": {
-		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
-		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
-	},
 	"/plateau.iam.account.v1.AccountService/ChangePassword": {
 		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
 		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,

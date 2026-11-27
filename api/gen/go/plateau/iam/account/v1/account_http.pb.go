@@ -17,7 +17,6 @@ var _ = new(context.Context)
 
 const _ = http.SupportPackageIsVersion3
 
-const OperationAccountServiceChangeInitialPassword = "/plateau.iam.account.v1.AccountService/ChangeInitialPassword"
 const OperationAccountServiceChangePassword = "/plateau.iam.account.v1.AccountService/ChangePassword"
 const OperationAccountServiceConfirmPasswordReset = "/plateau.iam.account.v1.AccountService/ConfirmPasswordReset"
 const OperationAccountServiceDeleteAccount = "/plateau.iam.account.v1.AccountService/DeleteAccount"
@@ -29,8 +28,6 @@ const OperationAccountServiceUpdateProfile = "/plateau.iam.account.v1.AccountSer
 const OperationAccountServiceVerifyEmail = "/plateau.iam.account.v1.AccountService/VerifyEmail"
 
 type AccountServiceHTTPServer interface {
-	// ChangeInitialPassword ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-	ChangeInitialPassword(context.Context, *ChangeInitialPasswordRequest) (*ChangeInitialPasswordResponse, error)
 	// ChangePassword ChangePassword changes the current password and revokes other sessions.
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	// ConfirmPasswordReset ConfirmPasswordReset consumes a one-time reset token and sets a password.
@@ -61,7 +58,6 @@ func RegisterAccountServiceHTTPServer(s *http.Server, srv AccountServiceHTTPServ
 	r.Handle("POST", "/v1/iam/account/change-password", _AccountService_ChangePassword0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/password-reset/request", _AccountService_RequestPasswordReset0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/password-reset/confirm", _AccountService_ConfirmPasswordReset0_HTTP_Handler(srv))
-	r.Handle("POST", "/v1/iam/account/change-initial-password", _AccountService_ChangeInitialPassword0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/delete", _AccountService_DeleteAccount0_HTTP_Handler(srv))
 }
 
@@ -220,25 +216,6 @@ func _AccountService_ConfirmPasswordReset0_HTTP_Handler(srv AccountServiceHTTPSe
 	}
 }
 
-func _AccountService_ChangeInitialPassword0_HTTP_Handler(srv AccountServiceHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in ChangeInitialPasswordRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationAccountServiceChangeInitialPassword)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ChangeInitialPassword(ctx, req.(*ChangeInitialPasswordRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*ChangeInitialPasswordResponse)
-		return ctx.Result(200, reply)
-	}
-}
-
 func _AccountService_DeleteAccount0_HTTP_Handler(srv AccountServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in DeleteAccountRequest
@@ -259,8 +236,6 @@ func _AccountService_DeleteAccount0_HTTP_Handler(srv AccountServiceHTTPServer) f
 }
 
 type AccountServiceHTTPClient interface {
-	// ChangeInitialPassword ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-	ChangeInitialPassword(ctx context.Context, req *ChangeInitialPasswordRequest, opts ...http.CallOption) (rsp *ChangeInitialPasswordResponse, err error)
 	// ChangePassword ChangePassword changes the current password and revokes other sessions.
 	ChangePassword(ctx context.Context, req *ChangePasswordRequest, opts ...http.CallOption) (rsp *ChangePasswordResponse, err error)
 	// ConfirmPasswordReset ConfirmPasswordReset consumes a one-time reset token and sets a password.
@@ -287,24 +262,6 @@ type AccountServiceHTTPClientImpl struct {
 
 func NewAccountServiceHTTPClient(client *http.Client) AccountServiceHTTPClient {
 	return &AccountServiceHTTPClientImpl{client}
-}
-
-// ChangeInitialPassword ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-func (c *AccountServiceHTTPClientImpl) ChangeInitialPassword(ctx context.Context, in *ChangeInitialPasswordRequest, opts ...http.CallOption) (*ChangeInitialPasswordResponse, error) {
-	var out ChangeInitialPasswordResponse
-	pattern := "/v1/iam/account/change-initial-password"
-	path := http.BuildPath(pattern, in)
-	opts = append([]http.CallOption{
-		http.Accept("application/protojson"),
-		http.ContentType("application/protojson"),
-		http.Operation(OperationAccountServiceChangeInitialPassword),
-		http.PathTemplate(pattern),
-	}, opts...)
-	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
 }
 
 // ChangePassword ChangePassword changes the current password and revokes other sessions.

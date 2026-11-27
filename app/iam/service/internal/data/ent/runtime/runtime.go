@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
@@ -26,6 +27,30 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	authflowFields := schema.AuthFlow{}.Fields()
+	_ = authflowFields
+	// authflowDescOwnerHash is the schema descriptor for owner_hash field.
+	authflowDescOwnerHash := authflowFields[1].Descriptor()
+	// authflow.OwnerHashValidator is a validator for the "owner_hash" field. It is called by the builders before save.
+	authflow.OwnerHashValidator = authflowDescOwnerHash.Validators[0].(func(string) error)
+	// authflowDescCompletedAmr is the schema descriptor for completed_amr field.
+	authflowDescCompletedAmr := authflowFields[11].Descriptor()
+	// authflow.DefaultCompletedAmr holds the default value on creation for the completed_amr field.
+	authflow.DefaultCompletedAmr = authflowDescCompletedAmr.Default.([]string)
+	// authflowDescRequiredActions is the schema descriptor for required_actions field.
+	authflowDescRequiredActions := authflowFields[12].Descriptor()
+	// authflow.DefaultRequiredActions holds the default value on creation for the required_actions field.
+	authflow.DefaultRequiredActions = authflowDescRequiredActions.Default.([]string)
+	// authflowDescCreateTime is the schema descriptor for create_time field.
+	authflowDescCreateTime := authflowFields[15].Descriptor()
+	// authflow.DefaultCreateTime holds the default value on creation for the create_time field.
+	authflow.DefaultCreateTime = authflowDescCreateTime.Default.(func() time.Time)
+	// authflowDescUpdateTime is the schema descriptor for update_time field.
+	authflowDescUpdateTime := authflowFields[16].Descriptor()
+	// authflow.DefaultUpdateTime holds the default value on creation for the update_time field.
+	authflow.DefaultUpdateTime = authflowDescUpdateTime.Default.(func() time.Time)
+	// authflow.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	authflow.UpdateDefaultUpdateTime = authflowDescUpdateTime.UpdateDefault.(func() time.Time)
 	authenticatorFields := schema.Authenticator{}.Fields()
 	_ = authenticatorFields
 	// authenticatorDescUserID is the schema descriptor for user_id field.
@@ -68,16 +93,6 @@ func init() {
 	emailverificationtokenDescCreateTime := emailverificationtokenFields[6].Descriptor()
 	// emailverificationtoken.DefaultCreateTime holds the default value on creation for the create_time field.
 	emailverificationtoken.DefaultCreateTime = emailverificationtokenDescCreateTime.Default.(func() time.Time)
-	iamloginsessionFields := schema.IAMLoginSession{}.Fields()
-	_ = iamloginsessionFields
-	// iamloginsessionDescUserID is the schema descriptor for user_id field.
-	iamloginsessionDescUserID := iamloginsessionFields[1].Descriptor()
-	// iamloginsession.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
-	iamloginsession.UserIDValidator = iamloginsessionDescUserID.Validators[0].(func(string) error)
-	// iamloginsessionDescCreateTime is the schema descriptor for create_time field.
-	iamloginsessionDescCreateTime := iamloginsessionFields[2].Descriptor()
-	// iamloginsession.DefaultCreateTime holds the default value on creation for the create_time field.
-	iamloginsession.DefaultCreateTime = iamloginsessionDescCreateTime.Default.(func() time.Time)
 	loginidentifierFields := schema.LoginIdentifier{}.Fields()
 	_ = loginidentifierFields
 	// loginidentifierDescUserID is the schema descriptor for user_id field.
@@ -106,6 +121,20 @@ func init() {
 	loginidentifier.DefaultUpdateTime = loginidentifierDescUpdateTime.Default.(func() time.Time)
 	// loginidentifier.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	loginidentifier.UpdateDefaultUpdateTime = loginidentifierDescUpdateTime.UpdateDefault.(func() time.Time)
+	loginsessionFields := schema.LoginSession{}.Fields()
+	_ = loginsessionFields
+	// loginsessionDescUserID is the schema descriptor for user_id field.
+	loginsessionDescUserID := loginsessionFields[1].Descriptor()
+	// loginsession.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	loginsession.UserIDValidator = loginsessionDescUserID.Validators[0].(func(string) error)
+	// loginsessionDescAmr is the schema descriptor for amr field.
+	loginsessionDescAmr := loginsessionFields[2].Descriptor()
+	// loginsession.DefaultAmr holds the default value on creation for the amr field.
+	loginsession.DefaultAmr = loginsessionDescAmr.Default.([]string)
+	// loginsessionDescCreateTime is the schema descriptor for create_time field.
+	loginsessionDescCreateTime := loginsessionFields[3].Descriptor()
+	// loginsession.DefaultCreateTime holds the default value on creation for the create_time field.
+	loginsession.DefaultCreateTime = loginsessionDescCreateTime.Default.(func() time.Time)
 	oauthaccesstokenFields := schema.OAuthAccessToken{}.Fields()
 	_ = oauthaccesstokenFields
 	// oauthaccesstokenDescSubject is the schema descriptor for subject field.
@@ -202,10 +231,10 @@ func init() {
 	oauthtokensessionDescClientID := oauthtokensessionFields[2].Descriptor()
 	// oauthtokensession.ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
 	oauthtokensession.ClientIDValidator = oauthtokensessionDescClientID.Validators[0].(func(string) error)
-	// oauthtokensessionDescIamLoginSessionID is the schema descriptor for iam_login_session_id field.
-	oauthtokensessionDescIamLoginSessionID := oauthtokensessionFields[3].Descriptor()
-	// oauthtokensession.IamLoginSessionIDValidator is a validator for the "iam_login_session_id" field. It is called by the builders before save.
-	oauthtokensession.IamLoginSessionIDValidator = oauthtokensessionDescIamLoginSessionID.Validators[0].(func(string) error)
+	// oauthtokensessionDescLoginSessionID is the schema descriptor for login_session_id field.
+	oauthtokensessionDescLoginSessionID := oauthtokensessionFields[3].Descriptor()
+	// oauthtokensession.LoginSessionIDValidator is a validator for the "login_session_id" field. It is called by the builders before save.
+	oauthtokensession.LoginSessionIDValidator = oauthtokensessionDescLoginSessionID.Validators[0].(func(string) error)
 	// oauthtokensessionDescRefreshFamilyID is the schema descriptor for refresh_family_id field.
 	oauthtokensessionDescRefreshFamilyID := oauthtokensessionFields[4].Descriptor()
 	// oauthtokensession.RefreshFamilyIDValidator is a validator for the "refresh_family_id" field. It is called by the builders before save.
@@ -246,16 +275,20 @@ func init() {
 	oidcauthorizationrequestDescPkceChallengeMethod := oidcauthorizationrequestFields[9].Descriptor()
 	// oidcauthorizationrequest.DefaultPkceChallengeMethod holds the default value on creation for the pkce_challenge_method field.
 	oidcauthorizationrequest.DefaultPkceChallengeMethod = oidcauthorizationrequestDescPkceChallengeMethod.Default.(string)
+	// oidcauthorizationrequestDescAmr is the schema descriptor for amr field.
+	oidcauthorizationrequestDescAmr := oidcauthorizationrequestFields[13].Descriptor()
+	// oidcauthorizationrequest.DefaultAmr holds the default value on creation for the amr field.
+	oidcauthorizationrequest.DefaultAmr = oidcauthorizationrequestDescAmr.Default.([]string)
 	// oidcauthorizationrequestDescDone is the schema descriptor for done field.
-	oidcauthorizationrequestDescDone := oidcauthorizationrequestFields[13].Descriptor()
+	oidcauthorizationrequestDescDone := oidcauthorizationrequestFields[14].Descriptor()
 	// oidcauthorizationrequest.DefaultDone holds the default value on creation for the done field.
 	oidcauthorizationrequest.DefaultDone = oidcauthorizationrequestDescDone.Default.(bool)
 	// oidcauthorizationrequestDescCreateTime is the schema descriptor for create_time field.
-	oidcauthorizationrequestDescCreateTime := oidcauthorizationrequestFields[15].Descriptor()
+	oidcauthorizationrequestDescCreateTime := oidcauthorizationrequestFields[16].Descriptor()
 	// oidcauthorizationrequest.DefaultCreateTime holds the default value on creation for the create_time field.
 	oidcauthorizationrequest.DefaultCreateTime = oidcauthorizationrequestDescCreateTime.Default.(func() time.Time)
 	// oidcauthorizationrequestDescUpdateTime is the schema descriptor for update_time field.
-	oidcauthorizationrequestDescUpdateTime := oidcauthorizationrequestFields[16].Descriptor()
+	oidcauthorizationrequestDescUpdateTime := oidcauthorizationrequestFields[17].Descriptor()
 	// oidcauthorizationrequest.DefaultUpdateTime holds the default value on creation for the update_time field.
 	oidcauthorizationrequest.DefaultUpdateTime = oidcauthorizationrequestDescUpdateTime.Default.(func() time.Time)
 	// oidcauthorizationrequest.UpdateDefaultUpdateTime holds the default value on update for the update_time field.

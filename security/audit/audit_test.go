@@ -138,7 +138,7 @@ func TestMiddlewareCreateFallbackRedactionErrorsAndAuthzDenied(t *testing.T) {
 	const (
 		createOp  = "/plateau.iam.user.v1.UserService/CreateUser"
 		setPwdOp  = "/plateau.iam.user.v1.UserService/SetUserPassword"
-		loginOp   = "/plateau.iam.authn.v1.AuthnService/Login"
+		loginOp   = "/plateau.iam.authn.v1.AuthnService/SubmitPassword"
 		listOp    = "/plateau.iam.user.v1.UserService/ListUsers"
 		disableOp = "/plateau.iam.user.v1.UserService/DisableUser"
 	)
@@ -238,12 +238,13 @@ func TestMiddlewareCreateFallbackRedactionErrorsAndAuthzDenied(t *testing.T) {
 		}
 	})
 
-	t.Run("public Login enriches Actor and Resource via context slot and redacts password", func(t *testing.T) {
+	t.Run("public SubmitPassword enriches Actor and Resource via context slot and redacts password", func(t *testing.T) {
 		rec := &recordingAuditor{}
 		mw := Server(rec, security.WithRulesFuncs(rulesFn))
 
 		const rawLoginPwd = "test-login-cred-val"
-		req := &iamauthnpb.LoginRequest{
+		req := &iamauthnpb.SubmitPasswordRequest{
+			FlowId:   "flow-1",
 			Email:    "alice@example.com",
 			Password: rawLoginPwd,
 		}
@@ -251,7 +252,7 @@ func TestMiddlewareCreateFallbackRedactionErrorsAndAuthzDenied(t *testing.T) {
 		_, err := mw(func(hCtx context.Context, _ any) (any, error) {
 			SetActor(hCtx, security.Actor{Type: security.ActorTypeHuman, ID: "user-alice"})
 			SetResource(hCtx, "iam.plateau.dev/User", "users/user-alice")
-			return &iamauthnpb.LoginResponse{}, nil
+			return &iamauthnpb.SubmitPasswordResponse{}, nil
 		})(ctx, req)
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)

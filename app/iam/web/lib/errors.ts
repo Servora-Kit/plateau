@@ -1,5 +1,14 @@
+import {
+  AuthnErrorReason,
+  isAuthnErrorReason,
+} from "@plateau/api/plateau/iam/authn/v1/authn.errors"
 import { ApiError, parseKratosError } from "@servora/proto-utils/errors"
 
+export function authnErrorReason(error: unknown): AuthnErrorReason | null {
+  if (!(error instanceof ApiError)) return null
+  const reason = parseKratosError(error)?.reason
+  return isAuthnErrorReason(reason) ? reason : null
+}
 const invalidTokenReasons: Record<string, true> = {
   ACCOUNT_ERROR_REASON_INVALID_TOKEN: true,
   ACCOUNT_ERROR_REASON_TOKEN_EXPIRED: true,
@@ -24,9 +33,11 @@ export function isInvalidOneTimeToken(error: unknown): boolean {
 }
 
 export function isInvalidPassword(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false
+  const reason = parseKratosError(error)?.reason
   return (
-    error instanceof ApiError &&
-    parseKratosError(error)?.reason === "ACCOUNT_ERROR_REASON_INVALID_PASSWORD"
+    reason === "ACCOUNT_ERROR_REASON_INVALID_PASSWORD" ||
+    reason === AuthnErrorReason.AUTHN_ERROR_REASON_INVALID_PASSWORD
   )
 }
 

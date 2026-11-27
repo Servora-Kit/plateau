@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package plateau.iam.authn.v1;
 
-import "buf/validate/validate.proto";
 import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
 import "plateau/iam/user/v1/user.proto";
 import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
@@ -15,17 +15,73 @@ import "servora/redact/v3/redact.proto";
 
 option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1;iamauthnv1";
 
-// AuthnService owns email/password authentication.
+// AuthnService owns server-side browser authentication flows.
 service AuthnService {
   option (plateau.security.authz.v1.service_default) = {mode: AUTHZ_MODE_NONE};
-  // Login verifies credentials and establishes one opaque browser session.
-  rpc Login(LoginRequest) returns (LoginResponse) {
+  option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_PUBLIC};
+
+  // CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+  rpc CreateAuthFlow(CreateAuthFlowRequest) returns (CreateAuthFlowResponse) {
     option (google.api.http) = {
-      post: "/v1/iam/authn/login"
+      post: "/v1/iam/authn/flows"
       body: "*"
     };
-    option (google.api.method_signature) = "email,password";
-    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
+  }
+
+  // GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+  rpc GetAuthFlow(GetAuthFlowRequest) returns (GetAuthFlowResponse) {
+    option (google.api.http) = {get: "/v1/iam/authn/flows/{flow_id}"};
+    option (google.api.method_signature) = "flow_id";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
+  }
+
+  // SubmitPassword verifies email and password credentials and advances or completes the flow.
+  rpc SubmitPassword(SubmitPasswordRequest) returns (SubmitPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/flows/{flow_id}:submitPassword"
+      body: "*"
+    };
+    option (google.api.method_signature) = "flow_id,email,password";
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
+  }
+
+  // CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+  rpc CompleteUpdatePassword(CompleteUpdatePasswordRequest) returns (CompleteUpdatePasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/flows/{flow_id}:completeUpdatePassword"
+      body: "*"
+    };
+    option (google.api.method_signature) = "flow_id,new_password";
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
+  }
+
+  // ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+  rpc ResetAuthFlow(ResetAuthFlowRequest) returns (ResetAuthFlowResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/flows/{flow_id}:reset"
+      body: "*"
+    };
+    option (google.api.method_signature) = "flow_id";
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
+  }
+
+  // CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+  rpc CancelAuthFlow(CancelAuthFlowRequest) returns (CancelAuthFlowResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/flows/{flow_id}:cancel"
+      body: "*"
+    };
+    option (google.api.method_signature) = "flow_id";
     option (plateau.security.audit.v1.rule) = {
       mode: AUDIT_MODE_ENABLED
       category: AUDIT_CATEGORY_AUTHN
@@ -33,27 +89,115 @@ service AuthnService {
   }
 }
 
-// AuthnErrorReason contains intentionally generic credential failures.
+// AuthnErrorReason contains authentication flow failures.
 enum AuthnErrorReason {
   option (servora.errors.v1.default_code) = 500;
 
   AUTHN_ERROR_REASON_UNSPECIFIED = 0;
   AUTHN_ERROR_REASON_INVALID_CREDENTIALS = 1 [(servora.errors.v1.code) = 401];
+  AUTHN_ERROR_REASON_FLOW_NOT_FOUND = 2 [(servora.errors.v1.code) = 404];
+  AUTHN_ERROR_REASON_FLOW_EXPIRED = 3 [(servora.errors.v1.code) = 410];
+  AUTHN_ERROR_REASON_FLOW_INVALIDATED = 4 [(servora.errors.v1.code) = 409];
+  AUTHN_ERROR_REASON_INVALID_PASSWORD = 5 [(servora.errors.v1.code) = 400];
+  AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID = 6 [(servora.errors.v1.code) = 400];
 }
 
-message LoginRequest {
+// AuthFlowState represents the externally visible stage of an authentication flow.
+enum AuthFlowState {
+  AUTH_FLOW_STATE_UNSPECIFIED = 0;
+  AUTH_FLOW_STATE_AUTHENTICATE = 1;
+  AUTH_FLOW_STATE_REQUIRED_ACTION = 2;
+  AUTH_FLOW_STATE_COMPLETED = 3;
+}
+
+// AuthFactorMethod identifies an authentication factor accepted in the current stage.
+enum AuthFactorMethod {
+  AUTH_FACTOR_METHOD_UNSPECIFIED = 0;
+  AUTH_FACTOR_METHOD_PASSWORD = 1;
+}
+
+// AuthFlowOidcContext exposes non-sensitive OIDC application context for the login UI.
+message AuthFlowOidcContext {
+  string client_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// AuthFlow is the client-facing snapshot of a browser-bound authentication flow.
+message AuthFlow {
+  // Opaque flow identifier; empty when CreateAuthFlow short-circuits on an existing login session.
+  string flow_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  AuthFlowState state = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated AuthFactorMethod available_methods = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated string completed_amr = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated plateau.iam.user.v1.UserRequiredAction remaining_required_actions = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  plateau.iam.user.v1.UserRequiredAction next_required_action = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Read-only display email populated only after primary authentication succeeds.
+  string email = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+  AuthFlowOidcContext oidc = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp expires_time = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp step_expires_time = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Relative browser continuation target populated only when state is COMPLETED.
+  string continue_url = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Authenticated user snapshot populated only when state is COMPLETED.
+  plateau.iam.user.v1.User user = 12 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message CreateAuthFlowRequest {
+  string oidc_request_id = 1 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message CreateAuthFlowResponse {
+  AuthFlow flow = 1;
+}
+
+message GetAuthFlowRequest {
+  string flow_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetAuthFlowResponse {
+  AuthFlow flow = 1;
+}
+
+message SubmitPasswordRequest {
+  string flow_id = 1 [(google.api.field_behavior) = REQUIRED];
   // Service canonicalizes email before locating the Login Identifier.
-  string email = 1 [(google.api.field_behavior) = REQUIRED];
-  string password = 2 [
+  string email = 2 [(google.api.field_behavior) = REQUIRED];
+  // Validated in the authentication domain layer to preserve uniform credential errors and audit records.
+  string password = 3 [
     (google.api.field_behavior) = REQUIRED,
-    (buf.validate.field).string = {
-      min_len: 8
-      max_len: 128
-    },
     (servora.redact.v3.value).string = ""
   ];
 }
 
-message LoginResponse {
-  plateau.iam.user.v1.User user = 1;
+message SubmitPasswordResponse {
+  AuthFlow flow = 1;
+}
+
+message CompleteUpdatePasswordRequest {
+  string flow_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // 8-128 byte policy is enforced in the domain layer after flow ownership/state checks.
+  string new_password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (servora.redact.v3.value).string = ""
+  ];
+}
+
+message CompleteUpdatePasswordResponse {
+  AuthFlow flow = 1;
+}
+
+message ResetAuthFlowRequest {
+  string flow_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message ResetAuthFlowResponse {
+  AuthFlow flow = 1;
+}
+
+message CancelAuthFlowRequest {
+  string flow_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message CancelAuthFlowResponse {
+  // RFC 6749/9207 error redirect URI when an active OIDC request was aborted; empty otherwise.
+  string redirect_uri = 1;
 }

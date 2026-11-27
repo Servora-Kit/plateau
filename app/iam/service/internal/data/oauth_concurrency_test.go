@@ -107,7 +107,7 @@ func prepareOAuthGrant(t *testing.T, client *entmodel.Client, kind string, login
 	}
 	_, err := client.OIDCAuthorizationRequest.Create().SetID("request").SetClientID("web").
 		SetRedirectURI("https://web.example/callback").SetResponseType("code").SetScopes(grant.Scopes).
-		SetPkceChallenge("challenge").SetSubject(login.UserID).SetIamLoginSessionID(login.ID).SetAuthTime(login.AuthTime).
+		SetPkceChallenge("challenge").SetSubject(login.UserID).SetLoginSessionID(login.ID).SetAuthTime(login.AuthTime).
 		SetDone(true).SetExpiresTime(time.Now().Add(time.Hour)).Save(t.Context())
 	if err != nil {
 		t.Fatal(err)

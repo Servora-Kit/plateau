@@ -9,6 +9,49 @@ import (
 )
 
 var (
+	// AuthFlowsColumns holds the columns for the "auth_flows" table.
+	AuthFlowsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "owner_hash", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "completed", "cancelled", "reset", "invalidated"}, Default: "active"},
+		{Name: "state", Type: field.TypeEnum, Enums: []string{"authenticate", "required_action", "completed"}, Default: "authenticate"},
+		{Name: "oidc_request_id", Type: field.TypeString, Nullable: true},
+		{Name: "user_id", Type: field.TypeString, Nullable: true},
+		{Name: "user_email", Type: field.TypeString, Nullable: true},
+		{Name: "user_etag", Type: field.TypeString, Nullable: true},
+		{Name: "authenticator_id", Type: field.TypeString, Nullable: true},
+		{Name: "password_authenticator_id", Type: field.TypeString, Nullable: true},
+		{Name: "password_changed_time", Type: field.TypeTime, Nullable: true},
+		{Name: "completed_amr", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "required_actions", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "expires_time", Type: field.TypeTime},
+		{Name: "step_expires_time", Type: field.TypeTime, Nullable: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+	}
+	// AuthFlowsTable holds the schema information for the "auth_flows" table.
+	AuthFlowsTable = &schema.Table{
+		Name:       "auth_flows",
+		Columns:    AuthFlowsColumns,
+		PrimaryKey: []*schema.Column{AuthFlowsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "authflow_user_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{AuthFlowsColumns[5], AuthFlowsColumns[2]},
+			},
+			{
+				Name:    "authflow_oidc_request_id",
+				Unique:  false,
+				Columns: []*schema.Column{AuthFlowsColumns[4]},
+			},
+			{
+				Name:    "authflow_expires_time",
+				Unique:  false,
+				Columns: []*schema.Column{AuthFlowsColumns[13]},
+			},
+		},
+	}
 	// AuthenticatorsColumns holds the columns for the "authenticators" table.
 	AuthenticatorsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -92,26 +135,6 @@ var (
 			},
 		},
 	}
-	// IamLoginSessionsColumns holds the columns for the "iam_login_sessions" table.
-	IamLoginSessionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString},
-		{Name: "user_id", Type: field.TypeString},
-		{Name: "create_time", Type: field.TypeTime},
-		{Name: "revoked_time", Type: field.TypeTime, Nullable: true},
-	}
-	// IamLoginSessionsTable holds the schema information for the "iam_login_sessions" table.
-	IamLoginSessionsTable = &schema.Table{
-		Name:       "iam_login_sessions",
-		Columns:    IamLoginSessionsColumns,
-		PrimaryKey: []*schema.Column{IamLoginSessionsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "iamloginsession_user_id_revoked_time",
-				Unique:  false,
-				Columns: []*schema.Column{IamLoginSessionsColumns[1], IamLoginSessionsColumns[3]},
-			},
-		},
-	}
 	// LoginIdentifiersColumns holds the columns for the "login_identifiers" table.
 	LoginIdentifiersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
@@ -143,6 +166,27 @@ var (
 				Name:    "loginidentifier_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{LoginIdentifiersColumns[1]},
+			},
+		},
+	}
+	// LoginSessionsColumns holds the columns for the "login_sessions" table.
+	LoginSessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "amr", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "revoked_time", Type: field.TypeTime, Nullable: true},
+	}
+	// LoginSessionsTable holds the schema information for the "login_sessions" table.
+	LoginSessionsTable = &schema.Table{
+		Name:       "login_sessions",
+		Columns:    LoginSessionsColumns,
+		PrimaryKey: []*schema.Column{LoginSessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "loginsession_user_id_revoked_time",
+				Unique:  false,
+				Columns: []*schema.Column{LoginSessionsColumns[1], LoginSessionsColumns[4]},
 			},
 		},
 	}
@@ -280,7 +324,7 @@ var (
 		{Name: "id", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
 		{Name: "client_id", Type: field.TypeString},
-		{Name: "iam_login_session_id", Type: field.TypeString},
+		{Name: "login_session_id", Type: field.TypeString},
 		{Name: "refresh_family_id", Type: field.TypeString},
 		{Name: "scopes", Type: field.TypeJSON},
 		{Name: "auth_time", Type: field.TypeTime},
@@ -296,7 +340,7 @@ var (
 		PrimaryKey: []*schema.Column{OauthTokenSessionsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "oauthtokensession_iam_login_session_id_revoked_time",
+				Name:    "oauthtokensession_login_session_id_revoked_time",
 				Unique:  false,
 				Columns: []*schema.Column{OauthTokenSessionsColumns[3], OauthTokenSessionsColumns[8]},
 			},
@@ -330,8 +374,9 @@ var (
 		{Name: "pkce_challenge", Type: field.TypeString},
 		{Name: "pkce_challenge_method", Type: field.TypeString, Default: "S256"},
 		{Name: "subject", Type: field.TypeString, Nullable: true},
-		{Name: "iam_login_session_id", Type: field.TypeString, Nullable: true},
+		{Name: "login_session_id", Type: field.TypeString, Nullable: true},
 		{Name: "auth_time", Type: field.TypeTime, Nullable: true},
+		{Name: "amr", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "done", Type: field.TypeBool, Default: false},
 		{Name: "expires_time", Type: field.TypeTime},
 		{Name: "create_time", Type: field.TypeTime},
@@ -346,17 +391,17 @@ var (
 			{
 				Name:    "oidcauthorizationrequest_client_id_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[1], OidcAuthorizationRequestsColumns[14]},
+				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[1], OidcAuthorizationRequestsColumns[15]},
 			},
 			{
 				Name:    "oidcauthorizationrequest_subject_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[10], OidcAuthorizationRequestsColumns[14]},
+				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[10], OidcAuthorizationRequestsColumns[15]},
 			},
 			{
 				Name:    "oidcauthorizationrequest_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[14]},
+				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[15]},
 			},
 		},
 	}
@@ -484,11 +529,12 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AuthFlowsTable,
 		AuthenticatorsTable,
 		EmailVerificationTokensTable,
 		SessionsTable,
-		IamLoginSessionsTable,
 		LoginIdentifiersTable,
+		LoginSessionsTable,
 		OauthAccessTokensTable,
 		OauthAuthorizationCodesTable,
 		OauthClientsTable,
@@ -503,6 +549,9 @@ var (
 )
 
 func init() {
+	AuthFlowsTable.Annotation = &entsql.Annotation{
+		Table: "auth_flows",
+	}
 	AuthenticatorsTable.Annotation = &entsql.Annotation{
 		Table: "authenticators",
 	}
@@ -512,11 +561,11 @@ func init() {
 	SessionsTable.Annotation = &entsql.Annotation{
 		Table: "sessions",
 	}
-	IamLoginSessionsTable.Annotation = &entsql.Annotation{
-		Table: "iam_login_sessions",
-	}
 	LoginIdentifiersTable.Annotation = &entsql.Annotation{
 		Table: "login_identifiers",
+	}
+	LoginSessionsTable.Annotation = &entsql.Annotation{
+		Table: "login_sessions",
 	}
 	OauthAccessTokensTable.Annotation = &entsql.Annotation{
 		Table: "oauth_access_tokens",

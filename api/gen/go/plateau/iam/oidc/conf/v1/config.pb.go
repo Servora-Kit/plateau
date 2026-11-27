@@ -36,6 +36,7 @@ type OIDC struct {
 	// 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
 	Clients               []*OAuthClient       `protobuf:"bytes,4,rep,name=clients,proto3" json:"clients,omitempty"`
 	ServiceAccessTokenTtl *durationpb.Duration `protobuf:"bytes,5,opt,name=service_access_token_ttl,json=serviceAccessTokenTtl,proto3" json:"service_access_token_ttl,omitempty"`
+	AuthRequestTtl        *durationpb.Duration `protobuf:"bytes,6,opt,name=auth_request_ttl,json=authRequestTtl,proto3" json:"auth_request_ttl,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -101,6 +102,13 @@ func (x *OIDC) GetClients() []*OAuthClient {
 func (x *OIDC) GetServiceAccessTokenTtl() *durationpb.Duration {
 	if x != nil {
 		return x.ServiceAccessTokenTtl
+	}
+	return nil
+}
+
+func (x *OIDC) GetAuthRequestTtl() *durationpb.Duration {
+	if x != nil {
+		return x.AuthRequestTtl
 	}
 	return nil
 }
@@ -206,14 +214,16 @@ var File_plateau_iam_oidc_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_iam_oidc_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"%plateau/iam/oidc/conf/v1/config.proto\x12\x18plateau.iam.oidc.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\x85\x03\n" +
+	"%plateau/iam/oidc/conf/v1/config.proto\x12\x18plateau.iam.oidc.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xd5\x03\n" +
 	"\x04OIDC\x12*\n" +
 	"\x06issuer\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x06issuer\x88\x01\x01\x12<\n" +
 	"\x10signing_key_path\x18\x02 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x01R\x0esigningKeyPath\x88\x01\x01\x12:\n" +
 	"\x0fcrypto_key_path\x18\x03 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x02R\rcryptoKeyPath\x88\x01\x01\x12?\n" +
 	"\aclients\x18\x04 \x03(\v2%.plateau.iam.oidc.conf.v1.OAuthClientR\aclients\x12\\\n" +
 	"\x18service_access_token_ttl\x18\x05 \x01(\v2\x19.google.protobuf.DurationB\b\x8a\xce\x18\x04\n" +
-	"\x025mR\x15serviceAccessTokenTtl:\x04\x80\xce\x18\x01B\t\n" +
+	"\x025mR\x15serviceAccessTokenTtl\x12N\n" +
+	"\x10auth_request_ttl\x18\x06 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
+	"\x0330mR\x0eauthRequestTtl:\x04\x80\xce\x18\x01B\t\n" +
 	"\a_issuerB\x13\n" +
 	"\x11_signing_key_pathB\x12\n" +
 	"\x10_crypto_key_path\"\xd5\x02\n" +
@@ -250,11 +260,12 @@ var file_plateau_iam_oidc_conf_v1_config_proto_goTypes = []any{
 var file_plateau_iam_oidc_conf_v1_config_proto_depIdxs = []int32{
 	1, // 0: plateau.iam.oidc.conf.v1.OIDC.clients:type_name -> plateau.iam.oidc.conf.v1.OAuthClient
 	2, // 1: plateau.iam.oidc.conf.v1.OIDC.service_access_token_ttl:type_name -> google.protobuf.Duration
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 2: plateau.iam.oidc.conf.v1.OIDC.auth_request_ttl:type_name -> google.protobuf.Duration
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_plateau_iam_oidc_conf_v1_config_proto_init() }

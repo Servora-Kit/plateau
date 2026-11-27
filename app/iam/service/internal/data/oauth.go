@@ -50,7 +50,7 @@ func (repo *oauthRepository) CompleteAuthorizationRequest(ctx context.Context, r
 			}
 			return err
 		}
-		login, err := tx.IAMLoginSession.Get(ctx, loginID)
+		login, err := tx.LoginSession.Get(ctx, loginID)
 		if entmodel.IsNotFound(err) {
 			return biz.ErrOAuthGrantInvalid
 		}
@@ -60,6 +60,10 @@ func (repo *oauthRepository) CompleteAuthorizationRequest(ctx context.Context, r
 		if login.UserID != userID || login.RevokedTime != nil {
 			return biz.ErrOAuthGrantInvalid
 		}
+		amr := biz.NormalizeAMR(login.Amr)
+		if len(amr) == 0 {
+			return biz.ErrOAuthGrantInvalid
+		}
 		updated, err := tx.OIDCAuthorizationRequest.Update().
 			Where(
 				oidcauthorizationrequest.IDEQ(requestID),
@@ -67,8 +71,9 @@ func (repo *oauthRepository) CompleteAuthorizationRequest(ctx context.Context, r
 				oidcauthorizationrequest.ExpiresTimeGT(now),
 			).
 			SetSubject(userID).
-			SetIamLoginSessionID(loginID).
+			SetLoginSessionID(loginID).
 			SetAuthTime(login.CreateTime.UTC()).
+			SetAmr(amr).
 			SetDone(true).
 			Save(ctx)
 		if err != nil {
@@ -103,7 +108,7 @@ func (repo *oauthRepository) SaveAuthorizationCode(ctx context.Context, requestI
 	if err != nil {
 		return translateEntError(err)
 	}
-	if initialRequest.Subject == nil || *initialRequest.Subject == "" || initialRequest.IamLoginSessionID == nil || *initialRequest.IamLoginSessionID == "" {
+	if initialRequest.Subject == nil || *initialRequest.Subject == "" || initialRequest.LoginSessionID == nil || *initialRequest.LoginSessionID == "" {
 		return biz.ErrOAuthGrantInvalid
 	}
 	subject := *initialRequest.Subject
@@ -131,10 +136,10 @@ func (repo *oauthRepository) SaveAuthorizationCode(ctx context.Context, requestI
 		if err != nil {
 			return translateEntError(err)
 		}
-		if !request.Done || !request.ExpiresTime.After(now) || request.Subject == nil || *request.Subject != subject || request.IamLoginSessionID == nil || *request.IamLoginSessionID == "" {
+		if !request.Done || !request.ExpiresTime.After(now) || request.Subject == nil || *request.Subject != subject || request.LoginSessionID == nil || *request.LoginSessionID == "" {
 			return biz.ErrOAuthGrantInvalid
 		}
-		login, err := tx.IAMLoginSession.Get(ctx, *request.IamLoginSessionID)
+		login, err := tx.LoginSession.Get(ctx, *request.LoginSessionID)
 		if entmodel.IsNotFound(err) {
 			return biz.ErrOAuthGrantInvalid
 		}
@@ -192,7 +197,7 @@ func (repo *oauthRepository) Issue(ctx context.Context, grant biz.OAuthGrant, is
 			if session.UserID != grant.Subject || session.ClientID != grant.ClientID || session.RevokedTime != nil {
 				return biz.ErrOAuthGrantInvalid
 			}
-			loginID, familyID = session.IamLoginSessionID, session.RefreshFamilyID
+			loginID, familyID = session.LoginSessionID, session.RefreshFamilyID
 			token, err := tx.OAuthRefreshToken.Get(ctx, grant.RefreshTokenID)
 			if err != nil {
 				return err
@@ -231,7 +236,7 @@ func (repo *oauthRepository) Issue(ctx context.Context, grant biz.OAuthGrant, is
 			if err != nil {
 				return err
 			}
-			if !request.Done || request.IamLoginSessionID == nil || *request.IamLoginSessionID != loginID {
+			if !request.Done || request.LoginSessionID == nil || *request.LoginSessionID != loginID {
 				return biz.ErrOAuthGrantInvalid
 			}
 			sessionID, err = biz.NewUserID()
@@ -246,7 +251,7 @@ func (repo *oauthRepository) Issue(ctx context.Context, grant biz.OAuthGrant, is
 				return err
 			}
 		}
-		login, err := tx.IAMLoginSession.Get(ctx, loginID)
+		login, err := tx.LoginSession.Get(ctx, loginID)
 		if err != nil {
 			return err
 		}
@@ -255,7 +260,7 @@ func (repo *oauthRepository) Issue(ctx context.Context, grant biz.OAuthGrant, is
 		}
 		if grant.TokenSessionID == "" {
 			_, err := tx.OAuthTokenSession.Create().SetID(sessionID).SetUserID(grant.Subject).SetClientID(grant.ClientID).
-				SetIamLoginSessionID(loginID).SetRefreshFamilyID(familyID).SetScopes(grant.Scopes).SetAuthTime(login.CreateTime).SetAmr(grant.AMR).Save(ctx)
+				SetLoginSessionID(loginID).SetRefreshFamilyID(familyID).SetScopes(grant.Scopes).SetAuthTime(login.CreateTime).SetAmr(grant.AMR).Save(ctx)
 			if err != nil {
 				return err
 			}

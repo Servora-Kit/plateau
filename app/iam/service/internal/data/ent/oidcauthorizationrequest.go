@@ -38,10 +38,12 @@ type OIDCAuthorizationRequest struct {
 	PkceChallengeMethod string `json:"pkce_challenge_method,omitempty"`
 	// Subject holds the value of the "subject" field.
 	Subject *string `json:"subject,omitempty"`
-	// IamLoginSessionID holds the value of the "iam_login_session_id" field.
-	IamLoginSessionID *string `json:"iam_login_session_id,omitempty"`
+	// LoginSessionID holds the value of the "login_session_id" field.
+	LoginSessionID *string `json:"login_session_id,omitempty"`
 	// AuthTime holds the value of the "auth_time" field.
 	AuthTime *time.Time `json:"auth_time,omitempty"`
+	// Amr holds the value of the "amr" field.
+	Amr []string `json:"amr,omitempty"`
 	// Done holds the value of the "done" field.
 	Done bool `json:"done,omitempty"`
 	// ExpiresTime holds the value of the "expires_time" field.
@@ -58,11 +60,11 @@ func (*OIDCAuthorizationRequest) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case oidcauthorizationrequest.FieldScopes:
+		case oidcauthorizationrequest.FieldScopes, oidcauthorizationrequest.FieldAmr:
 			values[i] = new([]byte)
 		case oidcauthorizationrequest.FieldDone:
 			values[i] = new(sql.NullBool)
-		case oidcauthorizationrequest.FieldID, oidcauthorizationrequest.FieldClientID, oidcauthorizationrequest.FieldRedirectURI, oidcauthorizationrequest.FieldResponseType, oidcauthorizationrequest.FieldResponseMode, oidcauthorizationrequest.FieldState, oidcauthorizationrequest.FieldNonce, oidcauthorizationrequest.FieldPkceChallenge, oidcauthorizationrequest.FieldPkceChallengeMethod, oidcauthorizationrequest.FieldSubject, oidcauthorizationrequest.FieldIamLoginSessionID:
+		case oidcauthorizationrequest.FieldID, oidcauthorizationrequest.FieldClientID, oidcauthorizationrequest.FieldRedirectURI, oidcauthorizationrequest.FieldResponseType, oidcauthorizationrequest.FieldResponseMode, oidcauthorizationrequest.FieldState, oidcauthorizationrequest.FieldNonce, oidcauthorizationrequest.FieldPkceChallenge, oidcauthorizationrequest.FieldPkceChallengeMethod, oidcauthorizationrequest.FieldSubject, oidcauthorizationrequest.FieldLoginSessionID:
 			values[i] = new(sql.NullString)
 		case oidcauthorizationrequest.FieldAuthTime, oidcauthorizationrequest.FieldExpiresTime, oidcauthorizationrequest.FieldCreateTime, oidcauthorizationrequest.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -152,12 +154,12 @@ func (_m *OIDCAuthorizationRequest) assignValues(columns []string, values []any)
 				_m.Subject = new(string)
 				*_m.Subject = value.String
 			}
-		case oidcauthorizationrequest.FieldIamLoginSessionID:
+		case oidcauthorizationrequest.FieldLoginSessionID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field iam_login_session_id", values[i])
+				return fmt.Errorf("unexpected type %T for field login_session_id", values[i])
 			} else if value.Valid {
-				_m.IamLoginSessionID = new(string)
-				*_m.IamLoginSessionID = value.String
+				_m.LoginSessionID = new(string)
+				*_m.LoginSessionID = value.String
 			}
 		case oidcauthorizationrequest.FieldAuthTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -165,6 +167,14 @@ func (_m *OIDCAuthorizationRequest) assignValues(columns []string, values []any)
 			} else if value.Valid {
 				_m.AuthTime = new(time.Time)
 				*_m.AuthTime = value.Time
+			}
+		case oidcauthorizationrequest.FieldAmr:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field amr", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Amr); err != nil {
+					return fmt.Errorf("unmarshal field amr: %w", err)
+				}
 			}
 		case oidcauthorizationrequest.FieldDone:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -255,8 +265,8 @@ func (_m *OIDCAuthorizationRequest) String() string {
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
-	if v := _m.IamLoginSessionID; v != nil {
-		builder.WriteString("iam_login_session_id=")
+	if v := _m.LoginSessionID; v != nil {
+		builder.WriteString("login_session_id=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
@@ -264,6 +274,9 @@ func (_m *OIDCAuthorizationRequest) String() string {
 		builder.WriteString("auth_time=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("amr=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Amr))
 	builder.WriteString(", ")
 	builder.WriteString("done=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Done))

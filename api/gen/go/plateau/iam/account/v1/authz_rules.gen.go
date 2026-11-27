@@ -9,9 +9,6 @@ import (
 
 // _authzRules is the immutable backing store for AuthzRules.
 var _authzRules = map[string]*v1.AuthzRule{
-	"/plateau.iam.account.v1.AccountService/ChangeInitialPassword": {
-		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
-	},
 	"/plateau.iam.account.v1.AccountService/ChangePassword": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},

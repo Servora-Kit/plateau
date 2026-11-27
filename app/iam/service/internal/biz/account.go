@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -341,68 +340,6 @@ func (uc *AccountUsecase) ChangePassword(ctx context.Context, userID, currentSes
 		return fmt.Errorf("replace password: %w", err)
 	}
 	return nil
-}
-
-// ChangeInitialPassword verifies the initial password without a prior session, clears UPDATE_PASSWORD, and creates a normal login session.
-func (uc *AccountUsecase) ChangeInitialPassword(ctx context.Context, email, currentPassword, newPassword string) (*LoginSession, error) {
-	canonical := security.NormalizeEmail(email)
-	if canonical == "" || currentPassword == "" {
-		return nil, ErrUnauthenticated
-	}
-	user, err := uc.users.FindByEmail(ctx, canonical)
-	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return nil, ErrUnauthenticated
-		}
-		return nil, fmt.Errorf("find initial-password user: %w", err)
-	}
-	if user.GetStatus() != userpb.UserStatus_USER_STATUS_ACTIVE || !user.GetEmailVerified() {
-		return nil, ErrUnauthenticated
-	}
-	credential, err := uc.credentials.FindActivePassword(ctx, user.GetUserId())
-	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return nil, ErrUnauthenticated
-		}
-		return nil, fmt.Errorf("find initial-password credential: %w", err)
-	}
-	match, _, err := password.Compare(currentPassword, credential.PasswordHash)
-	if err != nil || !match {
-		return nil, ErrUnauthenticated
-	}
-	if !slices.Contains(user.GetRequiredActions(), userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD) || len(user.GetRequiredActions()) != 1 {
-		return nil, ErrAccountInvalidState
-	}
-	if err := ValidatePassword(newPassword); err != nil {
-		return nil, err
-	}
-	if newPassword == currentPassword {
-		return nil, ErrInvalidPassword
-	}
-	same, _, err := password.Compare(newPassword, credential.PasswordHash)
-	if err != nil {
-		return nil, fmt.Errorf("compare new initial password: %w", err)
-	}
-	if same {
-		return nil, ErrInvalidPassword
-	}
-	expected := *credential
-	newHash, err := password.Hash(newPassword)
-	if err != nil {
-		return nil, fmt.Errorf("hash new initial password: %w", err)
-	}
-	login, err := uc.credentials.CompleteInitialPassword(ctx, expected, user.GetEtag(), newHash, uc.now())
-	if err != nil {
-		switch {
-		case errors.Is(err, ErrNotFound), errors.Is(err, ErrUserDisabled), errors.Is(err, ErrUserNotActive), errors.Is(err, ErrInvalidCredentials):
-			return nil, ErrUnauthenticated
-		case errors.Is(err, ErrAccountInvalidState), errors.Is(err, ErrUserEtagMismatch), errors.Is(err, ErrMutationMiss):
-			return nil, ErrAccountInvalidState
-		default:
-			return nil, err
-		}
-	}
-	return login, nil
 }
 
 // DeleteAccount verifies the authenticated user's current password before soft-deleting the account.

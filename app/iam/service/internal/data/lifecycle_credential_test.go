@@ -6,12 +6,14 @@ import (
 	"time"
 
 	crudpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/crud/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
@@ -22,6 +24,7 @@ import (
 	corecrud "github.com/Servora-Kit/plateau/crud"
 	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
 	"github.com/Servora-Kit/plateau/security/password"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestUserVisibilityPaginationRequiredActionsAndCredentialSnapshotsSQLite(t *testing.T) {
@@ -183,6 +186,10 @@ func TestUserSoftDeleteUndeleteAndExpungeLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	flows, err := NewAuthFlowRepository(d)
+	if err != nil {
+		t.Fatal(err)
+	}
 	sessions, err := NewSessionRepository(d)
 	if err != nil {
 		t.Fatal(err)
@@ -234,24 +241,41 @@ func TestUserSoftDeleteUndeleteAndExpungeLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// SessionRepo.Create must NOT create a login session while UPDATE_PASSWORD is present.
-	gatedUser, gatedLogin, err := sessions.Create(ctx, *cred, activeTarget.GetEtag(), now)
-	if err != nil || gatedLogin != nil || len(gatedUser.GetRequiredActions()) != 1 {
-		t.Fatalf("SessionRepo.Create(gated) user=%#v login=%#v err=%v", gatedUser, gatedLogin, err)
+	// AdvanceAfterPassword must enter REQUIRED_ACTION without creating a LoginSession while UPDATE_PASSWORD is present.
+	ownerHash := biz.HashOpaqueSecret("owner-target")
+	seedFlow := func(flowID string) {
+		base := biz.EvaluateFlowProgress(nil, biz.DefaultAuthPolicy(), nil)
+		base.FlowId = flowID
+		base.ExpiresTime = timestamppb.New(now.Add(30 * time.Minute))
+		if _, err := flows.Create(ctx, base, ownerHash, "", now); err != nil {
+			t.Fatalf("flows.Create(%s): %v", flowID, err)
+		}
+	}
+	seedFlow("flow-1")
+	seedFlow("flow-concurrent")
+	gatedFlow, gatedLogin, err := flows.AdvanceAfterPassword(ctx, "flow-1", ownerHash, *cred, activeTarget.GetEtag(), []string{"pwd"}, 10*time.Minute, now)
+	if err != nil || gatedLogin != nil || gatedFlow.GetState() != authnpb.AuthFlowState_AUTH_FLOW_STATE_REQUIRED_ACTION {
+		t.Fatalf("AdvanceAfterPassword(gated) flow=%#v login=%#v err=%v", gatedFlow, gatedLogin, err)
+	}
+	if _, _, err := flows.AdvanceAfterPassword(ctx, "flow-concurrent", ownerHash, *cred, activeTarget.GetEtag(), []string{"pwd"}, 10*time.Minute, now); err != nil {
+		t.Fatalf("AdvanceAfterPassword(concurrent): %v", err)
 	}
 
-	// Clear UPDATE_PASSWORD via CompleteInitialPassword so we also get an active IAMLoginSession.
+	// CompleteUpdatePassword clears UPDATE_PASSWORD, creates LoginSession, and cascades invalidation to other active flows.
 	nextHash, err := password.Hash("next horse battery staple")
 	if err != nil {
 		t.Fatal(err)
 	}
-	loginSession, err := credentials.CompleteInitialPassword(ctx, *cred, activeTarget.GetEtag(), nextHash, now)
-	if err != nil || loginSession == nil {
-		t.Fatalf("CompleteInitialPassword: session=%#v err=%v", loginSession, err)
+	doneFlow, loginSession, err := flows.CompleteUpdatePassword(ctx, "flow-1", ownerHash, nextHash, 10*time.Minute, now)
+	if err != nil || loginSession == nil || doneFlow.GetState() != authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED {
+		t.Fatalf("CompleteUpdatePassword: flow=%#v session=%#v err=%v", doneFlow, loginSession, err)
+	}
+	if snapOther, err := flows.Get(ctx, "flow-concurrent"); err != nil || snapOther.Status != biz.AuthFlowStatusInvalidated {
+		t.Fatalf("expected concurrent active flow to be invalidated on password update, got snap=%#v err=%v", snapOther, err)
 	}
 	activeTarget, err = users.Get(ctx, targetID)
 	if err != nil || len(activeTarget.GetRequiredActions()) != 0 {
-		t.Fatalf("after CompleteInitialPassword: user=%#v err=%v", activeTarget, err)
+		t.Fatalf("after CompleteUpdatePassword: user=%#v err=%v", activeTarget, err)
 	}
 	cred, err = credentials.FindActivePassword(ctx, targetID)
 	if err != nil {
@@ -275,7 +299,7 @@ func TestUserSoftDeleteUndeleteAndExpungeLifecycle(t *testing.T) {
 		SetID("ts-1").
 		SetUserID(targetID).
 		SetClientID("web-client").
-		SetIamLoginSessionID(loginSession.ID).
+		SetLoginSessionID(loginSession.ID).
 		SetRefreshFamilyID("fam-1").
 		SetScopes([]string{"openid"}).
 		SetAmr([]string{"pwd"}).
@@ -331,7 +355,7 @@ func TestUserSoftDeleteUndeleteAndExpungeLifecycle(t *testing.T) {
 		SetScopes([]string{"openid"}).
 		SetPkceChallenge("challenge").
 		SetSubject(targetID).
-		SetIamLoginSessionID(loginSession.ID).
+		SetLoginSessionID(loginSession.ID).
 		SetAuthTime(now).
 		SetDone(true).
 		SetExpiresTime(now.Add(time.Hour)).
@@ -497,7 +521,8 @@ func TestUserSoftDeleteUndeleteAndExpungeLifecycle(t *testing.T) {
 		client.PasswordAuthenticator.Query().CountX(ctx) != 1 || // only otherID's password authenticator remains
 		client.EmailVerificationToken.Query().Where(emailverificationtoken.UserIDEQ(targetID)).CountX(ctx) != 0 ||
 		client.PasswordResetToken.Query().Where(passwordresettoken.UserIDEQ(targetID)).CountX(ctx) != 0 ||
-		client.IAMLoginSession.Query().Where(iamloginsession.UserIDEQ(targetID)).CountX(ctx) != 0 ||
+		client.AuthFlow.Query().Where(authflow.UserIDEQ(targetID)).CountX(ctx) != 0 ||
+		client.LoginSession.Query().Where(loginsession.UserIDEQ(targetID)).CountX(ctx) != 0 ||
 		client.OAuthTokenSession.Query().Where(oauthtokensession.UserIDEQ(targetID)).CountX(ctx) != 0 ||
 		client.OAuthRefreshToken.Query().Where(oauthrefreshtoken.IDEQ("rt-1")).CountX(ctx) != 0 ||
 		client.OAuthAccessToken.Query().Where(oauthaccesstoken.ActorTypeEQ(oauthaccesstoken.ActorTypeHuman), oauthaccesstoken.SubjectEQ(targetID)).CountX(ctx) != 0 {
@@ -611,7 +636,10 @@ func TestOAuthRepositoryRejectsUsersWithPendingRequiredActionsOrDeletedState(t *
 	if err := creator.CreateInitialUser(ctx, "u-oidc", "oidc@example.com", "oidc@example.com", "hash", now); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := client.IAMLoginSession.Create().SetID("login-oidc").SetUserID("u-oidc").SetCreateTime(now).Save(ctx); err != nil {
+	if _, err := client.LoginSession.Create().SetID("login-oidc").SetUserID("u-oidc").SetAmr([]string{"pwd"}).SetCreateTime(now).Save(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.LoginSession.Create().SetID("login-empty-amr").SetUserID("u-oidc").SetAmr([]string{}).SetCreateTime(now).Save(ctx); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := client.OIDCAuthorizationRequest.Create().
@@ -634,6 +662,10 @@ func TestOAuthRepositoryRejectsUsersWithPendingRequiredActionsOrDeletedState(t *
 	// Clear required_actions -> CompleteAuthorizationRequest & SaveAuthorizationCode succeed.
 	if _, err := client.User.UpdateOneID("u-oidc").SetRequiredActions([]string{}).Save(ctx); err != nil {
 		t.Fatal(err)
+	}
+	// Empty AMR on LoginSession must be rejected rather than fabricating "pwd".
+	if err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-empty-amr", now); !errors.Is(err, biz.ErrOAuthGrantInvalid) {
+		t.Fatalf("CompleteAuthorizationRequest with empty amr = %v, want ErrOAuthGrantInvalid", err)
 	}
 	if err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-oidc", now); err != nil {
 		t.Fatalf("CompleteAuthorizationRequest(clean) = %v", err)

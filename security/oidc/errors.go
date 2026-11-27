@@ -9,6 +9,10 @@ var (
 	// browser OIDC login handshake or rejected token/claims exchange.
 	ErrHandshakeInvalid = errors.New("oidc: authorization handshake is invalid")
 
+	// ErrAccessDenied indicates that the user explicitly cancelled or denied the
+	// upstream OIDC authorization request on a verified handshake.
+	ErrAccessDenied = errors.New("oidc: authorization access denied")
+
 	// ErrProviderUnavailable indicates that upstream OIDC discovery or token/userinfo
 	// transport could not be reached.
 	ErrProviderUnavailable = errors.New("oidc: upstream provider is unavailable")

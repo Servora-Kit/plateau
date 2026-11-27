@@ -9,6 +9,18 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 )
 
+// The AuthFlowFunc type is an adapter to allow the use of ordinary
+// function as AuthFlow mutator.
+type AuthFlowFunc func(context.Context, *ent.AuthFlowMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AuthFlowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AuthFlowMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuthFlowMutation", m)
+}
+
 // The AuthenticatorFunc type is an adapter to allow the use of ordinary
 // function as Authenticator mutator.
 type AuthenticatorFunc func(context.Context, *ent.AuthenticatorMutation) (ent.Value, error)
@@ -45,18 +57,6 @@ func (f HTTPSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.HTTPSessionMutation", m)
 }
 
-// The IAMLoginSessionFunc type is an adapter to allow the use of ordinary
-// function as IAMLoginSession mutator.
-type IAMLoginSessionFunc func(context.Context, *ent.IAMLoginSessionMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f IAMLoginSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.IAMLoginSessionMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IAMLoginSessionMutation", m)
-}
-
 // The LoginIdentifierFunc type is an adapter to allow the use of ordinary
 // function as LoginIdentifier mutator.
 type LoginIdentifierFunc func(context.Context, *ent.LoginIdentifierMutation) (ent.Value, error)
@@ -67,6 +67,18 @@ func (f LoginIdentifierFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginIdentifierMutation", m)
+}
+
+// The LoginSessionFunc type is an adapter to allow the use of ordinary
+// function as LoginSession mutator.
+type LoginSessionFunc func(context.Context, *ent.LoginSessionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LoginSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.LoginSessionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LoginSessionMutation", m)
 }
 
 // The OAuthAccessTokenFunc type is an adapter to allow the use of ordinary

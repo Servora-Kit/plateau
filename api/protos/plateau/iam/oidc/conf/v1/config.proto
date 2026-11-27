@@ -30,6 +30,7 @@ message OIDC {
   // 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
   repeated OAuthClient clients = 4;
   google.protobuf.Duration service_access_token_ttl = 5 [(servora.conf.v1.field) = {default: "5m"}];
+  google.protobuf.Duration auth_request_ttl = 6 [(servora.conf.v1.field) = {default: "30m"}];
 }
 
 // OAuthClient 配置使用客户端 ID 和密钥认证的应用。

@@ -120,16 +120,16 @@ func (_c *OIDCAuthorizationRequestCreate) SetNillableSubject(v *string) *OIDCAut
 	return _c
 }
 
-// SetIamLoginSessionID sets the "iam_login_session_id" field.
-func (_c *OIDCAuthorizationRequestCreate) SetIamLoginSessionID(v string) *OIDCAuthorizationRequestCreate {
-	_c.mutation.SetIamLoginSessionID(v)
+// SetLoginSessionID sets the "login_session_id" field.
+func (_c *OIDCAuthorizationRequestCreate) SetLoginSessionID(v string) *OIDCAuthorizationRequestCreate {
+	_c.mutation.SetLoginSessionID(v)
 	return _c
 }
 
-// SetNillableIamLoginSessionID sets the "iam_login_session_id" field if the given value is not nil.
-func (_c *OIDCAuthorizationRequestCreate) SetNillableIamLoginSessionID(v *string) *OIDCAuthorizationRequestCreate {
+// SetNillableLoginSessionID sets the "login_session_id" field if the given value is not nil.
+func (_c *OIDCAuthorizationRequestCreate) SetNillableLoginSessionID(v *string) *OIDCAuthorizationRequestCreate {
 	if v != nil {
-		_c.SetIamLoginSessionID(*v)
+		_c.SetLoginSessionID(*v)
 	}
 	return _c
 }
@@ -145,6 +145,12 @@ func (_c *OIDCAuthorizationRequestCreate) SetNillableAuthTime(v *time.Time) *OID
 	if v != nil {
 		_c.SetAuthTime(*v)
 	}
+	return _c
+}
+
+// SetAmr sets the "amr" field.
+func (_c *OIDCAuthorizationRequestCreate) SetAmr(v []string) *OIDCAuthorizationRequestCreate {
+	_c.mutation.SetAmr(v)
 	return _c
 }
 
@@ -245,6 +251,10 @@ func (_c *OIDCAuthorizationRequestCreate) defaults() {
 		v := oidcauthorizationrequest.DefaultPkceChallengeMethod
 		_c.mutation.SetPkceChallengeMethod(v)
 	}
+	if _, ok := _c.mutation.Amr(); !ok {
+		v := oidcauthorizationrequest.DefaultAmr
+		_c.mutation.SetAmr(v)
+	}
 	if _, ok := _c.mutation.Done(); !ok {
 		v := oidcauthorizationrequest.DefaultDone
 		_c.mutation.SetDone(v)
@@ -298,6 +308,9 @@ func (_c *OIDCAuthorizationRequestCreate) check() error {
 	}
 	if _, ok := _c.mutation.PkceChallengeMethod(); !ok {
 		return &ValidationError{Name: "pkce_challenge_method", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.pkce_challenge_method"`)}
+	}
+	if _, ok := _c.mutation.Amr(); !ok {
+		return &ValidationError{Name: "amr", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.amr"`)}
 	}
 	if _, ok := _c.mutation.Done(); !ok {
 		return &ValidationError{Name: "done", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.done"`)}
@@ -386,13 +399,17 @@ func (_c *OIDCAuthorizationRequestCreate) createSpec() (*OIDCAuthorizationReques
 		_spec.SetField(oidcauthorizationrequest.FieldSubject, field.TypeString, value)
 		_node.Subject = &value
 	}
-	if value, ok := _c.mutation.IamLoginSessionID(); ok {
-		_spec.SetField(oidcauthorizationrequest.FieldIamLoginSessionID, field.TypeString, value)
-		_node.IamLoginSessionID = &value
+	if value, ok := _c.mutation.LoginSessionID(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldLoginSessionID, field.TypeString, value)
+		_node.LoginSessionID = &value
 	}
 	if value, ok := _c.mutation.AuthTime(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldAuthTime, field.TypeTime, value)
 		_node.AuthTime = &value
+	}
+	if value, ok := _c.mutation.Amr(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldAmr, field.TypeJSON, value)
+		_node.Amr = value
 	}
 	if value, ok := _c.mutation.Done(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldDone, field.TypeBool, value)

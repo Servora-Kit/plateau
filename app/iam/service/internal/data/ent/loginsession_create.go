@@ -10,30 +10,36 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 )
 
-// IAMLoginSessionCreate is the builder for creating a IAMLoginSession entity.
-type IAMLoginSessionCreate struct {
+// LoginSessionCreate is the builder for creating a LoginSession entity.
+type LoginSessionCreate struct {
 	config
-	mutation *IAMLoginSessionMutation
+	mutation *LoginSessionMutation
 	hooks    []Hook
 }
 
 // SetUserID sets the "user_id" field.
-func (_c *IAMLoginSessionCreate) SetUserID(v string) *IAMLoginSessionCreate {
+func (_c *LoginSessionCreate) SetUserID(v string) *LoginSessionCreate {
 	_c.mutation.SetUserID(v)
 	return _c
 }
 
+// SetAmr sets the "amr" field.
+func (_c *LoginSessionCreate) SetAmr(v []string) *LoginSessionCreate {
+	_c.mutation.SetAmr(v)
+	return _c
+}
+
 // SetCreateTime sets the "create_time" field.
-func (_c *IAMLoginSessionCreate) SetCreateTime(v time.Time) *IAMLoginSessionCreate {
+func (_c *LoginSessionCreate) SetCreateTime(v time.Time) *LoginSessionCreate {
 	_c.mutation.SetCreateTime(v)
 	return _c
 }
 
 // SetNillableCreateTime sets the "create_time" field if the given value is not nil.
-func (_c *IAMLoginSessionCreate) SetNillableCreateTime(v *time.Time) *IAMLoginSessionCreate {
+func (_c *LoginSessionCreate) SetNillableCreateTime(v *time.Time) *LoginSessionCreate {
 	if v != nil {
 		_c.SetCreateTime(*v)
 	}
@@ -41,13 +47,13 @@ func (_c *IAMLoginSessionCreate) SetNillableCreateTime(v *time.Time) *IAMLoginSe
 }
 
 // SetRevokedTime sets the "revoked_time" field.
-func (_c *IAMLoginSessionCreate) SetRevokedTime(v time.Time) *IAMLoginSessionCreate {
+func (_c *LoginSessionCreate) SetRevokedTime(v time.Time) *LoginSessionCreate {
 	_c.mutation.SetRevokedTime(v)
 	return _c
 }
 
 // SetNillableRevokedTime sets the "revoked_time" field if the given value is not nil.
-func (_c *IAMLoginSessionCreate) SetNillableRevokedTime(v *time.Time) *IAMLoginSessionCreate {
+func (_c *LoginSessionCreate) SetNillableRevokedTime(v *time.Time) *LoginSessionCreate {
 	if v != nil {
 		_c.SetRevokedTime(*v)
 	}
@@ -55,24 +61,24 @@ func (_c *IAMLoginSessionCreate) SetNillableRevokedTime(v *time.Time) *IAMLoginS
 }
 
 // SetID sets the "id" field.
-func (_c *IAMLoginSessionCreate) SetID(v string) *IAMLoginSessionCreate {
+func (_c *LoginSessionCreate) SetID(v string) *LoginSessionCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
-// Mutation returns the IAMLoginSessionMutation object of the builder.
-func (_c *IAMLoginSessionCreate) Mutation() *IAMLoginSessionMutation {
+// Mutation returns the LoginSessionMutation object of the builder.
+func (_c *LoginSessionCreate) Mutation() *LoginSessionMutation {
 	return _c.mutation
 }
 
-// Save creates the IAMLoginSession in the database.
-func (_c *IAMLoginSessionCreate) Save(ctx context.Context) (*IAMLoginSession, error) {
+// Save creates the LoginSession in the database.
+func (_c *LoginSessionCreate) Save(ctx context.Context) (*LoginSession, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *IAMLoginSessionCreate) SaveX(ctx context.Context) *IAMLoginSession {
+func (_c *LoginSessionCreate) SaveX(ctx context.Context) *LoginSession {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -81,43 +87,50 @@ func (_c *IAMLoginSessionCreate) SaveX(ctx context.Context) *IAMLoginSession {
 }
 
 // Exec executes the query.
-func (_c *IAMLoginSessionCreate) Exec(ctx context.Context) error {
+func (_c *LoginSessionCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *IAMLoginSessionCreate) ExecX(ctx context.Context) {
+func (_c *LoginSessionCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *IAMLoginSessionCreate) defaults() {
+func (_c *LoginSessionCreate) defaults() {
+	if _, ok := _c.mutation.Amr(); !ok {
+		v := loginsession.DefaultAmr
+		_c.mutation.SetAmr(v)
+	}
 	if _, ok := _c.mutation.CreateTime(); !ok {
-		v := iamloginsession.DefaultCreateTime()
+		v := loginsession.DefaultCreateTime()
 		_c.mutation.SetCreateTime(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *IAMLoginSessionCreate) check() error {
+func (_c *LoginSessionCreate) check() error {
 	if _, ok := _c.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "IAMLoginSession.user_id"`)}
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "LoginSession.user_id"`)}
 	}
 	if v, ok := _c.mutation.UserID(); ok {
-		if err := iamloginsession.UserIDValidator(v); err != nil {
-			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "IAMLoginSession.user_id": %w`, err)}
+		if err := loginsession.UserIDValidator(v); err != nil {
+			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "LoginSession.user_id": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.Amr(); !ok {
+		return &ValidationError{Name: "amr", err: errors.New(`ent: missing required field "LoginSession.amr"`)}
+	}
 	if _, ok := _c.mutation.CreateTime(); !ok {
-		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "IAMLoginSession.create_time"`)}
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "LoginSession.create_time"`)}
 	}
 	return nil
 }
 
-func (_c *IAMLoginSessionCreate) sqlSave(ctx context.Context) (*IAMLoginSession, error) {
+func (_c *LoginSessionCreate) sqlSave(ctx context.Context) (*LoginSession, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -132,7 +145,7 @@ func (_c *IAMLoginSessionCreate) sqlSave(ctx context.Context) (*IAMLoginSession,
 		if id, ok := _spec.ID.Value.(string); ok {
 			_node.ID = id
 		} else {
-			return nil, fmt.Errorf("unexpected IAMLoginSession.ID type: %T", _spec.ID.Value)
+			return nil, fmt.Errorf("unexpected LoginSession.ID type: %T", _spec.ID.Value)
 		}
 	}
 	_c.mutation.id = &_node.ID
@@ -140,51 +153,55 @@ func (_c *IAMLoginSessionCreate) sqlSave(ctx context.Context) (*IAMLoginSession,
 	return _node, nil
 }
 
-func (_c *IAMLoginSessionCreate) createSpec() (*IAMLoginSession, *sqlgraph.CreateSpec) {
+func (_c *LoginSessionCreate) createSpec() (*LoginSession, *sqlgraph.CreateSpec) {
 	var (
-		_node = &IAMLoginSession{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(iamloginsession.Table, sqlgraph.NewFieldSpec(iamloginsession.FieldID, field.TypeString))
+		_node = &LoginSession{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(loginsession.Table, sqlgraph.NewFieldSpec(loginsession.FieldID, field.TypeString))
 	)
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
 	if value, ok := _c.mutation.UserID(); ok {
-		_spec.SetField(iamloginsession.FieldUserID, field.TypeString, value)
+		_spec.SetField(loginsession.FieldUserID, field.TypeString, value)
 		_node.UserID = value
 	}
+	if value, ok := _c.mutation.Amr(); ok {
+		_spec.SetField(loginsession.FieldAmr, field.TypeJSON, value)
+		_node.Amr = value
+	}
 	if value, ok := _c.mutation.CreateTime(); ok {
-		_spec.SetField(iamloginsession.FieldCreateTime, field.TypeTime, value)
+		_spec.SetField(loginsession.FieldCreateTime, field.TypeTime, value)
 		_node.CreateTime = value
 	}
 	if value, ok := _c.mutation.RevokedTime(); ok {
-		_spec.SetField(iamloginsession.FieldRevokedTime, field.TypeTime, value)
+		_spec.SetField(loginsession.FieldRevokedTime, field.TypeTime, value)
 		_node.RevokedTime = &value
 	}
 	return _node, _spec
 }
 
-// IAMLoginSessionCreateBulk is the builder for creating many IAMLoginSession entities in bulk.
-type IAMLoginSessionCreateBulk struct {
+// LoginSessionCreateBulk is the builder for creating many LoginSession entities in bulk.
+type LoginSessionCreateBulk struct {
 	config
 	err      error
-	builders []*IAMLoginSessionCreate
+	builders []*LoginSessionCreate
 }
 
-// Save creates the IAMLoginSession entities in the database.
-func (_c *IAMLoginSessionCreateBulk) Save(ctx context.Context) ([]*IAMLoginSession, error) {
+// Save creates the LoginSession entities in the database.
+func (_c *LoginSessionCreateBulk) Save(ctx context.Context) ([]*LoginSession, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*IAMLoginSession, len(_c.builders))
+	nodes := make([]*LoginSession, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*IAMLoginSessionMutation)
+				mutation, ok := m.(*LoginSessionMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -227,7 +244,7 @@ func (_c *IAMLoginSessionCreateBulk) Save(ctx context.Context) ([]*IAMLoginSessi
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *IAMLoginSessionCreateBulk) SaveX(ctx context.Context) []*IAMLoginSession {
+func (_c *LoginSessionCreateBulk) SaveX(ctx context.Context) []*LoginSession {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -236,13 +253,13 @@ func (_c *IAMLoginSessionCreateBulk) SaveX(ctx context.Context) []*IAMLoginSessi
 }
 
 // Exec executes the query.
-func (_c *IAMLoginSessionCreateBulk) Exec(ctx context.Context) error {
+func (_c *LoginSessionCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *IAMLoginSessionCreateBulk) ExecX(ctx context.Context) {
+func (_c *LoginSessionCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

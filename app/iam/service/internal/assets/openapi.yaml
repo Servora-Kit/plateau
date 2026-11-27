@@ -6,25 +6,6 @@ info:
     title: ""
     version: 0.0.1
 paths:
-    /v1/iam/account/change-initial-password:
-        post:
-            tags:
-                - AccountService
-            description: ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-            operationId: AccountService_ChangeInitialPassword
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ChangeInitialPasswordRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ChangeInitialPasswordResponse'
     /v1/iam/account/change-password:
         post:
             tags:
@@ -195,17 +176,17 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VerifyEmailResponse'
-    /v1/iam/authn/login:
+    /v1/iam/authn/flows:
         post:
             tags:
                 - AuthnService
-            description: Login verifies credentials and establishes one opaque browser session.
-            operationId: AuthnService_Login
+            description: CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+            operationId: AuthnService_CreateAuthFlow
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/LoginRequest'
+                            $ref: '#/components/schemas/CreateAuthFlowRequest'
                 required: true
             responses:
                 "200":
@@ -213,7 +194,126 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/LoginResponse'
+                                $ref: '#/components/schemas/CreateAuthFlowResponse'
+    /v1/iam/authn/flows/{flowId}:
+        get:
+            tags:
+                - AuthnService
+            description: GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+            operationId: AuthnService_GetAuthFlow
+            parameters:
+                - name: flowId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetAuthFlowResponse'
+    /v1/iam/authn/flows/{flowId}:cancel:
+        post:
+            tags:
+                - AuthnService
+            description: CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+            operationId: AuthnService_CancelAuthFlow
+            parameters:
+                - name: flowId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CancelAuthFlowRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CancelAuthFlowResponse'
+    /v1/iam/authn/flows/{flowId}:completeUpdatePassword:
+        post:
+            tags:
+                - AuthnService
+            description: CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+            operationId: AuthnService_CompleteUpdatePassword
+            parameters:
+                - name: flowId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CompleteUpdatePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CompleteUpdatePasswordResponse'
+    /v1/iam/authn/flows/{flowId}:reset:
+        post:
+            tags:
+                - AuthnService
+            description: ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+            operationId: AuthnService_ResetAuthFlow
+            parameters:
+                - name: flowId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ResetAuthFlowRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ResetAuthFlowResponse'
+    /v1/iam/authn/flows/{flowId}:submitPassword:
+        post:
+            tags:
+                - AuthnService
+            description: SubmitPassword verifies email and password credentials and advances or completes the flow.
+            operationId: AuthnService_SubmitPassword
+            parameters:
+                - name: flowId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SubmitPasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SubmitPasswordResponse'
     /v1/iam/sessions/current:logout:
         post:
             tags:
@@ -235,24 +335,29 @@ paths:
                                 $ref: '#/components/schemas/LogoutResponse'
 components:
     schemas:
-        ChangeInitialPasswordRequest:
-            required:
-                - email
-                - currentPassword
-                - newPassword
+        AuthFlow:
             type: object
             properties:
-                email:
+                ttl:
+                    pattern: ^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$
                     type: string
-                    description: Service canonicalizes email before locating the Login Identifier.
-                currentPassword:
+                stepTtl:
+                    pattern: ^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$
                     type: string
-                    description: Current initial password is verified independently and never logged or returned.
-                newPassword:
-                    type: string
-        ChangeInitialPasswordResponse:
+            description: AuthFlow configures authentication flow expiration windows.
+        CancelAuthFlowRequest:
+            required:
+                - flowId
             type: object
-            properties: {}
+            properties:
+                flowId:
+                    type: string
+        CancelAuthFlowResponse:
+            type: object
+            properties:
+                redirectUri:
+                    type: string
+                    description: RFC 6749/9207 error redirect URI when an active OIDC request was aborted; empty otherwise.
         ChangePasswordRequest:
             required:
                 - currentPassword
@@ -267,6 +372,22 @@ components:
         ChangePasswordResponse:
             type: object
             properties: {}
+        CompleteUpdatePasswordRequest:
+            required:
+                - flowId
+                - newPassword
+            type: object
+            properties:
+                flowId:
+                    type: string
+                newPassword:
+                    type: string
+                    description: 8-128 byte policy is enforced in the domain layer after flow ownership/state checks.
+        CompleteUpdatePasswordResponse:
+            type: object
+            properties:
+                flow:
+                    $ref: '#/components/schemas/AuthFlow'
         ConfirmPasswordResetRequest:
             required:
                 - token
@@ -281,6 +402,16 @@ components:
         ConfirmPasswordResetResponse:
             type: object
             properties: {}
+        CreateAuthFlowRequest:
+            type: object
+            properties:
+                oidcRequestId:
+                    type: string
+        CreateAuthFlowResponse:
+            type: object
+            properties:
+                flow:
+                    $ref: '#/components/schemas/AuthFlow'
         DeleteAccountRequest:
             required:
                 - currentPassword
@@ -292,23 +423,12 @@ components:
         DeleteAccountResponse:
             type: object
             properties: {}
+        GetAuthFlowResponse:
+            type: object
+            properties:
+                flow:
+                    $ref: '#/components/schemas/AuthFlow'
         GetProfileResponse:
-            type: object
-            properties:
-                user:
-                    $ref: '#/components/schemas/User'
-        LoginRequest:
-            required:
-                - email
-                - password
-            type: object
-            properties:
-                email:
-                    type: string
-                    description: Service canonicalizes email before locating the Login Identifier.
-                password:
-                    type: string
-        LoginResponse:
             type: object
             properties:
                 user:
@@ -371,6 +491,38 @@ components:
         ResendVerificationEmailResponse:
             type: object
             properties: {}
+        ResetAuthFlowRequest:
+            required:
+                - flowId
+            type: object
+            properties:
+                flowId:
+                    type: string
+        ResetAuthFlowResponse:
+            type: object
+            properties:
+                flow:
+                    $ref: '#/components/schemas/AuthFlow'
+        SubmitPasswordRequest:
+            required:
+                - flowId
+                - email
+                - password
+            type: object
+            properties:
+                flowId:
+                    type: string
+                email:
+                    type: string
+                    description: Service canonicalizes email before locating the Login Identifier.
+                password:
+                    type: string
+                    description: Validated in the authentication domain layer to preserve uniform credential errors and audit records.
+        SubmitPasswordResponse:
+            type: object
+            properties:
+                flow:
+                    $ref: '#/components/schemas/AuthFlow'
         UpdateProfileResponse:
             type: object
             properties:
@@ -475,6 +627,6 @@ tags:
     - name: AccountService
       description: AccountService owns self-service registration, profile and recovery flows.
     - name: AuthnService
-      description: AuthnService owns email/password authentication.
+      description: AuthnService owns server-side browser authentication flows.
     - name: SessionService
       description: SessionService owns IAM Login Session lifecycle commands.

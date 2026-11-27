@@ -2,8 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log/slog"
-
 	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/session/v1"
@@ -13,6 +11,7 @@ import (
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"
+	"log/slog"
 
 	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/audit"

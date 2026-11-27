@@ -2,24 +2,86 @@
 /* eslint-disable no-use-before-define, @typescript-eslint/no-unused-vars, prettier/prettier */
 
 import type { ClientTransport } from '@servora/proto-utils/transport';
+import { encodePathSegment } from '@servora/proto-utils/transport';
 
-// AuthnErrorReason contains intentionally generic credential failures.
+// AuthnErrorReason contains authentication flow failures.
 export type AuthnErrorReason =
+  | 'AUTHN_ERROR_REASON_FLOW_EXPIRED'
+  | 'AUTHN_ERROR_REASON_FLOW_INVALIDATED'
+  | 'AUTHN_ERROR_REASON_FLOW_NOT_FOUND'
   | 'AUTHN_ERROR_REASON_INVALID_CREDENTIALS'
+  | 'AUTHN_ERROR_REASON_INVALID_PASSWORD'
+  | 'AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID'
   | 'AUTHN_ERROR_REASON_UNSPECIFIED';
-export type LoginRequest = {
-  // Service canonicalizes email before locating the Login Identifier.
+// AuthFlowState represents the externally visible stage of an authentication flow.
+export type AuthFlowState =
+  | 'AUTH_FLOW_STATE_AUTHENTICATE'
+  | 'AUTH_FLOW_STATE_COMPLETED'
+  | 'AUTH_FLOW_STATE_REQUIRED_ACTION'
+  | 'AUTH_FLOW_STATE_UNSPECIFIED';
+// AuthFactorMethod identifies an authentication factor accepted in the current stage.
+export type AuthFactorMethod =
+  | 'AUTH_FACTOR_METHOD_PASSWORD'
+  | 'AUTH_FACTOR_METHOD_UNSPECIFIED';
+// AuthFlowOidcContext exposes non-sensitive OIDC application context for the login UI.
+export type AuthFlowOidcContext = {
   //
-  // Behaviors: REQUIRED
+  // Behaviors: OUTPUT_ONLY
+  clientId?: string;
+};
+
+// AuthFlow is the client-facing snapshot of a browser-bound authentication flow.
+export type AuthFlow = {
+  //
+  // Behaviors: OUTPUT_ONLY
+  availableMethods?: AuthFactorMethod[];
+  //
+  // Behaviors: OUTPUT_ONLY
+  completedAmr?: string[];
+  // Relative browser continuation target populated only when state is COMPLETED.
+  //
+  // Behaviors: OUTPUT_ONLY
+  continueUrl?: string;
+  // Read-only display email populated only after primary authentication succeeds.
+  //
+  // Behaviors: OUTPUT_ONLY
   email?: string;
   //
-  // Behaviors: REQUIRED
-  password?: string;
-};
-
-export type LoginResponse = {
+  // Behaviors: OUTPUT_ONLY
+  expiresTime?: wellKnownTimestamp;
+  // Opaque flow identifier; empty when CreateAuthFlow short-circuits on an existing login session.
+  //
+  // Behaviors: OUTPUT_ONLY
+  flowId?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  nextRequiredAction?: plateauiamuserv1_UserRequiredAction;
+  //
+  // Behaviors: OUTPUT_ONLY
+  oidc?: AuthFlowOidcContext;
+  //
+  // Behaviors: OUTPUT_ONLY
+  remainingRequiredActions?: plateauiamuserv1_UserRequiredAction[];
+  //
+  // Behaviors: OUTPUT_ONLY
+  state?: AuthFlowState;
+  //
+  // Behaviors: OUTPUT_ONLY
+  stepExpiresTime?: wellKnownTimestamp;
+  // Authenticated user snapshot populated only when state is COMPLETED.
+  //
+  // Behaviors: OUTPUT_ONLY
   user?: plateauiamuserv1_User;
 };
+
+// UserRequiredAction identifies persistent actions the user must complete before normal access.
+export type plateauiamuserv1_UserRequiredAction =
+  | 'USER_REQUIRED_ACTION_UNSPECIFIED'
+  | 'USER_REQUIRED_ACTION_UPDATE_PASSWORD';
+// Encoded using RFC 3339, where generated output will always be Z-normalized
+// and uses 0, 3, 6 or 9 fractional digits.
+// Offsets other than "Z" are also accepted.
+type wellKnownTimestamp = string;
 
 // User is the globally unique IAM identity resource.
 export type plateauiamuserv1_User = {
@@ -99,39 +161,181 @@ export type plateauiamuserv1_UserStatus =
   | 'USER_STATUS_DISABLED'
   | 'USER_STATUS_PENDING_EMAIL_VERIFICATION'
   | 'USER_STATUS_UNSPECIFIED';
-// Encoded using RFC 3339, where generated output will always be Z-normalized
-// and uses 0, 3, 6 or 9 fractional digits.
-// Offsets other than "Z" are also accepted.
-type wellKnownTimestamp = string;
+export type CreateAuthFlowRequest = {
+  //
+  // Behaviors: OPTIONAL
+  oidcRequestId?: string;
+};
 
-// UserRequiredAction identifies persistent actions the user must complete before normal access.
-export type plateauiamuserv1_UserRequiredAction =
-  | 'USER_REQUIRED_ACTION_UNSPECIFIED'
-  | 'USER_REQUIRED_ACTION_UPDATE_PASSWORD';
-// AuthnService owns email/password authentication.
+export type CreateAuthFlowResponse = {
+  flow?: AuthFlow;
+};
+
+export type GetAuthFlowRequest = {
+  //
+  // Behaviors: REQUIRED
+  flowId?: string;
+};
+
+export type GetAuthFlowResponse = {
+  flow?: AuthFlow;
+};
+
+export type SubmitPasswordRequest = {
+  // Service canonicalizes email before locating the Login Identifier.
+  //
+  // Behaviors: REQUIRED
+  email?: string;
+  //
+  // Behaviors: REQUIRED
+  flowId?: string;
+  // Validated in the authentication domain layer to preserve uniform credential errors and audit records.
+  //
+  // Behaviors: REQUIRED
+  password?: string;
+};
+
+export type SubmitPasswordResponse = {
+  flow?: AuthFlow;
+};
+
+export type CompleteUpdatePasswordRequest = {
+  //
+  // Behaviors: REQUIRED
+  flowId?: string;
+  // 8-128 byte policy is enforced in the domain layer after flow ownership/state checks.
+  //
+  // Behaviors: REQUIRED
+  newPassword?: string;
+};
+
+export type CompleteUpdatePasswordResponse = {
+  flow?: AuthFlow;
+};
+
+export type ResetAuthFlowRequest = {
+  //
+  // Behaviors: REQUIRED
+  flowId?: string;
+};
+
+export type ResetAuthFlowResponse = {
+  flow?: AuthFlow;
+};
+
+export type CancelAuthFlowRequest = {
+  //
+  // Behaviors: REQUIRED
+  flowId?: string;
+};
+
+export type CancelAuthFlowResponse = {
+  // RFC 6749/9207 error redirect URI when an active OIDC request was aborted; empty otherwise.
+  redirectUri?: string;
+};
+
+// AuthnService owns server-side browser authentication flows.
 export interface AuthnService {
-  // Login verifies credentials and establishes one opaque browser session.
-  Login(
-    request: LoginRequest,
-  ): Promise<LoginResponse>;
+  // CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+  CreateAuthFlow(
+    request: CreateAuthFlowRequest,
+  ): Promise<CreateAuthFlowResponse>;
+  // GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+  GetAuthFlow(
+    request: GetAuthFlowRequest,
+  ): Promise<GetAuthFlowResponse>;
+  // SubmitPassword verifies email and password credentials and advances or completes the flow.
+  SubmitPassword(
+    request: SubmitPasswordRequest,
+  ): Promise<SubmitPasswordResponse>;
+  // CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+  CompleteUpdatePassword(
+    request: CompleteUpdatePasswordRequest,
+  ): Promise<CompleteUpdatePasswordResponse>;
+  // ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+  ResetAuthFlow(
+    request: ResetAuthFlowRequest,
+  ): Promise<ResetAuthFlowResponse>;
+  // CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+  CancelAuthFlow(
+    request: CancelAuthFlowRequest,
+  ): Promise<CancelAuthFlowResponse>;
 }
 
 export function createAuthnServiceClient(
   transport: ClientTransport,
 ): AuthnService {
   return {
-    Login(request) {
+    CreateAuthFlow(request) {
+      const path = `v1/iam/authn/flows`;
+      const body = JSON.stringify(request);
+      return transport.unary<CreateAuthFlowResponse>(path, 'POST', body, {
+        service: 'AuthnService',
+        method: 'CreateAuthFlow',
+      });
+    },
+    GetAuthFlow(request) {
+      if (request.flowId === undefined || request.flowId === null || request.flowId === '') {
+        throw new Error('missing required field request.flow_id');
+      }
+      const path = `v1/iam/authn/flows/${encodePathSegment(request.flowId)}`;
+      const body = null;
+      return transport.unary<GetAuthFlowResponse>(path, 'GET', body, {
+        service: 'AuthnService',
+        method: 'GetAuthFlow',
+      });
+    },
+    SubmitPassword(request) {
       if (request.email === undefined || request.email === null || request.email === '') {
         throw new Error('missing required field request.email');
       }
       if (request.password === undefined || request.password === null || request.password === '') {
         throw new Error('missing required field request.password');
       }
-      const path = `v1/iam/authn/login`;
+      if (request.flowId === undefined || request.flowId === null || request.flowId === '') {
+        throw new Error('missing required field request.flow_id');
+      }
+      const path = `v1/iam/authn/flows/${encodePathSegment(request.flowId)}:submitPassword`;
       const body = JSON.stringify(request);
-      return transport.unary<LoginResponse>(path, 'POST', body, {
+      return transport.unary<SubmitPasswordResponse>(path, 'POST', body, {
         service: 'AuthnService',
-        method: 'Login',
+        method: 'SubmitPassword',
+      });
+    },
+    CompleteUpdatePassword(request) {
+      if (request.newPassword === undefined || request.newPassword === null || request.newPassword === '') {
+        throw new Error('missing required field request.new_password');
+      }
+      if (request.flowId === undefined || request.flowId === null || request.flowId === '') {
+        throw new Error('missing required field request.flow_id');
+      }
+      const path = `v1/iam/authn/flows/${encodePathSegment(request.flowId)}:completeUpdatePassword`;
+      const body = JSON.stringify(request);
+      return transport.unary<CompleteUpdatePasswordResponse>(path, 'POST', body, {
+        service: 'AuthnService',
+        method: 'CompleteUpdatePassword',
+      });
+    },
+    ResetAuthFlow(request) {
+      if (request.flowId === undefined || request.flowId === null || request.flowId === '') {
+        throw new Error('missing required field request.flow_id');
+      }
+      const path = `v1/iam/authn/flows/${encodePathSegment(request.flowId)}:reset`;
+      const body = JSON.stringify(request);
+      return transport.unary<ResetAuthFlowResponse>(path, 'POST', body, {
+        service: 'AuthnService',
+        method: 'ResetAuthFlow',
+      });
+    },
+    CancelAuthFlow(request) {
+      if (request.flowId === undefined || request.flowId === null || request.flowId === '') {
+        throw new Error('missing required field request.flow_id');
+      }
+      const path = `v1/iam/authn/flows/${encodePathSegment(request.flowId)}:cancel`;
+      const body = JSON.stringify(request);
+      return transport.unary<CancelAuthFlowResponse>(path, 'POST', body, {
+        service: 'AuthnService',
+        method: 'CancelAuthFlow',
       });
     },
   };

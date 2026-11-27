@@ -7,7 +7,6 @@
 package iamauthnv1
 
 import (
-	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	v1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	_ "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
@@ -17,6 +16,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -29,12 +29,17 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// AuthnErrorReason contains intentionally generic credential failures.
+// AuthnErrorReason contains authentication flow failures.
 type AuthnErrorReason int32
 
 const (
-	AuthnErrorReason_AUTHN_ERROR_REASON_UNSPECIFIED         AuthnErrorReason = 0
-	AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_CREDENTIALS AuthnErrorReason = 1
+	AuthnErrorReason_AUTHN_ERROR_REASON_UNSPECIFIED          AuthnErrorReason = 0
+	AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_CREDENTIALS  AuthnErrorReason = 1
+	AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_NOT_FOUND       AuthnErrorReason = 2
+	AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_EXPIRED         AuthnErrorReason = 3
+	AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_INVALIDATED     AuthnErrorReason = 4
+	AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_PASSWORD     AuthnErrorReason = 5
+	AuthnErrorReason_AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID AuthnErrorReason = 6
 )
 
 // Enum value maps for AuthnErrorReason.
@@ -42,10 +47,20 @@ var (
 	AuthnErrorReason_name = map[int32]string{
 		0: "AUTHN_ERROR_REASON_UNSPECIFIED",
 		1: "AUTHN_ERROR_REASON_INVALID_CREDENTIALS",
+		2: "AUTHN_ERROR_REASON_FLOW_NOT_FOUND",
+		3: "AUTHN_ERROR_REASON_FLOW_EXPIRED",
+		4: "AUTHN_ERROR_REASON_FLOW_INVALIDATED",
+		5: "AUTHN_ERROR_REASON_INVALID_PASSWORD",
+		6: "AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID",
 	}
 	AuthnErrorReason_value = map[string]int32{
-		"AUTHN_ERROR_REASON_UNSPECIFIED":         0,
-		"AUTHN_ERROR_REASON_INVALID_CREDENTIALS": 1,
+		"AUTHN_ERROR_REASON_UNSPECIFIED":          0,
+		"AUTHN_ERROR_REASON_INVALID_CREDENTIALS":  1,
+		"AUTHN_ERROR_REASON_FLOW_NOT_FOUND":       2,
+		"AUTHN_ERROR_REASON_FLOW_EXPIRED":         3,
+		"AUTHN_ERROR_REASON_FLOW_INVALIDATED":     4,
+		"AUTHN_ERROR_REASON_INVALID_PASSWORD":     5,
+		"AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID": 6,
 	}
 )
 
@@ -76,29 +91,128 @@ func (AuthnErrorReason) EnumDescriptor() ([]byte, []int) {
 	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{0}
 }
 
-type LoginRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Service canonicalizes email before locating the Login Identifier.
-	Email         string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+// AuthFlowState represents the externally visible stage of an authentication flow.
+type AuthFlowState int32
+
+const (
+	AuthFlowState_AUTH_FLOW_STATE_UNSPECIFIED     AuthFlowState = 0
+	AuthFlowState_AUTH_FLOW_STATE_AUTHENTICATE    AuthFlowState = 1
+	AuthFlowState_AUTH_FLOW_STATE_REQUIRED_ACTION AuthFlowState = 2
+	AuthFlowState_AUTH_FLOW_STATE_COMPLETED       AuthFlowState = 3
+)
+
+// Enum value maps for AuthFlowState.
+var (
+	AuthFlowState_name = map[int32]string{
+		0: "AUTH_FLOW_STATE_UNSPECIFIED",
+		1: "AUTH_FLOW_STATE_AUTHENTICATE",
+		2: "AUTH_FLOW_STATE_REQUIRED_ACTION",
+		3: "AUTH_FLOW_STATE_COMPLETED",
+	}
+	AuthFlowState_value = map[string]int32{
+		"AUTH_FLOW_STATE_UNSPECIFIED":     0,
+		"AUTH_FLOW_STATE_AUTHENTICATE":    1,
+		"AUTH_FLOW_STATE_REQUIRED_ACTION": 2,
+		"AUTH_FLOW_STATE_COMPLETED":       3,
+	}
+)
+
+func (x AuthFlowState) Enum() *AuthFlowState {
+	p := new(AuthFlowState)
+	*p = x
+	return p
+}
+
+func (x AuthFlowState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AuthFlowState) Descriptor() protoreflect.EnumDescriptor {
+	return file_plateau_iam_authn_v1_authn_proto_enumTypes[1].Descriptor()
+}
+
+func (AuthFlowState) Type() protoreflect.EnumType {
+	return &file_plateau_iam_authn_v1_authn_proto_enumTypes[1]
+}
+
+func (x AuthFlowState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AuthFlowState.Descriptor instead.
+func (AuthFlowState) EnumDescriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{1}
+}
+
+// AuthFactorMethod identifies an authentication factor accepted in the current stage.
+type AuthFactorMethod int32
+
+const (
+	AuthFactorMethod_AUTH_FACTOR_METHOD_UNSPECIFIED AuthFactorMethod = 0
+	AuthFactorMethod_AUTH_FACTOR_METHOD_PASSWORD    AuthFactorMethod = 1
+)
+
+// Enum value maps for AuthFactorMethod.
+var (
+	AuthFactorMethod_name = map[int32]string{
+		0: "AUTH_FACTOR_METHOD_UNSPECIFIED",
+		1: "AUTH_FACTOR_METHOD_PASSWORD",
+	}
+	AuthFactorMethod_value = map[string]int32{
+		"AUTH_FACTOR_METHOD_UNSPECIFIED": 0,
+		"AUTH_FACTOR_METHOD_PASSWORD":    1,
+	}
+)
+
+func (x AuthFactorMethod) Enum() *AuthFactorMethod {
+	p := new(AuthFactorMethod)
+	*p = x
+	return p
+}
+
+func (x AuthFactorMethod) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AuthFactorMethod) Descriptor() protoreflect.EnumDescriptor {
+	return file_plateau_iam_authn_v1_authn_proto_enumTypes[2].Descriptor()
+}
+
+func (AuthFactorMethod) Type() protoreflect.EnumType {
+	return &file_plateau_iam_authn_v1_authn_proto_enumTypes[2]
+}
+
+func (x AuthFactorMethod) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AuthFactorMethod.Descriptor instead.
+func (AuthFactorMethod) EnumDescriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{2}
+}
+
+// AuthFlowOidcContext exposes non-sensitive OIDC application context for the login UI.
+type AuthFlowOidcContext struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *LoginRequest) Reset() {
-	*x = LoginRequest{}
+func (x *AuthFlowOidcContext) Reset() {
+	*x = AuthFlowOidcContext{}
 	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LoginRequest) String() string {
+func (x *AuthFlowOidcContext) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LoginRequest) ProtoMessage() {}
+func (*AuthFlowOidcContext) ProtoMessage() {}
 
-func (x *LoginRequest) ProtoReflect() protoreflect.Message {
+func (x *AuthFlowOidcContext) ProtoReflect() protoreflect.Message {
 	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -110,47 +224,177 @@ func (x *LoginRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
-func (*LoginRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AuthFlowOidcContext.ProtoReflect.Descriptor instead.
+func (*AuthFlowOidcContext) Descriptor() ([]byte, []int) {
 	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *LoginRequest) GetEmail() string {
+func (x *AuthFlowOidcContext) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+// AuthFlow is the client-facing snapshot of a browser-bound authentication flow.
+type AuthFlow struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Opaque flow identifier; empty when CreateAuthFlow short-circuits on an existing login session.
+	FlowId                   string                  `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	State                    AuthFlowState           `protobuf:"varint,2,opt,name=state,proto3,enum=plateau.iam.authn.v1.AuthFlowState" json:"state,omitempty"`
+	AvailableMethods         []AuthFactorMethod      `protobuf:"varint,3,rep,packed,name=available_methods,json=availableMethods,proto3,enum=plateau.iam.authn.v1.AuthFactorMethod" json:"available_methods,omitempty"`
+	CompletedAmr             []string                `protobuf:"bytes,4,rep,name=completed_amr,json=completedAmr,proto3" json:"completed_amr,omitempty"`
+	RemainingRequiredActions []v1.UserRequiredAction `protobuf:"varint,5,rep,packed,name=remaining_required_actions,json=remainingRequiredActions,proto3,enum=plateau.iam.user.v1.UserRequiredAction" json:"remaining_required_actions,omitempty"`
+	NextRequiredAction       v1.UserRequiredAction   `protobuf:"varint,6,opt,name=next_required_action,json=nextRequiredAction,proto3,enum=plateau.iam.user.v1.UserRequiredAction" json:"next_required_action,omitempty"`
+	// Read-only display email populated only after primary authentication succeeds.
+	Email           string                 `protobuf:"bytes,7,opt,name=email,proto3" json:"email,omitempty"`
+	Oidc            *AuthFlowOidcContext   `protobuf:"bytes,8,opt,name=oidc,proto3" json:"oidc,omitempty"`
+	ExpiresTime     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=expires_time,json=expiresTime,proto3" json:"expires_time,omitempty"`
+	StepExpiresTime *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=step_expires_time,json=stepExpiresTime,proto3" json:"step_expires_time,omitempty"`
+	// Relative browser continuation target populated only when state is COMPLETED.
+	ContinueUrl string `protobuf:"bytes,11,opt,name=continue_url,json=continueUrl,proto3" json:"continue_url,omitempty"`
+	// Authenticated user snapshot populated only when state is COMPLETED.
+	User          *v1.User `protobuf:"bytes,12,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthFlow) Reset() {
+	*x = AuthFlow{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthFlow) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthFlow) ProtoMessage() {}
+
+func (x *AuthFlow) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthFlow.ProtoReflect.Descriptor instead.
+func (*AuthFlow) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AuthFlow) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+func (x *AuthFlow) GetState() AuthFlowState {
+	if x != nil {
+		return x.State
+	}
+	return AuthFlowState_AUTH_FLOW_STATE_UNSPECIFIED
+}
+
+func (x *AuthFlow) GetAvailableMethods() []AuthFactorMethod {
+	if x != nil {
+		return x.AvailableMethods
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetCompletedAmr() []string {
+	if x != nil {
+		return x.CompletedAmr
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetRemainingRequiredActions() []v1.UserRequiredAction {
+	if x != nil {
+		return x.RemainingRequiredActions
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetNextRequiredAction() v1.UserRequiredAction {
+	if x != nil {
+		return x.NextRequiredAction
+	}
+	return v1.UserRequiredAction(0)
+}
+
+func (x *AuthFlow) GetEmail() string {
 	if x != nil {
 		return x.Email
 	}
 	return ""
 }
 
-func (x *LoginRequest) GetPassword() string {
+func (x *AuthFlow) GetOidc() *AuthFlowOidcContext {
 	if x != nil {
-		return x.Password
+		return x.Oidc
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetExpiresTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresTime
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetStepExpiresTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StepExpiresTime
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetContinueUrl() string {
+	if x != nil {
+		return x.ContinueUrl
 	}
 	return ""
 }
 
-type LoginResponse struct {
+func (x *AuthFlow) GetUser() *v1.User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+type CreateAuthFlowRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *v1.User               `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	OidcRequestId string                 `protobuf:"bytes,1,opt,name=oidc_request_id,json=oidcRequestId,proto3" json:"oidc_request_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *LoginResponse) Reset() {
-	*x = LoginResponse{}
-	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[1]
+func (x *CreateAuthFlowRequest) Reset() {
+	*x = CreateAuthFlowRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LoginResponse) String() string {
+func (x *CreateAuthFlowRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LoginResponse) ProtoMessage() {}
+func (*CreateAuthFlowRequest) ProtoMessage() {}
 
-func (x *LoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[1]
+func (x *CreateAuthFlowRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -161,33 +405,603 @@ func (x *LoginResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
-func (*LoginResponse) Descriptor() ([]byte, []int) {
-	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use CreateAuthFlowRequest.ProtoReflect.Descriptor instead.
+func (*CreateAuthFlowRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *LoginResponse) GetUser() *v1.User {
+func (x *CreateAuthFlowRequest) GetOidcRequestId() string {
 	if x != nil {
-		return x.User
+		return x.OidcRequestId
+	}
+	return ""
+}
+
+type CreateAuthFlowResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Flow          *AuthFlow              `protobuf:"bytes,1,opt,name=flow,proto3" json:"flow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAuthFlowResponse) Reset() {
+	*x = CreateAuthFlowResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAuthFlowResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAuthFlowResponse) ProtoMessage() {}
+
+func (x *CreateAuthFlowResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAuthFlowResponse.ProtoReflect.Descriptor instead.
+func (*CreateAuthFlowResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateAuthFlowResponse) GetFlow() *AuthFlow {
+	if x != nil {
+		return x.Flow
 	}
 	return nil
+}
+
+type GetAuthFlowRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAuthFlowRequest) Reset() {
+	*x = GetAuthFlowRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAuthFlowRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAuthFlowRequest) ProtoMessage() {}
+
+func (x *GetAuthFlowRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAuthFlowRequest.ProtoReflect.Descriptor instead.
+func (*GetAuthFlowRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetAuthFlowRequest) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+type GetAuthFlowResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Flow          *AuthFlow              `protobuf:"bytes,1,opt,name=flow,proto3" json:"flow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAuthFlowResponse) Reset() {
+	*x = GetAuthFlowResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAuthFlowResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAuthFlowResponse) ProtoMessage() {}
+
+func (x *GetAuthFlowResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAuthFlowResponse.ProtoReflect.Descriptor instead.
+func (*GetAuthFlowResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetAuthFlowResponse) GetFlow() *AuthFlow {
+	if x != nil {
+		return x.Flow
+	}
+	return nil
+}
+
+type SubmitPasswordRequest struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	FlowId string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	// Service canonicalizes email before locating the Login Identifier.
+	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	// Validated in the authentication domain layer to preserve uniform credential errors and audit records.
+	Password      string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitPasswordRequest) Reset() {
+	*x = SubmitPasswordRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitPasswordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitPasswordRequest) ProtoMessage() {}
+
+func (x *SubmitPasswordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitPasswordRequest.ProtoReflect.Descriptor instead.
+func (*SubmitPasswordRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SubmitPasswordRequest) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+func (x *SubmitPasswordRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *SubmitPasswordRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type SubmitPasswordResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Flow          *AuthFlow              `protobuf:"bytes,1,opt,name=flow,proto3" json:"flow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitPasswordResponse) Reset() {
+	*x = SubmitPasswordResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitPasswordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitPasswordResponse) ProtoMessage() {}
+
+func (x *SubmitPasswordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitPasswordResponse.ProtoReflect.Descriptor instead.
+func (*SubmitPasswordResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SubmitPasswordResponse) GetFlow() *AuthFlow {
+	if x != nil {
+		return x.Flow
+	}
+	return nil
+}
+
+type CompleteUpdatePasswordRequest struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	FlowId string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	// 8-128 byte policy is enforced in the domain layer after flow ownership/state checks.
+	NewPassword   string `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompleteUpdatePasswordRequest) Reset() {
+	*x = CompleteUpdatePasswordRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteUpdatePasswordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteUpdatePasswordRequest) ProtoMessage() {}
+
+func (x *CompleteUpdatePasswordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteUpdatePasswordRequest.ProtoReflect.Descriptor instead.
+func (*CompleteUpdatePasswordRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CompleteUpdatePasswordRequest) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+func (x *CompleteUpdatePasswordRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+type CompleteUpdatePasswordResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Flow          *AuthFlow              `protobuf:"bytes,1,opt,name=flow,proto3" json:"flow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompleteUpdatePasswordResponse) Reset() {
+	*x = CompleteUpdatePasswordResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteUpdatePasswordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteUpdatePasswordResponse) ProtoMessage() {}
+
+func (x *CompleteUpdatePasswordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteUpdatePasswordResponse.ProtoReflect.Descriptor instead.
+func (*CompleteUpdatePasswordResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CompleteUpdatePasswordResponse) GetFlow() *AuthFlow {
+	if x != nil {
+		return x.Flow
+	}
+	return nil
+}
+
+type ResetAuthFlowRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetAuthFlowRequest) Reset() {
+	*x = ResetAuthFlowRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetAuthFlowRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetAuthFlowRequest) ProtoMessage() {}
+
+func (x *ResetAuthFlowRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetAuthFlowRequest.ProtoReflect.Descriptor instead.
+func (*ResetAuthFlowRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ResetAuthFlowRequest) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+type ResetAuthFlowResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Flow          *AuthFlow              `protobuf:"bytes,1,opt,name=flow,proto3" json:"flow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetAuthFlowResponse) Reset() {
+	*x = ResetAuthFlowResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetAuthFlowResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetAuthFlowResponse) ProtoMessage() {}
+
+func (x *ResetAuthFlowResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetAuthFlowResponse.ProtoReflect.Descriptor instead.
+func (*ResetAuthFlowResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ResetAuthFlowResponse) GetFlow() *AuthFlow {
+	if x != nil {
+		return x.Flow
+	}
+	return nil
+}
+
+type CancelAuthFlowRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelAuthFlowRequest) Reset() {
+	*x = CancelAuthFlowRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelAuthFlowRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelAuthFlowRequest) ProtoMessage() {}
+
+func (x *CancelAuthFlowRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelAuthFlowRequest.ProtoReflect.Descriptor instead.
+func (*CancelAuthFlowRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *CancelAuthFlowRequest) GetFlowId() string {
+	if x != nil {
+		return x.FlowId
+	}
+	return ""
+}
+
+type CancelAuthFlowResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// RFC 6749/9207 error redirect URI when an active OIDC request was aborted; empty otherwise.
+	RedirectUri   string `protobuf:"bytes,1,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelAuthFlowResponse) Reset() {
+	*x = CancelAuthFlowResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelAuthFlowResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelAuthFlowResponse) ProtoMessage() {}
+
+func (x *CancelAuthFlowResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelAuthFlowResponse.ProtoReflect.Descriptor instead.
+func (*CancelAuthFlowResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *CancelAuthFlowResponse) GetRedirectUri() string {
+	if x != nil {
+		return x.RedirectUri
+	}
+	return ""
 }
 
 var File_plateau_iam_authn_v1_authn_proto protoreflect.FileDescriptor
 
 const file_plateau_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\n" +
-	" plateau/iam/authn/v1/authn.proto\x12\x14plateau.iam.authn.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1eplateau/iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\\\n" +
-	"\fLoginRequest\x12\x1a\n" +
-	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x120\n" +
-	"\bpassword\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\">\n" +
-	"\rLoginResponse\x12-\n" +
-	"\x04user\x18\x01 \x01(\v2\x19.plateau.iam.user.v1.UserR\x04user*p\n" +
+	" plateau/iam/authn/v1/authn.proto\x12\x14plateau.iam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eplateau/iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"8\n" +
+	"\x13AuthFlowOidcContext\x12!\n" +
+	"\tclient_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\bclientId\"\x90\x06\n" +
+	"\bAuthFlow\x12\x1d\n" +
+	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\x06flowId\x12?\n" +
+	"\x05state\x18\x02 \x01(\x0e2#.plateau.iam.authn.v1.AuthFlowStateB\x04\xe2A\x01\x03R\x05state\x12Y\n" +
+	"\x11available_methods\x18\x03 \x03(\x0e2&.plateau.iam.authn.v1.AuthFactorMethodB\x04\xe2A\x01\x03R\x10availableMethods\x12)\n" +
+	"\rcompleted_amr\x18\x04 \x03(\tB\x04\xe2A\x01\x03R\fcompletedAmr\x12k\n" +
+	"\x1aremaining_required_actions\x18\x05 \x03(\x0e2'.plateau.iam.user.v1.UserRequiredActionB\x04\xe2A\x01\x03R\x18remainingRequiredActions\x12_\n" +
+	"\x14next_required_action\x18\x06 \x01(\x0e2'.plateau.iam.user.v1.UserRequiredActionB\x04\xe2A\x01\x03R\x12nextRequiredAction\x12\x1a\n" +
+	"\x05email\x18\a \x01(\tB\x04\xe2A\x01\x03R\x05email\x12C\n" +
+	"\x04oidc\x18\b \x01(\v2).plateau.iam.authn.v1.AuthFlowOidcContextB\x04\xe2A\x01\x03R\x04oidc\x12C\n" +
+	"\fexpires_time\x18\t \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\vexpiresTime\x12L\n" +
+	"\x11step_expires_time\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\x0fstepExpiresTime\x12'\n" +
+	"\fcontinue_url\x18\v \x01(\tB\x04\xe2A\x01\x03R\vcontinueUrl\x123\n" +
+	"\x04user\x18\f \x01(\v2\x19.plateau.iam.user.v1.UserB\x04\xe2A\x01\x03R\x04user\"E\n" +
+	"\x15CreateAuthFlowRequest\x12,\n" +
+	"\x0foidc_request_id\x18\x01 \x01(\tB\x04\xe2A\x01\x01R\roidcRequestId\"L\n" +
+	"\x16CreateAuthFlowResponse\x122\n" +
+	"\x04flow\x18\x01 \x01(\v2\x1e.plateau.iam.authn.v1.AuthFlowR\x04flow\"3\n" +
+	"\x12GetAuthFlowRequest\x12\x1d\n" +
+	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06flowId\"I\n" +
+	"\x13GetAuthFlowResponse\x122\n" +
+	"\x04flow\x18\x01 \x01(\v2\x1e.plateau.iam.authn.v1.AuthFlowR\x04flow\"z\n" +
+	"\x15SubmitPasswordRequest\x12\x1d\n" +
+	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06flowId\x12\x1a\n" +
+	"\x05email\x18\x02 \x01(\tB\x04\xe2A\x01\x02R\x05email\x12&\n" +
+	"\bpassword\x18\x03 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\bpassword\"L\n" +
+	"\x16SubmitPasswordResponse\x122\n" +
+	"\x04flow\x18\x01 \x01(\v2\x1e.plateau.iam.authn.v1.AuthFlowR\x04flow\"m\n" +
+	"\x1dCompleteUpdatePasswordRequest\x12\x1d\n" +
+	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06flowId\x12-\n" +
+	"\fnew_password\x18\x02 \x01(\tB\n" +
+	"\xe2A\x01\x02ڶ\x1a\x02z\x00R\vnewPassword\"T\n" +
+	"\x1eCompleteUpdatePasswordResponse\x122\n" +
+	"\x04flow\x18\x01 \x01(\v2\x1e.plateau.iam.authn.v1.AuthFlowR\x04flow\"5\n" +
+	"\x14ResetAuthFlowRequest\x12\x1d\n" +
+	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06flowId\"K\n" +
+	"\x15ResetAuthFlowResponse\x122\n" +
+	"\x04flow\x18\x01 \x01(\v2\x1e.plateau.iam.authn.v1.AuthFlowR\x04flow\"6\n" +
+	"\x15CancelAuthFlowRequest\x12\x1d\n" +
+	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06flowId\";\n" +
+	"\x16CancelAuthFlowResponse\x12!\n" +
+	"\fredirect_uri\x18\x01 \x01(\tR\vredirectUri*\xde\x02\n" +
 	"\x10AuthnErrorReason\x12\"\n" +
 	"\x1eAUTHN_ERROR_REASON_UNSPECIFIED\x10\x00\x121\n" +
-	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xa8\x01\n" +
-	"\fAuthnService\x12\x8f\x01\n" +
-	"\x05Login\x12\".plateau.iam.authn.v1.LoginRequest\x1a#.plateau.iam.authn.v1.LoginResponse\"=\xdaA\x0eemail,password\xa2\xbb\x18\x04\b\x02\x10\x01\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/login\x1a\x06\xca\xc1\x18\x02\b\x01BKZIgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1;iamauthnv1b\x06proto3"
+	"&AUTHN_ERROR_REASON_INVALID_CREDENTIALS\x10\x01\x1a\x05\xa8\xd4\x18\x91\x03\x12,\n" +
+	"!AUTHN_ERROR_REASON_FLOW_NOT_FOUND\x10\x02\x1a\x05\xa8\xd4\x18\x94\x03\x12*\n" +
+	"\x1fAUTHN_ERROR_REASON_FLOW_EXPIRED\x10\x03\x1a\x05\xa8\xd4\x18\x9a\x03\x12.\n" +
+	"#AUTHN_ERROR_REASON_FLOW_INVALIDATED\x10\x04\x1a\x05\xa8\xd4\x18\x99\x03\x12.\n" +
+	"#AUTHN_ERROR_REASON_INVALID_PASSWORD\x10\x05\x1a\x05\xa8\xd4\x18\x90\x03\x122\n" +
+	"'AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID\x10\x06\x1a\x05\xa8\xd4\x18\x90\x03\x1a\x05\xa0\xd4\x18\xf4\x03*\x96\x01\n" +
+	"\rAuthFlowState\x12\x1f\n" +
+	"\x1bAUTH_FLOW_STATE_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cAUTH_FLOW_STATE_AUTHENTICATE\x10\x01\x12#\n" +
+	"\x1fAUTH_FLOW_STATE_REQUIRED_ACTION\x10\x02\x12\x1d\n" +
+	"\x19AUTH_FLOW_STATE_COMPLETED\x10\x03*W\n" +
+	"\x10AuthFactorMethod\x12\"\n" +
+	"\x1eAUTH_FACTOR_METHOD_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bAUTH_FACTOR_METHOD_PASSWORD\x10\x012\xd8\b\n" +
+	"\fAuthnService\x12\x91\x01\n" +
+	"\x0eCreateAuthFlow\x12+.plateau.iam.authn.v1.CreateAuthFlowRequest\x1a,.plateau.iam.authn.v1.CreateAuthFlowResponse\"$\xa2\xbb\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/flows\x12\x99\x01\n" +
+	"\vGetAuthFlow\x12(.plateau.iam.authn.v1.GetAuthFlowRequest\x1a).plateau.iam.authn.v1.GetAuthFlowResponse\"5\xdaA\aflow_id\xa2\xbb\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1f\x12\x1d/v1/iam/authn/flows/{flow_id}\x12\xc5\x01\n" +
+	"\x0eSubmitPassword\x12+.plateau.iam.authn.v1.SubmitPasswordRequest\x1a,.plateau.iam.authn.v1.SubmitPasswordResponse\"X\xdaA\x16flow_id,email,password\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x021:\x01*\",/v1/iam/authn/flows/{flow_id}:submitPassword\x12\xe3\x01\n" +
+	"\x16CompleteUpdatePassword\x123.plateau.iam.authn.v1.CompleteUpdatePasswordRequest\x1a4.plateau.iam.authn.v1.CompleteUpdatePasswordResponse\"^\xdaA\x14flow_id,new_password\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x029:\x01*\"4/v1/iam/authn/flows/{flow_id}:completeUpdatePassword\x12\xaa\x01\n" +
+	"\rResetAuthFlow\x12*.plateau.iam.authn.v1.ResetAuthFlowRequest\x1a+.plateau.iam.authn.v1.ResetAuthFlowResponse\"@\xdaA\aflow_id\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/authn/flows/{flow_id}:reset\x12\xae\x01\n" +
+	"\x0eCancelAuthFlow\x12+.plateau.iam.authn.v1.CancelAuthFlowRequest\x1a,.plateau.iam.authn.v1.CancelAuthFlowResponse\"A\xdaA\aflow_id\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x02):\x01*\"$/v1/iam/authn/flows/{flow_id}:cancel\x1a\f\xca\xc1\x18\x02\b\x01\xea\xc7\x18\x02\b\x01BKZIgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1;iamauthnv1b\x06proto3"
 
 var (
 	file_plateau_iam_authn_v1_authn_proto_rawDescOnce sync.Once
@@ -201,23 +1015,61 @@ func file_plateau_iam_authn_v1_authn_proto_rawDescGZIP() []byte {
 	return file_plateau_iam_authn_v1_authn_proto_rawDescData
 }
 
-var file_plateau_iam_authn_v1_authn_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_plateau_iam_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_plateau_iam_authn_v1_authn_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_plateau_iam_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_plateau_iam_authn_v1_authn_proto_goTypes = []any{
-	(AuthnErrorReason)(0), // 0: plateau.iam.authn.v1.AuthnErrorReason
-	(*LoginRequest)(nil),  // 1: plateau.iam.authn.v1.LoginRequest
-	(*LoginResponse)(nil), // 2: plateau.iam.authn.v1.LoginResponse
-	(*v1.User)(nil),       // 3: plateau.iam.user.v1.User
+	(AuthnErrorReason)(0),                  // 0: plateau.iam.authn.v1.AuthnErrorReason
+	(AuthFlowState)(0),                     // 1: plateau.iam.authn.v1.AuthFlowState
+	(AuthFactorMethod)(0),                  // 2: plateau.iam.authn.v1.AuthFactorMethod
+	(*AuthFlowOidcContext)(nil),            // 3: plateau.iam.authn.v1.AuthFlowOidcContext
+	(*AuthFlow)(nil),                       // 4: plateau.iam.authn.v1.AuthFlow
+	(*CreateAuthFlowRequest)(nil),          // 5: plateau.iam.authn.v1.CreateAuthFlowRequest
+	(*CreateAuthFlowResponse)(nil),         // 6: plateau.iam.authn.v1.CreateAuthFlowResponse
+	(*GetAuthFlowRequest)(nil),             // 7: plateau.iam.authn.v1.GetAuthFlowRequest
+	(*GetAuthFlowResponse)(nil),            // 8: plateau.iam.authn.v1.GetAuthFlowResponse
+	(*SubmitPasswordRequest)(nil),          // 9: plateau.iam.authn.v1.SubmitPasswordRequest
+	(*SubmitPasswordResponse)(nil),         // 10: plateau.iam.authn.v1.SubmitPasswordResponse
+	(*CompleteUpdatePasswordRequest)(nil),  // 11: plateau.iam.authn.v1.CompleteUpdatePasswordRequest
+	(*CompleteUpdatePasswordResponse)(nil), // 12: plateau.iam.authn.v1.CompleteUpdatePasswordResponse
+	(*ResetAuthFlowRequest)(nil),           // 13: plateau.iam.authn.v1.ResetAuthFlowRequest
+	(*ResetAuthFlowResponse)(nil),          // 14: plateau.iam.authn.v1.ResetAuthFlowResponse
+	(*CancelAuthFlowRequest)(nil),          // 15: plateau.iam.authn.v1.CancelAuthFlowRequest
+	(*CancelAuthFlowResponse)(nil),         // 16: plateau.iam.authn.v1.CancelAuthFlowResponse
+	(v1.UserRequiredAction)(0),             // 17: plateau.iam.user.v1.UserRequiredAction
+	(*timestamppb.Timestamp)(nil),          // 18: google.protobuf.Timestamp
+	(*v1.User)(nil),                        // 19: plateau.iam.user.v1.User
 }
 var file_plateau_iam_authn_v1_authn_proto_depIdxs = []int32{
-	3, // 0: plateau.iam.authn.v1.LoginResponse.user:type_name -> plateau.iam.user.v1.User
-	1, // 1: plateau.iam.authn.v1.AuthnService.Login:input_type -> plateau.iam.authn.v1.LoginRequest
-	2, // 2: plateau.iam.authn.v1.AuthnService.Login:output_type -> plateau.iam.authn.v1.LoginResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1,  // 0: plateau.iam.authn.v1.AuthFlow.state:type_name -> plateau.iam.authn.v1.AuthFlowState
+	2,  // 1: plateau.iam.authn.v1.AuthFlow.available_methods:type_name -> plateau.iam.authn.v1.AuthFactorMethod
+	17, // 2: plateau.iam.authn.v1.AuthFlow.remaining_required_actions:type_name -> plateau.iam.user.v1.UserRequiredAction
+	17, // 3: plateau.iam.authn.v1.AuthFlow.next_required_action:type_name -> plateau.iam.user.v1.UserRequiredAction
+	3,  // 4: plateau.iam.authn.v1.AuthFlow.oidc:type_name -> plateau.iam.authn.v1.AuthFlowOidcContext
+	18, // 5: plateau.iam.authn.v1.AuthFlow.expires_time:type_name -> google.protobuf.Timestamp
+	18, // 6: plateau.iam.authn.v1.AuthFlow.step_expires_time:type_name -> google.protobuf.Timestamp
+	19, // 7: plateau.iam.authn.v1.AuthFlow.user:type_name -> plateau.iam.user.v1.User
+	4,  // 8: plateau.iam.authn.v1.CreateAuthFlowResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
+	4,  // 9: plateau.iam.authn.v1.GetAuthFlowResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
+	4,  // 10: plateau.iam.authn.v1.SubmitPasswordResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
+	4,  // 11: plateau.iam.authn.v1.CompleteUpdatePasswordResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
+	4,  // 12: plateau.iam.authn.v1.ResetAuthFlowResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
+	5,  // 13: plateau.iam.authn.v1.AuthnService.CreateAuthFlow:input_type -> plateau.iam.authn.v1.CreateAuthFlowRequest
+	7,  // 14: plateau.iam.authn.v1.AuthnService.GetAuthFlow:input_type -> plateau.iam.authn.v1.GetAuthFlowRequest
+	9,  // 15: plateau.iam.authn.v1.AuthnService.SubmitPassword:input_type -> plateau.iam.authn.v1.SubmitPasswordRequest
+	11, // 16: plateau.iam.authn.v1.AuthnService.CompleteUpdatePassword:input_type -> plateau.iam.authn.v1.CompleteUpdatePasswordRequest
+	13, // 17: plateau.iam.authn.v1.AuthnService.ResetAuthFlow:input_type -> plateau.iam.authn.v1.ResetAuthFlowRequest
+	15, // 18: plateau.iam.authn.v1.AuthnService.CancelAuthFlow:input_type -> plateau.iam.authn.v1.CancelAuthFlowRequest
+	6,  // 19: plateau.iam.authn.v1.AuthnService.CreateAuthFlow:output_type -> plateau.iam.authn.v1.CreateAuthFlowResponse
+	8,  // 20: plateau.iam.authn.v1.AuthnService.GetAuthFlow:output_type -> plateau.iam.authn.v1.GetAuthFlowResponse
+	10, // 21: plateau.iam.authn.v1.AuthnService.SubmitPassword:output_type -> plateau.iam.authn.v1.SubmitPasswordResponse
+	12, // 22: plateau.iam.authn.v1.AuthnService.CompleteUpdatePassword:output_type -> plateau.iam.authn.v1.CompleteUpdatePasswordResponse
+	14, // 23: plateau.iam.authn.v1.AuthnService.ResetAuthFlow:output_type -> plateau.iam.authn.v1.ResetAuthFlowResponse
+	16, // 24: plateau.iam.authn.v1.AuthnService.CancelAuthFlow:output_type -> plateau.iam.authn.v1.CancelAuthFlowResponse
+	19, // [19:25] is the sub-list for method output_type
+	13, // [13:19] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_plateau_iam_authn_v1_authn_proto_init() }
@@ -230,8 +1082,8 @@ func file_plateau_iam_authn_v1_authn_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plateau_iam_authn_v1_authn_proto_rawDesc), len(file_plateau_iam_authn_v1_authn_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   2,
+			NumEnums:      3,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

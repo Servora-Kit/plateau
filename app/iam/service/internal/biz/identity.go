@@ -2,6 +2,7 @@ package biz
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -26,4 +27,9 @@ func ValidatePassword(plaintext string) error {
 		return ErrInvalidPassword
 	}
 	return nil
+}
+
+// NormalizeTimestamp truncates timestamps to UTC microsecond precision to match PostgreSQL timestamptz storage.
+func NormalizeTimestamp(value time.Time) time.Time {
+	return value.UTC().Truncate(time.Microsecond)
 }

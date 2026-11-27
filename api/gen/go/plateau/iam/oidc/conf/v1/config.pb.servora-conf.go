@@ -60,6 +60,9 @@ func (m *OIDC) Apply() error {
 	if m.ServiceAccessTokenTtl == nil {
 		m.ServiceAccessTokenTtl = durationpb.New(300000000000)
 	}
+	if m.AuthRequestTtl == nil {
+		m.AuthRequestTtl = durationpb.New(1800000000000)
+	}
 	for i, v := range m.Clients {
 		if v == nil {
 			return fmt.Errorf("%s[%d]: nil message", "clients", i)

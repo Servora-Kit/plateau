@@ -9,7 +9,25 @@ import (
 
 // _auditRules is the immutable backing store for AuditRules.
 var _auditRules = map[string]*v1.AuditRule{
-	"/plateau.iam.authn.v1.AuthnService/Login": {
+	"/plateau.iam.authn.v1.AuthnService/CancelAuthFlow": {
+		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
+		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
+	},
+	"/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword": {
+		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
+		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
+	},
+	"/plateau.iam.authn.v1.AuthnService/CreateAuthFlow": {
+		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
+	},
+	"/plateau.iam.authn.v1.AuthnService/GetAuthFlow": {
+		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
+	},
+	"/plateau.iam.authn.v1.AuthnService/ResetAuthFlow": {
+		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
+		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
+	},
+	"/plateau.iam.authn.v1.AuthnService/SubmitPassword": {
 		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
 		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
 	},

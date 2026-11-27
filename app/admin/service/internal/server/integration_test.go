@@ -725,6 +725,66 @@ func cookieByName(cookies []*http.Cookie, name string) *http.Cookie {
 	return nil
 }
 
+func performIAMAuthFlowLogin(t *testing.T, iamOrigin, email, password, newPassword string) *http.Cookie {
+	t.Helper()
+	createRes, createRaw := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/flows", iamOrigin, "{}")
+	if createRes.StatusCode != http.StatusOK {
+		t.Fatalf("IAM CreateAuthFlow status=%d body=%s", createRes.StatusCode, string(createRaw))
+	}
+	var createPayload struct {
+		Flow struct {
+			FlowID string `json:"flowId"`
+		} `json:"flow"`
+	}
+	if err := json.Unmarshal(createRaw, &createPayload); err != nil || createPayload.Flow.FlowID == "" {
+		t.Fatalf("IAM CreateAuthFlow decode err=%v body=%s", err, string(createRaw))
+	}
+	flowID := createPayload.Flow.FlowID
+	ownerCookie := cookieByName(createRes.Cookies(), "iam_session")
+	if ownerCookie == nil || ownerCookie.Value == "" {
+		t.Fatal("expected iam_session owner cookie from CreateAuthFlow")
+	}
+
+	submitRes, submitRaw := doJSON(
+		t,
+		http.MethodPost,
+		iamOrigin+"/v1/iam/authn/flows/"+flowID+":submitPassword",
+		iamOrigin,
+		fmt.Sprintf(`{"email":%q,"password":%q}`, email, password),
+		ownerCookie,
+	)
+	if submitRes.StatusCode != http.StatusOK {
+		t.Fatalf("IAM SubmitPassword(%s) status=%d body=%s", email, submitRes.StatusCode, string(submitRaw))
+	}
+	if newPassword == "" {
+		loginCookie := cookieByName(submitRes.Cookies(), "iam_session")
+		if loginCookie == nil || loginCookie.Value == "" {
+			t.Fatalf("expected rotated iam_session cookie after SubmitPassword(%s)", email)
+		}
+		return loginCookie
+	}
+
+	if updated := cookieByName(submitRes.Cookies(), "iam_session"); updated != nil && updated.Value != "" {
+		ownerCookie = updated
+	}
+	completeRes, completeRaw := doJSON(
+		t,
+		http.MethodPost,
+		iamOrigin+"/v1/iam/authn/flows/"+flowID+":completeUpdatePassword",
+		iamOrigin,
+		fmt.Sprintf(`{"newPassword":%q}`, newPassword),
+		ownerCookie,
+	)
+	if completeRes.StatusCode != http.StatusOK {
+		t.Fatalf("IAM CompleteUpdatePassword(%s) status=%d body=%s", email, completeRes.StatusCode, string(completeRaw))
+	}
+	loginCookie := cookieByName(completeRes.Cookies(), "iam_session")
+	if loginCookie == nil || loginCookie.Value == "" {
+		t.Fatalf("expected rotated iam_session cookie after CompleteUpdatePassword(%s)", email)
+	}
+	return loginCookie
+}
+
 func performBrowserOIDCLogin(t *testing.T, adminOrigin, iamOrigin, returnTo string, iamSession *http.Cookie, preAdminCookie *http.Cookie) (*http.Response, []*http.Cookie) {
 	t.Helper()
 	noRedirect := &http.Client{
@@ -875,18 +935,71 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	res, raw = doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/users", adminOrigin, "")
 	assertErrorReason(t, res.StatusCode, raw, http.StatusUnauthorized, "SECURITY_ERROR_REASON_UNAUTHENTICATED")
 
-	// Complete initial password change for bootstrap user on IAM to obtain IAM browser session.
-	iamInitRes, iamInitBody := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/account/change-initial-password", iamOrigin, fmt.Sprintf(
-		`{"email":%q,"currentPassword":%q,"newPassword":%q}`,
-		adminBootstrapEml, initialPassword, adminNewPassword,
-	))
-	if iamInitRes.StatusCode != http.StatusOK {
-		t.Fatalf("IAM ChangeInitialPassword status=%d body=%s", iamInitRes.StatusCode, string(iamInitBody))
+	// Verify OIDC user cancellation end-to-end: Admin /login -> IAM /authorize -> /authorize/callback -> CreateAuthFlow -> CancelAuthFlow -> Admin /callback -> ?error=login_cancelled.
+	{
+		noRedir := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+		startRes, err := noRedir.Get(adminOrigin + "/v1/admin/auth/login")
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = startRes.Body.Close()
+		cancelHandshake := cookieByName(startRes.Cookies(), "admin_oidc_handshake")
+		authRes, err := noRedir.Get(startRes.Header.Get("Location"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = authRes.Body.Close()
+		cbLoc := authRes.Header.Get("Location")
+		if strings.HasPrefix(cbLoc, "/") {
+			cbLoc = iamOrigin + cbLoc
+		}
+		iamLoginRedir, err := noRedir.Get(cbLoc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = iamLoginRedir.Body.Close()
+		loginRedirectURL, err := url.Parse(iamLoginRedir.Header.Get("Location"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		oidcReqID := loginRedirectURL.Query().Get("request_id")
+		cFlowRes, cFlowRaw := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/flows", iamOrigin, fmt.Sprintf(`{"oidcRequestId":%q}`, oidcReqID))
+		if cFlowRes.StatusCode != http.StatusOK {
+			t.Fatalf("CreateAuthFlow(cancel) status=%d body=%s", cFlowRes.StatusCode, string(cFlowRaw))
+		}
+		var cFlowPayload struct {
+			Flow struct {
+				FlowID string `json:"flowId"`
+			} `json:"flow"`
+		}
+		if err := json.Unmarshal(cFlowRaw, &cFlowPayload); err != nil {
+			t.Fatal(err)
+		}
+		cOwnerCookie := cookieByName(cFlowRes.Cookies(), "iam_session")
+		cancelRes, cancelRaw := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/flows/"+cFlowPayload.Flow.FlowID+":cancel", iamOrigin, "{}", cOwnerCookie)
+		if cancelRes.StatusCode != http.StatusOK {
+			t.Fatalf("CancelAuthFlow status=%d body=%s", cancelRes.StatusCode, string(cancelRaw))
+		}
+		var cancelPayload struct {
+			RedirectURI string `json:"redirectUri"`
+		}
+		if err := json.Unmarshal(cancelRaw, &cancelPayload); err != nil {
+			t.Fatal(err)
+		}
+		adminCancelReq, _ := http.NewRequest(http.MethodGet, cancelPayload.RedirectURI, nil)
+		adminCancelReq.AddCookie(cancelHandshake)
+		adminCancelRes, err := noRedir.Do(adminCancelReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = adminCancelRes.Body.Close()
+		if adminCancelRes.StatusCode != http.StatusFound || adminCancelRes.Header.Get("Location") != "/auth/login?error=login_cancelled" {
+			t.Fatalf("Admin cancelled callback = (%d, %q), want 302 /auth/login?error=login_cancelled", adminCancelRes.StatusCode, adminCancelRes.Header.Get("Location"))
+		}
 	}
-	adminIAMCookie := cookieByName(iamInitRes.Cookies(), "iam_session")
-	if adminIAMCookie == nil || adminIAMCookie.Value == "" {
-		t.Fatal("expected iam_session cookie after ChangeInitialPassword")
-	}
+
+	// Complete initial password update via IAM Auth Flow for bootstrap user to obtain IAM browser session.
+	adminIAMCookie := performIAMAuthFlowLogin(t, iamOrigin, adminBootstrapEml, initialPassword, adminNewPassword)
 
 	// AC-B1: Perform full browser OIDC Authorization Code + PKCE S256 + state + nonce login.
 	// Callback lazily seeds user:<adminID> admin admin:global and creates Admin's local SCS session.
@@ -956,13 +1069,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	}
 
 	// Re-login on IAM, then test Admin Logout: destroys ONLY Admin session while IAM session stays valid!
-	iamReloginRes, iamReloginRaw := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/login", iamOrigin, fmt.Sprintf(
-		`{"email":%q,"password":%q}`, adminBootstrapEml, adminNewPassword,
-	))
-	if iamReloginRes.StatusCode != http.StatusOK {
-		t.Fatalf("IAM relogin status=%d body=%s", iamReloginRes.StatusCode, string(iamReloginRaw))
-	}
-	adminIAMCookie = cookieByName(iamReloginRes.Cookies(), "iam_session")
+	adminIAMCookie = performIAMAuthFlowLogin(t, iamOrigin, adminBootstrapEml, adminNewPassword, "")
 
 	// Cross-origin or non-JSON POST to /v1/admin/auth/logout is blocked by session.NewFilter (403 / 415).
 	badOriginReq, _ := http.NewRequest(http.MethodPost, adminOrigin+"/v1/admin/auth/logout", strings.NewReader("{}"))
@@ -1024,13 +1131,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	if verifyBobRes.StatusCode != http.StatusOK {
 		t.Fatalf("IAM VerifyEmail(bob) status=%d body=%s", verifyBobRes.StatusCode, string(verifyBobRaw))
 	}
-	bobIAMLoginRes, _ := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/login", iamOrigin, fmt.Sprintf(
-		`{"email":"bob@example.com","password":%q}`, bobInitialPass,
-	))
-	if bobIAMLoginRes.StatusCode != http.StatusOK {
-		t.Fatalf("IAM Login(bob) status = %d", bobIAMLoginRes.StatusCode)
-	}
-	bobIAMCookie := cookieByName(bobIAMLoginRes.Cookies(), "iam_session")
+	bobIAMCookie := performIAMAuthFlowLogin(t, iamOrigin, "bob@example.com", bobInitialPass, "")
 
 	bobCBRes, bobCBCookies := performBrowserOIDCLogin(t, adminOrigin, iamOrigin, "/", bobIAMCookie, nil)
 	if bobCBRes.StatusCode != http.StatusFound || bobCBRes.Header.Get("Location") != "/auth/login?error=access_denied" {
@@ -1134,10 +1235,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	if setPwdRes.StatusCode != http.StatusOK {
 		t.Fatalf("SetUserPassword status=%d body=%s", setPwdRes.StatusCode, string(setPwdRaw))
 	}
-	bobNewLogin, _ := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/login", iamOrigin, fmt.Sprintf(`{"email":"bob@example.com","password":%q}`, bobResetPass))
-	if bobNewLogin.StatusCode != http.StatusOK {
-		t.Fatalf("Bob could not login with admin-reset password: status=%d", bobNewLogin.StatusCode)
-	}
+	_ = performIAMAuthFlowLogin(t, iamOrigin, "bob@example.com", bobResetPass, "")
 
 	// AC-B5: Self-protection & Fellow-admin protection BEFORE calling IAM.
 	adminResourceName := "users/" + adminUserID

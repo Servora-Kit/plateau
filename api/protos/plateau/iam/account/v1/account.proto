@@ -108,16 +108,6 @@ service AccountService {
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
   }
 
-  // ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-  rpc ChangeInitialPassword(ChangeInitialPasswordRequest) returns (ChangeInitialPasswordResponse) {
-    option (google.api.http) = {
-      post: "/v1/iam/account/change-initial-password"
-      body: "*"
-    };
-    option (google.api.method_signature) = "email,current_password,new_password";
-    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
-  }
-
   // DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
     option (google.api.http) = {
@@ -260,30 +250,6 @@ message ChangePasswordResponse {}
 message RequestPasswordResetResponse {}
 
 message ConfirmPasswordResetResponse {}
-
-message ChangeInitialPasswordRequest {
-  // Service canonicalizes email before locating the Login Identifier.
-  string email = 1 [(google.api.field_behavior) = REQUIRED];
-  // Current initial password is verified independently and never logged or returned.
-  string current_password = 2 [
-    (google.api.field_behavior) = REQUIRED,
-    (buf.validate.field).string = {
-      min_len: 8
-      max_len: 128
-    },
-    (servora.redact.v3.value).string = ""
-  ];
-  string new_password = 3 [
-    (google.api.field_behavior) = REQUIRED,
-    (buf.validate.field).string = {
-      min_len: 8
-      max_len: 128
-    },
-    (servora.redact.v3.value).string = ""
-  ];
-}
-
-message ChangeInitialPasswordResponse {}
 
 message DeleteAccountRequest {
   // Current password is verified before soft-deleting the authenticated user's account.

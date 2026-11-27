@@ -3,6 +3,7 @@
 
 // OIDC configures the Plateau IAM OpenID Provider.
 export type OIDC = {
+  authRequestTtl?: wellKnownDuration;
   // 静态应用注册；允许的用户或机器流程由各客户端的授权类型决定。
   clients?: OAuthClient[];
   // Stable zitadel/oidc provider crypto-key path, distinct from signing and TLS keys.

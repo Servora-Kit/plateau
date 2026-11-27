@@ -19,17 +19,32 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthnService_Login_FullMethodName = "/plateau.iam.authn.v1.AuthnService/Login"
+	AuthnService_CreateAuthFlow_FullMethodName         = "/plateau.iam.authn.v1.AuthnService/CreateAuthFlow"
+	AuthnService_GetAuthFlow_FullMethodName            = "/plateau.iam.authn.v1.AuthnService/GetAuthFlow"
+	AuthnService_SubmitPassword_FullMethodName         = "/plateau.iam.authn.v1.AuthnService/SubmitPassword"
+	AuthnService_CompleteUpdatePassword_FullMethodName = "/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword"
+	AuthnService_ResetAuthFlow_FullMethodName          = "/plateau.iam.authn.v1.AuthnService/ResetAuthFlow"
+	AuthnService_CancelAuthFlow_FullMethodName         = "/plateau.iam.authn.v1.AuthnService/CancelAuthFlow"
 )
 
 // AuthnServiceClient is the client API for AuthnService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AuthnService owns email/password authentication.
+// AuthnService owns server-side browser authentication flows.
 type AuthnServiceClient interface {
-	// Login verifies credentials and establishes one opaque browser session.
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	// CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+	CreateAuthFlow(ctx context.Context, in *CreateAuthFlowRequest, opts ...grpc.CallOption) (*CreateAuthFlowResponse, error)
+	// GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+	GetAuthFlow(ctx context.Context, in *GetAuthFlowRequest, opts ...grpc.CallOption) (*GetAuthFlowResponse, error)
+	// SubmitPassword verifies email and password credentials and advances or completes the flow.
+	SubmitPassword(ctx context.Context, in *SubmitPasswordRequest, opts ...grpc.CallOption) (*SubmitPasswordResponse, error)
+	// CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+	CompleteUpdatePassword(ctx context.Context, in *CompleteUpdatePasswordRequest, opts ...grpc.CallOption) (*CompleteUpdatePasswordResponse, error)
+	// ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+	ResetAuthFlow(ctx context.Context, in *ResetAuthFlowRequest, opts ...grpc.CallOption) (*ResetAuthFlowResponse, error)
+	// CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+	CancelAuthFlow(ctx context.Context, in *CancelAuthFlowRequest, opts ...grpc.CallOption) (*CancelAuthFlowResponse, error)
 }
 
 type authnServiceClient struct {
@@ -40,10 +55,60 @@ func NewAuthnServiceClient(cc grpc.ClientConnInterface) AuthnServiceClient {
 	return &authnServiceClient{cc}
 }
 
-func (c *authnServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+func (c *authnServiceClient) CreateAuthFlow(ctx context.Context, in *CreateAuthFlowRequest, opts ...grpc.CallOption) (*CreateAuthFlowResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LoginResponse)
-	err := c.cc.Invoke(ctx, AuthnService_Login_FullMethodName, in, out, cOpts...)
+	out := new(CreateAuthFlowResponse)
+	err := c.cc.Invoke(ctx, AuthnService_CreateAuthFlow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authnServiceClient) GetAuthFlow(ctx context.Context, in *GetAuthFlowRequest, opts ...grpc.CallOption) (*GetAuthFlowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAuthFlowResponse)
+	err := c.cc.Invoke(ctx, AuthnService_GetAuthFlow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authnServiceClient) SubmitPassword(ctx context.Context, in *SubmitPasswordRequest, opts ...grpc.CallOption) (*SubmitPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubmitPasswordResponse)
+	err := c.cc.Invoke(ctx, AuthnService_SubmitPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authnServiceClient) CompleteUpdatePassword(ctx context.Context, in *CompleteUpdatePasswordRequest, opts ...grpc.CallOption) (*CompleteUpdatePasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CompleteUpdatePasswordResponse)
+	err := c.cc.Invoke(ctx, AuthnService_CompleteUpdatePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authnServiceClient) ResetAuthFlow(ctx context.Context, in *ResetAuthFlowRequest, opts ...grpc.CallOption) (*ResetAuthFlowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResetAuthFlowResponse)
+	err := c.cc.Invoke(ctx, AuthnService_ResetAuthFlow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authnServiceClient) CancelAuthFlow(ctx context.Context, in *CancelAuthFlowRequest, opts ...grpc.CallOption) (*CancelAuthFlowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CancelAuthFlowResponse)
+	err := c.cc.Invoke(ctx, AuthnService_CancelAuthFlow_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +119,20 @@ func (c *authnServiceClient) Login(ctx context.Context, in *LoginRequest, opts .
 // All implementations must embed UnimplementedAuthnServiceServer
 // for forward compatibility.
 //
-// AuthnService owns email/password authentication.
+// AuthnService owns server-side browser authentication flows.
 type AuthnServiceServer interface {
-	// Login verifies credentials and establishes one opaque browser session.
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	// CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+	CreateAuthFlow(context.Context, *CreateAuthFlowRequest) (*CreateAuthFlowResponse, error)
+	// GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+	GetAuthFlow(context.Context, *GetAuthFlowRequest) (*GetAuthFlowResponse, error)
+	// SubmitPassword verifies email and password credentials and advances or completes the flow.
+	SubmitPassword(context.Context, *SubmitPasswordRequest) (*SubmitPasswordResponse, error)
+	// CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+	CompleteUpdatePassword(context.Context, *CompleteUpdatePasswordRequest) (*CompleteUpdatePasswordResponse, error)
+	// ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+	ResetAuthFlow(context.Context, *ResetAuthFlowRequest) (*ResetAuthFlowResponse, error)
+	// CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+	CancelAuthFlow(context.Context, *CancelAuthFlowRequest) (*CancelAuthFlowResponse, error)
 	mustEmbedUnimplementedAuthnServiceServer()
 }
 
@@ -68,8 +143,23 @@ type AuthnServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthnServiceServer struct{}
 
-func (UnimplementedAuthnServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Login not implemented")
+func (UnimplementedAuthnServiceServer) CreateAuthFlow(context.Context, *CreateAuthFlowRequest) (*CreateAuthFlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAuthFlow not implemented")
+}
+func (UnimplementedAuthnServiceServer) GetAuthFlow(context.Context, *GetAuthFlowRequest) (*GetAuthFlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAuthFlow not implemented")
+}
+func (UnimplementedAuthnServiceServer) SubmitPassword(context.Context, *SubmitPasswordRequest) (*SubmitPasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SubmitPassword not implemented")
+}
+func (UnimplementedAuthnServiceServer) CompleteUpdatePassword(context.Context, *CompleteUpdatePasswordRequest) (*CompleteUpdatePasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompleteUpdatePassword not implemented")
+}
+func (UnimplementedAuthnServiceServer) ResetAuthFlow(context.Context, *ResetAuthFlowRequest) (*ResetAuthFlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResetAuthFlow not implemented")
+}
+func (UnimplementedAuthnServiceServer) CancelAuthFlow(context.Context, *CancelAuthFlowRequest) (*CancelAuthFlowResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CancelAuthFlow not implemented")
 }
 func (UnimplementedAuthnServiceServer) mustEmbedUnimplementedAuthnServiceServer() {}
 func (UnimplementedAuthnServiceServer) testEmbeddedByValue()                      {}
@@ -92,20 +182,110 @@ func RegisterAuthnServiceServer(s grpc.ServiceRegistrar, srv AuthnServiceServer)
 	s.RegisterService(&AuthnService_ServiceDesc, srv)
 }
 
-func _AuthnService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginRequest)
+func _AuthnService_CreateAuthFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAuthFlowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthnServiceServer).Login(ctx, in)
+		return srv.(AuthnServiceServer).CreateAuthFlow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthnService_Login_FullMethodName,
+		FullMethod: AuthnService_CreateAuthFlow_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthnServiceServer).Login(ctx, req.(*LoginRequest))
+		return srv.(AuthnServiceServer).CreateAuthFlow(ctx, req.(*CreateAuthFlowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthnService_GetAuthFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthFlowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).GetAuthFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_GetAuthFlow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).GetAuthFlow(ctx, req.(*GetAuthFlowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthnService_SubmitPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).SubmitPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_SubmitPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).SubmitPassword(ctx, req.(*SubmitPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthnService_CompleteUpdatePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompleteUpdatePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).CompleteUpdatePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_CompleteUpdatePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).CompleteUpdatePassword(ctx, req.(*CompleteUpdatePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthnService_ResetAuthFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetAuthFlowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).ResetAuthFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_ResetAuthFlow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).ResetAuthFlow(ctx, req.(*ResetAuthFlowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthnService_CancelAuthFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelAuthFlowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).CancelAuthFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_CancelAuthFlow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).CancelAuthFlow(ctx, req.(*CancelAuthFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -118,8 +298,28 @@ var AuthnService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AuthnServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Login",
-			Handler:    _AuthnService_Login_Handler,
+			MethodName: "CreateAuthFlow",
+			Handler:    _AuthnService_CreateAuthFlow_Handler,
+		},
+		{
+			MethodName: "GetAuthFlow",
+			Handler:    _AuthnService_GetAuthFlow_Handler,
+		},
+		{
+			MethodName: "SubmitPassword",
+			Handler:    _AuthnService_SubmitPassword_Handler,
+		},
+		{
+			MethodName: "CompleteUpdatePassword",
+			Handler:    _AuthnService_CompleteUpdatePassword_Handler,
+		},
+		{
+			MethodName: "ResetAuthFlow",
+			Handler:    _AuthnService_ResetAuthFlow_Handler,
+		},
+		{
+			MethodName: "CancelAuthFlow",
+			Handler:    _AuthnService_CancelAuthFlow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

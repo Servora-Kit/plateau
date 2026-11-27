@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"log/slog"
@@ -720,12 +721,25 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 		t.Fatalf("unauthenticated ListEvents status = %d, want 401", unauthAuditRes.StatusCode)
 	}
 
-	// 2. Failed IAM login (wrong password) + ChangeInitialPassword + Admin OIDC browser login.
+	// 2. Failed IAM login (wrong password) + Auth Flow CompleteUpdatePassword + Admin OIDC browser login.
 	const wrongPass = "{{SECRET_0008wrongpass}}"
-	badLoginRes, _ := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/login", iamOrigin,
-		fmt.Sprintf(`{"email":%q,"password":%q}`, adminBootstrapEml, wrongPass))
+	badFlowRes, badFlowRaw := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/flows", iamOrigin, "{}")
+	if badFlowRes.StatusCode != http.StatusOK {
+		t.Fatalf("CreateAuthFlow(wrong pass) status=%d body=%s", badFlowRes.StatusCode, string(badFlowRaw))
+	}
+	var badFlowPayload struct {
+		Flow struct {
+			FlowID string `json:"flowId"`
+		} `json:"flow"`
+	}
+	if err := json.Unmarshal(badFlowRaw, &badFlowPayload); err != nil {
+		t.Fatal(err)
+	}
+	badOwnerCookie := cookieByName(badFlowRes.Cookies(), "iam_session")
+	badLoginRes, _ := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/authn/flows/"+badFlowPayload.Flow.FlowID+":submitPassword", iamOrigin,
+		fmt.Sprintf(`{"email":%q,"password":%q}`, adminBootstrapEml, wrongPass), badOwnerCookie)
 	if badLoginRes.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("wrong password login status = %d, want 401", badLoginRes.StatusCode)
+		t.Fatalf("wrong password SubmitPassword status = %d, want 401", badLoginRes.StatusCode)
 	}
 
 	// Trigger OIDC login before IAM session exists -> unauthenticated /authorize/callback 302 /login must NOT emit noise.
@@ -754,15 +768,7 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 	}
 
 	// Complete initial password change on IAM to obtain IAM session cookie.
-	initPassRes, initPassRaw := doJSON(t, http.MethodPost, iamOrigin+"/v1/iam/account/change-initial-password", iamOrigin,
-		fmt.Sprintf(`{"email":%q,"currentPassword":%q,"newPassword":%q}`, adminBootstrapEml, initialPassword, adminNewPassword))
-	if initPassRes.StatusCode != http.StatusOK {
-		t.Fatalf("ChangeInitialPassword status=%d body=%s", initPassRes.StatusCode, string(initPassRaw))
-	}
-	iamCookie := cookieByName(initPassRes.Cookies(), "iam_session")
-	if iamCookie == nil {
-		t.Fatal("missing iam_session cookie after ChangeInitialPassword")
-	}
+	iamCookie := performIAMAuthFlowLogin(t, iamOrigin, adminBootstrapEml, initialPassword, adminNewPassword)
 
 	// Complete OIDC callback on IAM & Admin.
 	iamCBReq, _ := http.NewRequest(http.MethodGet, cbURL, nil)
@@ -893,6 +899,8 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 			"/plateau.iam.user.v1.UserService/GetUser",
 			"/plateau.admin.auth.v1.AuthService/GetSession",
 			"/plateau.iam.account.v1.AccountService/GetProfile",
+			"/plateau.iam.authn.v1.AuthnService/CreateAuthFlow",
+			"/plateau.iam.authn.v1.AuthnService/GetAuthFlow",
 			"POST /oauth/token":
 			t.Fatalf("unexpected noise event persisted for read-only/token operation: %+v", ev)
 		}
@@ -905,7 +913,7 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 		if ev.GetOperation() == "GET /v1/admin/auth/callback" && ev.GetSuccess() {
 			hasAdminCallback = true
 		}
-		if ev.GetOperation() == "/plateau.iam.authn.v1.AuthnService/Login" && !ev.GetSuccess() && ev.GetActorType() == "anonymous" {
+		if ev.GetOperation() == "/plateau.iam.authn.v1.AuthnService/SubmitPassword" && !ev.GetSuccess() && ev.GetActorType() == "anonymous" {
 			hasFailedLogin = true
 		}
 		if ev.GetOperation() == "/plateau.admin.user.v1.UserService/UpdateUser" && ev.GetService() == "//admin.service" {

@@ -1,9 +1,11 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -16,11 +18,20 @@ import (
 
 func TestHTTPSessionLifecycle(t *testing.T) {
 	f := newServerFixture(t)
-	bad := f.request("POST", "/v1/iam/authn/login", `{"email":"alice@example.com","password":"incorrect"}`, nil)
-	if bad.Code != 401 || len(bad.Result().Cookies()) != 0 || f.ent.IAMLoginSession.Query().CountX(t.Context()) != 0 {
-		t.Fatalf("failed login created identity: %d %s", bad.Code, bad.Body)
+	flowID, ownerCookie := f.createFlow(t, "", nil)
+	bad := f.request("POST", "/v1/iam/authn/flows/"+flowID+":submitPassword", `{"email":"alice@example.com","password":"incorrect"}`, ownerCookie)
+	if bad.Code != 401 || bad.Header().Get("Cache-Control") != "no-store" || f.ent.LoginSession.Query().CountX(t.Context()) != 0 {
+		t.Fatalf("failed login created identity or missed no-store: %d cc=%q %s", bad.Code, bad.Header().Get("Cache-Control"), bad.Body)
 	}
-	cookie := f.login(t, testPassword, nil)
+	// Same flow stays retryable after 401 and rotates SCS cookie on success.
+	good := f.request("POST", "/v1/iam/authn/flows/"+flowID+":submitPassword", `{"email":"alice@example.com","password":"`+testPassword+`"}`, ownerCookie)
+	if good.Code != 200 || good.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("retry on same flow failed: %d cc=%q %s", good.Code, good.Header().Get("Cache-Control"), good.Body)
+	}
+	cookie := f.sessionCookie(good, nil)
+	if cookie == nil || cookie.Value == ownerCookie.Value {
+		t.Fatalf("completed SubmitPassword did not rotate SCS cookie: %+v", cookie)
+	}
 	if !cookie.Secure || !cookie.HttpOnly || cookie.Domain != "" || cookie.Path != "/" || cookie.SameSite != http.SameSiteLaxMode {
 		t.Fatalf("unexpected cookie attributes: %+v", cookie)
 	}
@@ -80,11 +91,20 @@ func TestHTTPSessionLifecycle(t *testing.T) {
 	if w := f.request("GET", "/v1/iam/account/profile", "", &http.Cookie{Name: cookie.Name, Value: lateToken}); w.Code != 401 {
 		t.Fatalf("late SCS save revived identity: %d", w.Code)
 	}
-	// Login itself also rotates an existing session token.
-	another := f.login(t, "new correct horse battery staple", nil)
-	renewed := f.login(t, "new correct horse battery staple", another)
-	if renewed.Value == another.Value {
+	// Login rotates an existing pre-authentication SCS token, and CreateAuthFlow short-circuits once signed in.
+	preCtx, err := f.manager.Load(t.Context(), "")
+	check(t, err)
+	f.manager.Put(preCtx, "pre_auth_state", "present")
+	preToken, _, err := f.manager.Commit(preCtx)
+	check(t, err)
+	preCookie := &http.Cookie{Name: cookie.Name, Value: preToken}
+	another := f.login(t, "new correct horse battery staple", preCookie)
+	if another.Value == preCookie.Value {
 		t.Fatal("login reused pre-authentication token")
+	}
+	shortCircuit := f.request("POST", "/v1/iam/authn/flows", "{}", another)
+	if shortCircuit.Code != 200 || !strings.Contains(shortCircuit.Body.String(), `"AUTH_FLOW_STATE_COMPLETED"`) || f.sessionCookie(shortCircuit, another).Value != another.Value {
+		t.Fatalf("signed-in CreateAuthFlow = %d %s cookies=%v", shortCircuit.Code, shortCircuit.Body, shortCircuit.Result().Cookies())
 	}
 }
 
@@ -120,12 +140,17 @@ func TestHTTPStoreFailureAfterBusinessCommit(t *testing.T) {
 			check(t, err)
 			loginID := f.manager.GetString(ctx, iamauthn.LoginReferenceKey)
 			other := f.login(t, testPassword, nil)
+			var preFlowID string
+			var preOwnerCookie *http.Cookie
+			if operation == "login" {
+				preFlowID, preOwnerCookie = f.createFlow(t, "", nil)
+			}
 			store := &failingStore{Store: f.manager.Store, commit: operation != "logout", remove: operation == "logout"}
 			f.manager.Store = store
 			var w *httptest.ResponseRecorder
 			switch operation {
 			case "login":
-				w = f.request("POST", "/v1/iam/authn/login", `{"email":"alice@example.com","password":"`+testPassword+`"}`, nil)
+				w = f.request("POST", "/v1/iam/authn/flows/"+preFlowID+":submitPassword", `{"email":"alice@example.com","password":"`+testPassword+`"}`, preOwnerCookie)
 			case "password":
 				w = f.request("POST", "/v1/iam/account/change-password", `{"currentPassword":"`+testPassword+`","newPassword":"new correct horse battery staple"}`, cookie)
 			case "logout":
@@ -197,9 +222,7 @@ func TestHTTPBrowserFilterScopeAndWriteGuards(t *testing.T) {
 
 	// 1. Real f.http rejects non-JSON and cross-origin writes on /v1/iam/* BEFORE touching session store or DB.
 	for _, targetPath := range []string{
-		"/v1/iam/authn/login",
-		"/v1/iam/account/change-initial-password",
-		"/v1/iam/account/delete",
+		"/v1/iam/authn/flows",
 		"/v1/iam/sessions/current:logout",
 	} {
 		store.reads = 0
@@ -208,8 +231,8 @@ func TestHTTPBrowserFilterScopeAndWriteGuards(t *testing.T) {
 		r.AddCookie(cookie)
 		w := httptest.NewRecorder()
 		f.http.ServeHTTP(w, r)
-		if w.Code != http.StatusUnsupportedMediaType || store.reads != 0 || len(w.Result().Cookies()) != 0 {
-			t.Fatalf("%s form POST: status=%d reads=%d cookies=%v", targetPath, w.Code, store.reads, w.Result().Cookies())
+		if w.Code != http.StatusUnsupportedMediaType || store.reads != 0 || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("%s form POST: status=%d reads=%d cookies=%v cc=%q", targetPath, w.Code, store.reads, w.Result().Cookies(), w.Header().Get("Cache-Control"))
 		}
 
 		r = httptest.NewRequest(http.MethodPost, f.web.URL+targetPath, strings.NewReader(`{"currentPassword":"`+testPassword+`","email":"alice@example.com","password":"`+testPassword+`"}`))
@@ -218,8 +241,8 @@ func TestHTTPBrowserFilterScopeAndWriteGuards(t *testing.T) {
 		r.AddCookie(cookie)
 		w = httptest.NewRecorder()
 		f.http.ServeHTTP(w, r)
-		if w.Code != http.StatusForbidden || store.reads != 0 || len(w.Result().Cookies()) != 0 {
-			t.Fatalf("%s cross-origin POST: status=%d reads=%d cookies=%v", targetPath, w.Code, store.reads, w.Result().Cookies())
+		if w.Code != http.StatusForbidden || store.reads != 0 || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("%s cross-origin POST: status=%d reads=%d cookies=%v cc=%q", targetPath, w.Code, store.reads, w.Result().Cookies(), w.Header().Get("Cache-Control"))
 		}
 	}
 	if w := f.request("GET", "/v1/iam/account/profile", "", cookie); w.Code != http.StatusOK {
@@ -273,5 +296,94 @@ func TestHTTPBrowserFilterScopeAndWriteGuards(t *testing.T) {
 		if w := f.request("GET", path, "", cookie); w.Code != http.StatusNotFound {
 			t.Fatalf("UserService HTTP still exposed: %s %d", path, w.Code)
 		}
+	}
+}
+
+func TestHTTPAuthFlowMultiTabContinuationAndCancel(t *testing.T) {
+	f := newServerFixture(t)
+	now := time.Now().UTC()
+	stateVal := "oidc-state-tab2"
+	_, err := f.ent.OIDCAuthorizationRequest.Create().
+		SetID("oidc-tab2").
+		SetClientID("admin").
+		SetRedirectURI("https://admin.example.com/v1/admin/auth/callback").
+		SetResponseType("code").
+		SetScopes([]string{"openid", "profile", "email"}).
+		SetState(stateVal).
+		SetNonce("nonce-1").
+		SetPkceChallenge("challenge-1").
+		SetExpiresTime(now.Add(15 * time.Minute)).
+		Save(t.Context())
+	check(t, err)
+
+	// Tab 1 (standalone) and Tab 2 (OIDC) share the same browser SCS cookie without clobbering each other.
+	flow1, browserCookie := f.createFlow(t, "", nil)
+	flow2, browserCookie := f.createFlow(t, "oidc-tab2", browserCookie)
+	if flow1 == flow2 {
+		t.Fatal("distinct tabs received identical flowId")
+	}
+
+	// Unowned cross-browser probe (both anonymous and signed-in) gets 404 without Set-Cookie.
+	anonProbe := f.request("GET", "/v1/iam/authn/flows/"+flow1, "", nil)
+	if anonProbe.Code != http.StatusNotFound || len(anonProbe.Result().Cookies()) != 0 || anonProbe.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("anonymous probe: code=%d cookies=%v cc=%q", anonProbe.Code, anonProbe.Result().Cookies(), anonProbe.Header().Get("Cache-Control"))
+	}
+	otherBrowserLogin := f.login(t, testPassword, nil)
+	signedInProbe := f.request("GET", "/v1/iam/authn/flows/"+flow1, "", otherBrowserLogin)
+	if signedInProbe.Code != http.StatusNotFound {
+		t.Fatalf("cross-browser signed-in probe: code=%d body=%s, want 404", signedInProbe.Code, signedInProbe.Body)
+	}
+
+	// Tab 1 completes authentication -> Tab 2's read-only GET short-circuits to COMPLETED with OIDC continue_url!
+	submit1 := f.request("POST", "/v1/iam/authn/flows/"+flow1+":submitPassword", `{"email":"alice@example.com","password":"`+testPassword+`"}`, browserCookie)
+	if submit1.Code != http.StatusOK {
+		t.Fatalf("Tab 1 SubmitPassword: %d %s", submit1.Code, submit1.Body)
+	}
+	browserCookie = f.sessionCookie(submit1, browserCookie)
+
+	get2 := f.request("GET", "/v1/iam/authn/flows/"+flow2, "", browserCookie)
+	if get2.Code != http.StatusOK || !strings.Contains(get2.Body.String(), `"/authorize/callback?id=oidc-tab2"`) {
+		t.Fatalf("Tab 2 GetAuthFlow continuation: code=%d body=%s", get2.Code, get2.Body)
+	}
+
+	// ResetAuthFlow & CancelAuthFlow on a fresh browser session with an OIDC request.
+	_, err = f.ent.OIDCAuthorizationRequest.Create().
+		SetID("oidc-cancel-1").
+		SetClientID("admin").
+		SetRedirectURI("https://admin.example.com/v1/admin/auth/callback").
+		SetResponseType("code").
+		SetScopes([]string{"openid"}).
+		SetState("cancel-st").
+		SetPkceChallenge("challenge-2").
+		SetExpiresTime(now.Add(15 * time.Minute)).
+		Save(t.Context())
+	check(t, err)
+
+	cancelFlowID, cancelBrowser := f.createFlow(t, "oidc-cancel-1", nil)
+	resetResp := f.request("POST", "/v1/iam/authn/flows/"+cancelFlowID+":reset", "{}", cancelBrowser)
+	if resetResp.Code != http.StatusOK {
+		t.Fatalf("ResetAuthFlow: %d %s", resetResp.Code, resetResp.Body)
+	}
+	var resetPayload struct {
+		Flow struct {
+			FlowID string `json:"flowId"`
+		} `json:"flow"`
+	}
+	check(t, json.Unmarshal(resetResp.Body.Bytes(), &resetPayload))
+	if resetPayload.Flow.FlowID == "" || resetPayload.Flow.FlowID == cancelFlowID {
+		t.Fatalf("ResetAuthFlow did not rotate flowId: %s", resetResp.Body)
+	}
+
+	cancelResp := f.request("POST", "/v1/iam/authn/flows/"+resetPayload.Flow.FlowID+":cancel", "{}", cancelBrowser)
+	if cancelResp.Code != http.StatusOK || cancelResp.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("CancelAuthFlow: %d %s", cancelResp.Code, cancelResp.Body)
+	}
+	var cancelPayload struct {
+		RedirectURI string `json:"redirectUri"`
+	}
+	check(t, json.Unmarshal(cancelResp.Body.Bytes(), &cancelPayload))
+	parsedCancel, err := url.Parse(cancelPayload.RedirectURI)
+	if err != nil || parsedCancel.Query().Get("error") != "access_denied" || parsedCancel.Query().Get("state") != "cancel-st" || parsedCancel.Query().Get("iss") != f.config.GetIssuer() {
+		t.Fatalf("CancelAuthFlow redirectUri = %q, want iss=%q", cancelPayload.RedirectURI, f.config.GetIssuer())
 	}
 }

@@ -38,28 +38,3 @@ export function useOneTimeFragment(): OneTimeValue & { clear(): void } {
 
   return { ...state, clear }
 }
-
-export function useOneTimeRequestId(): OneTimeValue {
-  const initialized = useRef(false)
-  const [state, setState] = useState<OneTimeValue>({
-    ready: false,
-    value: null,
-  })
-
-  useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
-
-    const requestId = new URL(window.location.href).searchParams.get(
-      "request_id"
-    )
-    window.history.replaceState(
-      window.history.state,
-      "",
-      window.location.pathname
-    )
-    setState({ ready: true, value: requestId?.trim() || null })
-  }, [])
-
-  return state
-}

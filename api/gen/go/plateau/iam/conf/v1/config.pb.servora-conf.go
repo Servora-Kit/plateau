@@ -7,8 +7,23 @@ import (
 	protovalidate "buf.build/go/protovalidate"
 	fmt "fmt"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	sort "sort"
 )
+
+// Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
+func (m *AuthFlow) Apply() error {
+	if m == nil {
+		return nil
+	}
+	if m.Ttl == nil {
+		m.Ttl = durationpb.New(1800000000000)
+	}
+	if m.StepTtl == nil {
+		m.StepTtl = durationpb.New(600000000000)
+	}
+	return nil
+}
 
 // Apply 检查字段设置状态、补充缺失的默认值并处理实际存在的子配置及本层值约束。
 func (m *IAM) Apply() error {
@@ -17,6 +32,11 @@ func (m *IAM) Apply() error {
 	}
 	if m.BootstrapUserEmail == nil {
 		return fmt.Errorf("bootstrap_user_email is required")
+	}
+	if m.AuthFlow != nil {
+		if err := m.AuthFlow.Apply(); err != nil {
+			return fmt.Errorf("%s: %w", "auth_flow", err)
+		}
 	}
 	if err := protovalidate.Validate(m, protovalidate.WithFilter(protovalidate.FilterFunc(func(current protoreflect.Message, _ protoreflect.Descriptor) bool {
 		return current.Interface() == m

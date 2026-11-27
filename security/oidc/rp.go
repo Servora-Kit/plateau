@@ -28,10 +28,9 @@ import (
 )
 
 const (
-	handshakeCookieMaxAge = 300
-	minCookieSecretBytes  = 32
-	hkdfHashInfo          = "plateau/security/oidc/cookie-hash-v1"
-	hkdfEncryptInfo       = "plateau/security/oidc/cookie-encrypt-v1"
+	minCookieSecretBytes = 32
+	hkdfHashInfo         = "plateau/security/oidc/cookie-hash-v1"
+	hkdfEncryptInfo      = "plateau/security/oidc/cookie-encrypt-v1"
 )
 
 type nonceContextKey struct{}
@@ -97,6 +96,10 @@ func NewRelyingParty(config *oidcv1.OIDCClient, opts ...Option) (*RelyingParty, 
 	if err := cfg.GetHttpTimeout().CheckValid(); err != nil || cfg.GetHttpTimeout().AsDuration() <= 0 {
 		return nil, fmt.Errorf("oidc: http_timeout must be a positive duration")
 	}
+	if err := cfg.GetHandshakeTtl().CheckValid(); err != nil || cfg.GetHandshakeTtl().AsDuration() < time.Second {
+		return nil, fmt.Errorf("oidc: handshake_ttl must be at least 1s")
+	}
+	handshakeMaxAge := int(cfg.GetHandshakeTtl().AsDuration() / time.Second)
 
 	hashKey, err := hkdf.Key(sha256.New, []byte(cfg.GetCookieSecret()), nil, hkdfHashInfo, 32)
 	if err != nil {
@@ -108,7 +111,7 @@ func NewRelyingParty(config *oidcv1.OIDCClient, opts ...Option) (*RelyingParty, 
 	}
 
 	cookieOpts := []httphelper.CookieHandlerOpt{
-		httphelper.WithMaxAge(handshakeCookieMaxAge),
+		httphelper.WithMaxAge(handshakeMaxAge),
 		httphelper.WithPath("/"),
 		httphelper.WithSameSite(http.SameSiteLaxMode),
 	}
@@ -148,12 +151,13 @@ func NewRelyingParty(config *oidcv1.OIDCClient, opts ...Option) (*RelyingParty, 
 	}, nil
 }
 
-// BeginLogin writes a 5-minute encrypted handshake cookie containing
+// BeginLogin writes an encrypted handshake cookie containing
 // {state, nonce, code_verifier, return_to} and issues a 302 redirect to the OP.
 func (p *RelyingParty) BeginLogin(w http.ResponseWriter, r *http.Request, defaultReturnTo string) error {
 	if r == nil || w == nil {
 		return fmt.Errorf("oidc: request and response writer are required")
 	}
+	w.Header().Set("Cache-Control", "no-store")
 	relyingParty, err := p.discover(r.Context())
 	if err != nil {
 		return err
@@ -201,19 +205,17 @@ func (p *RelyingParty) BeginLogin(w http.ResponseWriter, r *http.Request, defaul
 }
 
 // CompleteLogin consumes and deletes the one-time handshake cookie, validates
-// state, exchanges the authorization code with PKCE S256, verifies ID token
-// signature/iss/aud/exp/nonce/at_hash, and returns the verified IAM User snapshot.
+// state and RFC 9207 iss, maps verified access_denied responses, exchanges the
+// authorization code with PKCE S256, verifies ID token claims, and returns the
+// verified IAM User snapshot.
 func (p *RelyingParty) CompleteLogin(w http.ResponseWriter, r *http.Request) (*userpb.User, string, error) {
 	if r == nil || w == nil {
 		return nil, "", fmt.Errorf("oidc: request and response writer are required")
 	}
+	w.Header().Set("Cache-Control", "no-store")
 
 	rawCookie, cookieErr := p.cookies.CheckCookie(r, p.cookieName)
 	p.cookies.DeleteCookie(w, p.cookieName)
-
-	if r.URL.Query().Get("error") != "" {
-		return nil, "", fmt.Errorf("%w: upstream returned authorization error", ErrHandshakeInvalid)
-	}
 	if cookieErr != nil {
 		return nil, "", fmt.Errorf("%w: missing, expired, or invalid handshake cookie", ErrHandshakeInvalid)
 	}
@@ -223,12 +225,27 @@ func (p *RelyingParty) CompleteLogin(w http.ResponseWriter, r *http.Request) (*u
 		return nil, "", fmt.Errorf("%w: malformed handshake payload", ErrHandshakeInvalid)
 	}
 
-	queryState := r.URL.Query().Get("state")
-	code := r.URL.Query().Get("code")
-	if code == "" || subtle.ConstantTimeCompare([]byte(queryState), []byte(hs.State)) != 1 {
-		return nil, "", fmt.Errorf("%w: state mismatch or missing authorization code", ErrHandshakeInvalid)
+	query := r.URL.Query()
+	stateValues := query["state"]
+	if len(stateValues) != 1 || subtle.ConstantTimeCompare([]byte(stateValues[0]), []byte(hs.State)) != 1 {
+		return nil, "", fmt.Errorf("%w: state mismatch", ErrHandshakeInvalid)
+	}
+	issValues := query["iss"]
+	if len(issValues) != 1 || subtle.ConstantTimeCompare([]byte(issValues[0]), []byte(p.issuer)) != 1 {
+		return nil, "", fmt.Errorf("%w: missing or mismatched authorization response iss", ErrHandshakeInvalid)
+	}
+	if errParam := query.Get("error"); errParam != "" {
+		if errParam == string(oidc.AccessDenied) {
+			return nil, "", fmt.Errorf("%w: upstream authorization cancelled", ErrAccessDenied)
+		}
+		return nil, "", fmt.Errorf("%w: upstream returned authorization error", ErrHandshakeInvalid)
 	}
 
+	codeValues := query["code"]
+	if len(codeValues) != 1 || codeValues[0] == "" {
+		return nil, "", fmt.Errorf("%w: missing authorization code", ErrHandshakeInvalid)
+	}
+	code := codeValues[0]
 	relyingParty, err := p.discover(r.Context())
 	if err != nil {
 		return nil, "", err

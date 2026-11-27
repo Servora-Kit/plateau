@@ -7,6 +7,7 @@ export type OIDCClient = {
   clientSecret?: string;
   // 用于派生短期握手加密 Cookie 的 HMAC 与 AES-256 密钥（浏览器登录时必填，至少 32 字节）。
   cookieSecret?: string;
+  handshakeTtl?: wellKnownDuration;
   httpTimeout?: wellKnownDuration;
   issuer?: string;
   // 浏览器 OIDC 登录必填；纯机器客户端可留空。

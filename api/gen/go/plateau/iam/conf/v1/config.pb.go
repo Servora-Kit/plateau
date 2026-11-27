@@ -11,6 +11,7 @@ import (
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -28,8 +29,10 @@ type IAM struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Bootstrap creates this single platform administrator idempotently.
 	BootstrapUserEmail *string `protobuf:"bytes,1,opt,name=bootstrap_user_email,json=bootstrapUserEmail,proto3,oneof" json:"bootstrap_user_email,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// AuthFlow configures interactive browser authentication flow lifetimes.
+	AuthFlow      *AuthFlow `protobuf:"bytes,2,opt,name=auth_flow,json=authFlow,proto3" json:"auth_flow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *IAM) Reset() {
@@ -69,14 +72,80 @@ func (x *IAM) GetBootstrapUserEmail() string {
 	return ""
 }
 
+func (x *IAM) GetAuthFlow() *AuthFlow {
+	if x != nil {
+		return x.AuthFlow
+	}
+	return nil
+}
+
+// AuthFlow configures authentication flow expiration windows.
+type AuthFlow struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ttl           *durationpb.Duration   `protobuf:"bytes,1,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	StepTtl       *durationpb.Duration   `protobuf:"bytes,2,opt,name=step_ttl,json=stepTtl,proto3" json:"step_ttl,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthFlow) Reset() {
+	*x = AuthFlow{}
+	mi := &file_plateau_iam_conf_v1_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthFlow) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthFlow) ProtoMessage() {}
+
+func (x *AuthFlow) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_conf_v1_config_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthFlow.ProtoReflect.Descriptor instead.
+func (*AuthFlow) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_conf_v1_config_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AuthFlow) GetTtl() *durationpb.Duration {
+	if x != nil {
+		return x.Ttl
+	}
+	return nil
+}
+
+func (x *AuthFlow) GetStepTtl() *durationpb.Duration {
+	if x != nil {
+		return x.StepTtl
+	}
+	return nil
+}
+
 var File_plateau_iam_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_iam_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	" plateau/iam/conf/v1/config.proto\x12\x13plateau.iam.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a!servora/conf/v1/annotations.proto\"j\n" +
+	" plateau/iam/conf/v1/config.proto\x12\x13plateau.iam.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xa6\x01\n" +
 	"\x03IAM\x12D\n" +
-	"\x14bootstrap_user_email\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x12bootstrapUserEmail\x88\x01\x01:\x04\x80\xce\x18\x01B\x17\n" +
-	"\x15_bootstrap_user_emailBIZGgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1;iamconfv1b\x06proto3"
+	"\x14bootstrap_user_email\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x12bootstrapUserEmail\x88\x01\x01\x12:\n" +
+	"\tauth_flow\x18\x02 \x01(\v2\x1d.plateau.iam.conf.v1.AuthFlowR\bauthFlow:\x04\x80\xce\x18\x01B\x17\n" +
+	"\x15_bootstrap_user_email\"\x83\x01\n" +
+	"\bAuthFlow\x126\n" +
+	"\x03ttl\x18\x01 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
+	"\x0330mR\x03ttl\x12?\n" +
+	"\bstep_ttl\x18\x02 \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
+	"\x0310mR\astepTtlBIZGgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1;iamconfv1b\x06proto3"
 
 var (
 	file_plateau_iam_conf_v1_config_proto_rawDescOnce sync.Once
@@ -90,16 +159,21 @@ func file_plateau_iam_conf_v1_config_proto_rawDescGZIP() []byte {
 	return file_plateau_iam_conf_v1_config_proto_rawDescData
 }
 
-var file_plateau_iam_conf_v1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_plateau_iam_conf_v1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_plateau_iam_conf_v1_config_proto_goTypes = []any{
-	(*IAM)(nil), // 0: plateau.iam.conf.v1.IAM
+	(*IAM)(nil),                 // 0: plateau.iam.conf.v1.IAM
+	(*AuthFlow)(nil),            // 1: plateau.iam.conf.v1.AuthFlow
+	(*durationpb.Duration)(nil), // 2: google.protobuf.Duration
 }
 var file_plateau_iam_conf_v1_config_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: plateau.iam.conf.v1.IAM.auth_flow:type_name -> plateau.iam.conf.v1.AuthFlow
+	2, // 1: plateau.iam.conf.v1.AuthFlow.ttl:type_name -> google.protobuf.Duration
+	2, // 2: plateau.iam.conf.v1.AuthFlow.step_ttl:type_name -> google.protobuf.Duration
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_plateau_iam_conf_v1_config_proto_init() }
@@ -114,7 +188,7 @@ func file_plateau_iam_conf_v1_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plateau_iam_conf_v1_config_proto_rawDesc), len(file_plateau_iam_conf_v1_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

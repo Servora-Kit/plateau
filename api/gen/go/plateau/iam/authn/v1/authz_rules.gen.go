@@ -9,7 +9,22 @@ import (
 
 // _authzRules is the immutable backing store for AuthzRules.
 var _authzRules = map[string]*v1.AuthzRule{
-	"/plateau.iam.authn.v1.AuthnService/Login": {
+	"/plateau.iam.authn.v1.AuthnService/CancelAuthFlow": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/plateau.iam.authn.v1.AuthnService/CreateAuthFlow": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/plateau.iam.authn.v1.AuthnService/GetAuthFlow": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/plateau.iam.authn.v1.AuthnService/ResetAuthFlow": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/plateau.iam.authn.v1.AuthnService/SubmitPassword": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
 }

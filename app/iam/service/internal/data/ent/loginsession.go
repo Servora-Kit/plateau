@@ -3,22 +3,25 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 )
 
-// IAMLoginSession is the model entity for the IAMLoginSession schema.
-type IAMLoginSession struct {
+// LoginSession is the model entity for the LoginSession schema.
+type LoginSession struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID string `json:"user_id,omitempty"`
+	// Amr holds the value of the "amr" field.
+	Amr []string `json:"amr,omitempty"`
 	// CreateTime holds the value of the "create_time" field.
 	CreateTime time.Time `json:"create_time,omitempty"`
 	// RevokedTime holds the value of the "revoked_time" field.
@@ -27,13 +30,15 @@ type IAMLoginSession struct {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*IAMLoginSession) scanValues(columns []string) ([]any, error) {
+func (*LoginSession) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case iamloginsession.FieldID, iamloginsession.FieldUserID:
+		case loginsession.FieldAmr:
+			values[i] = new([]byte)
+		case loginsession.FieldID, loginsession.FieldUserID:
 			values[i] = new(sql.NullString)
-		case iamloginsession.FieldCreateTime, iamloginsession.FieldRevokedTime:
+		case loginsession.FieldCreateTime, loginsession.FieldRevokedTime:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -43,32 +48,40 @@ func (*IAMLoginSession) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the IAMLoginSession fields.
-func (_m *IAMLoginSession) assignValues(columns []string, values []any) error {
+// to the LoginSession fields.
+func (_m *LoginSession) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case iamloginsession.FieldID:
+		case loginsession.FieldID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
 				_m.ID = value.String
 			}
-		case iamloginsession.FieldUserID:
+		case loginsession.FieldUserID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
 				_m.UserID = value.String
 			}
-		case iamloginsession.FieldCreateTime:
+		case loginsession.FieldAmr:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field amr", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Amr); err != nil {
+					return fmt.Errorf("unmarshal field amr: %w", err)
+				}
+			}
+		case loginsession.FieldCreateTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field create_time", values[i])
 			} else if value.Valid {
 				_m.CreateTime = value.Time
 			}
-		case iamloginsession.FieldRevokedTime:
+		case loginsession.FieldRevokedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field revoked_time", values[i])
 			} else if value.Valid {
@@ -82,37 +95,40 @@ func (_m *IAMLoginSession) assignValues(columns []string, values []any) error {
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the IAMLoginSession.
+// Value returns the ent.Value that was dynamically selected and assigned to the LoginSession.
 // This includes values selected through modifiers, order, etc.
-func (_m *IAMLoginSession) Value(name string) (ent.Value, error) {
+func (_m *LoginSession) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// Update returns a builder for updating this IAMLoginSession.
-// Note that you need to call IAMLoginSession.Unwrap() before calling this method if this IAMLoginSession
+// Update returns a builder for updating this LoginSession.
+// Note that you need to call LoginSession.Unwrap() before calling this method if this LoginSession
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (_m *IAMLoginSession) Update() *IAMLoginSessionUpdateOne {
-	return NewIAMLoginSessionClient(_m.config).UpdateOne(_m)
+func (_m *LoginSession) Update() *LoginSessionUpdateOne {
+	return NewLoginSessionClient(_m.config).UpdateOne(_m)
 }
 
-// Unwrap unwraps the IAMLoginSession entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the LoginSession entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (_m *IAMLoginSession) Unwrap() *IAMLoginSession {
+func (_m *LoginSession) Unwrap() *LoginSession {
 	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: IAMLoginSession is not a transactional entity")
+		panic("ent: LoginSession is not a transactional entity")
 	}
 	_m.config.driver = _tx.drv
 	return _m
 }
 
 // String implements the fmt.Stringer.
-func (_m *IAMLoginSession) String() string {
+func (_m *LoginSession) String() string {
 	var builder strings.Builder
-	builder.WriteString("IAMLoginSession(")
+	builder.WriteString("LoginSession(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("user_id=")
 	builder.WriteString(_m.UserID)
+	builder.WriteString(", ")
+	builder.WriteString("amr=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Amr))
 	builder.WriteString(", ")
 	builder.WriteString("create_time=")
 	builder.WriteString(_m.CreateTime.Format(time.ANSIC))
@@ -125,5 +141,5 @@ func (_m *IAMLoginSession) String() string {
 	return builder.String()
 }
 
-// IAMLoginSessions is a parsable slice of IAMLoginSession.
-type IAMLoginSessions []*IAMLoginSession
+// LoginSessions is a parsable slice of LoginSession.
+type LoginSessions []*LoginSession

@@ -18,7 +18,7 @@ func (OAuthTokenSession) Fields() []ent.Field {
 		field.String("id").Immutable(),
 		field.String("user_id").NotEmpty().Immutable(),
 		field.String("client_id").NotEmpty().Immutable(),
-		field.String("iam_login_session_id").NotEmpty().Immutable(),
+		field.String("login_session_id").NotEmpty().Immutable(),
 		field.String("refresh_family_id").NotEmpty().Immutable(),
 		field.JSON("scopes", []string{}),
 		field.Time("auth_time").Immutable(),
@@ -31,7 +31,7 @@ func (OAuthTokenSession) Fields() []ent.Field {
 
 func (OAuthTokenSession) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("iam_login_session_id", "revoked_time"),
+		index.Fields("login_session_id", "revoked_time"),
 		index.Fields("user_id", "revoked_time"),
 		index.Fields("client_id", "user_id"),
 		index.Fields("refresh_family_id").Unique(),

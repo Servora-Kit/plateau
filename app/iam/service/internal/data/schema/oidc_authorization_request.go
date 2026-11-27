@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
@@ -26,8 +27,12 @@ func (OIDCAuthorizationRequest) Fields() []ent.Field {
 		field.String("pkce_challenge").NotEmpty().Sensitive(),
 		field.String("pkce_challenge_method").Default("S256"),
 		field.String("subject").Optional().Nillable(),
-		field.String("iam_login_session_id").Optional().Nillable(),
+		field.String("login_session_id").Optional().Nillable(),
 		field.Time("auth_time").Optional().Nillable(),
+		field.JSON("amr", []string{}).
+			Default([]string{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Annotations(entsql.Default("[]")),
 		field.Bool("done").Default(false),
 		field.Time("expires_time").Immutable(),
 		field.Time("create_time").Default(time.Now).Immutable(),

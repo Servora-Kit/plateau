@@ -8,12 +8,10 @@ import (
 )
 
 const (
-	authorizationRequestTTL = 10 * time.Minute
-	authorizationCodeTTL    = 5 * time.Minute
-	accessTokenTTL          = 15 * time.Minute
-	refreshTokenTTL         = 7 * 24 * time.Hour
-	idTokenTTL              = 15 * time.Minute
-	passwordAMR             = "pwd"
+	authorizationCodeTTL = 5 * time.Minute
+	accessTokenTTL       = 15 * time.Minute
+	refreshTokenTTL      = 7 * 24 * time.Hour
+	idTokenTTL           = 15 * time.Minute
 )
 
 var supportedScopes = []string{

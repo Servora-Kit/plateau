@@ -94,14 +94,18 @@ func (s *AuthService) handleCallback(w http.ResponseWriter, r *http.Request) {
 	user, returnTo, err := s.oidcRP.CompleteLogin(w, r)
 	if err != nil {
 		_ = s.manager.Destroy(r.Context())
-		if errors.Is(err, securityoidc.ErrProviderUnavailable) {
+		switch {
+		case errors.Is(err, securityoidc.ErrAccessDenied):
+			audit.SetError(r.Context(), "OIDC_LOGIN_CANCELLED", "user cancelled OIDC login")
+			http.Redirect(w, r, webLoginPath+"?error=login_cancelled", http.StatusFound)
+		case errors.Is(err, securityoidc.ErrProviderUnavailable):
 			audit.SetError(r.Context(), "OIDC_PROVIDER_UNAVAILABLE", "identity provider is unavailable")
 			s.log.ErrorContext(r.Context(), "OIDC CompleteLogin provider unavailable", "err", err)
 			http.Redirect(w, r, webLoginPath+"?error=service_unavailable", http.StatusFound)
-			return
+		default:
+			audit.SetError(r.Context(), "OIDC_LOGIN_FAILED", "OIDC callback verification failed")
+			http.Redirect(w, r, webLoginPath+"?error=login_failed", http.StatusFound)
 		}
-		audit.SetError(r.Context(), "OIDC_LOGIN_FAILED", "OIDC callback verification failed")
-		http.Redirect(w, r, webLoginPath+"?error=login_failed", http.StatusFound)
 		return
 	}
 

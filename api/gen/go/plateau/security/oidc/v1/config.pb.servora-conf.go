@@ -28,6 +28,9 @@ func (m *OIDCClient) Apply() error {
 	if m.HttpTimeout == nil {
 		m.HttpTimeout = durationpb.New(5000000000)
 	}
+	if m.HandshakeTtl == nil {
+		m.HandshakeTtl = durationpb.New(1800000000000)
+	}
 	if err := protovalidate.Validate(m, protovalidate.WithFilter(protovalidate.FilterFunc(func(current protoreflect.Message, _ protoreflect.Descriptor) bool {
 		return current.Interface() == m
 	}))); err != nil {

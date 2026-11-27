@@ -46,17 +46,29 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 		fmt.Sprintf(`{"token":%q,"newPassword":%q}`, resetToken, resetNewPass), nil); w.Code != http.StatusOK {
 		t.Fatalf("password-reset/confirm status=%d body=%s", w.Code, w.Body)
 	}
-	// Failed ChangeInitialPassword stays anonymous (with email retained in redacted request data); successful completion enriches human actor & user resource.
-	if w := f.request("POST", "/v1/iam/account/change-initial-password",
-		fmt.Sprintf(`{"email":"auditee@example.com","currentPassword":%q,"newPassword":%q}`, resetNewPass, changedPass), nil); w.Code != http.StatusConflict {
-		t.Fatalf("change-initial-password(no required action) status=%d, want 409; body=%s", w.Code, w.Body)
-	}
+	// Failed SubmitPassword stays anonymous; advancing to REQUIRED_ACTION and CompleteUpdatePassword enrich human actor & user resource; CreateAuthFlow & GetAuthFlow emit zero audit noise.
 	auditee, err := f.users.FindByEmail(t.Context(), "auditee@example.com")
 	check(t, err)
 	check(t, f.ent.User.UpdateOneID(auditee.GetUserId()).SetRequiredActions([]string{"UPDATE_PASSWORD"}).Exec(t.Context()))
-	if w := f.request("POST", "/v1/iam/account/change-initial-password",
-		fmt.Sprintf(`{"email":"auditee@example.com","currentPassword":%q,"newPassword":%q}`, resetNewPass, changedPass), nil); w.Code != http.StatusOK {
-		t.Fatalf("change-initial-password(success) status=%d, want 200; body=%s", w.Code, w.Body)
+	auditFlowID, auditOwnerCookie := f.createFlow(t, "", nil)
+	if w := f.request("GET", "/v1/iam/authn/flows/"+auditFlowID, "", auditOwnerCookie); w.Code != http.StatusOK {
+		t.Fatalf("GetAuthFlow status=%d body=%s", w.Code, w.Body)
+	}
+	if w := f.request("POST", "/v1/iam/authn/flows/"+auditFlowID+":submitPassword",
+		`{"email":"auditee@example.com","password":"wrong-audit-password"}`, auditOwnerCookie); w.Code != http.StatusUnauthorized {
+		t.Fatalf("SubmitPassword(wrong) status=%d, want 401; body=%s", w.Code, w.Body)
+	}
+	if w := f.request("POST", "/v1/iam/authn/flows/"+auditFlowID+":submitPassword",
+		fmt.Sprintf(`{"email":"auditee@example.com","password":%q}`, resetNewPass), auditOwnerCookie); w.Code != http.StatusOK {
+		t.Fatalf("SubmitPassword(REQUIRED_ACTION) status=%d, want 200; body=%s", w.Code, w.Body)
+	}
+	if w := f.request("POST", "/v1/iam/authn/flows/"+auditFlowID+":completeUpdatePassword",
+		fmt.Sprintf(`{"newPassword":%q}`, resetNewPass), auditOwnerCookie); w.Code != http.StatusBadRequest {
+		t.Fatalf("CompleteUpdatePassword(same) status=%d, want 400; body=%s", w.Code, w.Body)
+	}
+	if w := f.request("POST", "/v1/iam/authn/flows/"+auditFlowID+":completeUpdatePassword",
+		fmt.Sprintf(`{"newPassword":%q}`, changedPass), auditOwnerCookie); w.Code != http.StatusOK {
+		t.Fatalf("CompleteUpdatePassword(success) status=%d, want 200; body=%s", w.Code, w.Body)
 	}
 	// 3. Login + GetProfile (disabled -> 0 events) + UpdateProfile + ChangePassword + Logout + DeleteAccount.
 	cookie := f.login(t, testPassword, nil)
@@ -92,8 +104,10 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 	byOp := make(map[string]int)
 	for _, ev := range events {
 		byOp[ev.Subject()]++
-		if ev.Subject() == "/plateau.iam.account.v1.AccountService/GetProfile" {
-			t.Fatalf("GetProfile is AUDIT_MODE_DISABLED and must not emit events: %+v", ev)
+		if ev.Subject() == "/plateau.iam.account.v1.AccountService/GetProfile" ||
+			ev.Subject() == "/plateau.iam.authn.v1.AuthnService/CreateAuthFlow" ||
+			ev.Subject() == "/plateau.iam.authn.v1.AuthnService/GetAuthFlow" {
+			t.Fatalf("%s is AUDIT_MODE_DISABLED and must not emit events: %+v", ev.Subject(), ev)
 		}
 		if ev.Subject() == "/plateau.iam.account.v1.AccountService/RequestPasswordReset" {
 			if ev.Extensions()[audit.ExtActorType] != "anonymous" || ev.Extensions()[audit.ExtResourceName] != nil {
@@ -105,16 +119,21 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 				t.Fatalf("ConfirmPasswordReset must enrich human actor and user resource: %+v", ev.Extensions())
 			}
 		}
-		if ev.Subject() == "/plateau.iam.account.v1.AccountService/ChangeInitialPassword" {
+		if ev.Subject() == "/plateau.iam.authn.v1.AuthnService/SubmitPassword" {
 			switch ev.Extensions()[audit.ExtOutcome] {
 			case audit.OutcomeFailure:
-				if ev.Extensions()[audit.ExtActorType] != "anonymous" || ev.Extensions()[audit.ExtResourceName] != nil || !strings.Contains(string(ev.Data()), "auditee@example.com") {
-					t.Fatalf("failed ChangeInitialPassword must remain anonymous with email in data: ext=%+v data=%s", ev.Extensions(), string(ev.Data()))
+				if ev.Extensions()[audit.ExtActorType] != "anonymous" || ev.Extensions()[audit.ExtResourceName] != nil {
+					t.Fatalf("failed SubmitPassword must remain anonymous without resource: ext=%+v", ev.Extensions())
 				}
 			case audit.OutcomeSuccess:
-				if ev.Extensions()[audit.ExtActorType] != "human" || ev.Extensions()[audit.ExtActorID] != auditee.GetUserId() || ev.Extensions()[audit.ExtResourceName] != "users/"+auditee.GetUserId() {
-					t.Fatalf("successful ChangeInitialPassword must enrich human actor and user resource: %+v", ev.Extensions())
+				if ev.Extensions()[audit.ExtActorType] != "human" || ev.Extensions()[audit.ExtResourceName] == nil {
+					t.Fatalf("successful SubmitPassword must enrich human actor and user resource: %+v", ev.Extensions())
 				}
+			}
+		}
+		if ev.Subject() == "/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword" {
+			if ev.Extensions()[audit.ExtActorType] != "human" || ev.Extensions()[audit.ExtActorID] != auditee.GetUserId() || ev.Extensions()[audit.ExtResourceName] != "users/"+auditee.GetUserId() {
+				t.Fatalf("CompleteUpdatePassword must enrich human actor and user resource on both 400 and 200: %+v", ev.Extensions())
 			}
 		}
 		if ev.Subject() == "/plateau.iam.session.v1.SessionService/Logout" ||
@@ -138,8 +157,8 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 		"/plateau.iam.account.v1.AccountService/VerifyEmail",
 		"/plateau.iam.account.v1.AccountService/RequestPasswordReset",
 		"/plateau.iam.account.v1.AccountService/ConfirmPasswordReset",
-		"/plateau.iam.account.v1.AccountService/ChangeInitialPassword",
-		"/plateau.iam.authn.v1.AuthnService/Login",
+		"/plateau.iam.authn.v1.AuthnService/SubmitPassword",
+		"/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword",
 		"/plateau.iam.account.v1.AccountService/UpdateProfile",
 		"/plateau.iam.account.v1.AccountService/ChangePassword",
 		"/plateau.iam.session.v1.SessionService/Logout",

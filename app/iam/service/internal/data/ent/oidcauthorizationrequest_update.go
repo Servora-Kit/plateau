@@ -150,23 +150,23 @@ func (_u *OIDCAuthorizationRequestUpdate) ClearSubject() *OIDCAuthorizationReque
 	return _u
 }
 
-// SetIamLoginSessionID sets the "iam_login_session_id" field.
-func (_u *OIDCAuthorizationRequestUpdate) SetIamLoginSessionID(v string) *OIDCAuthorizationRequestUpdate {
-	_u.mutation.SetIamLoginSessionID(v)
+// SetLoginSessionID sets the "login_session_id" field.
+func (_u *OIDCAuthorizationRequestUpdate) SetLoginSessionID(v string) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.SetLoginSessionID(v)
 	return _u
 }
 
-// SetNillableIamLoginSessionID sets the "iam_login_session_id" field if the given value is not nil.
-func (_u *OIDCAuthorizationRequestUpdate) SetNillableIamLoginSessionID(v *string) *OIDCAuthorizationRequestUpdate {
+// SetNillableLoginSessionID sets the "login_session_id" field if the given value is not nil.
+func (_u *OIDCAuthorizationRequestUpdate) SetNillableLoginSessionID(v *string) *OIDCAuthorizationRequestUpdate {
 	if v != nil {
-		_u.SetIamLoginSessionID(*v)
+		_u.SetLoginSessionID(*v)
 	}
 	return _u
 }
 
-// ClearIamLoginSessionID clears the value of the "iam_login_session_id" field.
-func (_u *OIDCAuthorizationRequestUpdate) ClearIamLoginSessionID() *OIDCAuthorizationRequestUpdate {
-	_u.mutation.ClearIamLoginSessionID()
+// ClearLoginSessionID clears the value of the "login_session_id" field.
+func (_u *OIDCAuthorizationRequestUpdate) ClearLoginSessionID() *OIDCAuthorizationRequestUpdate {
+	_u.mutation.ClearLoginSessionID()
 	return _u
 }
 
@@ -187,6 +187,18 @@ func (_u *OIDCAuthorizationRequestUpdate) SetNillableAuthTime(v *time.Time) *OID
 // ClearAuthTime clears the value of the "auth_time" field.
 func (_u *OIDCAuthorizationRequestUpdate) ClearAuthTime() *OIDCAuthorizationRequestUpdate {
 	_u.mutation.ClearAuthTime()
+	return _u
+}
+
+// SetAmr sets the "amr" field.
+func (_u *OIDCAuthorizationRequestUpdate) SetAmr(v []string) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.SetAmr(v)
+	return _u
+}
+
+// AppendAmr appends value to the "amr" field.
+func (_u *OIDCAuthorizationRequestUpdate) AppendAmr(v []string) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.AppendAmr(v)
 	return _u
 }
 
@@ -317,17 +329,25 @@ func (_u *OIDCAuthorizationRequestUpdate) sqlSave(ctx context.Context) (_node in
 	if _u.mutation.SubjectCleared() {
 		_spec.ClearField(oidcauthorizationrequest.FieldSubject, field.TypeString)
 	}
-	if value, ok := _u.mutation.IamLoginSessionID(); ok {
-		_spec.SetField(oidcauthorizationrequest.FieldIamLoginSessionID, field.TypeString, value)
+	if value, ok := _u.mutation.LoginSessionID(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldLoginSessionID, field.TypeString, value)
 	}
-	if _u.mutation.IamLoginSessionIDCleared() {
-		_spec.ClearField(oidcauthorizationrequest.FieldIamLoginSessionID, field.TypeString)
+	if _u.mutation.LoginSessionIDCleared() {
+		_spec.ClearField(oidcauthorizationrequest.FieldLoginSessionID, field.TypeString)
 	}
 	if value, ok := _u.mutation.AuthTime(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldAuthTime, field.TypeTime, value)
 	}
 	if _u.mutation.AuthTimeCleared() {
 		_spec.ClearField(oidcauthorizationrequest.FieldAuthTime, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Amr(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldAmr, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedAmr(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oidcauthorizationrequest.FieldAmr, value)
+		})
 	}
 	if value, ok := _u.mutation.Done(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldDone, field.TypeBool, value)
@@ -477,23 +497,23 @@ func (_u *OIDCAuthorizationRequestUpdateOne) ClearSubject() *OIDCAuthorizationRe
 	return _u
 }
 
-// SetIamLoginSessionID sets the "iam_login_session_id" field.
-func (_u *OIDCAuthorizationRequestUpdateOne) SetIamLoginSessionID(v string) *OIDCAuthorizationRequestUpdateOne {
-	_u.mutation.SetIamLoginSessionID(v)
+// SetLoginSessionID sets the "login_session_id" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetLoginSessionID(v string) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.SetLoginSessionID(v)
 	return _u
 }
 
-// SetNillableIamLoginSessionID sets the "iam_login_session_id" field if the given value is not nil.
-func (_u *OIDCAuthorizationRequestUpdateOne) SetNillableIamLoginSessionID(v *string) *OIDCAuthorizationRequestUpdateOne {
+// SetNillableLoginSessionID sets the "login_session_id" field if the given value is not nil.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetNillableLoginSessionID(v *string) *OIDCAuthorizationRequestUpdateOne {
 	if v != nil {
-		_u.SetIamLoginSessionID(*v)
+		_u.SetLoginSessionID(*v)
 	}
 	return _u
 }
 
-// ClearIamLoginSessionID clears the value of the "iam_login_session_id" field.
-func (_u *OIDCAuthorizationRequestUpdateOne) ClearIamLoginSessionID() *OIDCAuthorizationRequestUpdateOne {
-	_u.mutation.ClearIamLoginSessionID()
+// ClearLoginSessionID clears the value of the "login_session_id" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) ClearLoginSessionID() *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.ClearLoginSessionID()
 	return _u
 }
 
@@ -514,6 +534,18 @@ func (_u *OIDCAuthorizationRequestUpdateOne) SetNillableAuthTime(v *time.Time) *
 // ClearAuthTime clears the value of the "auth_time" field.
 func (_u *OIDCAuthorizationRequestUpdateOne) ClearAuthTime() *OIDCAuthorizationRequestUpdateOne {
 	_u.mutation.ClearAuthTime()
+	return _u
+}
+
+// SetAmr sets the "amr" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetAmr(v []string) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.SetAmr(v)
+	return _u
+}
+
+// AppendAmr appends value to the "amr" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) AppendAmr(v []string) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.AppendAmr(v)
 	return _u
 }
 
@@ -674,17 +706,25 @@ func (_u *OIDCAuthorizationRequestUpdateOne) sqlSave(ctx context.Context) (_node
 	if _u.mutation.SubjectCleared() {
 		_spec.ClearField(oidcauthorizationrequest.FieldSubject, field.TypeString)
 	}
-	if value, ok := _u.mutation.IamLoginSessionID(); ok {
-		_spec.SetField(oidcauthorizationrequest.FieldIamLoginSessionID, field.TypeString, value)
+	if value, ok := _u.mutation.LoginSessionID(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldLoginSessionID, field.TypeString, value)
 	}
-	if _u.mutation.IamLoginSessionIDCleared() {
-		_spec.ClearField(oidcauthorizationrequest.FieldIamLoginSessionID, field.TypeString)
+	if _u.mutation.LoginSessionIDCleared() {
+		_spec.ClearField(oidcauthorizationrequest.FieldLoginSessionID, field.TypeString)
 	}
 	if value, ok := _u.mutation.AuthTime(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldAuthTime, field.TypeTime, value)
 	}
 	if _u.mutation.AuthTimeCleared() {
 		_spec.ClearField(oidcauthorizationrequest.FieldAuthTime, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Amr(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldAmr, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedAmr(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oidcauthorizationrequest.FieldAmr, value)
+		})
 	}
 	if value, ok := _u.mutation.Done(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldDone, field.TypeBool, value)

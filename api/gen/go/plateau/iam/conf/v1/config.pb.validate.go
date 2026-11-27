@@ -56,6 +56,35 @@ func (m *IAM) validate(all bool) error {
 
 	var errors []error
 
+	if all {
+		switch v := interface{}(m.GetAuthFlow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IAMValidationError{
+					field:  "AuthFlow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IAMValidationError{
+					field:  "AuthFlow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAuthFlow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IAMValidationError{
+				field:  "AuthFlow",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if m.BootstrapUserEmail != nil {
 		// no validation rules for BootstrapUserEmail
 	}
@@ -136,3 +165,160 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = IAMValidationError{}
+
+// Validate checks the field values on AuthFlow with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *AuthFlow) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AuthFlow with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AuthFlowMultiError, or nil
+// if none found.
+func (m *AuthFlow) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AuthFlow) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetTtl()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "Ttl",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "Ttl",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTtl()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthFlowValidationError{
+				field:  "Ttl",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetStepTtl()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "StepTtl",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "StepTtl",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetStepTtl()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthFlowValidationError{
+				field:  "StepTtl",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return AuthFlowMultiError(errors)
+	}
+
+	return nil
+}
+
+// AuthFlowMultiError is an error wrapping multiple validation errors returned
+// by AuthFlow.ValidateAll() if the designated constraints aren't met.
+type AuthFlowMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AuthFlowMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AuthFlowMultiError) AllErrors() []error { return m }
+
+// AuthFlowValidationError is the validation error returned by
+// AuthFlow.Validate if the designated constraints aren't met.
+type AuthFlowValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AuthFlowValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AuthFlowValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AuthFlowValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AuthFlowValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AuthFlowValidationError) ErrorName() string { return "AuthFlowValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AuthFlowValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAuthFlow.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AuthFlowValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AuthFlowValidationError{}

@@ -1,0 +1,10 @@
+{"file":".trellis/tasks/11-27-iam-auth-flow/prd.md","reason":"逐条核对 AC-1 至 AC-9 与 D1-D4 落盘结果"}
+{"file":".trellis/tasks/11-27-iam-auth-flow/design.md","reason":"核对锁序、归属隔离、RFC 6749/8176/9207 与双时钟实现一致性"}
+{"file":".trellis/tasks/11-27-iam-auth-flow/implement.md","reason":"核对实施清单、遗留符号清理与全部验证命令"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核对旧 RPC 彻底删除、错误码与生成物零漂移"}
+{"file":".trellis/spec/iam/sessions.md","reason":"核对未完成 Flow 零认证权限、SCS 归属绑定与令牌轮换"}
+{"file":".trellis/spec/iam/oidc.md","reason":"核对真实 amr 透传、RFC 9207 iss 与取消重定向行为"}
+{"file":".trellis/spec/iam/auth-flows.md","reason":"核对 IAM Web ?flow= 恢复、只读邮箱、切换账号与敏感输入清理"}
+{"file":".trellis/spec/admin/backend.md","reason":"核对 Admin 区分 login_cancelled 与 OpenFGA access_denied"}
+{"file":".trellis/spec/plateau/security/audit.md","reason":"核对匿名/已验密审计富化及零明文凭据泄露"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"核对单测/集成测试覆盖且无死代码或测试专用私有方法"}

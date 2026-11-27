@@ -64,7 +64,7 @@ just --dotenv-path /tmp/iam-test.env ENV_FILE=/tmp/iam-test.env openfga-model-ap
 
 开发模型直接替换，旧平台授权数据不迁移。CMS 模型由 Admin 示例替代。
 
-已有开发库切换时，先停止 IAM，清除旧登录及其关联的用户 OAuth 会话、令牌与授权请求，再删除旧 `iam_login_sessions` 表；下次启动由 Ent 创建新表及 SCS 的 `sessions` 表。普通 `Schema.Create` 不会删除旧表中的必填列，不能代替这次格式切换。保留用户、登录标识、密码验证材料、OAuth 客户端及签名密钥；旧浏览器须重新登录。不添加版本化迁移或旧 Cookie 兼容。
+开发库遇到不兼容的会话或协议表结构变更时，先停止 IAM，就地同步表/列重命名或直接删除并重建短期会话表（`login_sessions`、`auth_flows`、`oidc_authorization_requests`、`oauth_authorization_codes`、`oauth_token_sessions`、`oauth_access_tokens`、`oauth_refresh_tokens`），下次启动由 Ent `Schema.Create` 自动建表（含 SCS 的 `sessions` 表）。`Schema.Create` 仅执行幂等建表与补列，不自动删除已废弃的必填列，也不维护版本化迁移脚本；重建短期会话表时保留用户、登录标识、密码验证材料、OAuth 客户端及签名密钥，浏览器重新登录即可。
 
 ## 调用方与接收方
 

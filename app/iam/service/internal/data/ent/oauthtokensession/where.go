@@ -74,9 +74,9 @@ func ClientID(v string) predicate.OAuthTokenSession {
 	return predicate.OAuthTokenSession(sql.FieldEQ(FieldClientID, v))
 }
 
-// IamLoginSessionID applies equality check predicate on the "iam_login_session_id" field. It's identical to IamLoginSessionIDEQ.
-func IamLoginSessionID(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldEQ(FieldIamLoginSessionID, v))
+// LoginSessionID applies equality check predicate on the "login_session_id" field. It's identical to LoginSessionIDEQ.
+func LoginSessionID(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldEQ(FieldLoginSessionID, v))
 }
 
 // RefreshFamilyID applies equality check predicate on the "refresh_family_id" field. It's identical to RefreshFamilyIDEQ.
@@ -234,69 +234,69 @@ func ClientIDContainsFold(v string) predicate.OAuthTokenSession {
 	return predicate.OAuthTokenSession(sql.FieldContainsFold(FieldClientID, v))
 }
 
-// IamLoginSessionIDEQ applies the EQ predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDEQ(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldEQ(FieldIamLoginSessionID, v))
+// LoginSessionIDEQ applies the EQ predicate on the "login_session_id" field.
+func LoginSessionIDEQ(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldEQ(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDNEQ applies the NEQ predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDNEQ(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldNEQ(FieldIamLoginSessionID, v))
+// LoginSessionIDNEQ applies the NEQ predicate on the "login_session_id" field.
+func LoginSessionIDNEQ(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldNEQ(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDIn applies the In predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDIn(vs ...string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldIn(FieldIamLoginSessionID, vs...))
+// LoginSessionIDIn applies the In predicate on the "login_session_id" field.
+func LoginSessionIDIn(vs ...string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldIn(FieldLoginSessionID, vs...))
 }
 
-// IamLoginSessionIDNotIn applies the NotIn predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDNotIn(vs ...string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldNotIn(FieldIamLoginSessionID, vs...))
+// LoginSessionIDNotIn applies the NotIn predicate on the "login_session_id" field.
+func LoginSessionIDNotIn(vs ...string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldNotIn(FieldLoginSessionID, vs...))
 }
 
-// IamLoginSessionIDGT applies the GT predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDGT(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldGT(FieldIamLoginSessionID, v))
+// LoginSessionIDGT applies the GT predicate on the "login_session_id" field.
+func LoginSessionIDGT(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldGT(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDGTE applies the GTE predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDGTE(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldGTE(FieldIamLoginSessionID, v))
+// LoginSessionIDGTE applies the GTE predicate on the "login_session_id" field.
+func LoginSessionIDGTE(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldGTE(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDLT applies the LT predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDLT(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldLT(FieldIamLoginSessionID, v))
+// LoginSessionIDLT applies the LT predicate on the "login_session_id" field.
+func LoginSessionIDLT(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldLT(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDLTE applies the LTE predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDLTE(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldLTE(FieldIamLoginSessionID, v))
+// LoginSessionIDLTE applies the LTE predicate on the "login_session_id" field.
+func LoginSessionIDLTE(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldLTE(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDContains applies the Contains predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDContains(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldContains(FieldIamLoginSessionID, v))
+// LoginSessionIDContains applies the Contains predicate on the "login_session_id" field.
+func LoginSessionIDContains(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldContains(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDHasPrefix applies the HasPrefix predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDHasPrefix(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldHasPrefix(FieldIamLoginSessionID, v))
+// LoginSessionIDHasPrefix applies the HasPrefix predicate on the "login_session_id" field.
+func LoginSessionIDHasPrefix(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldHasPrefix(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDHasSuffix applies the HasSuffix predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDHasSuffix(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldHasSuffix(FieldIamLoginSessionID, v))
+// LoginSessionIDHasSuffix applies the HasSuffix predicate on the "login_session_id" field.
+func LoginSessionIDHasSuffix(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldHasSuffix(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDEqualFold applies the EqualFold predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDEqualFold(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldEqualFold(FieldIamLoginSessionID, v))
+// LoginSessionIDEqualFold applies the EqualFold predicate on the "login_session_id" field.
+func LoginSessionIDEqualFold(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldEqualFold(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDContainsFold applies the ContainsFold predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDContainsFold(v string) predicate.OAuthTokenSession {
-	return predicate.OAuthTokenSession(sql.FieldContainsFold(FieldIamLoginSessionID, v))
+// LoginSessionIDContainsFold applies the ContainsFold predicate on the "login_session_id" field.
+func LoginSessionIDContainsFold(v string) predicate.OAuthTokenSession {
+	return predicate.OAuthTokenSession(sql.FieldContainsFold(FieldLoginSessionID, v))
 }
 
 // RefreshFamilyIDEQ applies the EQ predicate on the "refresh_family_id" field.

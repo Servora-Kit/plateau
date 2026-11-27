@@ -9,4 +9,12 @@ const (
 	UserStatusPendingVerification = "pending_verification"
 	UserStatusActive              = "active"
 	UserStatusDisabled            = "disabled"
+
+	AMRPassword = "pwd"
+
+	AuthFlowStatusActive      = "active"
+	AuthFlowStatusCompleted   = "completed"
+	AuthFlowStatusCancelled   = "cancelled"
+	AuthFlowStatusReset       = "reset"
+	AuthFlowStatusInvalidated = "invalidated"
 )

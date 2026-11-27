@@ -30,7 +30,7 @@ func NewOIDCInitializer(config *oidcconfpb.OIDC, storage *OIDCStorage) (*OIDCIni
 	if err := config.Apply(); err != nil {
 		return nil, fmt.Errorf("OIDC initializer config: %w", err)
 	}
-	if _, _, err := normalizeIssuer(config.GetIssuer()); err != nil {
+	if _, _, err := biz.NormalizeOIDCIssuer(config.GetIssuer()); err != nil {
 		return nil, err
 	}
 	if len(config.GetClients()) == 0 {

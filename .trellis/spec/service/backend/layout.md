@@ -16,3 +16,10 @@
 ## `internal/server` 的生产文件
 
 以 `server.go`、`grpc.go`、`http.go` 为基本划分，仅按新增 transport 职责扩展文件；测试文件可同包存在。
+
+## 四层内文件命名
+
+`service/`、`biz/`、`data/` 各自保持单层单包，不在三层内部再拆业务子目录（避免跨用例复用引发循环依赖或破坏同包事务辅助函数封装）：
+
+- 按领域前缀平铺：主文件命名为 `<domain>.go`（如 `authn.go`、`account.go`、`user.go`），同领域的规则、子流程或独立仓储拆分为 `<domain>_<topic>.go`（如 `authn_flow.go`、`user_initializer.go`），单测对应 `<domain>_test.go` 或 `<domain>_<topic>_test.go`。
+- `data/schema/` 按 Ent 实体单数名一对一命名（如 `auth_flow.go`、`login_session.go`），不叠加领域前缀。

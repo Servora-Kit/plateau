@@ -13,4 +13,8 @@ var (
 	ErrInvalidPassword         = errors.New("invalid password")
 	ErrAccountInvalidState     = errors.New("account state is invalid")
 	ErrVerificationEmailFailed = errors.New("verification email delivery failed")
+	ErrAuthFlowNotFound        = errors.New("authentication flow not found")
+	ErrAuthFlowExpired         = errors.New("authentication flow expired")
+	ErrAuthFlowInvalidated     = errors.New("authentication flow invalidated")
+	ErrOIDCRequestInvalid      = errors.New("OIDC authorization request is invalid")
 )

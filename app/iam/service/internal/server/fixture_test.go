@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
+	"encoding/json"
 	"encoding/pem"
 	"io"
 	"log/slog"
@@ -18,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	cappb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
@@ -126,7 +129,7 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	sessions, err := biz.NewSessionUsecase(users, logins)
 	check(t, err)
-	authentication, err := biz.NewAuthenticationUsecase(users, passwords, sessions)
+	authFlows, err := data.NewAuthFlowRepository(d)
 	check(t, err)
 	manager, closeSession, err := data.NewHTTPSessionManager(&sessionpb.Session{Lifetime: durationpb.New(24 * time.Hour), IdleTimeout: durationpb.New(time.Hour), Cookie: &sessionpb.Cookie{Name: proto.String("__Host-iam_session")}}, db, client)
 	check(t, err)
@@ -142,8 +145,6 @@ func newServerFixture(t *testing.T) *serverFixture {
 	check(t, err)
 	userUC, err := biz.NewUserUsecase(accountUC, users, passwords, logins)
 	check(t, err)
-	authnService, err := service.NewAuthnService(authentication, manager)
-	check(t, err)
 	sessionService, err := service.NewSessionService(sessions, manager)
 	check(t, err)
 	accountService, err := service.NewAccountService(accountUC, manager)
@@ -155,6 +156,10 @@ func newServerFixture(t *testing.T) *serverFixture {
 	authorizer, err := openfga.NewDefault(fga)
 	check(t, err)
 	config := newProtocolConfig(t, publicOrigin)
+	authentication, err := biz.NewAuthenticationUsecase(&iamconfpb.IAM{}, config, users, passwords, sessions, authFlows)
+	check(t, err)
+	authnService, err := service.NewAuthnService(authentication, manager)
+	check(t, err)
 	storage, err := oidc.NewOIDCStorage(client, config, tokens)
 	check(t, err)
 	initializer, err := oidc.NewOIDCInitializer(config, storage)
@@ -232,20 +237,63 @@ func (f *serverFixture) request(method, path, body string, cookie *http.Cookie) 
 	return w
 }
 
-func (f *serverFixture) login(t *testing.T, password string, previous *http.Cookie) *http.Cookie {
-	t.Helper()
-	w := f.request("POST", "/v1/iam/authn/login", `{"email":"alice@example.com","password":"`+password+`"}`, previous)
-	if w.Code != http.StatusOK {
-		t.Fatalf("login status=%d body=%s", w.Code, w.Body)
-	}
+func (f *serverFixture) sessionCookie(w *httptest.ResponseRecorder, fallback *http.Cookie) *http.Cookie {
 	for _, cookie := range w.Result().Cookies() {
 		if cookie.Name == f.manager.Cookie.Name {
 			return cookie
 		}
 	}
-	t.Fatal("login did not deliver session cookie")
+	return fallback
+}
+
+func (f *serverFixture) createFlow(t *testing.T, oidcRequestID string, previous *http.Cookie) (string, *http.Cookie) {
+	t.Helper()
+	body := "{}"
+	if oidcRequestID != "" {
+		body = `{"oidcRequestId":"` + oidcRequestID + `"}`
+	}
+	w := f.request("POST", "/v1/iam/authn/flows", body, previous)
+	if w.Code != http.StatusOK {
+		t.Fatalf("CreateAuthFlow status=%d body=%s", w.Code, w.Body)
+	}
+	var payload struct {
+		Flow struct {
+			FlowID string `json:"flowId"`
+		} `json:"flow"`
+	}
+	check(t, json.Unmarshal(w.Body.Bytes(), &payload))
+	cookie := f.sessionCookie(w, previous)
+	if payload.Flow.FlowID == "" || cookie == nil {
+		t.Fatalf("CreateAuthFlow missing flowId or cookie: body=%s cookies=%v", w.Body, w.Result().Cookies())
+	}
+	return payload.Flow.FlowID, cookie
+}
+
+func (f *serverFixture) loginEmail(t *testing.T, email, password string, previous *http.Cookie) *http.Cookie {
+	t.Helper()
+	flowID, ownerCookie := f.createFlow(t, "", previous)
+	w := f.request("POST", "/v1/iam/authn/flows/"+flowID+":submitPassword", `{"email":"`+email+`","password":"`+password+`"}`, ownerCookie)
+	if w.Code != http.StatusOK {
+		t.Fatalf("SubmitPassword status=%d body=%s", w.Code, w.Body)
+	}
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.Name == f.manager.Cookie.Name {
+			if ownerCookie != nil && cookie.Value == ownerCookie.Value {
+				t.Fatal("SubmitPassword completed without rotating SCS session token")
+			}
+			return cookie
+		}
+	}
+	t.Fatal("SubmitPassword did not deliver rotated session cookie")
 	return nil
 }
+
+func (f *serverFixture) login(t *testing.T, password string, previous *http.Cookie) *http.Cookie {
+	t.Helper()
+	return f.loginEmail(t, "alice@example.com", password, previous)
+}
+
+var _ = authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED
 
 type recordingAuditor struct {
 	mu     sync.Mutex

@@ -13,10 +13,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/httpsession"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
@@ -87,11 +88,12 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			authflow.Table:                 authflow.ValidColumn,
 			authenticator.Table:            authenticator.ValidColumn,
 			emailverificationtoken.Table:   emailverificationtoken.ValidColumn,
 			httpsession.Table:              httpsession.ValidColumn,
-			iamloginsession.Table:          iamloginsession.ValidColumn,
 			loginidentifier.Table:          loginidentifier.ValidColumn,
+			loginsession.Table:             loginsession.ValidColumn,
 			oauthaccesstoken.Table:         oauthaccesstoken.ValidColumn,
 			oauthauthorizationcode.Table:   oauthauthorizationcode.ValidColumn,
 			oauthclient.Table:              oauthclient.ValidColumn,

@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AuthFlow is the predicate function for authflow builders.
+type AuthFlow func(*sql.Selector)
+
 // Authenticator is the predicate function for authenticator builders.
 type Authenticator func(*sql.Selector)
 
@@ -15,11 +18,11 @@ type EmailVerificationToken func(*sql.Selector)
 // HTTPSession is the predicate function for httpsession builders.
 type HTTPSession func(*sql.Selector)
 
-// IAMLoginSession is the predicate function for iamloginsession builders.
-type IAMLoginSession func(*sql.Selector)
-
 // LoginIdentifier is the predicate function for loginidentifier builders.
 type LoginIdentifier func(*sql.Selector)
+
+// LoginSession is the predicate function for loginsession builders.
+type LoginSession func(*sql.Selector)
 
 // OAuthAccessToken is the predicate function for oauthaccesstoken builders.
 type OAuthAccessToken func(*sql.Selector)

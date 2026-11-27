@@ -34,3 +34,63 @@ func IsAuthnErrorReasonInvalidCredentials(err error) bool {
 func ErrorAuthnErrorReasonInvalidCredentials(format string, args ...any) *errors.Error {
 	return errors.New(401, AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_CREDENTIALS.String(), fmt.Sprintf(format, args...))
 }
+
+func IsAuthnErrorReasonFlowNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_NOT_FOUND.String() && e.Code == 404
+}
+
+func ErrorAuthnErrorReasonFlowNotFound(format string, args ...any) *errors.Error {
+	return errors.New(404, AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_NOT_FOUND.String(), fmt.Sprintf(format, args...))
+}
+
+func IsAuthnErrorReasonFlowExpired(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_EXPIRED.String() && e.Code == 410
+}
+
+func ErrorAuthnErrorReasonFlowExpired(format string, args ...any) *errors.Error {
+	return errors.New(410, AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_EXPIRED.String(), fmt.Sprintf(format, args...))
+}
+
+func IsAuthnErrorReasonFlowInvalidated(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_INVALIDATED.String() && e.Code == 409
+}
+
+func ErrorAuthnErrorReasonFlowInvalidated(format string, args ...any) *errors.Error {
+	return errors.New(409, AuthnErrorReason_AUTHN_ERROR_REASON_FLOW_INVALIDATED.String(), fmt.Sprintf(format, args...))
+}
+
+func IsAuthnErrorReasonInvalidPassword(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_PASSWORD.String() && e.Code == 400
+}
+
+func ErrorAuthnErrorReasonInvalidPassword(format string, args ...any) *errors.Error {
+	return errors.New(400, AuthnErrorReason_AUTHN_ERROR_REASON_INVALID_PASSWORD.String(), fmt.Sprintf(format, args...))
+}
+
+func IsAuthnErrorReasonOidcRequestInvalid(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := errors.FromError(err)
+	return e.Reason == AuthnErrorReason_AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID.String() && e.Code == 400
+}
+
+func ErrorAuthnErrorReasonOidcRequestInvalid(format string, args ...any) *errors.Error {
+	return errors.New(400, AuthnErrorReason_AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID.String(), fmt.Sprintf(format, args...))
+}

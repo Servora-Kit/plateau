@@ -218,6 +218,16 @@ func TestRelyingPartyValidationAndLazyDiscovery(t *testing.T) {
 	}); err == nil {
 		t.Fatal("expected short cookie_secret to be rejected")
 	}
+	if _, err := NewRelyingParty(&oidcv1.OIDCClient{
+		Issuer:       new("https://iam.example.com"),
+		ClientId:     new("admin"),
+		ClientSecret: new(testClientSecret),
+		RedirectUri:  "https://admin.example.com/v1/admin/auth/callback",
+		CookieSecret: testCookieSecret,
+		HandshakeTtl: durationpb.New(500 * time.Millisecond),
+	}); err == nil {
+		t.Fatal("expected sub-second handshake_ttl to be rejected")
+	}
 
 	var networkCalls atomic.Int32
 	client := &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
@@ -250,6 +260,7 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 		ClientSecret: new(testClientSecret),
 		RedirectUri:  "http://localhost:10012/v1/admin/auth/callback",
 		CookieSecret: testCookieSecret,
+		HandshakeTtl: durationpb.New(45 * time.Minute),
 	})
 	if err != nil {
 		t.Fatalf("NewRelyingParty() error = %v", err)
@@ -271,7 +282,13 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 		if rec.Code != http.StatusFound {
 			t.Fatalf("BeginLogin status = %d", rec.Code)
 		}
+		if got := rec.Header().Get("Cache-Control"); got != "no-store" {
+			t.Fatalf("BeginLogin Cache-Control = %q, want no-store", got)
+		}
 		cookie := rec.Result().Cookies()[0]
+		if cookie.MaxAge != 2700 {
+			t.Fatalf("BeginLogin handshake cookie MaxAge = %d, want 2700", cookie.MaxAge)
+		}
 		loc, err := url.Parse(rec.Header().Get("Location"))
 		if err != nil {
 			t.Fatal(err)
@@ -283,10 +300,17 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 			t.Fatalf("missing PKCE S256 or nonce in authorize URL: %s", loc.RawQuery)
 		}
 
-		cbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc.Query().Get("state")), nil)
+		cbReq := httptest.NewRequest(
+			http.MethodGet,
+			"/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc.Query().Get("state"))+"&iss="+url.QueryEscape(op.server.URL),
+			nil,
+		)
 		cbReq.AddCookie(cookie)
 		cbRec := httptest.NewRecorder()
 		user, returnTo, err := rpClient.CompleteLogin(cbRec, cbReq)
+		if got := cbRec.Header().Get("Cache-Control"); got != "no-store" {
+			t.Fatalf("CompleteLogin Cache-Control = %q, want no-store", got)
+		}
 		if err != nil {
 			t.Fatalf("CompleteLogin() error = %v", err)
 		}
@@ -319,22 +343,68 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 	state := loc.Query().Get("state")
 
 	// Tampered cookie is rejected.
-	tamperedReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state), nil)
+	issParam := "&iss=" + url.QueryEscape(op.server.URL)
+
+	// Tampered cookie is rejected.
+	tamperedReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state)+issParam, nil)
 	tamperedReq.AddCookie(&http.Cookie{Name: cookie.Name, Value: cookie.Value + "tamper"})
 	if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), tamperedReq); !errors.Is(err, ErrHandshakeInvalid) {
 		t.Fatalf("tampered cookie err = %v, want ErrHandshakeInvalid", err)
 	}
 
 	// Wrong state is rejected.
-	badStateReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state=wrong-state", nil)
+	badStateReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state=wrong-state"+issParam, nil)
 	badStateReq.AddCookie(cookie)
 	if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), badStateReq); !errors.Is(err, ErrHandshakeInvalid) {
 		t.Fatalf("mismatched state err = %v, want ErrHandshakeInvalid", err)
 	}
 
+	// Missing, duplicate, and mismatched iss parameters are rejected (RFC 9207).
+	for _, tc := range []struct {
+		name   string
+		suffix string
+	}{
+		{name: "missing iss", suffix: ""},
+		{name: "duplicate iss", suffix: issParam + issParam},
+		{name: "mismatched iss", suffix: "&iss=" + url.QueryEscape("https://evil.example.com")},
+	} {
+		badIssReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state)+tc.suffix, nil)
+		badIssReq.AddCookie(cookie)
+		if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), badIssReq); !errors.Is(err, ErrHandshakeInvalid) {
+			t.Fatalf("%s err = %v, want ErrHandshakeInvalid", tc.name, err)
+		}
+	}
+
+	// Forged error=access_denied without cookie, with wrong state, or with wrong iss must return ErrHandshakeInvalid, NOT ErrAccessDenied.
+	forgedNoCookie := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?error=access_denied&state="+url.QueryEscape(state)+issParam, nil)
+	if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), forgedNoCookie); !errors.Is(err, ErrHandshakeInvalid) {
+		t.Fatalf("forged access_denied without cookie err = %v, want ErrHandshakeInvalid", err)
+	}
+	forgedBadState := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?error=access_denied&state=wrong"+issParam, nil)
+	forgedBadState.AddCookie(cookie)
+	if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), forgedBadState); !errors.Is(err, ErrHandshakeInvalid) {
+		t.Fatalf("forged access_denied bad state err = %v, want ErrHandshakeInvalid", err)
+	}
+	forgedBadIss := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?error=access_denied&state="+url.QueryEscape(state)+"&iss=https://evil.example.com", nil)
+	forgedBadIss.AddCookie(cookie)
+	if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), forgedBadIss); !errors.Is(err, ErrHandshakeInvalid) {
+		t.Fatalf("forged access_denied bad iss err = %v, want ErrHandshakeInvalid", err)
+	}
+
+	// Verified error=access_denied returns ErrAccessDenied and clears handshake cookie.
+	cancelRec := httptest.NewRecorder()
+	cancelReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?error=access_denied&state="+url.QueryEscape(state)+issParam, nil)
+	cancelReq.AddCookie(cookie)
+	if _, _, err := rpClient.CompleteLogin(cancelRec, cancelReq); !errors.Is(err, ErrAccessDenied) {
+		t.Fatalf("verified access_denied err = %v, want ErrAccessDenied", err)
+	}
+	if cleared := cancelRec.Result().Cookies(); len(cleared) != 1 || cleared[0].MaxAge >= 0 {
+		t.Fatalf("access_denied did not clear handshake cookie: %+v", cleared)
+	}
+
 	// Wrong nonce in ID token is rejected.
 	op.overrideNonce = "wrong-nonce"
-	badNonceReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state), nil)
+	badNonceReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state)+issParam, nil)
 	badNonceReq.AddCookie(cookie)
 	if _, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), badNonceReq); !errors.Is(err, ErrHandshakeInvalid) {
 		t.Fatalf("mismatched nonce err = %v, want ErrHandshakeInvalid", err)
@@ -342,7 +412,7 @@ func TestRelyingPartyHandshakePKCENonceAndOpenRedirect(t *testing.T) {
 	op.overrideNonce = ""
 
 	// Valid completion preserves safe relative return_to.
-	okReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state), nil)
+	okReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(state)+issParam, nil)
 	okReq.AddCookie(cookie)
 	_, returnTo, err := rpClient.CompleteLogin(httptest.NewRecorder(), okReq)
 	if err != nil || returnTo != "/users?page=2" {
@@ -374,7 +444,7 @@ func TestCompleteLoginUserAndProfileExtraction(t *testing.T) {
 	op.lastChallenge = minLoc.Query().Get("code_challenge")
 	op.lastNonce = minLoc.Query().Get("nonce")
 
-	minCbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(minLoc.Query().Get("state")), nil)
+	minCbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(minLoc.Query().Get("state"))+"&iss="+url.QueryEscape(op.server.URL), nil)
 	minCbReq.AddCookie(minCookie)
 	minimalUser, _, err := minimalRP.CompleteLogin(httptest.NewRecorder(), minCbReq)
 	if err != nil {
@@ -408,7 +478,7 @@ func TestCompleteLoginUserAndProfileExtraction(t *testing.T) {
 	op.lastChallenge = loc.Query().Get("code_challenge")
 	op.lastNonce = loc.Query().Get("nonce")
 
-	cbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc.Query().Get("state")), nil)
+	cbReq := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc.Query().Get("state"))+"&iss="+url.QueryEscape(op.server.URL), nil)
 	cbReq.AddCookie(cookie)
 	userFromUserinfo, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), cbReq)
 	if err != nil {
@@ -457,7 +527,7 @@ func TestCompleteLoginUserAndProfileExtraction(t *testing.T) {
 	op.lastChallenge = loc2.Query().Get("code_challenge")
 	op.lastNonce = loc2.Query().Get("nonce")
 
-	cbReq2 := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc2.Query().Get("state")), nil)
+	cbReq2 := httptest.NewRequest(http.MethodGet, "/v1/admin/auth/callback?code=good-code&state="+url.QueryEscape(loc2.Query().Get("state"))+"&iss="+url.QueryEscape(op.server.URL), nil)
 	cbReq2.AddCookie(cookie2)
 	userFromIDToken, _, err := rpClient.CompleteLogin(httptest.NewRecorder(), cbReq2)
 	if err != nil {

@@ -26,7 +26,7 @@ type requestSlot struct {
 }
 
 // SetActor enriches the current RPC or HTTP audit event with a verified execution Actor.
-// Intended for AUTHN_MODE_PUBLIC endpoints (such as Login, ChangeInitialPassword,
+// Intended for AUTHN_MODE_PUBLIC endpoints (such as SubmitPassword, CompleteUpdatePassword,
 // VerifyEmail, or ConfirmPasswordReset) and native HTTP protocol endpoints that verify
 // identity inside the handler.
 func SetActor(ctx context.Context, actor security.Actor) {

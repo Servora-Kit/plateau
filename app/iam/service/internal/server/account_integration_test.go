@@ -41,7 +41,8 @@ func TestPublicAccountCAPAndOneTimeProofs(t *testing.T) {
 	if replay := f.request("POST", "/v1/iam/account/register", body(proof), nil); replay.Code == 200 {
 		t.Fatal("CAP proof was reused")
 	}
-	if login := f.request("POST", "/v1/iam/authn/login", `{"email":"new@example.com","password":"correct horse battery staple"}`, nil); login.Code != 401 {
+	pendingFlowID, pendingCookie := f.createFlow(t, "", nil)
+	if login := f.request("POST", "/v1/iam/authn/flows/"+pendingFlowID+":submitPassword", `{"email":"new@example.com","password":"correct horse battery staple"}`, pendingCookie); login.Code != 401 {
 		t.Fatal("pending user could log in")
 	}
 	link, err := url.Parse(f.mailer.verification[0])
@@ -53,9 +54,7 @@ func TestPublicAccountCAPAndOneTimeProofs(t *testing.T) {
 	if w := f.request("POST", "/v1/iam/account/verify-email", verify, nil); w.Code == 200 {
 		t.Fatal("email proof was reused")
 	}
-	if w := f.request("POST", "/v1/iam/authn/login", `{"email":"new@example.com","password":"correct horse battery staple"}`, nil); w.Code != 200 {
-		t.Fatalf("verified user cannot log in: %d %s", w.Code, w.Body)
-	}
+	_ = f.loginEmail(t, "new@example.com", "correct horse battery staple", nil)
 	var responseBody string
 	for _, email := range []string{"new@example.com", "unknown@example.com"} {
 		request := fmt.Sprintf(`{"email":%q,"capToken":%q}`, email, f.capProof(t))

@@ -38,7 +38,7 @@ func TestServiceOAuthHTTPAndGRPC(t *testing.T) {
 	source := config.TokenSource(tokenCtx)
 	token, err := source.Token()
 	check(t, err)
-	if f.ent.IAMLoginSession.Query().CountX(ctx) != 0 || f.ent.OAuthTokenSession.Query().CountX(ctx) != 0 {
+	if f.ent.LoginSession.Query().CountX(ctx) != 0 || f.ent.OAuthTokenSession.Query().CountX(ctx) != 0 {
 		t.Fatal("service token created a user login")
 	}
 
@@ -226,20 +226,25 @@ func TestUserLifecycleInitialPasswordSelfDeleteAndExpungeAuthz(t *testing.T) {
 		t.Fatalf("verify-email: %d %s", w.Code, w.Body)
 	}
 
-	loginResp := f.request("POST", "/v1/iam/authn/login", `{"email":"bob@example.com","password":"`+testPassword+`"}`, nil)
-	if loginResp.Code != 200 || len(loginResp.Result().Cookies()) != 0 || !strings.Contains(loginResp.Body.String(), "USER_REQUIRED_ACTION_UPDATE_PASSWORD") {
-		t.Fatalf("initial password login should require action without cookie: code=%d cookies=%v body=%s", loginResp.Code, loginResp.Result().Cookies(), loginResp.Body)
+	bobFlowID, bobOwnerCookie := f.createFlow(t, "", nil)
+	loginResp := f.request("POST", "/v1/iam/authn/flows/"+bobFlowID+":submitPassword", `{"email":"bob@example.com","password":"`+testPassword+`"}`, bobOwnerCookie)
+	if loginResp.Code != 200 || !strings.Contains(loginResp.Body.String(), "AUTH_FLOW_STATE_REQUIRED_ACTION") || !strings.Contains(loginResp.Body.String(), "USER_REQUIRED_ACTION_UPDATE_PASSWORD") {
+		t.Fatalf("initial password SubmitPassword should enter REQUIRED_ACTION: code=%d body=%s", loginResp.Code, loginResp.Body)
+	}
+	bobOwnerCookie = f.sessionCookie(loginResp, bobOwnerCookie)
+	if w := f.request("GET", "/v1/iam/account/profile", "", bobOwnerCookie); w.Code != 401 {
+		t.Fatalf("incomplete REQUIRED_ACTION flow granted authenticated access: %d %s", w.Code, w.Body)
 	}
 
-	samePwd := f.request("POST", "/v1/iam/account/change-initial-password", `{"email":"bob@example.com","currentPassword":"`+testPassword+`","newPassword":"`+testPassword+`"}`, nil)
+	samePwd := f.request("POST", "/v1/iam/authn/flows/"+bobFlowID+":completeUpdatePassword", `{"newPassword":"`+testPassword+`"}`, bobOwnerCookie)
 	if samePwd.Code != 400 {
 		t.Fatalf("unchanged initial password accepted: %d %s", samePwd.Code, samePwd.Body)
 	}
 
-	const nextPassword = "bob-updated-password-12345"
-	changed := f.request("POST", "/v1/iam/account/change-initial-password", `{"email":"bob@example.com","currentPassword":"`+testPassword+`","newPassword":"`+nextPassword+`"}`, nil)
+	const nextPassword = "updated horse battery staple"
+	changed := f.request("POST", "/v1/iam/authn/flows/"+bobFlowID+":completeUpdatePassword", `{"newPassword":"`+nextPassword+`"}`, bobOwnerCookie)
 	if changed.Code != 200 || len(changed.Result().Cookies()) != 1 {
-		t.Fatalf("change-initial-password: code=%d cookies=%v body=%s", changed.Code, changed.Result().Cookies(), changed.Body)
+		t.Fatalf("completeUpdatePassword: code=%d cookies=%v body=%s", changed.Code, changed.Result().Cookies(), changed.Body)
 	}
 	bobCookie := changed.Result().Cookies()[0]
 	if w := f.request("GET", "/v1/iam/account/profile", "", bobCookie); w.Code != 200 {

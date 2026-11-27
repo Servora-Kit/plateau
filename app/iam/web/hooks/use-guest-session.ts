@@ -5,21 +5,12 @@ import { useRouter } from "next/navigation"
 
 import { createIamApi } from "@/lib/iam-api"
 
-interface UseGuestSessionOptions {
-  enabled?: boolean
-  requestId?: string | null
-}
-
-export function useGuestSession(options?: UseGuestSessionOptions) {
-  const enabled = options?.enabled ?? true
-  const requestId = options?.requestId ?? null
+export function useGuestSession() {
   const router = useRouter()
   const [revision, setRevision] = useState(0)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (!enabled) return
-
     const controller = new AbortController()
     void createIamApi(controller.signal)
       .account.GetProfile({})
@@ -27,13 +18,7 @@ export function useGuestSession(options?: UseGuestSessionOptions) {
         ({ user }) => {
           if (controller.signal.aborted) return
           if (user) {
-            if (requestId) {
-              window.location.replace(
-                `/authorize/callback?id=${encodeURIComponent(requestId)}`
-              )
-            } else {
-              router.replace("/account/")
-            }
+            router.replace("/account/")
             return
           }
           setReady(true)
@@ -43,7 +28,6 @@ export function useGuestSession(options?: UseGuestSessionOptions) {
           setReady(true)
         }
       )
-
     const handlePageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return
       setReady(false)
@@ -55,7 +39,7 @@ export function useGuestSession(options?: UseGuestSessionOptions) {
       controller.abort()
       window.removeEventListener("pageshow", handlePageShow)
     }
-  }, [enabled, requestId, router, revision])
+  }, [router, revision])
 
-  return { ready: enabled && ready }
+  return { ready }
 }

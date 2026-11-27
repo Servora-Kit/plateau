@@ -9,10 +9,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/httpsession"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
@@ -80,6 +81,33 @@ func (f TraverseFunc) Traverse(ctx context.Context, q ent.Query) error {
 		return err
 	}
 	return f(ctx, query)
+}
+
+// The AuthFlowFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AuthFlowFunc func(context.Context, *ent.AuthFlowQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AuthFlowFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AuthFlowQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AuthFlowQuery", q)
+}
+
+// The TraverseAuthFlow type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAuthFlow func(context.Context, *ent.AuthFlowQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAuthFlow) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAuthFlow) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AuthFlowQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AuthFlowQuery", q)
 }
 
 // The AuthenticatorFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -163,33 +191,6 @@ func (f TraverseHTTPSession) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.HTTPSessionQuery", q)
 }
 
-// The IAMLoginSessionFunc type is an adapter to allow the use of ordinary function as a Querier.
-type IAMLoginSessionFunc func(context.Context, *ent.IAMLoginSessionQuery) (ent.Value, error)
-
-// Query calls f(ctx, q).
-func (f IAMLoginSessionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
-	if q, ok := q.(*ent.IAMLoginSessionQuery); ok {
-		return f(ctx, q)
-	}
-	return nil, fmt.Errorf("unexpected query type %T. expect *ent.IAMLoginSessionQuery", q)
-}
-
-// The TraverseIAMLoginSession type is an adapter to allow the use of ordinary function as Traverser.
-type TraverseIAMLoginSession func(context.Context, *ent.IAMLoginSessionQuery) error
-
-// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
-func (f TraverseIAMLoginSession) Intercept(next ent.Querier) ent.Querier {
-	return next
-}
-
-// Traverse calls f(ctx, q).
-func (f TraverseIAMLoginSession) Traverse(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.IAMLoginSessionQuery); ok {
-		return f(ctx, q)
-	}
-	return fmt.Errorf("unexpected query type %T. expect *ent.IAMLoginSessionQuery", q)
-}
-
 // The LoginIdentifierFunc type is an adapter to allow the use of ordinary function as a Querier.
 type LoginIdentifierFunc func(context.Context, *ent.LoginIdentifierQuery) (ent.Value, error)
 
@@ -215,6 +216,33 @@ func (f TraverseLoginIdentifier) Traverse(ctx context.Context, q ent.Query) erro
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.LoginIdentifierQuery", q)
+}
+
+// The LoginSessionFunc type is an adapter to allow the use of ordinary function as a Querier.
+type LoginSessionFunc func(context.Context, *ent.LoginSessionQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f LoginSessionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.LoginSessionQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.LoginSessionQuery", q)
+}
+
+// The TraverseLoginSession type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseLoginSession func(context.Context, *ent.LoginSessionQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseLoginSession) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseLoginSession) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.LoginSessionQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.LoginSessionQuery", q)
 }
 
 // The OAuthAccessTokenFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -490,16 +518,18 @@ func (f TraverseUser) Traverse(ctx context.Context, q ent.Query) error {
 // NewQuery returns the generic Query interface for the given typed query.
 func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
+	case *ent.AuthFlowQuery:
+		return &query[*ent.AuthFlowQuery, predicate.AuthFlow, authflow.OrderOption]{typ: ent.TypeAuthFlow, tq: q}, nil
 	case *ent.AuthenticatorQuery:
 		return &query[*ent.AuthenticatorQuery, predicate.Authenticator, authenticator.OrderOption]{typ: ent.TypeAuthenticator, tq: q}, nil
 	case *ent.EmailVerificationTokenQuery:
 		return &query[*ent.EmailVerificationTokenQuery, predicate.EmailVerificationToken, emailverificationtoken.OrderOption]{typ: ent.TypeEmailVerificationToken, tq: q}, nil
 	case *ent.HTTPSessionQuery:
 		return &query[*ent.HTTPSessionQuery, predicate.HTTPSession, httpsession.OrderOption]{typ: ent.TypeHTTPSession, tq: q}, nil
-	case *ent.IAMLoginSessionQuery:
-		return &query[*ent.IAMLoginSessionQuery, predicate.IAMLoginSession, iamloginsession.OrderOption]{typ: ent.TypeIAMLoginSession, tq: q}, nil
 	case *ent.LoginIdentifierQuery:
 		return &query[*ent.LoginIdentifierQuery, predicate.LoginIdentifier, loginidentifier.OrderOption]{typ: ent.TypeLoginIdentifier, tq: q}, nil
+	case *ent.LoginSessionQuery:
+		return &query[*ent.LoginSessionQuery, predicate.LoginSession, loginsession.OrderOption]{typ: ent.TypeLoginSession, tq: q}, nil
 	case *ent.OAuthAccessTokenQuery:
 		return &query[*ent.OAuthAccessTokenQuery, predicate.OAuthAccessToken, oauthaccesstoken.OrderOption]{typ: ent.TypeOAuthAccessToken, tq: q}, nil
 	case *ent.OAuthAuthorizationCodeQuery:

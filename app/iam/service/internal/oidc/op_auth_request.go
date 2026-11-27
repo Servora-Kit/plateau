@@ -21,7 +21,7 @@ func (request *authorizationRequest) GetAMR() []string {
 	if !request.Done() {
 		return nil
 	}
-	return []string{passwordAMR}
+	return slices.Clone(request.entity.Amr)
 }
 
 func (request *authorizationRequest) GetAudience() []string {

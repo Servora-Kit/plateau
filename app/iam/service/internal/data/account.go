@@ -311,6 +311,7 @@ func (repo *passwordResetTokenRepo) Peek(ctx context.Context, tokenHash string, 
 			AuthenticatorID:         authEntity.ID,
 			PasswordAuthenticatorID: passEntity.ID,
 			PasswordHash:            passEntity.PasswordHash,
+			ChangedTime:             biz.NormalizeTimestamp(passEntity.ChangedTime),
 		},
 		RequiresPasswordChange: slices.Contains(userEntity.RequiredActions, storedRequiredActionUpdatePassword),
 	}, nil
@@ -395,7 +396,7 @@ func (repo *passwordResetTokenRepo) ConsumeAndReplacePassword(ctx context.Contex
 				passwordauthenticator.PasswordHashEQ(proof.Credential.PasswordHash),
 			).
 			SetPasswordHash(passwordHash).
-			SetChangedTime(now).
+			SetChangedTime(biz.NormalizeTimestamp(now)).
 			Save(ctx)
 		if err != nil {
 			return translateEntError(err)

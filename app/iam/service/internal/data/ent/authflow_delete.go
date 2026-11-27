@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/predicate"
 )
 
-// IAMLoginSessionDelete is the builder for deleting a IAMLoginSession entity.
-type IAMLoginSessionDelete struct {
+// AuthFlowDelete is the builder for deleting a AuthFlow entity.
+type AuthFlowDelete struct {
 	config
 	hooks    []Hook
-	mutation *IAMLoginSessionMutation
+	mutation *AuthFlowMutation
 }
 
-// Where appends a list predicates to the IAMLoginSessionDelete builder.
-func (_d *IAMLoginSessionDelete) Where(ps ...predicate.IAMLoginSession) *IAMLoginSessionDelete {
+// Where appends a list predicates to the AuthFlowDelete builder.
+func (_d *AuthFlowDelete) Where(ps ...predicate.AuthFlow) *AuthFlowDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *IAMLoginSessionDelete) Exec(ctx context.Context) (int, error) {
+func (_d *AuthFlowDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *IAMLoginSessionDelete) ExecX(ctx context.Context) int {
+func (_d *AuthFlowDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *IAMLoginSessionDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *IAMLoginSessionDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(iamloginsession.Table, sqlgraph.NewFieldSpec(iamloginsession.FieldID, field.TypeString))
+func (_d *AuthFlowDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(authflow.Table, sqlgraph.NewFieldSpec(authflow.FieldID, field.TypeString))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *IAMLoginSessionDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// IAMLoginSessionDeleteOne is the builder for deleting a single IAMLoginSession entity.
-type IAMLoginSessionDeleteOne struct {
-	_d *IAMLoginSessionDelete
+// AuthFlowDeleteOne is the builder for deleting a single AuthFlow entity.
+type AuthFlowDeleteOne struct {
+	_d *AuthFlowDelete
 }
 
-// Where appends a list predicates to the IAMLoginSessionDelete builder.
-func (_d *IAMLoginSessionDeleteOne) Where(ps ...predicate.IAMLoginSession) *IAMLoginSessionDeleteOne {
+// Where appends a list predicates to the AuthFlowDelete builder.
+func (_d *AuthFlowDeleteOne) Where(ps ...predicate.AuthFlow) *AuthFlowDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *IAMLoginSessionDeleteOne) Exec(ctx context.Context) error {
+func (_d *AuthFlowDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{iamloginsession.Label}
+		return &NotFoundError{authflow.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *IAMLoginSessionDeleteOne) ExecX(ctx context.Context) {
+func (_d *AuthFlowDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

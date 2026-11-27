@@ -307,42 +307,6 @@ func (x *ConfirmPasswordResetResponse) RedactFields() {
 }
 
 // Redact returns a redacted representation without mutating x.
-func (x *ChangeInitialPasswordRequest) Redact() string {
-	if x == nil {
-		return ""
-	}
-	clone := proto.Clone(x).(*ChangeInitialPasswordRequest)
-	clone.RedactFields()
-	return clone.String()
-}
-
-// RedactFields applies annotated field replacements in place.
-func (x *ChangeInitialPasswordRequest) RedactFields() {
-	if x == nil {
-		return
-	}
-	x.CurrentPassword = ``
-	x.NewPassword = ``
-}
-
-// Redact returns a redacted representation without mutating x.
-func (x *ChangeInitialPasswordResponse) Redact() string {
-	if x == nil {
-		return ""
-	}
-	clone := proto.Clone(x).(*ChangeInitialPasswordResponse)
-	clone.RedactFields()
-	return clone.String()
-}
-
-// RedactFields applies annotated field replacements in place.
-func (x *ChangeInitialPasswordResponse) RedactFields() {
-	if x == nil {
-		return
-	}
-}
-
-// Redact returns a redacted representation without mutating x.
 func (x *DeleteAccountRequest) Redact() string {
 	if x == nil {
 		return ""

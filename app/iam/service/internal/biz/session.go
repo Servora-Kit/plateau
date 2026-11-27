@@ -20,13 +20,13 @@ var (
 type LoginSession struct {
 	ID        string
 	UserID    string
+	AMR       []string
 	AuthTime  time.Time
 	RevokedAt *time.Time
 }
 
 // SessionRepo 的撤销方法原子更新登录及其关联 OAuth 状态。
 type SessionRepo interface {
-	Create(context.Context, PasswordCredential, string, time.Time) (*userpb.User, *LoginSession, error)
 	Find(context.Context, string) (*LoginSession, error)
 	Revoke(context.Context, string, time.Time) error
 	RevokeAll(context.Context, string, time.Time) error
@@ -43,13 +43,6 @@ func NewSessionUsecase(users UserRepo, sessions SessionRepo) (*SessionUsecase, e
 		return nil, fmt.Errorf("session: repository dependency is nil")
 	}
 	return &SessionUsecase{users: users, sessions: sessions, now: time.Now}, nil
-}
-
-func (uc *SessionUsecase) Create(ctx context.Context, expected PasswordCredential, expectedUserEtag string) (*userpb.User, *LoginSession, error) {
-	if expected.UserID == "" || expected.AuthenticatorID == "" || expected.PasswordAuthenticatorID == "" || expected.PasswordHash == "" || expectedUserEtag == "" {
-		return nil, nil, ErrUnauthenticated
-	}
-	return uc.sessions.Create(ctx, expected, expectedUserEtag, uc.now())
 }
 
 // Resolve 只接受从已装载 SCS 数据读取的登录引用，并查询当前身份事实。

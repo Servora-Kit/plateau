@@ -17,6 +17,8 @@ import (
 	"unicode/utf8"
 
 	"google.golang.org/protobuf/types/known/anypb"
+
+	iamuserv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 )
 
 // ensure the imports are used
@@ -33,47 +35,48 @@ var (
 	_ = (*mail.Address)(nil)
 	_ = anypb.Any{}
 	_ = sort.Sort
+
+	_ = iamuserv1.UserRequiredAction(0)
 )
 
-// Validate checks the field values on LoginRequest with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *LoginRequest) Validate() error {
+// Validate checks the field values on AuthFlowOidcContext with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *AuthFlowOidcContext) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on LoginRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in LoginRequestMultiError, or
-// nil if none found.
-func (m *LoginRequest) ValidateAll() error {
+// ValidateAll checks the field values on AuthFlowOidcContext with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// AuthFlowOidcContextMultiError, or nil if none found.
+func (m *AuthFlowOidcContext) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *LoginRequest) validate(all bool) error {
+func (m *AuthFlowOidcContext) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for Email
-
-	// no validation rules for Password
+	// no validation rules for ClientId
 
 	if len(errors) > 0 {
-		return LoginRequestMultiError(errors)
+		return AuthFlowOidcContextMultiError(errors)
 	}
 
 	return nil
 }
 
-// LoginRequestMultiError is an error wrapping multiple validation errors
-// returned by LoginRequest.ValidateAll() if the designated constraints aren't met.
-type LoginRequestMultiError []error
+// AuthFlowOidcContextMultiError is an error wrapping multiple validation
+// errors returned by AuthFlowOidcContext.ValidateAll() if the designated
+// constraints aren't met.
+type AuthFlowOidcContextMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m LoginRequestMultiError) Error() string {
+func (m AuthFlowOidcContextMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -82,11 +85,11 @@ func (m LoginRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m LoginRequestMultiError) AllErrors() []error { return m }
+func (m AuthFlowOidcContextMultiError) AllErrors() []error { return m }
 
-// LoginRequestValidationError is the validation error returned by
-// LoginRequest.Validate if the designated constraints aren't met.
-type LoginRequestValidationError struct {
+// AuthFlowOidcContextValidationError is the validation error returned by
+// AuthFlowOidcContext.Validate if the designated constraints aren't met.
+type AuthFlowOidcContextValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -94,22 +97,24 @@ type LoginRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e LoginRequestValidationError) Field() string { return e.field }
+func (e AuthFlowOidcContextValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e LoginRequestValidationError) Reason() string { return e.reason }
+func (e AuthFlowOidcContextValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e LoginRequestValidationError) Cause() error { return e.cause }
+func (e AuthFlowOidcContextValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e LoginRequestValidationError) Key() bool { return e.key }
+func (e AuthFlowOidcContextValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e LoginRequestValidationError) ErrorName() string { return "LoginRequestValidationError" }
+func (e AuthFlowOidcContextValidationError) ErrorName() string {
+	return "AuthFlowOidcContextValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e LoginRequestValidationError) Error() string {
+func (e AuthFlowOidcContextValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -121,14 +126,14 @@ func (e LoginRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sLoginRequest.%s: %s%s",
+		"invalid %sAuthFlowOidcContext.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = LoginRequestValidationError{}
+var _ error = AuthFlowOidcContextValidationError{}
 
 var _ interface {
 	Field() string
@@ -136,35 +141,132 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = LoginRequestValidationError{}
+} = AuthFlowOidcContextValidationError{}
 
-// Validate checks the field values on LoginResponse with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
+// Validate checks the field values on AuthFlow with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
-func (m *LoginResponse) Validate() error {
+func (m *AuthFlow) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on LoginResponse with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in LoginResponseMultiError, or
-// nil if none found.
-func (m *LoginResponse) ValidateAll() error {
+// ValidateAll checks the field values on AuthFlow with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AuthFlowMultiError, or nil
+// if none found.
+func (m *AuthFlow) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *LoginResponse) validate(all bool) error {
+func (m *AuthFlow) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
+	// no validation rules for FlowId
+
+	// no validation rules for State
+
+	// no validation rules for NextRequiredAction
+
+	// no validation rules for Email
+
+	if all {
+		switch v := interface{}(m.GetOidc()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "Oidc",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "Oidc",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetOidc()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthFlowValidationError{
+				field:  "Oidc",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetExpiresTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "ExpiresTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "ExpiresTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetExpiresTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthFlowValidationError{
+				field:  "ExpiresTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetStepExpiresTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "StepExpiresTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthFlowValidationError{
+					field:  "StepExpiresTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetStepExpiresTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthFlowValidationError{
+				field:  "StepExpiresTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for ContinueUrl
+
 	if all {
 		switch v := interface{}(m.GetUser()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, LoginResponseValidationError{
+				errors = append(errors, AuthFlowValidationError{
 					field:  "User",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -172,7 +274,7 @@ func (m *LoginResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, LoginResponseValidationError{
+				errors = append(errors, AuthFlowValidationError{
 					field:  "User",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -181,7 +283,7 @@ func (m *LoginResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetUser()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return LoginResponseValidationError{
+			return AuthFlowValidationError{
 				field:  "User",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -190,19 +292,18 @@ func (m *LoginResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return LoginResponseMultiError(errors)
+		return AuthFlowMultiError(errors)
 	}
 
 	return nil
 }
 
-// LoginResponseMultiError is an error wrapping multiple validation errors
-// returned by LoginResponse.ValidateAll() if the designated constraints
-// aren't met.
-type LoginResponseMultiError []error
+// AuthFlowMultiError is an error wrapping multiple validation errors returned
+// by AuthFlow.ValidateAll() if the designated constraints aren't met.
+type AuthFlowMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m LoginResponseMultiError) Error() string {
+func (m AuthFlowMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -211,11 +312,11 @@ func (m LoginResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m LoginResponseMultiError) AllErrors() []error { return m }
+func (m AuthFlowMultiError) AllErrors() []error { return m }
 
-// LoginResponseValidationError is the validation error returned by
-// LoginResponse.Validate if the designated constraints aren't met.
-type LoginResponseValidationError struct {
+// AuthFlowValidationError is the validation error returned by
+// AuthFlow.Validate if the designated constraints aren't met.
+type AuthFlowValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -223,22 +324,22 @@ type LoginResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e LoginResponseValidationError) Field() string { return e.field }
+func (e AuthFlowValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e LoginResponseValidationError) Reason() string { return e.reason }
+func (e AuthFlowValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e LoginResponseValidationError) Cause() error { return e.cause }
+func (e AuthFlowValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e LoginResponseValidationError) Key() bool { return e.key }
+func (e AuthFlowValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e LoginResponseValidationError) ErrorName() string { return "LoginResponseValidationError" }
+func (e AuthFlowValidationError) ErrorName() string { return "AuthFlowValidationError" }
 
 // Error satisfies the builtin error interface
-func (e LoginResponseValidationError) Error() string {
+func (e AuthFlowValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -250,14 +351,14 @@ func (e LoginResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sLoginResponse.%s: %s%s",
+		"invalid %sAuthFlow.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = LoginResponseValidationError{}
+var _ error = AuthFlowValidationError{}
 
 var _ interface {
 	Field() string
@@ -265,4 +366,1395 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = LoginResponseValidationError{}
+} = AuthFlowValidationError{}
+
+// Validate checks the field values on CreateAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateAuthFlowRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateAuthFlowRequestMultiError, or nil if none found.
+func (m *CreateAuthFlowRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateAuthFlowRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for OidcRequestId
+
+	if len(errors) > 0 {
+		return CreateAuthFlowRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateAuthFlowRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateAuthFlowRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAuthFlowRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateAuthFlowRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateAuthFlowRequestMultiError) AllErrors() []error { return m }
+
+// CreateAuthFlowRequestValidationError is the validation error returned by
+// CreateAuthFlowRequest.Validate if the designated constraints aren't met.
+type CreateAuthFlowRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAuthFlowRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAuthFlowRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAuthFlowRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAuthFlowRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAuthFlowRequestValidationError) ErrorName() string {
+	return "CreateAuthFlowRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAuthFlowRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAuthFlowRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAuthFlowRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAuthFlowRequestValidationError{}
+
+// Validate checks the field values on CreateAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateAuthFlowResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateAuthFlowResponseMultiError, or nil if none found.
+func (m *CreateAuthFlowResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateAuthFlowResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetFlow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateAuthFlowResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateAuthFlowResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFlow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateAuthFlowResponseValidationError{
+				field:  "Flow",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateAuthFlowResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateAuthFlowResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateAuthFlowResponse.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAuthFlowResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateAuthFlowResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateAuthFlowResponseMultiError) AllErrors() []error { return m }
+
+// CreateAuthFlowResponseValidationError is the validation error returned by
+// CreateAuthFlowResponse.Validate if the designated constraints aren't met.
+type CreateAuthFlowResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAuthFlowResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAuthFlowResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAuthFlowResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAuthFlowResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAuthFlowResponseValidationError) ErrorName() string {
+	return "CreateAuthFlowResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAuthFlowResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAuthFlowResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAuthFlowResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAuthFlowResponseValidationError{}
+
+// Validate checks the field values on GetAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetAuthFlowRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetAuthFlowRequestMultiError, or nil if none found.
+func (m *GetAuthFlowRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAuthFlowRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for FlowId
+
+	if len(errors) > 0 {
+		return GetAuthFlowRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAuthFlowRequestMultiError is an error wrapping multiple validation errors
+// returned by GetAuthFlowRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetAuthFlowRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAuthFlowRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAuthFlowRequestMultiError) AllErrors() []error { return m }
+
+// GetAuthFlowRequestValidationError is the validation error returned by
+// GetAuthFlowRequest.Validate if the designated constraints aren't met.
+type GetAuthFlowRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAuthFlowRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAuthFlowRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAuthFlowRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAuthFlowRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAuthFlowRequestValidationError) ErrorName() string {
+	return "GetAuthFlowRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAuthFlowRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAuthFlowRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAuthFlowRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAuthFlowRequestValidationError{}
+
+// Validate checks the field values on GetAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetAuthFlowResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetAuthFlowResponseMultiError, or nil if none found.
+func (m *GetAuthFlowResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAuthFlowResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetFlow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetAuthFlowResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetAuthFlowResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFlow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetAuthFlowResponseValidationError{
+				field:  "Flow",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetAuthFlowResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAuthFlowResponseMultiError is an error wrapping multiple validation
+// errors returned by GetAuthFlowResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetAuthFlowResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAuthFlowResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAuthFlowResponseMultiError) AllErrors() []error { return m }
+
+// GetAuthFlowResponseValidationError is the validation error returned by
+// GetAuthFlowResponse.Validate if the designated constraints aren't met.
+type GetAuthFlowResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAuthFlowResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAuthFlowResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAuthFlowResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAuthFlowResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAuthFlowResponseValidationError) ErrorName() string {
+	return "GetAuthFlowResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAuthFlowResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAuthFlowResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAuthFlowResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAuthFlowResponseValidationError{}
+
+// Validate checks the field values on SubmitPasswordRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SubmitPasswordRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubmitPasswordRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SubmitPasswordRequestMultiError, or nil if none found.
+func (m *SubmitPasswordRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubmitPasswordRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for FlowId
+
+	// no validation rules for Email
+
+	// no validation rules for Password
+
+	if len(errors) > 0 {
+		return SubmitPasswordRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubmitPasswordRequestMultiError is an error wrapping multiple validation
+// errors returned by SubmitPasswordRequest.ValidateAll() if the designated
+// constraints aren't met.
+type SubmitPasswordRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubmitPasswordRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubmitPasswordRequestMultiError) AllErrors() []error { return m }
+
+// SubmitPasswordRequestValidationError is the validation error returned by
+// SubmitPasswordRequest.Validate if the designated constraints aren't met.
+type SubmitPasswordRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubmitPasswordRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubmitPasswordRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubmitPasswordRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubmitPasswordRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubmitPasswordRequestValidationError) ErrorName() string {
+	return "SubmitPasswordRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SubmitPasswordRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubmitPasswordRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubmitPasswordRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubmitPasswordRequestValidationError{}
+
+// Validate checks the field values on SubmitPasswordResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SubmitPasswordResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubmitPasswordResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SubmitPasswordResponseMultiError, or nil if none found.
+func (m *SubmitPasswordResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubmitPasswordResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetFlow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubmitPasswordResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubmitPasswordResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFlow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubmitPasswordResponseValidationError{
+				field:  "Flow",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SubmitPasswordResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubmitPasswordResponseMultiError is an error wrapping multiple validation
+// errors returned by SubmitPasswordResponse.ValidateAll() if the designated
+// constraints aren't met.
+type SubmitPasswordResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubmitPasswordResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubmitPasswordResponseMultiError) AllErrors() []error { return m }
+
+// SubmitPasswordResponseValidationError is the validation error returned by
+// SubmitPasswordResponse.Validate if the designated constraints aren't met.
+type SubmitPasswordResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubmitPasswordResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubmitPasswordResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubmitPasswordResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubmitPasswordResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubmitPasswordResponseValidationError) ErrorName() string {
+	return "SubmitPasswordResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SubmitPasswordResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubmitPasswordResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubmitPasswordResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubmitPasswordResponseValidationError{}
+
+// Validate checks the field values on CompleteUpdatePasswordRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CompleteUpdatePasswordRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CompleteUpdatePasswordRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// CompleteUpdatePasswordRequestMultiError, or nil if none found.
+func (m *CompleteUpdatePasswordRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CompleteUpdatePasswordRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for FlowId
+
+	// no validation rules for NewPassword
+
+	if len(errors) > 0 {
+		return CompleteUpdatePasswordRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CompleteUpdatePasswordRequestMultiError is an error wrapping multiple
+// validation errors returned by CompleteUpdatePasswordRequest.ValidateAll()
+// if the designated constraints aren't met.
+type CompleteUpdatePasswordRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CompleteUpdatePasswordRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CompleteUpdatePasswordRequestMultiError) AllErrors() []error { return m }
+
+// CompleteUpdatePasswordRequestValidationError is the validation error
+// returned by CompleteUpdatePasswordRequest.Validate if the designated
+// constraints aren't met.
+type CompleteUpdatePasswordRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CompleteUpdatePasswordRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CompleteUpdatePasswordRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CompleteUpdatePasswordRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CompleteUpdatePasswordRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CompleteUpdatePasswordRequestValidationError) ErrorName() string {
+	return "CompleteUpdatePasswordRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CompleteUpdatePasswordRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCompleteUpdatePasswordRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CompleteUpdatePasswordRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CompleteUpdatePasswordRequestValidationError{}
+
+// Validate checks the field values on CompleteUpdatePasswordResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CompleteUpdatePasswordResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CompleteUpdatePasswordResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// CompleteUpdatePasswordResponseMultiError, or nil if none found.
+func (m *CompleteUpdatePasswordResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CompleteUpdatePasswordResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetFlow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CompleteUpdatePasswordResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CompleteUpdatePasswordResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFlow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CompleteUpdatePasswordResponseValidationError{
+				field:  "Flow",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CompleteUpdatePasswordResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CompleteUpdatePasswordResponseMultiError is an error wrapping multiple
+// validation errors returned by CompleteUpdatePasswordResponse.ValidateAll()
+// if the designated constraints aren't met.
+type CompleteUpdatePasswordResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CompleteUpdatePasswordResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CompleteUpdatePasswordResponseMultiError) AllErrors() []error { return m }
+
+// CompleteUpdatePasswordResponseValidationError is the validation error
+// returned by CompleteUpdatePasswordResponse.Validate if the designated
+// constraints aren't met.
+type CompleteUpdatePasswordResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CompleteUpdatePasswordResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CompleteUpdatePasswordResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CompleteUpdatePasswordResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CompleteUpdatePasswordResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CompleteUpdatePasswordResponseValidationError) ErrorName() string {
+	return "CompleteUpdatePasswordResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CompleteUpdatePasswordResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCompleteUpdatePasswordResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CompleteUpdatePasswordResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CompleteUpdatePasswordResponseValidationError{}
+
+// Validate checks the field values on ResetAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResetAuthFlowRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResetAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResetAuthFlowRequestMultiError, or nil if none found.
+func (m *ResetAuthFlowRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResetAuthFlowRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for FlowId
+
+	if len(errors) > 0 {
+		return ResetAuthFlowRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResetAuthFlowRequestMultiError is an error wrapping multiple validation
+// errors returned by ResetAuthFlowRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ResetAuthFlowRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResetAuthFlowRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResetAuthFlowRequestMultiError) AllErrors() []error { return m }
+
+// ResetAuthFlowRequestValidationError is the validation error returned by
+// ResetAuthFlowRequest.Validate if the designated constraints aren't met.
+type ResetAuthFlowRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResetAuthFlowRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResetAuthFlowRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResetAuthFlowRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResetAuthFlowRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResetAuthFlowRequestValidationError) ErrorName() string {
+	return "ResetAuthFlowRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResetAuthFlowRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResetAuthFlowRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResetAuthFlowRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResetAuthFlowRequestValidationError{}
+
+// Validate checks the field values on ResetAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResetAuthFlowResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResetAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResetAuthFlowResponseMultiError, or nil if none found.
+func (m *ResetAuthFlowResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResetAuthFlowResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetFlow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResetAuthFlowResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResetAuthFlowResponseValidationError{
+					field:  "Flow",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFlow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResetAuthFlowResponseValidationError{
+				field:  "Flow",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ResetAuthFlowResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResetAuthFlowResponseMultiError is an error wrapping multiple validation
+// errors returned by ResetAuthFlowResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ResetAuthFlowResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResetAuthFlowResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResetAuthFlowResponseMultiError) AllErrors() []error { return m }
+
+// ResetAuthFlowResponseValidationError is the validation error returned by
+// ResetAuthFlowResponse.Validate if the designated constraints aren't met.
+type ResetAuthFlowResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResetAuthFlowResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResetAuthFlowResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResetAuthFlowResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResetAuthFlowResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResetAuthFlowResponseValidationError) ErrorName() string {
+	return "ResetAuthFlowResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResetAuthFlowResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResetAuthFlowResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResetAuthFlowResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResetAuthFlowResponseValidationError{}
+
+// Validate checks the field values on CancelAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CancelAuthFlowRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CancelAuthFlowRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CancelAuthFlowRequestMultiError, or nil if none found.
+func (m *CancelAuthFlowRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CancelAuthFlowRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for FlowId
+
+	if len(errors) > 0 {
+		return CancelAuthFlowRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CancelAuthFlowRequestMultiError is an error wrapping multiple validation
+// errors returned by CancelAuthFlowRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CancelAuthFlowRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CancelAuthFlowRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CancelAuthFlowRequestMultiError) AllErrors() []error { return m }
+
+// CancelAuthFlowRequestValidationError is the validation error returned by
+// CancelAuthFlowRequest.Validate if the designated constraints aren't met.
+type CancelAuthFlowRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CancelAuthFlowRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CancelAuthFlowRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CancelAuthFlowRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CancelAuthFlowRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CancelAuthFlowRequestValidationError) ErrorName() string {
+	return "CancelAuthFlowRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CancelAuthFlowRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCancelAuthFlowRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CancelAuthFlowRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CancelAuthFlowRequestValidationError{}
+
+// Validate checks the field values on CancelAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CancelAuthFlowResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CancelAuthFlowResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CancelAuthFlowResponseMultiError, or nil if none found.
+func (m *CancelAuthFlowResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CancelAuthFlowResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for RedirectUri
+
+	if len(errors) > 0 {
+		return CancelAuthFlowResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CancelAuthFlowResponseMultiError is an error wrapping multiple validation
+// errors returned by CancelAuthFlowResponse.ValidateAll() if the designated
+// constraints aren't met.
+type CancelAuthFlowResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CancelAuthFlowResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CancelAuthFlowResponseMultiError) AllErrors() []error { return m }
+
+// CancelAuthFlowResponseValidationError is the validation error returned by
+// CancelAuthFlowResponse.Validate if the designated constraints aren't met.
+type CancelAuthFlowResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CancelAuthFlowResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CancelAuthFlowResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CancelAuthFlowResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CancelAuthFlowResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CancelAuthFlowResponseValidationError) ErrorName() string {
+	return "CancelAuthFlowResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CancelAuthFlowResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCancelAuthFlowResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CancelAuthFlowResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CancelAuthFlowResponseValidationError{}

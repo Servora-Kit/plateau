@@ -7,28 +7,24 @@ import (
 	"slices"
 	"time"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordauthenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/predicate"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
-	crudmapper "github.com/Servora-Kit/plateau/crud/mapper"
 	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
 )
 
 type credentialRepository struct{ ent *entmodel.Client }
 
-type sessionRepository struct {
-	ent    *entmodel.Client
-	mapper *crudmapper.ResourceMapper[*userpb.User, entmodel.User]
-}
+type sessionRepository struct{ ent *entmodel.Client }
 
 func NewCredentialRepository(data *Data) (biz.CredentialRepo, error) {
 	if data == nil || data.ent == nil {
@@ -41,11 +37,7 @@ func NewSessionRepository(data *Data) (biz.SessionRepo, error) {
 	if data == nil || data.ent == nil {
 		return nil, fmt.Errorf("session repository: data is nil")
 	}
-	mapper, err := newUserResourceMapper()
-	if err != nil {
-		return nil, err
-	}
-	return &sessionRepository{ent: data.ent, mapper: mapper}, nil
+	return &sessionRepository{ent: data.ent}, nil
 }
 
 // lockUser 为身份变更、登录与 OAuth 提交提供同一数据库串行化边界。
@@ -126,12 +118,21 @@ func verifyPasswordCredentialSnapshot(ctx context.Context, tx *entmodel.Tx, expe
 	return passEntity, nil
 }
 
-func insertLoginSession(ctx context.Context, tx *entmodel.Tx, userID string, now time.Time) (*biz.LoginSession, error) {
+func insertLoginSession(ctx context.Context, tx *entmodel.Tx, userID string, amr []string, now time.Time) (*biz.LoginSession, error) {
+	normalizedAMR := biz.NormalizeAMR(amr)
+	if len(normalizedAMR) == 0 {
+		return nil, fmt.Errorf("insert login session: AMR is required")
+	}
 	id, err := biz.NewUserID()
 	if err != nil {
 		return nil, err
 	}
-	login, err := tx.IAMLoginSession.Create().SetID(id).SetUserID(userID).SetCreateTime(now).Save(ctx)
+	login, err := tx.LoginSession.Create().
+		SetID(id).
+		SetUserID(userID).
+		SetAmr(normalizedAMR).
+		SetCreateTime(now).
+		Save(ctx)
 	if err != nil {
 		return nil, translateEntError(err)
 	}
@@ -157,6 +158,7 @@ func (repo *credentialRepository) FindActivePassword(ctx context.Context, userID
 		AuthenticatorID:         entity.ID,
 		PasswordAuthenticatorID: passwordEntity.ID,
 		PasswordHash:            passwordEntity.PasswordHash,
+		ChangedTime:             biz.NormalizeTimestamp(passwordEntity.ChangedTime),
 	}, nil
 }
 
@@ -181,7 +183,7 @@ func (repo *credentialRepository) ReplacePassword(ctx context.Context, userID, a
 			}
 			return err
 		}
-		_, err = tx.IAMLoginSession.Query().Where(iamloginsession.IDEQ(keepLoginID), iamloginsession.UserIDEQ(userID), iamloginsession.RevokedTimeIsNil()).Only(ctx)
+		_, err = tx.LoginSession.Query().Where(loginsession.IDEQ(keepLoginID), loginsession.UserIDEQ(userID), loginsession.RevokedTimeIsNil()).Only(ctx)
 		if entmodel.IsNotFound(err) {
 			return biz.ErrSessionRevoked
 		}
@@ -201,7 +203,7 @@ func (repo *credentialRepository) ReplacePassword(ctx context.Context, userID, a
 		updated, err := tx.PasswordAuthenticator.Update().Where(
 			passwordauthenticator.AuthenticatorIDEQ(entity.ID),
 			passwordauthenticator.PasswordHashEQ(expectedHash),
-		).SetPasswordHash(passwordHash).SetChangedTime(now).Save(ctx)
+		).SetPasswordHash(passwordHash).SetChangedTime(biz.NormalizeTimestamp(now)).Save(ctx)
 		if err != nil {
 			return translateEntError(err)
 		}
@@ -244,7 +246,7 @@ func (repo *credentialRepository) SetPasswordAndRevokeSessions(ctx context.Conte
 		}
 		if _, err := tx.PasswordAuthenticator.UpdateOneID(passEntity.ID).
 			SetPasswordHash(passwordHash).
-			SetChangedTime(now).
+			SetChangedTime(biz.NormalizeTimestamp(now)).
 			Save(ctx); err != nil {
 			return translateEntError(err)
 		}
@@ -252,141 +254,8 @@ func (repo *credentialRepository) SetPasswordAndRevokeSessions(ctx context.Conte
 	})
 }
 
-func (repo *credentialRepository) CompleteInitialPassword(ctx context.Context, expected biz.PasswordCredential, expectedUserEtag, newHash string, now time.Time) (*biz.LoginSession, error) {
-	if expected.UserID == "" || expectedUserEtag == "" || newHash == "" {
-		return nil, fmt.Errorf("complete initial password: credential snapshot, expected etag, and new hash are required")
-	}
-	if now.IsZero() {
-		now = time.Now()
-	}
-	etag, err := biz.NewUserID()
-	if err != nil {
-		return nil, err
-	}
-	var login *biz.LoginSession
-	err = inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
-		current, err := lockUser(ctx, tx, expected.UserID)
-		if err != nil {
-			return err
-		}
-		if current.Status != biz.UserStatusActive {
-			return biz.ErrUnauthenticated
-		}
-		if _, err := ensureVerifiedEmail(ctx, tx, expected.UserID); err != nil {
-			if errors.Is(err, biz.ErrNotFound) || errors.Is(err, biz.ErrMutationMiss) {
-				return biz.ErrUnauthenticated
-			}
-			return err
-		}
-		if current.Etag != expectedUserEtag {
-			return biz.ErrAccountInvalidState
-		}
-		if _, err := verifyPasswordCredentialSnapshot(ctx, tx, expected); err != nil {
-			if errors.Is(err, biz.ErrMutationMiss) {
-				return biz.ErrAccountInvalidState
-			}
-			return err
-		}
-		if _, err := requiredActionsFromStrings(current.RequiredActions); err != nil {
-			return err
-		}
-		if !slices.Contains(current.RequiredActions, storedRequiredActionUpdatePassword) {
-			return biz.ErrAccountInvalidState
-		}
-		remaining := make([]string, 0, len(current.RequiredActions))
-		for _, action := range current.RequiredActions {
-			if action != storedRequiredActionUpdatePassword {
-				remaining = append(remaining, action)
-			}
-		}
-		if len(remaining) > 0 {
-			return biz.ErrAccountInvalidState
-		}
-		updated, err := tx.PasswordAuthenticator.Update().Where(
-			passwordauthenticator.IDEQ(expected.PasswordAuthenticatorID),
-			passwordauthenticator.AuthenticatorIDEQ(expected.AuthenticatorID),
-			passwordauthenticator.PasswordHashEQ(expected.PasswordHash),
-		).SetPasswordHash(newHash).SetChangedTime(now).Save(ctx)
-		if err != nil {
-			return translateEntError(err)
-		}
-		if updated != 1 {
-			return biz.ErrAccountInvalidState
-		}
-		affected, err := tx.User.Update().Where(
-			user.IDEQ(expected.UserID),
-			user.DeleteTimeIsNil(),
-			user.EtagEQ(expectedUserEtag),
-		).SetRequiredActions([]string{}).SetEtag(etag).SetUpdateTime(now).Save(ctx)
-		if err != nil {
-			return translateEntError(err)
-		}
-		if affected != 1 {
-			return biz.ErrAccountInvalidState
-		}
-		if err := revokeUserSessions(ctx, tx, expected.UserID, "", now); err != nil {
-			return err
-		}
-		login, err = insertLoginSession(ctx, tx, expected.UserID, now)
-		return err
-	})
-	if err != nil {
-		return nil, err
-	}
-	return login, nil
-}
-
-func (repo *sessionRepository) Create(ctx context.Context, expected biz.PasswordCredential, expectedUserEtag string, now time.Time) (*userpb.User, *biz.LoginSession, error) {
-	if expected.UserID == "" || expectedUserEtag == "" {
-		return nil, nil, fmt.Errorf("create session: credential snapshot and expected user etag are required")
-	}
-	if now.IsZero() {
-		now = time.Now()
-	}
-	var projected *userpb.User
-	var login *biz.LoginSession
-	err := inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
-		current, err := lockUser(ctx, tx, expected.UserID)
-		if err != nil {
-			return err
-		}
-		if current.Etag != expectedUserEtag {
-			return biz.ErrMutationMiss
-		}
-		if current.Status != biz.UserStatusActive {
-			return biz.ErrUserNotActive
-		}
-		if _, err := ensureVerifiedEmail(ctx, tx, expected.UserID); err != nil {
-			if errors.Is(err, biz.ErrNotFound) || errors.Is(err, biz.ErrMutationMiss) {
-				return biz.ErrUserNotActive
-			}
-			return err
-		}
-		if _, err := verifyPasswordCredentialSnapshot(ctx, tx, expected); err != nil {
-			if errors.Is(err, biz.ErrMutationMiss) {
-				return biz.ErrInvalidCredentials
-			}
-			return err
-		}
-		resources, err := projectUsersWithClient(ctx, tx.Client(), repo.mapper, []*entmodel.User{current})
-		if err != nil {
-			return err
-		}
-		projected = resources[0]
-		if len(projected.GetRequiredActions()) > 0 {
-			return nil
-		}
-		login, err = insertLoginSession(ctx, tx, expected.UserID, now)
-		return err
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return projected, login, nil
-}
-
 func (repo *sessionRepository) Find(ctx context.Context, id string) (*biz.LoginSession, error) {
-	entity, err := repo.ent.IAMLoginSession.Get(ctx, id)
+	entity, err := repo.ent.LoginSession.Get(ctx, id)
 	if err != nil {
 		return nil, translateEntError(err)
 	}
@@ -397,7 +266,7 @@ func (repo *sessionRepository) Revoke(ctx context.Context, id string, now time.T
 	if now.IsZero() {
 		now = time.Now()
 	}
-	login, err := repo.ent.IAMLoginSession.Get(ctx, id)
+	login, err := repo.ent.LoginSession.Get(ctx, id)
 	if entmodel.IsNotFound(err) {
 		return nil
 	}
@@ -411,13 +280,12 @@ func (repo *sessionRepository) Revoke(ctx context.Context, id string, now time.T
 			}
 			return err
 		}
-		if _, err := tx.IAMLoginSession.Update().Where(iamloginsession.IDEQ(id), iamloginsession.RevokedTimeIsNil()).SetRevokedTime(now).Save(ctx); err != nil {
+		if _, err := tx.LoginSession.Update().Where(loginsession.IDEQ(id), loginsession.RevokedTimeIsNil()).SetRevokedTime(now).Save(ctx); err != nil {
 			return translateEntError(err)
 		}
-		return revokeOAuthSessions(ctx, tx, now, oauthtokensession.IamLoginSessionIDEQ(id))
+		return revokeOAuthSessions(ctx, tx, now, oauthtokensession.LoginSessionIDEQ(id))
 	})
 }
-
 func (repo *sessionRepository) RevokeAll(ctx context.Context, userID string, now time.Time) error {
 	if userID == "" {
 		return fmt.Errorf("revoke all sessions: user ID is required")
@@ -442,14 +310,36 @@ func (repo *sessionRepository) RevokeAll(ctx context.Context, userID string, now
 }
 
 func revokeUserSessions(ctx context.Context, tx *entmodel.Tx, userID, keepID string, now time.Time) error {
-	update := tx.IAMLoginSession.Update().Where(iamloginsession.UserIDEQ(userID), iamloginsession.RevokedTimeIsNil())
+	return revokeUserSessionsAndFlows(ctx, tx, userID, keepID, "", now)
+}
+
+func revokeUserSessionsAndFlows(ctx context.Context, tx *entmodel.Tx, userID, keepID, exceptFlowID string, now time.Time) error {
+	update := tx.LoginSession.Update().Where(loginsession.UserIDEQ(userID), loginsession.RevokedTimeIsNil())
 	if keepID != "" {
-		update.Where(iamloginsession.IDNEQ(keepID))
+		update.Where(loginsession.IDNEQ(keepID))
 	}
 	if _, err := update.SetRevokedTime(now).Save(ctx); err != nil {
 		return translateEntError(err)
 	}
+	if err := invalidateUserAuthFlows(ctx, tx, userID, exceptFlowID, now); err != nil {
+		return err
+	}
 	return revokeOAuthSessions(ctx, tx, now, oauthtokensession.UserIDEQ(userID))
+}
+
+func invalidateUserAuthFlows(ctx context.Context, tx *entmodel.Tx, userID, exceptFlowID string, now time.Time) error {
+	if userID == "" {
+		return nil
+	}
+	update := tx.AuthFlow.Update().Where(
+		authflow.UserIDEQ(userID),
+		authflow.StatusEQ(authflow.StatusActive),
+	)
+	if exceptFlowID != "" {
+		update.Where(authflow.IDNEQ(exceptFlowID))
+	}
+	_, err := update.SetStatus(authflow.StatusInvalidated).SetUpdateTime(now).Save(ctx)
+	return translateEntError(err)
 }
 
 func revokeOAuthSessions(ctx context.Context, tx *entmodel.Tx, now time.Time, predicates ...predicate.OAuthTokenSession) error {
@@ -475,6 +365,12 @@ func revokeOAuthSessions(ctx context.Context, tx *entmodel.Tx, now time.Time, pr
 	}
 	return nil
 }
-func toSession(entity *entmodel.IAMLoginSession) *biz.LoginSession {
-	return &biz.LoginSession{ID: entity.ID, UserID: entity.UserID, AuthTime: entity.CreateTime, RevokedAt: entity.RevokedTime}
+func toSession(entity *entmodel.LoginSession) *biz.LoginSession {
+	return &biz.LoginSession{
+		ID:        entity.ID,
+		UserID:    entity.UserID,
+		AMR:       slices.Clone(entity.Amr),
+		AuthTime:  entity.CreateTime,
+		RevokedAt: entity.RevokedTime,
+	}
 }

@@ -12,9 +12,10 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"
-	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/iamloginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
@@ -565,10 +566,10 @@ func (repo *userRepository) SoftDelete(ctx context.Context, userID string, proof
 			return err
 		}
 		if proof != nil {
-			if _, err := tx.IAMLoginSession.Query().Where(
-				iamloginsession.IDEQ(proof.LoginID),
-				iamloginsession.UserIDEQ(userID),
-				iamloginsession.RevokedTimeIsNil(),
+			if _, err := tx.LoginSession.Query().Where(
+				loginsession.IDEQ(proof.LoginID),
+				loginsession.UserIDEQ(userID),
+				loginsession.RevokedTimeIsNil(),
 			).Only(ctx); err != nil {
 				if entmodel.IsNotFound(err) {
 					return biz.ErrSessionRevoked
@@ -630,7 +631,7 @@ func (repo *userRepository) SoftDelete(ctx context.Context, userID string, proof
 		).SetConsumedTime(now).Save(ctx); err != nil {
 			return translateEntError(err)
 		}
-		loginIDs, err := tx.IAMLoginSession.Query().Where(iamloginsession.UserIDEQ(userID)).IDs(ctx)
+		loginIDs, err := tx.LoginSession.Query().Where(loginsession.UserIDEQ(userID)).IDs(ctx)
 		if err != nil {
 			return translateEntError(err)
 		}
@@ -716,7 +717,7 @@ func (repo *userRepository) Expunge(ctx context.Context, userID string) error {
 		if current.DeleteTime == nil {
 			return biz.ErrUserInvalidState
 		}
-		loginIDs, err := tx.IAMLoginSession.Query().Where(iamloginsession.UserIDEQ(userID)).IDs(ctx)
+		loginIDs, err := tx.LoginSession.Query().Where(loginsession.UserIDEQ(userID)).IDs(ctx)
 		if err != nil {
 			return translateEntError(err)
 		}
@@ -759,8 +760,11 @@ func (repo *userRepository) Expunge(ctx context.Context, userID string) error {
 				return translateEntError(err)
 			}
 		}
-		// 6. iam_login_sessions
-		if _, err := tx.IAMLoginSession.Delete().Where(iamloginsession.UserIDEQ(userID)).Exec(ctx); err != nil {
+		// 6. login_sessions & auth_flows
+		if _, err := tx.LoginSession.Delete().Where(loginsession.UserIDEQ(userID)).Exec(ctx); err != nil {
+			return translateEntError(err)
+		}
+		if _, err := tx.AuthFlow.Delete().Where(authflow.UserIDEQ(userID)).Exec(ctx); err != nil {
 			return translateEntError(err)
 		}
 		// 7. email_verification_tokens
@@ -804,7 +808,7 @@ func deleteIdentityBoundOIDCArtifacts(ctx context.Context, tx *entmodel.Tx, user
 	if len(loginIDs) > 0 {
 		reqPred = oidcauthorizationrequest.Or(
 			oidcauthorizationrequest.SubjectEQ(userID),
-			oidcauthorizationrequest.IamLoginSessionIDIn(loginIDs...),
+			oidcauthorizationrequest.LoginSessionIDIn(loginIDs...),
 		)
 	}
 	requestIDs, err := tx.OIDCAuthorizationRequest.Query().Where(reqPred).IDs(ctx)

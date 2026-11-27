@@ -17,8 +17,8 @@ const (
 	FieldUserID = "user_id"
 	// FieldClientID holds the string denoting the client_id field in the database.
 	FieldClientID = "client_id"
-	// FieldIamLoginSessionID holds the string denoting the iam_login_session_id field in the database.
-	FieldIamLoginSessionID = "iam_login_session_id"
+	// FieldLoginSessionID holds the string denoting the login_session_id field in the database.
+	FieldLoginSessionID = "login_session_id"
 	// FieldRefreshFamilyID holds the string denoting the refresh_family_id field in the database.
 	FieldRefreshFamilyID = "refresh_family_id"
 	// FieldScopes holds the string denoting the scopes field in the database.
@@ -42,7 +42,7 @@ var Columns = []string{
 	FieldID,
 	FieldUserID,
 	FieldClientID,
-	FieldIamLoginSessionID,
+	FieldLoginSessionID,
 	FieldRefreshFamilyID,
 	FieldScopes,
 	FieldAuthTime,
@@ -67,8 +67,8 @@ var (
 	UserIDValidator func(string) error
 	// ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
 	ClientIDValidator func(string) error
-	// IamLoginSessionIDValidator is a validator for the "iam_login_session_id" field. It is called by the builders before save.
-	IamLoginSessionIDValidator func(string) error
+	// LoginSessionIDValidator is a validator for the "login_session_id" field. It is called by the builders before save.
+	LoginSessionIDValidator func(string) error
 	// RefreshFamilyIDValidator is a validator for the "refresh_family_id" field. It is called by the builders before save.
 	RefreshFamilyIDValidator func(string) error
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
@@ -97,9 +97,9 @@ func ByClientID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClientID, opts...).ToFunc()
 }
 
-// ByIamLoginSessionID orders the results by the iam_login_session_id field.
-func ByIamLoginSessionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIamLoginSessionID, opts...).ToFunc()
+// ByLoginSessionID orders the results by the login_session_id field.
+func ByLoginSessionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLoginSessionID, opts...).ToFunc()
 }
 
 // ByRefreshFamilyID orders the results by the refresh_family_id field.

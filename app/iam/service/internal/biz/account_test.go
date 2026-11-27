@@ -382,53 +382,35 @@ func TestUserDisableRevokesLoginAndOAuthSessions(t *testing.T) {
 	}
 }
 
-func TestAccountChangeInitialPasswordAndDeleteAccount(t *testing.T) {
-	const initialPlain = "correct horse battery staple"
-	const nextPlain = "updated horse battery staple"
-	initialHash, err := password.Hash(initialPlain)
+func TestAccountDeleteAccount(t *testing.T) {
+	const activePlain = "updated horse battery staple"
+	activeHash, err := password.Hash(activePlain)
 	if err != nil {
-		t.Fatalf("hash initial password: %v", err)
+		t.Fatalf("hash password: %v", err)
 	}
 	u := &userpb.User{
-		UserId:          "user-1",
-		Email:           new("person@example.com"),
-		Status:          userpb.UserStatus_USER_STATUS_ACTIVE,
-		EmailVerified:   true,
-		Etag:            "etag-1",
-		RequiredActions: []userpb.UserRequiredAction{userpb.UserRequiredAction_USER_REQUIRED_ACTION_UPDATE_PASSWORD},
+		UserId:        "user-1",
+		Email:         new("person@example.com"),
+		Status:        userpb.UserStatus_USER_STATUS_ACTIVE,
+		EmailVerified: true,
+		Etag:          "etag-1",
 	}
 	users := &fakeAccountUsers{user: u}
 	credentials := &fakeCredentials{credential: &PasswordCredential{
 		UserID:                  "user-1",
 		AuthenticatorID:         "auth-1",
 		PasswordAuthenticatorID: "pa-1",
-		PasswordHash:            initialHash,
+		PasswordHash:            activeHash,
 	}}
 	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := usecase.ChangeInitialPassword(t.Context(), "person@example.com", "wrong-password", nextPlain); !errors.Is(err, ErrUnauthenticated) {
-		t.Fatalf("wrong current password error = %v, want ErrUnauthenticated", err)
-	}
-	if _, err := usecase.ChangeInitialPassword(t.Context(), "person@example.com", initialPlain, initialPlain); !errors.Is(err, ErrInvalidPassword) {
-		t.Fatalf("unchanged password error = %v, want ErrInvalidPassword", err)
-	}
-	session, err := usecase.ChangeInitialPassword(t.Context(), " Person@Example.com ", initialPlain, nextPlain)
-	if err != nil || session == nil || session.UserID != "user-1" || !credentials.completedInitial {
-		t.Fatalf("ChangeInitialPassword() session=%#v err=%v", session, err)
-	}
-
-	u.RequiredActions = nil
-	if _, err := usecase.ChangeInitialPassword(t.Context(), "person@example.com", nextPlain, "another horse battery staple"); !errors.Is(err, ErrAccountInvalidState) {
-		t.Fatalf("missing UPDATE_PASSWORD error = %v, want ErrAccountInvalidState", err)
-	}
-
 	if err := usecase.DeleteAccount(t.Context(), "user-1", "session-1", "wrong-password"); !errors.Is(err, ErrInvalidCredentials) {
 		t.Fatalf("DeleteAccount wrong password error = %v, want ErrInvalidCredentials", err)
 	}
-	if err := usecase.DeleteAccount(t.Context(), "user-1", "session-1", nextPlain); err != nil {
+	if err := usecase.DeleteAccount(t.Context(), "user-1", "session-1", activePlain); err != nil {
 		t.Fatalf("DeleteAccount() error = %v", err)
 	}
 	if users.softDeleted == nil || users.softDeleted.LoginID != "session-1" || users.user.DeleteTime == nil {

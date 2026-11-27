@@ -22,8 +22,8 @@ type OAuthTokenSession struct {
 	UserID string `json:"user_id,omitempty"`
 	// ClientID holds the value of the "client_id" field.
 	ClientID string `json:"client_id,omitempty"`
-	// IamLoginSessionID holds the value of the "iam_login_session_id" field.
-	IamLoginSessionID string `json:"iam_login_session_id,omitempty"`
+	// LoginSessionID holds the value of the "login_session_id" field.
+	LoginSessionID string `json:"login_session_id,omitempty"`
 	// RefreshFamilyID holds the value of the "refresh_family_id" field.
 	RefreshFamilyID string `json:"refresh_family_id,omitempty"`
 	// Scopes holds the value of the "scopes" field.
@@ -48,7 +48,7 @@ func (*OAuthTokenSession) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case oauthtokensession.FieldScopes, oauthtokensession.FieldAmr:
 			values[i] = new([]byte)
-		case oauthtokensession.FieldID, oauthtokensession.FieldUserID, oauthtokensession.FieldClientID, oauthtokensession.FieldIamLoginSessionID, oauthtokensession.FieldRefreshFamilyID:
+		case oauthtokensession.FieldID, oauthtokensession.FieldUserID, oauthtokensession.FieldClientID, oauthtokensession.FieldLoginSessionID, oauthtokensession.FieldRefreshFamilyID:
 			values[i] = new(sql.NullString)
 		case oauthtokensession.FieldAuthTime, oauthtokensession.FieldRevokedTime, oauthtokensession.FieldCreateTime, oauthtokensession.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -85,11 +85,11 @@ func (_m *OAuthTokenSession) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				_m.ClientID = value.String
 			}
-		case oauthtokensession.FieldIamLoginSessionID:
+		case oauthtokensession.FieldLoginSessionID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field iam_login_session_id", values[i])
+				return fmt.Errorf("unexpected type %T for field login_session_id", values[i])
 			} else if value.Valid {
-				_m.IamLoginSessionID = value.String
+				_m.LoginSessionID = value.String
 			}
 		case oauthtokensession.FieldRefreshFamilyID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -180,8 +180,8 @@ func (_m *OAuthTokenSession) String() string {
 	builder.WriteString("client_id=")
 	builder.WriteString(_m.ClientID)
 	builder.WriteString(", ")
-	builder.WriteString("iam_login_session_id=")
-	builder.WriteString(_m.IamLoginSessionID)
+	builder.WriteString("login_session_id=")
+	builder.WriteString(_m.LoginSessionID)
 	builder.WriteString(", ")
 	builder.WriteString("refresh_family_id=")
 	builder.WriteString(_m.RefreshFamilyID)

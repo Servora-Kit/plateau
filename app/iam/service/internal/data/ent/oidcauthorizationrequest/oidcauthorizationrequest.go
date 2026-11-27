@@ -33,10 +33,12 @@ const (
 	FieldPkceChallengeMethod = "pkce_challenge_method"
 	// FieldSubject holds the string denoting the subject field in the database.
 	FieldSubject = "subject"
-	// FieldIamLoginSessionID holds the string denoting the iam_login_session_id field in the database.
-	FieldIamLoginSessionID = "iam_login_session_id"
+	// FieldLoginSessionID holds the string denoting the login_session_id field in the database.
+	FieldLoginSessionID = "login_session_id"
 	// FieldAuthTime holds the string denoting the auth_time field in the database.
 	FieldAuthTime = "auth_time"
+	// FieldAmr holds the string denoting the amr field in the database.
+	FieldAmr = "amr"
 	// FieldDone holds the string denoting the done field in the database.
 	FieldDone = "done"
 	// FieldExpiresTime holds the string denoting the expires_time field in the database.
@@ -62,8 +64,9 @@ var Columns = []string{
 	FieldPkceChallenge,
 	FieldPkceChallengeMethod,
 	FieldSubject,
-	FieldIamLoginSessionID,
+	FieldLoginSessionID,
 	FieldAuthTime,
+	FieldAmr,
 	FieldDone,
 	FieldExpiresTime,
 	FieldCreateTime,
@@ -93,6 +96,8 @@ var (
 	PkceChallengeValidator func(string) error
 	// DefaultPkceChallengeMethod holds the default value on creation for the "pkce_challenge_method" field.
 	DefaultPkceChallengeMethod string
+	// DefaultAmr holds the default value on creation for the "amr" field.
+	DefaultAmr []string
 	// DefaultDone holds the default value on creation for the "done" field.
 	DefaultDone bool
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
@@ -156,9 +161,9 @@ func BySubject(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubject, opts...).ToFunc()
 }
 
-// ByIamLoginSessionID orders the results by the iam_login_session_id field.
-func ByIamLoginSessionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIamLoginSessionID, opts...).ToFunc()
+// ByLoginSessionID orders the results by the login_session_id field.
+func ByLoginSessionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLoginSessionID, opts...).ToFunc()
 }
 
 // ByAuthTime orders the results by the auth_time field.

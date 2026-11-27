@@ -135,30 +135,6 @@ func (s *AccountService) ChangePassword(ctx context.Context, request *accountpb.
 	return &accountpb.ChangePasswordResponse{}, nil
 }
 
-func (s *AccountService) ChangeInitialPassword(ctx context.Context, request *accountpb.ChangeInitialPasswordRequest) (*accountpb.ChangeInitialPasswordResponse, error) {
-	if request == nil {
-		return nil, accountError(biz.ErrUnauthenticated)
-	}
-	if !sessions.Loaded(ctx, s.manager) {
-		return nil, accountError(fmt.Errorf("HTTP session is not loaded"))
-	}
-	loginSession, err := s.account.ChangeInitialPassword(ctx, request.GetEmail(), request.GetCurrentPassword(), request.GetNewPassword())
-	if err != nil {
-		if errors.Is(err, biz.ErrInvalidCredentials) {
-			return nil, accountpb.ErrorAccountErrorReasonUnauthenticated("authentication required")
-		}
-		return nil, accountError(err)
-	}
-	audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: loginSession.UserID})
-	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+loginSession.UserID)
-	if err := s.manager.RenewToken(ctx); err != nil {
-		s.manager.Remove(ctx, authn.LoginReferenceKey)
-		return nil, accountError(err)
-	}
-	s.manager.Put(ctx, authn.LoginReferenceKey, loginSession.ID)
-	return &accountpb.ChangeInitialPasswordResponse{}, nil
-}
-
 func (s *AccountService) DeleteAccount(ctx context.Context, request *accountpb.DeleteAccountRequest) (*accountpb.DeleteAccountResponse, error) {
 	if request == nil {
 		return nil, accountError(biz.ErrInvalidCredentials)

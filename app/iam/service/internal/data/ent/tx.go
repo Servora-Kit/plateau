@@ -12,16 +12,18 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AuthFlow is the client for interacting with the AuthFlow builders.
+	AuthFlow *AuthFlowClient
 	// Authenticator is the client for interacting with the Authenticator builders.
 	Authenticator *AuthenticatorClient
 	// EmailVerificationToken is the client for interacting with the EmailVerificationToken builders.
 	EmailVerificationToken *EmailVerificationTokenClient
 	// HTTPSession is the client for interacting with the HTTPSession builders.
 	HTTPSession *HTTPSessionClient
-	// IAMLoginSession is the client for interacting with the IAMLoginSession builders.
-	IAMLoginSession *IAMLoginSessionClient
 	// LoginIdentifier is the client for interacting with the LoginIdentifier builders.
 	LoginIdentifier *LoginIdentifierClient
+	// LoginSession is the client for interacting with the LoginSession builders.
+	LoginSession *LoginSessionClient
 	// OAuthAccessToken is the client for interacting with the OAuthAccessToken builders.
 	OAuthAccessToken *OAuthAccessTokenClient
 	// OAuthAuthorizationCode is the client for interacting with the OAuthAuthorizationCode builders.
@@ -173,11 +175,12 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AuthFlow = NewAuthFlowClient(tx.config)
 	tx.Authenticator = NewAuthenticatorClient(tx.config)
 	tx.EmailVerificationToken = NewEmailVerificationTokenClient(tx.config)
 	tx.HTTPSession = NewHTTPSessionClient(tx.config)
-	tx.IAMLoginSession = NewIAMLoginSessionClient(tx.config)
 	tx.LoginIdentifier = NewLoginIdentifierClient(tx.config)
+	tx.LoginSession = NewLoginSessionClient(tx.config)
 	tx.OAuthAccessToken = NewOAuthAccessTokenClient(tx.config)
 	tx.OAuthAuthorizationCode = NewOAuthAuthorizationCodeClient(tx.config)
 	tx.OAuthClient = NewOAuthClientClient(tx.config)
@@ -197,7 +200,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Authenticator.QueryXXX(), the query will be executed
+// applies a query, for example: AuthFlow.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

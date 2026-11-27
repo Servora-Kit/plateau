@@ -32,6 +32,14 @@ const callbackNotice = computed<CallbackNotice | null>(() => {
         type: 'warning',
       };
     }
+    case 'login_cancelled': {
+      return {
+        description:
+          '您已取消本次统一身份认证，如需进入管理台请重新点击下方按钮发起登录。',
+        message: '已取消登录',
+        type: 'info',
+      };
+    }
     case 'login_failed': {
       return {
         description: '登录握手已过期或未完成，请重新点击下方按钮发起认证。',

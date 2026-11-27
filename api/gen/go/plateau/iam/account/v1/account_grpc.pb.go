@@ -27,7 +27,6 @@ const (
 	AccountService_ChangePassword_FullMethodName          = "/plateau.iam.account.v1.AccountService/ChangePassword"
 	AccountService_RequestPasswordReset_FullMethodName    = "/plateau.iam.account.v1.AccountService/RequestPasswordReset"
 	AccountService_ConfirmPasswordReset_FullMethodName    = "/plateau.iam.account.v1.AccountService/ConfirmPasswordReset"
-	AccountService_ChangeInitialPassword_FullMethodName   = "/plateau.iam.account.v1.AccountService/ChangeInitialPassword"
 	AccountService_DeleteAccount_FullMethodName           = "/plateau.iam.account.v1.AccountService/DeleteAccount"
 )
 
@@ -53,8 +52,6 @@ type AccountServiceClient interface {
 	RequestPasswordReset(ctx context.Context, in *RequestPasswordResetRequest, opts ...grpc.CallOption) (*RequestPasswordResetResponse, error)
 	// ConfirmPasswordReset consumes a one-time reset token and sets a password.
 	ConfirmPasswordReset(ctx context.Context, in *ConfirmPasswordResetRequest, opts ...grpc.CallOption) (*ConfirmPasswordResetResponse, error)
-	// ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-	ChangeInitialPassword(ctx context.Context, in *ChangeInitialPasswordRequest, opts ...grpc.CallOption) (*ChangeInitialPasswordResponse, error)
 	// DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
 }
@@ -147,16 +144,6 @@ func (c *accountServiceClient) ConfirmPasswordReset(ctx context.Context, in *Con
 	return out, nil
 }
 
-func (c *accountServiceClient) ChangeInitialPassword(ctx context.Context, in *ChangeInitialPasswordRequest, opts ...grpc.CallOption) (*ChangeInitialPasswordResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ChangeInitialPasswordResponse)
-	err := c.cc.Invoke(ctx, AccountService_ChangeInitialPassword_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *accountServiceClient) DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteAccountResponse)
@@ -189,8 +176,6 @@ type AccountServiceServer interface {
 	RequestPasswordReset(context.Context, *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
 	// ConfirmPasswordReset consumes a one-time reset token and sets a password.
 	ConfirmPasswordReset(context.Context, *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error)
-	// ChangeInitialPassword completes the initial password change requirement and establishes a browser session.
-	ChangeInitialPassword(context.Context, *ChangeInitialPasswordRequest) (*ChangeInitialPasswordResponse, error)
 	// DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
 	mustEmbedUnimplementedAccountServiceServer()
@@ -226,9 +211,6 @@ func (UnimplementedAccountServiceServer) RequestPasswordReset(context.Context, *
 }
 func (UnimplementedAccountServiceServer) ConfirmPasswordReset(context.Context, *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ConfirmPasswordReset not implemented")
-}
-func (UnimplementedAccountServiceServer) ChangeInitialPassword(context.Context, *ChangeInitialPasswordRequest) (*ChangeInitialPasswordResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ChangeInitialPassword not implemented")
 }
 func (UnimplementedAccountServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAccount not implemented")
@@ -398,24 +380,6 @@ func _AccountService_ConfirmPasswordReset_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccountService_ChangeInitialPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeInitialPasswordRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccountServiceServer).ChangeInitialPassword(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AccountService_ChangeInitialPassword_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServiceServer).ChangeInitialPassword(ctx, req.(*ChangeInitialPasswordRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AccountService_DeleteAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteAccountRequest)
 	if err := dec(in); err != nil {
@@ -472,10 +436,6 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfirmPasswordReset",
 			Handler:    _AccountService_ConfirmPasswordReset_Handler,
-		},
-		{
-			MethodName: "ChangeInitialPassword",
-			Handler:    _AccountService_ChangeInitialPassword_Handler,
 		},
 		{
 			MethodName: "DeleteAccount",

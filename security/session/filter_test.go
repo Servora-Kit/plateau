@@ -80,8 +80,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 		r.Header.Set("Origin", "https://other.example")
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
-		if w.Code != http.StatusOK || called != before+1 {
-			t.Fatalf("JSON safe %s status=%d called=%d", method, w.Code, called-before)
+		if w.Code != http.StatusOK || called != before+1 || w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("JSON safe %s status=%d called=%d cc=%q", method, w.Code, called-before, w.Header().Get("Cache-Control"))
 		}
 	}
 
@@ -95,8 +95,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 			}
 			w := httptest.NewRecorder()
 			h.ServeHTTP(w, r)
-			if w.Code != http.StatusUnsupportedMediaType || called != before || len(w.Result().Cookies()) != 0 {
-				t.Fatalf("JSON %s ct=%q status=%d called=%d cookies=%v", method, ct, w.Code, called-before, w.Result().Cookies())
+			if w.Code != http.StatusUnsupportedMediaType || called != before || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "no-store" {
+				t.Fatalf("JSON %s ct=%q status=%d called=%d cookies=%v cc=%q", method, ct, w.Code, called-before, w.Result().Cookies(), w.Header().Get("Cache-Control"))
 			}
 		}
 	}
@@ -109,8 +109,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 		r.Header.Set("Sec-Fetch-Site", fetchSite)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
-		if w.Code != http.StatusForbidden || called != before || len(w.Result().Cookies()) != 0 {
-			t.Fatalf("JSON Sec-Fetch-Site=%q status=%d", fetchSite, w.Code)
+		if w.Code != http.StatusForbidden || called != before || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("JSON Sec-Fetch-Site=%q status=%d cc=%q", fetchSite, w.Code, w.Header().Get("Cache-Control"))
 		}
 	}
 	for _, origins := range [][]string{
@@ -128,8 +128,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 		}
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
-		if w.Code != http.StatusForbidden || called != before || len(w.Result().Cookies()) != 0 {
-			t.Fatalf("JSON Origin=%v status=%d", origins, w.Code)
+		if w.Code != http.StatusForbidden || called != before || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("JSON Origin=%v status=%d cc=%q", origins, w.Code, w.Header().Get("Cache-Control"))
 		}
 	}
 
@@ -137,7 +137,7 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 	var cookie *http.Cookie
 	for _, origin := range []string{"", normalizedOrigin} {
 		before := called
-		r := httptest.NewRequest(http.MethodPost, normalizedOrigin+"/v1/iam/authn/login", strings.NewReader("{}"))
+		r := httptest.NewRequest(http.MethodPost, normalizedOrigin+"/v1/iam/authn/flows", strings.NewReader("{}"))
 		r.Header.Set("Content-Type", "application/json; charset=utf-8")
 		r.Header.Set("Sec-Fetch-Site", "same-origin")
 		if origin != "" {
@@ -145,8 +145,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 		}
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
-		if w.Code != http.StatusOK || called != before+1 || len(w.Result().Cookies()) == 0 {
-			t.Fatalf("JSON valid origin=%q status=%d cookies=%v", origin, w.Code, w.Result().Cookies())
+		if w.Code != http.StatusOK || called != before+1 || len(w.Result().Cookies()) == 0 || w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("JSON valid origin=%q status=%d cookies=%v cc=%q", origin, w.Code, w.Result().Cookies(), w.Header().Get("Cache-Control"))
 		}
 		cookie = w.Result().Cookies()[0]
 	}
@@ -159,8 +159,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 	r.AddCookie(cookie)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
-	if w.Code != http.StatusForbidden || called != before || len(w.Result().Cookies()) != 0 {
-		t.Fatalf("SameOriginPaths cross-origin POST status=%d called=%d", w.Code, called-before)
+	if w.Code != http.StatusForbidden || called != before || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("SameOriginPaths cross-origin POST status=%d called=%d cc=%q", w.Code, called-before, w.Header().Get("Cache-Control"))
 	}
 
 	before = called
@@ -170,8 +170,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 	r.AddCookie(cookie)
 	w = httptest.NewRecorder()
 	h.ServeHTTP(w, r)
-	if w.Code != http.StatusOK || called != before+1 {
-		t.Fatalf("SameOriginPaths same-origin POST status=%d called=%d", w.Code, called-before)
+	if w.Code != http.StatusOK || called != before+1 || w.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("SameOriginPaths same-origin POST status=%d called=%d cc=%q", w.Code, called-before, w.Header().Get("Cache-Control"))
 	}
 
 	// 6. CrossOriginPaths: RP cross-origin form POST (e.g. OIDC /end_session) loads session without 403/415.
@@ -183,8 +183,8 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 	r.AddCookie(cookie)
 	w = httptest.NewRecorder()
 	h.ServeHTTP(w, r)
-	if w.Code != http.StatusOK || called != before+1 {
-		t.Fatalf("CrossOriginPaths POST status=%d called=%d", w.Code, called-before)
+	if w.Code != http.StatusOK || called != before+1 || w.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("CrossOriginPaths POST status=%d called=%d cc=%q", w.Code, called-before, w.Header().Get("Cache-Control"))
 	}
 
 	// 7. Unmatched routes bypass session completely and never renew cookies.
@@ -193,7 +193,24 @@ func TestNewFilterThreeTierRoutingAndOriginProtection(t *testing.T) {
 	r.AddCookie(cookie)
 	w = httptest.NewRecorder()
 	h.ServeHTTP(w, r)
-	if w.Code != http.StatusOK || called != before+1 || len(w.Result().Cookies()) != 0 {
-		t.Fatalf("unmatched route status=%d cookies=%v", w.Code, w.Result().Cookies())
+	if w.Code != http.StatusOK || called != before+1 || len(w.Result().Cookies()) != 0 || w.Header().Get("Cache-Control") != "" {
+		t.Fatalf("unmatched route status=%d cookies=%v cc=%q", w.Code, w.Result().Cookies(), w.Header().Get("Cache-Control"))
+	}
+
+	// 8. Pre-existing or handler-set Cache-Control is preserved on matched browser routes.
+	customHandler := filter(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Cache-Control", "private, max-age=30")
+		w.WriteHeader(http.StatusOK)
+	}))
+	w = httptest.NewRecorder()
+	customHandler.ServeHTTP(w, httptest.NewRequest(http.MethodGet, normalizedOrigin+"/v1/iam/account/profile", nil))
+	if got := w.Header().Get("Cache-Control"); got != "private, max-age=30" {
+		t.Fatalf("handler Cache-Control override = %q, want private, max-age=30", got)
+	}
+	presetRec := httptest.NewRecorder()
+	presetRec.Header().Set("Cache-Control", "private, no-cache")
+	h.ServeHTTP(presetRec, httptest.NewRequest(http.MethodGet, normalizedOrigin+"/v1/iam/account/profile", nil))
+	if got := presetRec.Header().Get("Cache-Control"); got != "private, no-cache" {
+		t.Fatalf("pre-set Cache-Control = %q, want private, no-cache", got)
 	}
 }

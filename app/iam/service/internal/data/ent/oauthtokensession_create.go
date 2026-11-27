@@ -32,9 +32,9 @@ func (_c *OAuthTokenSessionCreate) SetClientID(v string) *OAuthTokenSessionCreat
 	return _c
 }
 
-// SetIamLoginSessionID sets the "iam_login_session_id" field.
-func (_c *OAuthTokenSessionCreate) SetIamLoginSessionID(v string) *OAuthTokenSessionCreate {
-	_c.mutation.SetIamLoginSessionID(v)
+// SetLoginSessionID sets the "login_session_id" field.
+func (_c *OAuthTokenSessionCreate) SetLoginSessionID(v string) *OAuthTokenSessionCreate {
+	_c.mutation.SetLoginSessionID(v)
 	return _c
 }
 
@@ -173,12 +173,12 @@ func (_c *OAuthTokenSessionCreate) check() error {
 			return &ValidationError{Name: "client_id", err: fmt.Errorf(`ent: validator failed for field "OAuthTokenSession.client_id": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.IamLoginSessionID(); !ok {
-		return &ValidationError{Name: "iam_login_session_id", err: errors.New(`ent: missing required field "OAuthTokenSession.iam_login_session_id"`)}
+	if _, ok := _c.mutation.LoginSessionID(); !ok {
+		return &ValidationError{Name: "login_session_id", err: errors.New(`ent: missing required field "OAuthTokenSession.login_session_id"`)}
 	}
-	if v, ok := _c.mutation.IamLoginSessionID(); ok {
-		if err := oauthtokensession.IamLoginSessionIDValidator(v); err != nil {
-			return &ValidationError{Name: "iam_login_session_id", err: fmt.Errorf(`ent: validator failed for field "OAuthTokenSession.iam_login_session_id": %w`, err)}
+	if v, ok := _c.mutation.LoginSessionID(); ok {
+		if err := oauthtokensession.LoginSessionIDValidator(v); err != nil {
+			return &ValidationError{Name: "login_session_id", err: fmt.Errorf(`ent: validator failed for field "OAuthTokenSession.login_session_id": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.RefreshFamilyID(); !ok {
@@ -247,9 +247,9 @@ func (_c *OAuthTokenSessionCreate) createSpec() (*OAuthTokenSession, *sqlgraph.C
 		_spec.SetField(oauthtokensession.FieldClientID, field.TypeString, value)
 		_node.ClientID = value
 	}
-	if value, ok := _c.mutation.IamLoginSessionID(); ok {
-		_spec.SetField(oauthtokensession.FieldIamLoginSessionID, field.TypeString, value)
-		_node.IamLoginSessionID = value
+	if value, ok := _c.mutation.LoginSessionID(); ok {
+		_spec.SetField(oauthtokensession.FieldLoginSessionID, field.TypeString, value)
+		_node.LoginSessionID = value
 	}
 	if value, ok := _c.mutation.RefreshFamilyID(); ok {
 		_spec.SetField(oauthtokensession.FieldRefreshFamilyID, field.TypeString, value)

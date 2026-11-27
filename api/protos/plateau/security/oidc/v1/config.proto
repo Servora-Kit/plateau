@@ -32,4 +32,5 @@ message OIDCClient {
   string cookie_secret = 5 [(servora.redact.v3.value).string = ""];
   repeated string scopes = 6;
   google.protobuf.Duration http_timeout = 7 [(servora.conf.v1.field) = {default: "5s"}];
+  google.protobuf.Duration handshake_ttl = 8 [(servora.conf.v1.field) = {default: "30m"}];
 }

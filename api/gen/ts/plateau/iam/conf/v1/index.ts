@@ -3,9 +3,23 @@
 
 // IAM contains service-owned identity lifecycle configuration.
 export type IAM = {
+  // AuthFlow configures interactive browser authentication flow lifetimes.
+  authFlow?: AuthFlow;
   // Bootstrap creates this single platform administrator idempotently.
   bootstrapUserEmail?: string;
 };
+
+// AuthFlow configures authentication flow expiration windows.
+export type AuthFlow = {
+  stepTtl?: wellKnownDuration;
+  ttl?: wellKnownDuration;
+};
+
+// Generated output always contains 0, 3, 6, or 9 fractional digits,
+// depending on required precision, followed by the suffix "s".
+// Accepted are any fractional digits (also none) as long as they fit
+// into nano-seconds precision and the suffix "s" is required.
+type wellKnownDuration = string;
 
 
 // @@protoc_insertion_point(typescript-http-eof)

@@ -16,6 +16,7 @@ import (
 type OIDCStorage struct {
 	tokens                biz.OAuthRepo
 	serviceAccessTokenTTL time.Duration
+	authRequestTTL        time.Duration
 	client                *entmodel.Client
 	now                   func() time.Time
 	signingPrivate        *signingKey
@@ -44,12 +45,22 @@ func NewOIDCStorage(client *entmodel.Client, config *oidcconfpb.OIDC, tokens biz
 	if ttl <= 0 {
 		return nil, fmt.Errorf("OIDC service access token TTL must be positive")
 	}
+	authReqTTLConfig := config.GetAuthRequestTtl()
+	if err := authReqTTLConfig.CheckValid(); err != nil {
+		return nil, err
+	}
+	authReqTTL := authReqTTLConfig.AsDuration()
+	if authReqTTL <= 0 {
+		return nil, fmt.Errorf("OIDC authorization request TTL must be positive")
+	}
 	return &OIDCStorage{
-		tokens: tokens, serviceAccessTokenTTL: ttl,
-		client:           client,
-		now:              time.Now,
-		signingPrivate:   &signingKey{id: keyID, key: privateKey},
-		signingPublicJWK: publicJWK,
+		tokens:                tokens,
+		serviceAccessTokenTTL: ttl,
+		authRequestTTL:        authReqTTL,
+		client:                client,
+		now:                   time.Now,
+		signingPrivate:        &signingKey{id: keyID, key: privateKey},
+		signingPublicJWK:      publicJWK,
 	}, nil
 }
 

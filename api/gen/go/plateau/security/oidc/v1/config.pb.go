@@ -37,6 +37,7 @@ type OIDCClient struct {
 	CookieSecret  string               `protobuf:"bytes,5,opt,name=cookie_secret,json=cookieSecret,proto3" json:"cookie_secret,omitempty"`
 	Scopes        []string             `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	HttpTimeout   *durationpb.Duration `protobuf:"bytes,7,opt,name=http_timeout,json=httpTimeout,proto3" json:"http_timeout,omitempty"`
+	HandshakeTtl  *durationpb.Duration `protobuf:"bytes,8,opt,name=handshake_ttl,json=handshakeTtl,proto3" json:"handshake_ttl,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -120,11 +121,18 @@ func (x *OIDCClient) GetHttpTimeout() *durationpb.Duration {
 	return nil
 }
 
+func (x *OIDCClient) GetHandshakeTtl() *durationpb.Duration {
+	if x != nil {
+		return x.HandshakeTtl
+	}
+	return nil
+}
+
 var File_plateau_security_oidc_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_security_oidc_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"%plateau/security/oidc/v1/config.proto\x12\x18plateau.security.oidc.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\"\x89\x03\n" +
+	"%plateau/security/oidc/v1/config.proto\x12\x18plateau.security.oidc.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\"\xd4\x03\n" +
 	"\n" +
 	"OIDCClient\x12*\n" +
 	"\x06issuer\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x06issuer\x88\x01\x01\x12/\n" +
@@ -134,7 +142,9 @@ const file_plateau_security_oidc_v1_config_proto_rawDesc = "" +
 	"\rcookie_secret\x18\x05 \x01(\tB\x06ڶ\x1a\x02z\x00R\fcookieSecret\x12\x16\n" +
 	"\x06scopes\x18\x06 \x03(\tR\x06scopes\x12F\n" +
 	"\fhttp_timeout\x18\a \x01(\v2\x19.google.protobuf.DurationB\b\x8a\xce\x18\x04\n" +
-	"\x025sR\vhttpTimeout:\x04\x80\xce\x18\x01B\t\n" +
+	"\x025sR\vhttpTimeout\x12I\n" +
+	"\rhandshake_ttl\x18\b \x01(\v2\x19.google.protobuf.DurationB\t\x8a\xce\x18\x05\n" +
+	"\x0330mR\fhandshakeTtl:\x04\x80\xce\x18\x01B\t\n" +
 	"\a_issuerB\f\n" +
 	"\n" +
 	"_client_idB\x10\n" +
@@ -159,11 +169,12 @@ var file_plateau_security_oidc_v1_config_proto_goTypes = []any{
 }
 var file_plateau_security_oidc_v1_config_proto_depIdxs = []int32{
 	1, // 0: plateau.security.oidc.v1.OIDCClient.http_timeout:type_name -> google.protobuf.Duration
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 1: plateau.security.oidc.v1.OIDCClient.handshake_ttl:type_name -> google.protobuf.Duration
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_plateau_security_oidc_v1_config_proto_init() }

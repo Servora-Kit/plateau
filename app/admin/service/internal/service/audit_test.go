@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -270,5 +271,84 @@ func TestAuthServiceCallbackAndLogoutAuditEnrichment(t *testing.T) {
 		logoutEv.Extensions()[audit.ExtResourceType] != "iam.plateau.dev/User" ||
 		logoutEv.Extensions()[audit.ExtResourceName] != "users/admin-42" {
 		t.Fatalf("unexpected logout audit event: %+v", logoutEv)
+	}
+}
+
+func TestAuthServiceCallbackCancelledVsForgedError(t *testing.T) {
+	var opURL string
+	opSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"issuer":"` + opURL + `","authorization_endpoint":"` + opURL + `/authorize","token_endpoint":"` + opURL + `/oauth/token","jwks_uri":"` + opURL + `/keys"}`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer opSrv.Close()
+	opURL = opSrv.URL
+
+	mgr := scs.New()
+	mgr.Store = memstore.NewWithCleanupInterval(0)
+	rp, err := securityoidc.NewRelyingParty(&oidcpb.OIDCClient{
+		Issuer:       proto.String(opURL),
+		ClientId:     proto.String("admin"),
+		ClientSecret: proto.String("admin-client-secret-for-callback-test"),
+		RedirectUri:  "http://localhost:10012/v1/admin/auth/callback",
+		CookieSecret: "0123456789abcdef0123456789abcdef",
+		Scopes:       []string{"openid", "profile", "email"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	authSvc := &AuthService{oidcRP: rp, manager: mgr}
+	recAuditor := &authCaptureAuditor{}
+	browserFilter, err := httpsession.NewFilter(mgr, httpsession.FilterConfig{
+		PublicOrigin: "http://localhost:10012",
+		JSONPrefixes: []string{"/v1/admin/"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := khttp.NewServer(khttp.Filter(browserFilter))
+	authSvc.RegisterOIDCHTTP(srv, recAuditor)
+
+	// 1. Forged ?error=access_denied WITHOUT handshake cookie must NOT map to login_cancelled.
+	forgedW := httptest.NewRecorder()
+	srv.ServeHTTP(forgedW, httptest.NewRequest(http.MethodGet, "http://localhost:10012/v1/admin/auth/callback?error=access_denied&state=fake&iss="+url.QueryEscape(opURL), nil))
+	if forgedW.Code != http.StatusFound || forgedW.Header().Get("Location") != "/auth/login?error=login_failed" || forgedW.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("forged cancel = (%d, %q, cc=%q), want 302 /auth/login?error=login_failed", forgedW.Code, forgedW.Header().Get("Location"), forgedW.Header().Get("Cache-Control"))
+	}
+	if len(recAuditor.events) != 1 || recAuditor.events[0].Extensions()[audit.ExtErrorCode] != "OIDC_LOGIN_FAILED" {
+		t.Fatalf("forged cancel audit = %+v, want OIDC_LOGIN_FAILED", recAuditor.events)
+	}
+
+	// 2. Legitimate OIDC cancel with valid handshake cookie + matching state + iss -> login_cancelled + OIDC_LOGIN_CANCELLED.
+	recAuditor.events = nil
+	beginW := httptest.NewRecorder()
+	srv.ServeHTTP(beginW, httptest.NewRequest(http.MethodGet, "http://localhost:10012/v1/admin/auth/login", nil))
+	if beginW.Code != http.StatusFound || beginW.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("BeginLogin = (%d, cc=%q)", beginW.Code, beginW.Header().Get("Cache-Control"))
+	}
+	var handshake *http.Cookie
+	for _, ck := range beginW.Result().Cookies() {
+		if ck.Name == "admin_oidc_handshake" {
+			handshake = ck
+		}
+	}
+	authLoc, err := url.Parse(beginW.Header().Get("Location"))
+	if err != nil || handshake == nil {
+		t.Fatalf("BeginLogin redirect/cookie err=%v handshake=%v", err, handshake)
+	}
+	stateParam := authLoc.Query().Get("state")
+
+	cancelReq := httptest.NewRequest(http.MethodGet, "http://localhost:10012/v1/admin/auth/callback?error=access_denied&state="+url.QueryEscape(stateParam)+"&iss="+url.QueryEscape(opURL), nil)
+	cancelReq.AddCookie(handshake)
+	cancelW := httptest.NewRecorder()
+	srv.ServeHTTP(cancelW, cancelReq)
+	if cancelW.Code != http.StatusFound || cancelW.Header().Get("Location") != "/auth/login?error=login_cancelled" || cancelW.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("legit cancel = (%d, %q, cc=%q), want 302 /auth/login?error=login_cancelled", cancelW.Code, cancelW.Header().Get("Location"), cancelW.Header().Get("Cache-Control"))
+	}
+	if len(recAuditor.events) != 1 || recAuditor.events[0].Extensions()[audit.ExtErrorCode] != "OIDC_LOGIN_CANCELLED" {
+		t.Fatalf("legit cancel audit = %+v, want OIDC_LOGIN_CANCELLED", recAuditor.events)
 	}
 }

@@ -4,7 +4,6 @@
 package iamauthnv1
 
 import (
-	validate "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	iamuserv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/v1"
@@ -12,11 +11,12 @@ import (
 	redactv3 "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
 	annotations "google.golang.org/genproto/googleapis/api/annotations"
 	proto "google.golang.org/protobuf/proto"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var _ validate.Rule
 var _ annotations.CommonLanguageSettings
 var _ annotations.FieldBehavior
+var _ timestamppb.Timestamp
 var _ iamuserv1.UserProfile
 var _ auditpb.AuditRule
 var _ authnpb.AuthnRule
@@ -24,17 +24,119 @@ var _ authzpb.AuthzRule
 var _ redactv3.FieldRules
 
 // Redact returns a redacted representation without mutating x.
-func (x *LoginRequest) Redact() string {
+func (x *AuthFlowOidcContext) Redact() string {
 	if x == nil {
 		return ""
 	}
-	clone := proto.Clone(x).(*LoginRequest)
+	clone := proto.Clone(x).(*AuthFlowOidcContext)
 	clone.RedactFields()
 	return clone.String()
 }
 
 // RedactFields applies annotated field replacements in place.
-func (x *LoginRequest) RedactFields() {
+func (x *AuthFlowOidcContext) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *AuthFlow) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*AuthFlow)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *AuthFlow) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *CreateAuthFlowRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*CreateAuthFlowRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *CreateAuthFlowRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *CreateAuthFlowResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*CreateAuthFlowResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *CreateAuthFlowResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *GetAuthFlowRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*GetAuthFlowRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *GetAuthFlowRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *GetAuthFlowResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*GetAuthFlowResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *GetAuthFlowResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *SubmitPasswordRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*SubmitPasswordRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *SubmitPasswordRequest) RedactFields() {
 	if x == nil {
 		return
 	}
@@ -42,17 +144,120 @@ func (x *LoginRequest) RedactFields() {
 }
 
 // Redact returns a redacted representation without mutating x.
-func (x *LoginResponse) Redact() string {
+func (x *SubmitPasswordResponse) Redact() string {
 	if x == nil {
 		return ""
 	}
-	clone := proto.Clone(x).(*LoginResponse)
+	clone := proto.Clone(x).(*SubmitPasswordResponse)
 	clone.RedactFields()
 	return clone.String()
 }
 
 // RedactFields applies annotated field replacements in place.
-func (x *LoginResponse) RedactFields() {
+func (x *SubmitPasswordResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *CompleteUpdatePasswordRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*CompleteUpdatePasswordRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *CompleteUpdatePasswordRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+	x.NewPassword = ``
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *CompleteUpdatePasswordResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*CompleteUpdatePasswordResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *CompleteUpdatePasswordResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *ResetAuthFlowRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*ResetAuthFlowRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *ResetAuthFlowRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *ResetAuthFlowResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*ResetAuthFlowResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *ResetAuthFlowResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *CancelAuthFlowRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*CancelAuthFlowRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *CancelAuthFlowRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *CancelAuthFlowResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*CancelAuthFlowResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *CancelAuthFlowResponse) RedactFields() {
 	if x == nil {
 		return
 	}

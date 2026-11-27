@@ -109,9 +109,9 @@ func Subject(v string) predicate.OIDCAuthorizationRequest {
 	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldSubject, v))
 }
 
-// IamLoginSessionID applies equality check predicate on the "iam_login_session_id" field. It's identical to IamLoginSessionIDEQ.
-func IamLoginSessionID(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldIamLoginSessionID, v))
+// LoginSessionID applies equality check predicate on the "login_session_id" field. It's identical to LoginSessionIDEQ.
+func LoginSessionID(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldLoginSessionID, v))
 }
 
 // AuthTime applies equality check predicate on the "auth_time" field. It's identical to AuthTimeEQ.
@@ -764,79 +764,79 @@ func SubjectContainsFold(v string) predicate.OIDCAuthorizationRequest {
 	return predicate.OIDCAuthorizationRequest(sql.FieldContainsFold(FieldSubject, v))
 }
 
-// IamLoginSessionIDEQ applies the EQ predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDEQ(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldIamLoginSessionID, v))
+// LoginSessionIDEQ applies the EQ predicate on the "login_session_id" field.
+func LoginSessionIDEQ(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDNEQ applies the NEQ predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDNEQ(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldNEQ(FieldIamLoginSessionID, v))
+// LoginSessionIDNEQ applies the NEQ predicate on the "login_session_id" field.
+func LoginSessionIDNEQ(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNEQ(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDIn applies the In predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDIn(vs ...string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldIn(FieldIamLoginSessionID, vs...))
+// LoginSessionIDIn applies the In predicate on the "login_session_id" field.
+func LoginSessionIDIn(vs ...string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldIn(FieldLoginSessionID, vs...))
 }
 
-// IamLoginSessionIDNotIn applies the NotIn predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDNotIn(vs ...string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldNotIn(FieldIamLoginSessionID, vs...))
+// LoginSessionIDNotIn applies the NotIn predicate on the "login_session_id" field.
+func LoginSessionIDNotIn(vs ...string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNotIn(FieldLoginSessionID, vs...))
 }
 
-// IamLoginSessionIDGT applies the GT predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDGT(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldGT(FieldIamLoginSessionID, v))
+// LoginSessionIDGT applies the GT predicate on the "login_session_id" field.
+func LoginSessionIDGT(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldGT(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDGTE applies the GTE predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDGTE(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldGTE(FieldIamLoginSessionID, v))
+// LoginSessionIDGTE applies the GTE predicate on the "login_session_id" field.
+func LoginSessionIDGTE(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldGTE(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDLT applies the LT predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDLT(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldLT(FieldIamLoginSessionID, v))
+// LoginSessionIDLT applies the LT predicate on the "login_session_id" field.
+func LoginSessionIDLT(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldLT(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDLTE applies the LTE predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDLTE(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldLTE(FieldIamLoginSessionID, v))
+// LoginSessionIDLTE applies the LTE predicate on the "login_session_id" field.
+func LoginSessionIDLTE(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldLTE(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDContains applies the Contains predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDContains(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldContains(FieldIamLoginSessionID, v))
+// LoginSessionIDContains applies the Contains predicate on the "login_session_id" field.
+func LoginSessionIDContains(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldContains(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDHasPrefix applies the HasPrefix predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDHasPrefix(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldHasPrefix(FieldIamLoginSessionID, v))
+// LoginSessionIDHasPrefix applies the HasPrefix predicate on the "login_session_id" field.
+func LoginSessionIDHasPrefix(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldHasPrefix(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDHasSuffix applies the HasSuffix predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDHasSuffix(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldHasSuffix(FieldIamLoginSessionID, v))
+// LoginSessionIDHasSuffix applies the HasSuffix predicate on the "login_session_id" field.
+func LoginSessionIDHasSuffix(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldHasSuffix(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDIsNil applies the IsNil predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDIsNil() predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldIsNull(FieldIamLoginSessionID))
+// LoginSessionIDIsNil applies the IsNil predicate on the "login_session_id" field.
+func LoginSessionIDIsNil() predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldIsNull(FieldLoginSessionID))
 }
 
-// IamLoginSessionIDNotNil applies the NotNil predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDNotNil() predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldNotNull(FieldIamLoginSessionID))
+// LoginSessionIDNotNil applies the NotNil predicate on the "login_session_id" field.
+func LoginSessionIDNotNil() predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNotNull(FieldLoginSessionID))
 }
 
-// IamLoginSessionIDEqualFold applies the EqualFold predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDEqualFold(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldEqualFold(FieldIamLoginSessionID, v))
+// LoginSessionIDEqualFold applies the EqualFold predicate on the "login_session_id" field.
+func LoginSessionIDEqualFold(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEqualFold(FieldLoginSessionID, v))
 }
 
-// IamLoginSessionIDContainsFold applies the ContainsFold predicate on the "iam_login_session_id" field.
-func IamLoginSessionIDContainsFold(v string) predicate.OIDCAuthorizationRequest {
-	return predicate.OIDCAuthorizationRequest(sql.FieldContainsFold(FieldIamLoginSessionID, v))
+// LoginSessionIDContainsFold applies the ContainsFold predicate on the "login_session_id" field.
+func LoginSessionIDContainsFold(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldContainsFold(FieldLoginSessionID, v))
 }
 
 // AuthTimeEQ applies the EQ predicate on the "auth_time" field.

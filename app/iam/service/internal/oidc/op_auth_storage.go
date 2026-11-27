@@ -21,11 +21,11 @@ import (
 func tokenGrantFromRequest(request op.TokenRequest) (biz.OAuthGrant, error) {
 	switch typed := request.(type) {
 	case *authorizationRequest:
-		if typed.authorizationCodeID == "" || !typed.Done() || typed.entity.IamLoginSessionID == nil {
+		if typed.authorizationCodeID == "" || !typed.Done() || typed.entity.LoginSessionID == nil {
 			return biz.OAuthGrant{}, biz.ErrOAuthGrantInvalid
 		}
 		return biz.OAuthGrant{CodeID: typed.authorizationCodeID, Subject: typed.GetSubject(), ClientID: typed.GetClientID(),
-			LoginID: *typed.entity.IamLoginSessionID, Scopes: typed.GetScopes(), Audiences: typed.GetAudience(), AuthTime: typed.GetAuthTime(), AMR: typed.GetAMR()}, nil
+			LoginID: *typed.entity.LoginSessionID, Scopes: typed.GetScopes(), Audiences: typed.GetAudience(), AuthTime: typed.GetAuthTime(), AMR: typed.GetAMR()}, nil
 	case *refreshTokenRequest:
 		return biz.OAuthGrant{RefreshTokenID: typed.tokenID, TokenSessionID: typed.tokenSessionID, Subject: typed.subject,
 			ClientID: typed.clientID, Scopes: typed.GetScopes(), Audiences: typed.GetAudience(), AuthTime: typed.authTime, AMR: typed.GetAMR()}, nil
@@ -59,7 +59,7 @@ func (storage *OIDCStorage) CreateAuthRequest(
 		SetScopes(slices.Clone(request.Scopes)).
 		SetPkceChallenge(request.CodeChallenge).
 		SetPkceChallengeMethod(string(request.CodeChallengeMethod)).
-		SetExpiresTime(now.Add(authorizationRequestTTL))
+		SetExpiresTime(now.Add(storage.authRequestTTL))
 	if request.State != "" {
 		builder.SetState(request.State)
 	}

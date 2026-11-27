@@ -17,40 +17,180 @@ var _ = new(context.Context)
 
 const _ = http.SupportPackageIsVersion3
 
-const OperationAuthnServiceLogin = "/plateau.iam.authn.v1.AuthnService/Login"
+const OperationAuthnServiceCancelAuthFlow = "/plateau.iam.authn.v1.AuthnService/CancelAuthFlow"
+const OperationAuthnServiceCompleteUpdatePassword = "/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword"
+const OperationAuthnServiceCreateAuthFlow = "/plateau.iam.authn.v1.AuthnService/CreateAuthFlow"
+const OperationAuthnServiceGetAuthFlow = "/plateau.iam.authn.v1.AuthnService/GetAuthFlow"
+const OperationAuthnServiceResetAuthFlow = "/plateau.iam.authn.v1.AuthnService/ResetAuthFlow"
+const OperationAuthnServiceSubmitPassword = "/plateau.iam.authn.v1.AuthnService/SubmitPassword"
 
 type AuthnServiceHTTPServer interface {
-	// Login Login verifies credentials and establishes one opaque browser session.
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	// CancelAuthFlow CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+	CancelAuthFlow(context.Context, *CancelAuthFlowRequest) (*CancelAuthFlowResponse, error)
+	// CompleteUpdatePassword CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+	CompleteUpdatePassword(context.Context, *CompleteUpdatePasswordRequest) (*CompleteUpdatePasswordResponse, error)
+	// CreateAuthFlow CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+	CreateAuthFlow(context.Context, *CreateAuthFlowRequest) (*CreateAuthFlowResponse, error)
+	// GetAuthFlow GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+	GetAuthFlow(context.Context, *GetAuthFlowRequest) (*GetAuthFlowResponse, error)
+	// ResetAuthFlow ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+	ResetAuthFlow(context.Context, *ResetAuthFlowRequest) (*ResetAuthFlowResponse, error)
+	// SubmitPassword SubmitPassword verifies email and password credentials and advances or completes the flow.
+	SubmitPassword(context.Context, *SubmitPasswordRequest) (*SubmitPasswordResponse, error)
 }
 
 func RegisterAuthnServiceHTTPServer(s *http.Server, srv AuthnServiceHTTPServer) {
 	r := s.Route("/")
-	r.Handle("POST", "/v1/iam/authn/login", _AuthnService_Login0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/authn/flows", _AuthnService_CreateAuthFlow0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/iam/authn/flows/{flow_id}", _AuthnService_GetAuthFlow0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:submitPassword", _AuthnService_SubmitPassword0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:completeUpdatePassword", _AuthnService_CompleteUpdatePassword0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:reset", _AuthnService_ResetAuthFlow0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:cancel", _AuthnService_CancelAuthFlow0_HTTP_Handler(srv))
 }
 
-func _AuthnService_Login0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+func _AuthnService_CreateAuthFlow0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in LoginRequest
+		var in CreateAuthFlowRequest
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationAuthnServiceLogin)
+		http.SetOperation(ctx, OperationAuthnServiceCreateAuthFlow)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.Login(ctx, req.(*LoginRequest))
+			return srv.CreateAuthFlow(ctx, req.(*CreateAuthFlowRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*LoginResponse)
+		reply := out.(*CreateAuthFlowResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AuthnService_GetAuthFlow0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetAuthFlowRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceGetAuthFlow)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetAuthFlow(ctx, req.(*GetAuthFlowRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetAuthFlowResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AuthnService_SubmitPassword0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in SubmitPasswordRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceSubmitPassword)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.SubmitPassword(ctx, req.(*SubmitPasswordRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*SubmitPasswordResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AuthnService_CompleteUpdatePassword0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CompleteUpdatePasswordRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceCompleteUpdatePassword)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CompleteUpdatePassword(ctx, req.(*CompleteUpdatePasswordRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CompleteUpdatePasswordResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AuthnService_ResetAuthFlow0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ResetAuthFlowRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceResetAuthFlow)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ResetAuthFlow(ctx, req.(*ResetAuthFlowRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ResetAuthFlowResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AuthnService_CancelAuthFlow0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CancelAuthFlowRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceCancelAuthFlow)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CancelAuthFlow(ctx, req.(*CancelAuthFlowRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CancelAuthFlowResponse)
 		return ctx.Result(200, reply)
 	}
 }
 
 type AuthnServiceHTTPClient interface {
-	// Login Login verifies credentials and establishes one opaque browser session.
-	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginResponse, err error)
+	// CancelAuthFlow CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+	CancelAuthFlow(ctx context.Context, req *CancelAuthFlowRequest, opts ...http.CallOption) (rsp *CancelAuthFlowResponse, err error)
+	// CompleteUpdatePassword CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+	CompleteUpdatePassword(ctx context.Context, req *CompleteUpdatePasswordRequest, opts ...http.CallOption) (rsp *CompleteUpdatePasswordResponse, err error)
+	// CreateAuthFlow CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+	CreateAuthFlow(ctx context.Context, req *CreateAuthFlowRequest, opts ...http.CallOption) (rsp *CreateAuthFlowResponse, err error)
+	// GetAuthFlow GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+	GetAuthFlow(ctx context.Context, req *GetAuthFlowRequest, opts ...http.CallOption) (rsp *GetAuthFlowResponse, err error)
+	// ResetAuthFlow ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+	ResetAuthFlow(ctx context.Context, req *ResetAuthFlowRequest, opts ...http.CallOption) (rsp *ResetAuthFlowResponse, err error)
+	// SubmitPassword SubmitPassword verifies email and password credentials and advances or completes the flow.
+	SubmitPassword(ctx context.Context, req *SubmitPasswordRequest, opts ...http.CallOption) (rsp *SubmitPasswordResponse, err error)
 }
 
 type AuthnServiceHTTPClientImpl struct {
@@ -61,15 +201,104 @@ func NewAuthnServiceHTTPClient(client *http.Client) AuthnServiceHTTPClient {
 	return &AuthnServiceHTTPClientImpl{client}
 }
 
-// Login Login verifies credentials and establishes one opaque browser session.
-func (c *AuthnServiceHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*LoginResponse, error) {
-	var out LoginResponse
-	pattern := "/v1/iam/authn/login"
+// CancelAuthFlow CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
+func (c *AuthnServiceHTTPClientImpl) CancelAuthFlow(ctx context.Context, in *CancelAuthFlowRequest, opts ...http.CallOption) (*CancelAuthFlowResponse, error) {
+	var out CancelAuthFlowResponse
+	pattern := "/v1/iam/authn/flows/{flow_id}:cancel"
 	path := http.BuildPath(pattern, in)
 	opts = append([]http.CallOption{
 		http.Accept("application/protojson"),
 		http.ContentType("application/protojson"),
-		http.Operation(OperationAuthnServiceLogin),
+		http.Operation(OperationAuthnServiceCancelAuthFlow),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// CompleteUpdatePassword CompleteUpdatePassword satisfies the UPDATE_PASSWORD required action for an authenticated flow.
+func (c *AuthnServiceHTTPClientImpl) CompleteUpdatePassword(ctx context.Context, in *CompleteUpdatePasswordRequest, opts ...http.CallOption) (*CompleteUpdatePasswordResponse, error) {
+	var out CompleteUpdatePasswordResponse
+	pattern := "/v1/iam/authn/flows/{flow_id}:completeUpdatePassword"
+	path := http.BuildPath(pattern, in)
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.ContentType("application/protojson"),
+		http.Operation(OperationAuthnServiceCompleteUpdatePassword),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// CreateAuthFlow CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
+func (c *AuthnServiceHTTPClientImpl) CreateAuthFlow(ctx context.Context, in *CreateAuthFlowRequest, opts ...http.CallOption) (*CreateAuthFlowResponse, error) {
+	var out CreateAuthFlowResponse
+	pattern := "/v1/iam/authn/flows"
+	path := http.BuildPath(pattern, in)
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.ContentType("application/protojson"),
+		http.Operation(OperationAuthnServiceCreateAuthFlow),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetAuthFlow GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
+func (c *AuthnServiceHTTPClientImpl) GetAuthFlow(ctx context.Context, in *GetAuthFlowRequest, opts ...http.CallOption) (*GetAuthFlowResponse, error) {
+	var out GetAuthFlowResponse
+	pattern := "/v1/iam/authn/flows/{flow_id}"
+	path := http.BuildPath(pattern, in, http.WithQueryParams())
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.Operation(OperationAuthnServiceGetAuthFlow),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ResetAuthFlow ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
+func (c *AuthnServiceHTTPClientImpl) ResetAuthFlow(ctx context.Context, in *ResetAuthFlowRequest, opts ...http.CallOption) (*ResetAuthFlowResponse, error) {
+	var out ResetAuthFlowResponse
+	pattern := "/v1/iam/authn/flows/{flow_id}:reset"
+	path := http.BuildPath(pattern, in)
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.ContentType("application/protojson"),
+		http.Operation(OperationAuthnServiceResetAuthFlow),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// SubmitPassword SubmitPassword verifies email and password credentials and advances or completes the flow.
+func (c *AuthnServiceHTTPClientImpl) SubmitPassword(ctx context.Context, in *SubmitPasswordRequest, opts ...http.CallOption) (*SubmitPasswordResponse, error) {
+	var out SubmitPasswordResponse
+	pattern := "/v1/iam/authn/flows/{flow_id}:submitPassword"
+	path := http.BuildPath(pattern, in)
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.ContentType("application/protojson"),
+		http.Operation(OperationAuthnServiceSubmitPassword),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)

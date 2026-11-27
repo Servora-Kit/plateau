@@ -134,8 +134,11 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if scopeRejected.Code != http.StatusFound {
 		t.Fatalf("disallowed client scope status = %d, body = %s", scopeRejected.Code, scopeRejected.Body.String())
 	}
+	if got := scopeRejected.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("authorize error Cache-Control = %q, want no-store", got)
+	}
 	scopeErrorLocation, err := url.Parse(scopeRejected.Header().Get("Location"))
-	if err != nil || scopeErrorLocation.Query().Get("error") != "invalid_scope" {
+	if err != nil || scopeErrorLocation.Query().Get("error") != "invalid_scope" || scopeErrorLocation.Query().Get("iss") != testIssuer {
 		t.Fatalf("disallowed client scope redirect = %q, err = %v", scopeRejected.Header().Get("Location"), err)
 	}
 	if _, err := fixture.client.OAuthClient.UpdateOneID(testClientID).SetAllowedScopes(supportedScopes).Save(ctx); err != nil {
@@ -146,9 +149,12 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if authorize.Code != http.StatusFound {
 		t.Fatalf("authorize status = %d, body = %s", authorize.Code, authorize.Body.String())
 	}
+	if got := authorize.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("authorize Cache-Control = %q, want no-store", got)
+	}
 	callbackLocation := authorize.Header().Get("Location")
 	callbackURL, err := url.Parse(callbackLocation)
-	if err != nil || callbackURL.Path != "/authorize/callback" || callbackURL.Query().Get("id") == "" {
+	if err != nil || callbackURL.Path != "/authorize/callback" || callbackURL.Query().Get("id") == "" || callbackURL.Query().Has("iss") {
 		t.Fatalf("authorize location = %q, err = %v", callbackLocation, err)
 	}
 	requestID := callbackURL.Query().Get("id")
@@ -158,8 +164,8 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	fixture.restartProvider(t)
 
 	withoutSession := performRequest(fixture.provider, http.MethodGet, testIssuer+callbackLocation, "", nil)
-	if withoutSession.Code != http.StatusFound || withoutSession.Header().Get("Location") != "/login?request_id="+url.QueryEscape(requestID) {
-		t.Fatalf("unauthenticated callback = %d %q", withoutSession.Code, withoutSession.Header().Get("Location"))
+	if withoutSession.Code != http.StatusFound || withoutSession.Header().Get("Location") != "/login?request_id="+url.QueryEscape(requestID) || withoutSession.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("unauthenticated callback = %d %q (cc=%q)", withoutSession.Code, withoutSession.Header().Get("Location"), withoutSession.Header().Get("Cache-Control"))
 	}
 
 	callbackRequest := httptest.NewRequest(http.MethodGet, testIssuer+callbackLocation, nil)
@@ -169,11 +175,14 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if callback.Code != http.StatusFound {
 		t.Fatalf("authenticated callback status = %d, body = %s", callback.Code, callback.Body.String())
 	}
+	if got := callback.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("authenticated callback Cache-Control = %q, want no-store", got)
+	}
 	clientRedirect, err := url.Parse(callback.Header().Get("Location"))
 	if err != nil || clientRedirect.Scheme+"://"+clientRedirect.Host+clientRedirect.Path != testRedirectURI {
 		t.Fatalf("client redirect = %q, err = %v", callback.Header().Get("Location"), err)
 	}
-	if clientRedirect.Query().Get("state") != "state-value" || clientRedirect.Query().Get("code") == "" {
+	if clientRedirect.Query().Get("state") != "state-value" || clientRedirect.Query().Get("code") == "" || clientRedirect.Query().Get("iss") != testIssuer {
 		t.Fatalf("client redirect query = %q", clientRedirect.RawQuery)
 	}
 	authorizationCode := clientRedirect.Query().Get("code")
@@ -226,6 +235,16 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if _, hasTokenUse := idClaimsMap["token_use"]; hasTokenUse {
 		t.Fatalf("id_token unexpectedly carried token_use claim: %+v", idClaimsMap)
 	}
+	rawAMR, _ := idClaimsMap["amr"].([]any)
+	var gotAMR []string
+	for _, item := range rawAMR {
+		if s, ok := item.(string); ok {
+			gotAMR = append(gotAMR, s)
+		}
+	}
+	if !sameStrings(gotAMR, []string{"hwk", "mfa", "user"}) {
+		t.Fatalf("id_token amr = %v, want [hwk mfa user]", gotAMR)
+	}
 	if _, err := authnjwt.AuthenticateFor[authnjwt.HumanClaims](ctx, humanAuthn, "Bearer "+tokens.IDToken); err == nil {
 		t.Fatal("id_token without token_use=access was unexpectedly accepted by HumanClaims")
 	}
@@ -270,16 +289,17 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 		t.Fatalf("discovery status = %d, body = %s", discovery.Code, discovery.Body.String())
 	}
 	var metadata struct {
-		Issuer                             string   `json:"issuer"`
-		Scopes                             []string `json:"scopes_supported"`
-		GrantTypes                         []string `json:"grant_types_supported"`
-		CodeChallengeMethods               []string `json:"code_challenge_methods_supported"`
-		TokenEndpointAuthenticationMethods []string `json:"token_endpoint_auth_methods_supported"`
+		Issuer                                     string   `json:"issuer"`
+		Scopes                                     []string `json:"scopes_supported"`
+		GrantTypes                                 []string `json:"grant_types_supported"`
+		CodeChallengeMethods                       []string `json:"code_challenge_methods_supported"`
+		TokenEndpointAuthenticationMethods         []string `json:"token_endpoint_auth_methods_supported"`
+		AuthorizationResponseIssParameterSupported bool     `json:"authorization_response_iss_parameter_supported"`
 	}
 	if err := json.Unmarshal(discovery.Body.Bytes(), &metadata); err != nil {
 		t.Fatalf("decode discovery: %v", err)
 	}
-	if metadata.Issuer != testIssuer || !sameStrings(metadata.Scopes, supportedScopes) {
+	if metadata.Issuer != testIssuer || !sameStrings(metadata.Scopes, supportedScopes) || !metadata.AuthorizationResponseIssParameterSupported {
 		t.Fatalf("discovery metadata = %+v", metadata)
 	}
 	if !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeClientCredentials)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeCode)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeRefreshToken)) {
@@ -315,6 +335,22 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if rotatedAgain.RefreshToken == "" || rotatedAgain.RefreshToken == rotated.RefreshToken || !sameStrings(strings.Fields(rotatedAgain.Scope), []string{"openid", "email"}) {
 		t.Fatalf("persisted refresh scope rotation = %+v", rotatedAgain)
 	}
+	rotatedClaims := jwtlib.MapClaims{}
+	if _, err := jwtVerifier.VerifySignature(ctx, rotatedAgain.IDToken, &rotatedClaims); err != nil {
+		t.Fatalf("verify rotated id_token: %v", err)
+	}
+	var rotatedAMR []string
+	if arr, ok := rotatedClaims["amr"].([]any); ok {
+		for _, item := range arr {
+			if s, ok := item.(string); ok {
+				rotatedAMR = append(rotatedAMR, s)
+			}
+		}
+	}
+	if !sameStrings(rotatedAMR, []string{"hwk", "mfa", "user"}) {
+		t.Fatalf("rotated id_token amr = %v, want [hwk mfa user]", rotatedAMR)
+	}
+
 	oldReplay := exchangeTokenRaw(fixture.provider, url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {tokens.RefreshToken},
@@ -484,14 +520,18 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed Password Authenticator: %v", err)
 	}
-	_, login, err := sessionRepo.Create(ctx, biz.PasswordCredential{
-		UserID:                  userID,
-		AuthenticatorID:         authID,
-		PasswordAuthenticatorID: passAuthID,
-		PasswordHash:            "password-hash",
-	}, "test-etag", now)
-	if err != nil || login == nil {
-		t.Fatalf("create IAM login session: login=%#v err=%v", login, err)
+	loginID, err := newID()
+	if err != nil {
+		t.Fatalf("generate LoginSession ID: %v", err)
+	}
+	login, err := client.LoginSession.Create().
+		SetID(loginID).
+		SetUserID(userID).
+		SetAmr([]string{"hwk", "mfa", "user"}).
+		SetCreateTime(now).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("seed LoginSession: %v", err)
 	}
 	manager, cleanupSession, err := data.NewHTTPSessionManager(&sessionconfig.Session{Cookie: &sessionconfig.Cookie{Name: proto.String("__Host-iam_session")}}, database, client)
 	if err != nil {
@@ -756,8 +796,8 @@ func TestLoopbackHostIssuerAndRedirectURI(t *testing.T) {
 		"https://iam.example.com",
 	}
 	for _, raw := range allowedIssuers {
-		if _, _, err := normalizeIssuer(raw); err != nil {
-			t.Errorf("normalizeIssuer(%q) unexpected error: %v", raw, err)
+		if _, _, err := biz.NormalizeOIDCIssuer(raw); err != nil {
+			t.Errorf("NormalizeOIDCIssuer(%q) unexpected error: %v", raw, err)
 		}
 	}
 
@@ -771,8 +811,8 @@ func TestLoopbackHostIssuerAndRedirectURI(t *testing.T) {
 		"http://localhost.:8080",
 	}
 	for _, raw := range rejectedIssuers {
-		if _, _, err := normalizeIssuer(raw); err == nil {
-			t.Errorf("normalizeIssuer(%q) succeeded; expected HTTPS requirement error", raw)
+		if _, _, err := biz.NormalizeOIDCIssuer(raw); err == nil {
+			t.Errorf("NormalizeOIDCIssuer(%q) succeeded; expected HTTPS requirement error", raw)
 		}
 	}
 

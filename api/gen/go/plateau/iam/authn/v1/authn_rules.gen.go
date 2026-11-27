@@ -9,7 +9,22 @@ import (
 
 // _authnRules is the immutable backing store for AuthnRules.
 var _authnRules = map[string]*v1.AuthnRule{
-	"/plateau.iam.authn.v1.AuthnService/Login": {
+	"/plateau.iam.authn.v1.AuthnService/CancelAuthFlow": {
+		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword": {
+		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.authn.v1.AuthnService/CreateAuthFlow": {
+		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.authn.v1.AuthnService/GetAuthFlow": {
+		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.authn.v1.AuthnService/ResetAuthFlow": {
+		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.authn.v1.AuthnService/SubmitPassword": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
 	},
 }

@@ -330,7 +330,18 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, iamoidcconfv1OIDC *
 		cleanup()
 		return nil, nil, err
 	}
-	authenticationUsecase, err := biz.NewAuthenticationUsecase(userRepo, credentialRepo, sessionUsecase)
+	authFlowRepo, err := data.NewAuthFlowRepository(dataData)
+	if err != nil {
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	authenticationUsecase, err := biz.NewAuthenticationUsecase(iam, iamoidcconfv1OIDC, userRepo, credentialRepo, sessionUsecase, authFlowRepo)
 	if err != nil {
 		cleanup7()
 		cleanup6()

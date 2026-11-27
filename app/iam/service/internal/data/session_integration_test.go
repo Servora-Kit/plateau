@@ -7,16 +7,19 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authflow"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordauthenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/passwordresettoken"
 	entgomixin "github.com/Servora-Kit/plateau/infra/entgo/mixin"
 	"github.com/alexedwards/scs/postgresstore"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestPostgresSCSStoreUsesEntSchema(t *testing.T) {
@@ -119,19 +122,32 @@ func seedLoginState(t *testing.T, client *entmodel.Client) (*userpb.User, biz.Us
 	if err != nil {
 		t.Fatal(err)
 	}
+	flows, err := NewAuthFlowRepository(d)
+	if err != nil {
+		t.Fatal(err)
+	}
 	cred, err := passwords.FindActivePassword(t.Context(), "alice")
 	if err != nil {
 		t.Fatal(err)
 	}
+	ownerHash := biz.HashOpaqueSecret("seed-owner")
 	logins := make([]*biz.LoginSession, 2)
 	for index := range logins {
-		_, login, err := sessions.Create(t.Context(), *cred, person.GetEtag(), time.Now())
-		if err != nil || login == nil {
-			t.Fatalf("Create() login=%#v error=%v", login, err)
+		now := time.Now().UTC()
+		flowID := "seed-flow-" + string(rune('a'+index))
+		seed := biz.EvaluateFlowProgress(nil, biz.DefaultAuthPolicy(), nil)
+		seed.FlowId = flowID
+		seed.ExpiresTime = timestamppb.New(now.Add(30 * time.Minute))
+		if _, err := flows.Create(t.Context(), seed, ownerHash, "", now); err != nil {
+			t.Fatalf("flows.Create(%s): %v", flowID, err)
+		}
+		doneFlow, login, err := flows.AdvanceAfterPassword(t.Context(), flowID, ownerHash, *cred, person.GetEtag(), []string{"pwd"}, 10*time.Minute, now)
+		if err != nil || login == nil || doneFlow.GetState() != authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED {
+			t.Fatalf("AdvanceAfterPassword() flow=%#v login=%#v error=%v", doneFlow, login, err)
 		}
 		logins[index] = login
 		_, err = client.OAuthTokenSession.Create().SetID(login.ID).
-			SetUserID("alice").SetClientID("web").SetIamLoginSessionID(login.ID).
+			SetUserID("alice").SetClientID("web").SetLoginSessionID(login.ID).
 			SetRefreshFamilyID(login.ID).SetScopes([]string{"openid"}).SetAmr([]string{"pwd"}).SetAuthTime(login.AuthTime).Save(t.Context())
 		if err != nil {
 			t.Fatal(err)
@@ -155,7 +171,7 @@ func TestPostgresSessionReplacementPreservesIdentity(t *testing.T) {
 	person, users, logins, passwords, previous := seedLoginState(t, client)
 	ctx := t.Context()
 	// Simulate a required legacy column that Schema.Create deliberately does not drop.
-	if _, err := db.ExecContext(ctx, "ALTER TABLE iam_login_sessions ADD COLUMN token_hash text NOT NULL DEFAULT 'legacy'"); err != nil {
+	if _, err := db.ExecContext(ctx, "ALTER TABLE login_sessions ADD COLUMN token_hash text NOT NULL DEFAULT 'legacy'"); err != nil {
 		t.Fatal(err)
 	}
 	// These statements run only inside this test's isolated schema, with IAM stopped.
@@ -165,7 +181,7 @@ func TestPostgresSessionReplacementPreservesIdentity(t *testing.T) {
 		"DELETE FROM oauth_token_sessions",
 		"DELETE FROM oauth_authorization_codes",
 		"DELETE FROM oidc_authorization_requests",
-		"DROP TABLE iam_login_sessions",
+		"DROP TABLE login_sessions",
 	} {
 		if _, err := db.ExecContext(ctx, statement); err != nil {
 			t.Fatal(err)
@@ -185,7 +201,19 @@ func TestPostgresSessionReplacementPreservesIdentity(t *testing.T) {
 	if _, err := logins.Find(ctx, previous[0].ID); !errors.Is(err, biz.ErrNotFound) {
 		t.Fatalf("old login survived replacement: %v", err)
 	}
-	if _, login, err := logins.Create(ctx, *proof, current.GetEtag(), time.Now()); err != nil || login == nil {
+	flows, err := NewAuthFlowRepository(&Data{ent: client})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().UTC()
+	ownerHash := biz.HashOpaqueSecret("post-replace-owner")
+	seed := biz.EvaluateFlowProgress(nil, biz.DefaultAuthPolicy(), nil)
+	seed.FlowId = "post-replace-flow"
+	seed.ExpiresTime = timestamppb.New(now.Add(30 * time.Minute))
+	if _, err := flows.Create(ctx, seed, ownerHash, "", now); err != nil {
+		t.Fatal(err)
+	}
+	if _, login, err := flows.AdvanceAfterPassword(ctx, "post-replace-flow", ownerHash, *proof, current.GetEtag(), []string{"pwd"}, 10*time.Minute, now); err != nil || login == nil {
 		t.Fatalf("new session schema is unusable: login=%#v err=%v", login, err)
 	}
 }
@@ -208,6 +236,16 @@ func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
 			}
 			resetProof, err := reset.Peek(t.Context(), "reset-proof", time.Now())
 			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := client.AuthFlow.Create().
+				SetID("active-user-flow").
+				SetOwnerHash(biz.HashOpaqueSecret("atomic-owner")).
+				SetStatus(authflow.StatusActive).
+				SetState(authflow.StateRequiredAction).
+				SetUserID("alice").
+				SetExpiresTime(time.Now().UTC().Add(30 * time.Minute)).
+				Save(t.Context()); err != nil {
 				t.Fatal(err)
 			}
 			injected := errors.New("injected OAuth revocation failure")
@@ -277,6 +315,11 @@ func TestPostgresIdentityMutationsAreAtomic(t *testing.T) {
 				}
 				if (storedUser.DeleteTime != nil) != (committed && operation == "soft_delete") {
 					t.Fatal("soft delete mutation did not follow transaction")
+				}
+				flowRow := client.AuthFlow.GetX(t.Context(), "active-user-flow")
+				wantFlowInvalidated := committed && operation != "logout"
+				if (flowRow.Status == authflow.StatusInvalidated) != wantFlowInvalidated {
+					t.Fatalf("auth_flow status=%s wantInvalidated=%v", flowRow.Status, wantFlowInvalidated)
 				}
 			}
 			assertState(false)

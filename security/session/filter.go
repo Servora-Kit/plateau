@@ -26,6 +26,7 @@ const (
 //     校验通过后执行 LoadAndSave。
 //   - CrossOriginPaths：精确匹配的标准跨站协议入口（须以 "/" 开头，如 OIDC "/authorize"、"/end_session"）。
 //     允许外部依赖方发起导航或协议表单请求，仅执行 LoadAndSave，跨站安全性由协议层（redirect_uri、state、id_token_hint）保证。
+//   - 命中上述三类浏览器会话路由（含 403/415 早退响应）时，若未预设 Cache-Control 则默认写入 Cache-Control: no-store。
 //   - 未命中上述范围的路径（如 Bearer 令牌端点、JWKS、健康检查）原样透传，不读写会话存储。
 type FilterConfig struct {
 	PublicOrigin     string
@@ -81,15 +82,18 @@ func NewFilter(manager *scs.SessionManager, cfg FilterConfig) (func(http.Handler
 			path := r.URL.Path
 			for _, prefix := range jsonPrefixes {
 				if strings.HasPrefix(path, prefix) {
+					setDefaultNoStore(w)
 					jsonBrowser.ServeHTTP(w, r)
 					return
 				}
 			}
 			if slices.Contains(sameOriginPaths, path) {
+				setDefaultNoStore(w)
 				sameOriginBrowser.ServeHTTP(w, r)
 				return
 			}
 			if slices.Contains(crossOriginPaths, path) {
+				setDefaultNoStore(w)
 				browser.ServeHTTP(w, r)
 				return
 			}
@@ -185,7 +189,14 @@ func isAllowedOrigin(r *http.Request, publicOrigin string) bool {
 	return true
 }
 
+func setDefaultNoStore(w http.ResponseWriter) {
+	if len(w.Header().Values("Cache-Control")) == 0 {
+		w.Header().Set("Cache-Control", "no-store")
+	}
+}
+
 func writeFilterError(w http.ResponseWriter, statusCode int, body string) {
+	setDefaultNoStore(w)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(statusCode)
 	_, _ = w.Write([]byte(body))

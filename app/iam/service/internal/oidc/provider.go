@@ -8,7 +8,6 @@ import (
 	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
-	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/audit"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
@@ -56,7 +55,7 @@ func NewIAMProvider(
 	if err := config.Apply(); err != nil {
 		return nil, fmt.Errorf("OIDC provider config: %w", err)
 	}
-	issuer, insecure, err := normalizeIssuer(config.GetIssuer())
+	issuer, insecure, err := biz.NormalizeOIDCIssuer(config.GetIssuer())
 	if err != nil {
 		return nil, err
 	}
@@ -88,15 +87,18 @@ func NewIAMProvider(
 }
 
 func (provider *IAMProvider) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	if request.URL.Path == "/.well-known/openid-configuration" {
+	switch request.URL.Path {
+	case "/.well-known/openid-configuration":
 		provider.serveDiscovery(response)
-		return
+	case "/authorize":
+		response.Header().Set("Cache-Control", "no-store")
+		provider.handler.ServeHTTP(&issRedirectWriter{ResponseWriter: response, issuer: provider.issuer}, request)
+	case "/authorize/callback":
+		response.Header().Set("Cache-Control", "no-store")
+		provider.completeAuthorization(&issRedirectWriter{ResponseWriter: response, issuer: provider.issuer}, request)
+	default:
+		provider.handler.ServeHTTP(response, request)
 	}
-	if request.URL.Path == "/authorize/callback" {
-		provider.completeAuthorization(response, request)
-		return
-	}
-	provider.handler.ServeHTTP(response, request)
 }
 
 func (provider *IAMProvider) HttpHandler() http.Handler { return provider }
@@ -160,31 +162,39 @@ func validateAuthorizationRequest(request *oidc.AuthRequest) error {
 	return nil
 }
 
+type discoveryDocument struct {
+	*oidc.DiscoveryConfiguration
+	AuthorizationResponseIssParameterSupported bool `json:"authorization_response_iss_parameter_supported"`
+}
+
 func (provider *IAMProvider) serveDiscovery(response http.ResponseWriter) {
-	metadata := &oidc.DiscoveryConfiguration{
-		Issuer:                                    provider.issuer,
-		AuthorizationEndpoint:                     provider.issuer + "/authorize",
-		TokenEndpoint:                             provider.issuer + "/oauth/token",
-		IntrospectionEndpoint:                     provider.issuer + "/oauth/introspect",
-		UserinfoEndpoint:                          provider.issuer + "/userinfo",
-		RevocationEndpoint:                        provider.issuer + "/revoke",
-		EndSessionEndpoint:                        provider.issuer + "/end_session",
-		JwksURI:                                   provider.issuer + "/keys",
-		ScopesSupported:                           append([]string(nil), supportedScopes...),
-		ResponseTypesSupported:                    []string{string(oidc.ResponseTypeCode)},
-		GrantTypesSupported:                       []oidc.GrantType{oidc.GrantTypeCode, oidc.GrantTypeRefreshToken, oidc.GrantTypeClientCredentials},
-		SubjectTypesSupported:                     []string{"public"},
-		IDTokenSigningAlgValuesSupported:          []string{"RS256"},
-		TokenEndpointAuthMethodsSupported:         []oidc.AuthMethod{oidc.AuthMethodBasic},
-		IntrospectionEndpointAuthMethodsSupported: []oidc.AuthMethod{oidc.AuthMethodBasic},
-		RevocationEndpointAuthMethodsSupported:    []oidc.AuthMethod{oidc.AuthMethodBasic},
-		ClaimsSupported: []string{
-			"sub", "aud", "exp", "iat", "iss", "auth_time", "nonce", "amr", "c_hash", "at_hash",
-			"name", "family_name", "given_name", "nickname", "preferred_username", "picture", "locale", "updated_at",
-			"email", "email_verified",
+	metadata := discoveryDocument{
+		DiscoveryConfiguration: &oidc.DiscoveryConfiguration{
+			Issuer:                                    provider.issuer,
+			AuthorizationEndpoint:                     provider.issuer + "/authorize",
+			TokenEndpoint:                             provider.issuer + "/oauth/token",
+			IntrospectionEndpoint:                     provider.issuer + "/oauth/introspect",
+			UserinfoEndpoint:                          provider.issuer + "/userinfo",
+			RevocationEndpoint:                        provider.issuer + "/revoke",
+			EndSessionEndpoint:                        provider.issuer + "/end_session",
+			JwksURI:                                   provider.issuer + "/keys",
+			ScopesSupported:                           append([]string(nil), supportedScopes...),
+			ResponseTypesSupported:                    []string{string(oidc.ResponseTypeCode)},
+			GrantTypesSupported:                       []oidc.GrantType{oidc.GrantTypeCode, oidc.GrantTypeRefreshToken, oidc.GrantTypeClientCredentials},
+			SubjectTypesSupported:                     []string{"public"},
+			IDTokenSigningAlgValuesSupported:          []string{"RS256"},
+			TokenEndpointAuthMethodsSupported:         []oidc.AuthMethod{oidc.AuthMethodBasic},
+			IntrospectionEndpointAuthMethodsSupported: []oidc.AuthMethod{oidc.AuthMethodBasic},
+			RevocationEndpointAuthMethodsSupported:    []oidc.AuthMethod{oidc.AuthMethodBasic},
+			ClaimsSupported: []string{
+				"sub", "aud", "exp", "iat", "iss", "auth_time", "nonce", "amr", "c_hash", "at_hash",
+				"name", "family_name", "given_name", "nickname", "preferred_username", "picture", "locale", "updated_at",
+				"email", "email_verified",
+			},
+			CodeChallengeMethodsSupported: []oidc.CodeChallengeMethod{oidc.CodeChallengeMethodS256},
+			RequestParameterSupported:     false,
 		},
-		CodeChallengeMethodsSupported: []oidc.CodeChallengeMethod{oidc.CodeChallengeMethodS256},
-		RequestParameterSupported:     false,
+		AuthorizationResponseIssParameterSupported: true,
 	}
 	response.Header().Set("Content-Type", "application/json")
 	data, err := json.Marshal(metadata)
@@ -217,7 +227,7 @@ func (provider *IAMProvider) completeAuthorization(response http.ResponseWriter,
 		return
 	}
 	user, session, err := provider.sessions.Resolve(request.Context(), loginID)
-	if err != nil || user == nil || session == nil || session.AuthTime.IsZero() {
+	if err != nil || session.AuthTime.IsZero() || len(session.AMR) == 0 {
 		redirectToLogin(response, request, requestID)
 		return
 	}
@@ -337,22 +347,4 @@ func redirectOAuthErrorCode(location string) string {
 		return ""
 	}
 	return "OAUTH_" + strings.ToUpper(strings.ReplaceAll(truncateUTF8Bytes(errParam, 64), "-", "_"))
-}
-
-func normalizeIssuer(raw string) (string, bool, error) {
-	issuer := strings.TrimSuffix(strings.TrimSpace(raw), "/")
-	parsed, err := url.Parse(issuer)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" || parsed.RawQuery != "" || parsed.Fragment != "" {
-		return "", false, fmt.Errorf("OIDC issuer must be an absolute URL without query or fragment")
-	}
-	if parsed.Path != "" {
-		return "", false, fmt.Errorf("OIDC issuer path is unsupported")
-	}
-	if parsed.Scheme == "https" {
-		return issuer, false, nil
-	}
-	if parsed.Scheme == "http" && security.IsLoopbackHost(parsed.Hostname()) {
-		return issuer, true, nil
-	}
-	return "", false, fmt.Errorf("OIDC issuer must use HTTPS except on localhost")
 }

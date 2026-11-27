@@ -15,9 +15,12 @@ func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {
 		redact  func() string
 		secrets []string
 	}{
-		{name: "login password", redact: func() string {
-			return (&authnpb.LoginRequest{Email: "person@example.com", Password: "login-password"}).Redact()
+		{name: "submit password flow", redact: func() string {
+			return (&authnpb.SubmitPasswordRequest{FlowId: "flow-1", Email: "person@example.com", Password: "login-password"}).Redact()
 		}, secrets: []string{"login-password"}},
+		{name: "complete update password flow", redact: func() string {
+			return (&authnpb.CompleteUpdatePasswordRequest{FlowId: "flow-1", NewPassword: "new-password-secret"}).Redact()
+		}, secrets: []string{"new-password-secret"}},
 		{name: "registration password and CAP", redact: func() string {
 			return (&accountpb.RegisterRequest{Email: "person@example.com", Password: "register-password", CapToken: "cap-secret"}).Redact()
 		}, secrets: []string{"register-password", "cap-secret"}},
@@ -28,13 +31,6 @@ func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {
 		{name: "password reset token", redact: func() string {
 			return (&accountpb.ConfirmPasswordResetRequest{Token: "reset-secret", NewPassword: "reset-password"}).Redact()
 		}, secrets: []string{"reset-secret", "reset-password"}},
-		{name: "initial password change", redact: func() string {
-			return (&accountpb.ChangeInitialPasswordRequest{
-				Email:           "person@example.com",
-				CurrentPassword: "initial-password-secret",
-				NewPassword:     "new-password-secret",
-			}).Redact()
-		}, secrets: []string{"initial-password-secret", "new-password-secret"}},
 		{name: "account self-delete password", redact: func() string {
 			return (&accountpb.DeleteAccountRequest{CurrentPassword: "delete-password-secret"}).Redact()
 		}, secrets: []string{"delete-password-secret"}},
