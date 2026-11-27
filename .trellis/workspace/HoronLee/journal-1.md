@@ -521,3 +521,43 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: 阶段四：Plateau 单一 BSR 统一命名空间、CGO 门禁与原子发布闭环
+<!-- trellis-session: v=2 fp=ce3a60c5fa2e6303 -->
+
+**Date**: 2026-11-27
+**Task**: 阶段四：Plateau 单一 BSR 统一命名空间、CGO 门禁与原子发布闭环
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 29 个公开 Proto 集中统一至 plateau.*.*.v1 与单一模块 buf.build/servora/plateau、根级单一 buf.openapi.gen.yaml、0.x 阶段关闭自动 breaking 拦截、三处 CGO_ENABLED=0 构建门禁及 BSR/Go/NPM 自动化发布工作流，实发 plateau v0.1.1 与 @servora/plateau-utils@0.1.0 并完成仓库外隔离消费验证，归档阶段四子任务与 servora-kit 工程化父任务。
+
+### Main Changes
+
+- 将 12 个服务 Proto 补齐顶层前缀迁至 api/protos/plateau/{iam,admin,audit}/.../v1（全仓 29 个公开 Proto 统一为 plateau.*.*.v1 并保留 /v1/ 路由），声明单一模块 buf.build/servora/plateau 并合并为根级唯一 buf.openapi.gen.yaml
+- 新增 buf-ci.yml、release.yml（强制校验 origin/main 祖先与 ci.yml 成功后再串行推送 BSR 标签与 GitHub Release）与 publish-plateau-utils.yml（NPM OIDC），在 ci.yml、just/service.just 与 prek.toml 三处锁定 CGO_ENABLED=0 构建并在 0.x 阶段关闭自动 breaking 拦截
+- 同步更新 AGENTS.md、README.md 与 .trellis/spec 规范，实发 github.com/Servora-Kit/plateau@v0.1.1、buf.build/servora/plateau:v0.1.1 与 @servora/plateau-utils@0.1.0
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ba49accb` | refactor(api): 集中服务 Proto 至根 api/protos 并声明 buf.build/servora/plateau |
+| `b08d2072` | ci(release): 锁定 CGO_ENABLED=0 构建门禁并新增 BSR、Go 与 NPM 发布流水线 |
+| `64590cbd` | docs: 同步集中式 Proto 契约规范、对外发布说明与阶段四任务规划 |
+| `a73e5e53` | fix(plateau-utils): 显式声明 tsconfig node 类型以修复独立筛选安装下的类型检查 |
+| `d09b39a4` | ci(release): 关闭 0.x 自动 breaking 拦截并收紧 CGO 与 BSR 发布门禁 |
+| `4239b3cd` | refactor(api): 统一服务 Proto 命名空间至 plateau.*.*.v1 并归拢根级 OpenAPI 模板 |
+| `991515a2` | docs: 同步 plateau.*.*.v1 契约规范、0.x 兼容策略与阶段四任务规划 |
+| `ae643308` | docs(task): 勾选阶段四 v0.1.1 实发验收项与父级工程化路线图清单 |
+
+### Testing
+
+- [OK] GOWORK=off 与 CGO_ENABLED=0 全套本地门禁、远端 CI/Buf CI/Release 工作流全绿及仓库外临时目录三制品隔离消费验证通过
+
+### Status
+
+[OK] **Completed**
