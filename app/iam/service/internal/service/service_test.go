@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"errors"
-	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
-	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	crudpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/crud/v1"
+	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	security "github.com/Servora-Kit/plateau/security"
 	sessions "github.com/Servora-Kit/plateau/security/session"
 	"github.com/alexedwards/scs/v2"
@@ -15,7 +15,7 @@ const userSessionKey = "plateau_session_user"
 
 type userContextKey struct{}
 
-// UserAuthenticator authenticates browser requests backed by a serialized iam.user.v1.User session snapshot.
+// UserAuthenticator authenticates browser requests backed by a serialized plateau.iam.user.v1.User session snapshot.
 type UserAuthenticator = Authenticator[*userpb.User]
 
 // SaveUser validates user, marshals the snapshot, rotates the SCS session token, and stores it in the session.

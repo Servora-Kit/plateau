@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	corecrud "github.com/Servora-Kit/plateau/crud"
 	"github.com/Servora-Kit/plateau/security/password"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	security "github.com/Servora-Kit/plateau/security"
 	sessionauthn "github.com/Servora-Kit/plateau/security/authn/session"

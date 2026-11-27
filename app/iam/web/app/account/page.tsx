@@ -1,9 +1,9 @@
 "use client"
 
 import type {
-  iamuserv1_User,
-  iamuserv1_UserProfile,
-} from "@plateau/api/iam/account/v1"
+  plateauiamuserv1_User,
+  plateauiamuserv1_UserProfile,
+} from "@plateau/api/plateau/iam/account/v1"
 import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 
@@ -34,7 +34,7 @@ const profileFields = [
 type ProfileField = (typeof profileFields)[number][0]
 type ProfileValues = Record<ProfileField, string>
 
-function valuesFromProfile(profile?: iamuserv1_UserProfile): ProfileValues {
+function valuesFromProfile(profile?: plateauiamuserv1_UserProfile): ProfileValues {
   return {
     name: profile?.name ?? "",
     givenName: profile?.givenName ?? "",
@@ -95,8 +95,8 @@ function ProfileForm({
   user,
   onUpdated,
 }: {
-  user: iamuserv1_User
-  onUpdated(user: iamuserv1_User): void
+  user: plateauiamuserv1_User
+  onUpdated(user: plateauiamuserv1_User): void
 }) {
   const router = useRouter()
   const { pending, run } = useSingleFlight()
@@ -125,7 +125,7 @@ function ProfileForm({
       return
     }
 
-    const profile: iamuserv1_UserProfile = {}
+    const profile: plateauiamuserv1_UserProfile = {}
     for (const field of changed) profile[field] = values[field]
     const updateMask = changed.join(",")
 

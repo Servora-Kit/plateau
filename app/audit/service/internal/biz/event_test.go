@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
 	securityauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/security/audit"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -66,7 +66,7 @@ func TestIngestEventsNormalizationAndPoisonIsolation(t *testing.T) {
 	evAdmin.SetID("ev-admin-1")
 	evAdmin.SetType(audit.DefaultRPCEventType)
 	evAdmin.SetSource("admin.service")
-	evAdmin.SetSubject("/admin.user.v1.UserService/DisableUser")
+	evAdmin.SetSubject("/plateau.admin.user.v1.UserService/DisableUser")
 	evAdmin.SetTime(now)
 	evAdmin.SetExtension(audit.ExtCategory, "resource")
 	evAdmin.SetExtension(audit.ExtActorType, "human")
@@ -83,7 +83,7 @@ func TestIngestEventsNormalizationAndPoisonIsolation(t *testing.T) {
 	evIAM.SetID("ev-iam-1")
 	evIAM.SetType(audit.DefaultRPCEventType)
 	evIAM.SetSource("iam.service")
-	evIAM.SetSubject("/iam.user.v1.UserService/DisableUser")
+	evIAM.SetSubject("/plateau.iam.user.v1.UserService/DisableUser")
 	evIAM.SetTime(now.Add(5 * time.Millisecond))
 	evIAM.SetExtension(audit.ExtCategory, "custom_unknown")
 	evIAM.SetExtension(audit.ExtActorType, "service")

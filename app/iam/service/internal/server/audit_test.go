@@ -92,20 +92,20 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 	byOp := make(map[string]int)
 	for _, ev := range events {
 		byOp[ev.Subject()]++
-		if ev.Subject() == "/iam.account.v1.AccountService/GetProfile" {
+		if ev.Subject() == "/plateau.iam.account.v1.AccountService/GetProfile" {
 			t.Fatalf("GetProfile is AUDIT_MODE_DISABLED and must not emit events: %+v", ev)
 		}
-		if ev.Subject() == "/iam.account.v1.AccountService/RequestPasswordReset" {
+		if ev.Subject() == "/plateau.iam.account.v1.AccountService/RequestPasswordReset" {
 			if ev.Extensions()[audit.ExtActorType] != "anonymous" || ev.Extensions()[audit.ExtResourceName] != nil {
 				t.Fatalf("RequestPasswordReset must remain anonymous with empty resource: %+v", ev.Extensions())
 			}
 		}
-		if ev.Subject() == "/iam.account.v1.AccountService/ConfirmPasswordReset" {
+		if ev.Subject() == "/plateau.iam.account.v1.AccountService/ConfirmPasswordReset" {
 			if ev.Extensions()[audit.ExtActorType] != "human" || ev.Extensions()[audit.ExtResourceName] == nil {
 				t.Fatalf("ConfirmPasswordReset must enrich human actor and user resource: %+v", ev.Extensions())
 			}
 		}
-		if ev.Subject() == "/iam.account.v1.AccountService/ChangeInitialPassword" {
+		if ev.Subject() == "/plateau.iam.account.v1.AccountService/ChangeInitialPassword" {
 			switch ev.Extensions()[audit.ExtOutcome] {
 			case audit.OutcomeFailure:
 				if ev.Extensions()[audit.ExtActorType] != "anonymous" || ev.Extensions()[audit.ExtResourceName] != nil || !strings.Contains(string(ev.Data()), "auditee@example.com") {
@@ -117,9 +117,9 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 				}
 			}
 		}
-		if ev.Subject() == "/iam.session.v1.SessionService/Logout" ||
-			ev.Subject() == "/iam.account.v1.AccountService/ChangePassword" ||
-			ev.Subject() == "/iam.account.v1.AccountService/DeleteAccount" {
+		if ev.Subject() == "/plateau.iam.session.v1.SessionService/Logout" ||
+			ev.Subject() == "/plateau.iam.account.v1.AccountService/ChangePassword" ||
+			ev.Subject() == "/plateau.iam.account.v1.AccountService/DeleteAccount" {
 			if ev.Extensions()[audit.ExtResourceName] != "users/"+f.user.GetUserId() {
 				t.Fatalf("%s resource = %v, want users/%s", ev.Subject(), ev.Extensions()[audit.ExtResourceName], f.user.GetUserId())
 			}
@@ -134,16 +134,16 @@ func TestIAMAccountAndSessionAuditEnrichmentAndRedaction(t *testing.T) {
 	}
 
 	for _, wantOp := range []string{
-		"/iam.account.v1.AccountService/Register",
-		"/iam.account.v1.AccountService/VerifyEmail",
-		"/iam.account.v1.AccountService/RequestPasswordReset",
-		"/iam.account.v1.AccountService/ConfirmPasswordReset",
-		"/iam.account.v1.AccountService/ChangeInitialPassword",
-		"/iam.authn.v1.AuthnService/Login",
-		"/iam.account.v1.AccountService/UpdateProfile",
-		"/iam.account.v1.AccountService/ChangePassword",
-		"/iam.session.v1.SessionService/Logout",
-		"/iam.account.v1.AccountService/DeleteAccount",
+		"/plateau.iam.account.v1.AccountService/Register",
+		"/plateau.iam.account.v1.AccountService/VerifyEmail",
+		"/plateau.iam.account.v1.AccountService/RequestPasswordReset",
+		"/plateau.iam.account.v1.AccountService/ConfirmPasswordReset",
+		"/plateau.iam.account.v1.AccountService/ChangeInitialPassword",
+		"/plateau.iam.authn.v1.AuthnService/Login",
+		"/plateau.iam.account.v1.AccountService/UpdateProfile",
+		"/plateau.iam.account.v1.AccountService/ChangePassword",
+		"/plateau.iam.session.v1.SessionService/Logout",
+		"/plateau.iam.account.v1.AccountService/DeleteAccount",
 	} {
 		if byOp[wantOp] == 0 {
 			t.Fatalf("missing expected audit event for %s (got %v)", wantOp, byOp)

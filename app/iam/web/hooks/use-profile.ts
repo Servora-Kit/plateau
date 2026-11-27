@@ -1,6 +1,6 @@
 "use client"
 
-import type { iamuserv1_User } from "@plateau/api/iam/account/v1"
+import type { plateauiamuserv1_User } from "@plateau/api/plateau/iam/account/v1"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -9,7 +9,7 @@ import { isUnauthenticated, requestErrorMessage } from "@/lib/errors"
 
 type ProfileState =
   | { status: "loading"; user: null; message: null }
-  | { status: "ready"; user: iamuserv1_User; message: null }
+  | { status: "ready"; user: plateauiamuserv1_User; message: null }
   | { status: "error"; user: null; message: string }
   | { status: "unauthenticated"; user: null; message: null }
 
@@ -62,7 +62,7 @@ export function useProfile() {
       setState({ status: "loading", user: null, message: null })
       setRevision((current) => current + 1)
     },
-    setUser: (user: iamuserv1_User) =>
+    setUser: (user: plateauiamuserv1_User) =>
       setState({ status: "ready", user, message: null }),
   }
 }

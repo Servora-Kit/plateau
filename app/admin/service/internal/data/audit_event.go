@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"

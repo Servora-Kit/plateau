@@ -2,8 +2,12 @@ import type {
   CreateUserRequest,
   ListUsersRequest,
   UpdateUserRequest,
-} from '@plateau/api/admin/user/v1';
-import type { User, UserProfile, UserStatus } from '@plateau/api/iam/user/v1';
+} from '@plateau/api/plateau/admin/user/v1';
+import type {
+  User,
+  UserProfile,
+  UserStatus,
+} from '@plateau/api/plateau/iam/user/v1';
 import type { FilterExpression } from '@servora/plateau-utils/crud';
 
 import type { VbenFormSchema } from '#/adapter/form';
@@ -13,7 +17,7 @@ import {
   UserFields,
   UserName,
   UserUpdateFields,
-} from '@plateau/api/iam/user/v1/user.crud';
+} from '@plateau/api/plateau/iam/user/v1/user.crud';
 import {
   buildFilter,
   buildOrderBy,

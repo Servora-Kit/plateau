@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
 
 	"github.com/go-kratos/kratos/v3/middleware/logging"
 	khttp "github.com/go-kratos/kratos/v3/transport/http"

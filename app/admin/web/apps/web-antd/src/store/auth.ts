@@ -1,4 +1,4 @@
-import type { User } from '@plateau/api/iam/user/v1';
+import type { User } from '@plateau/api/plateau/iam/user/v1';
 
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';

@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
-	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 )
 
 func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {

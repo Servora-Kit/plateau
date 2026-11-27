@@ -4,7 +4,7 @@
 package main
 
 import (
-	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/conf/v1"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"

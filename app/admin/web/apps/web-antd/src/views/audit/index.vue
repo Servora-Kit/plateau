@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Event } from '@plateau/api/audit/event/v1';
+import type { Event } from '@plateau/api/plateau/audit/event/v1';
 
 import type {
   AuditCategoryTab,

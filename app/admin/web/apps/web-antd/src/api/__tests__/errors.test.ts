@@ -1,5 +1,5 @@
-import { AdminAuditErrorReason } from '@plateau/api/admin/audit/v1/audit.errors';
-import { AdminUserErrorReason } from '@plateau/api/admin/user/v1/user.errors';
+import { AdminAuditErrorReason } from '@plateau/api/plateau/admin/audit/v1/audit.errors';
+import { AdminUserErrorReason } from '@plateau/api/plateau/admin/user/v1/user.errors';
 import { CrudErrorReason } from '@servora/plateau-utils/error-reasons/plateau/crud/v1/errors';
 import { SecurityErrorReason } from '@servora/plateau-utils/error-reasons/plateau/security/errors/v1/errors';
 import { ApiError } from '@servora/proto-utils/errors';

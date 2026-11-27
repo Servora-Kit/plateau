@@ -9,10 +9,10 @@ VERSION_ENV := env("VERSION", "")
 VERSION := if VERSION_ENV != "" { VERSION_ENV } else { `git describe --tags --always --dirty` }
 GOVERSION := `go version`
 CONF := env("CONF", "./configs/local/")
+CGO_ENABLED := env("CGO_ENABLED", "0")
 GOFLAGS := env("GOFLAGS", "")
 LDFLAGS := env("LDFLAGS", "-X main.Version=" + VERSION + " -X main.Name=" + SERVICE_NAME + ".service")
 JUST := just_executable()
-OPENAPI_TEMPLATE := join(COMPONENT_DIR, "api/buf.openapi.gen.yaml")
 ENT_GENERATOR := join(COMPONENT_DIR, "internal/data/generate.go")
 CMD_DIR := join(COMPONENT_DIR, "cmd")
 SERVER_DIR := join(CMD_DIR, "server")
@@ -46,7 +46,7 @@ api: _root-api-go
 
 [working-directory(ROOT_DIR)]
 openapi:
-    @{{ if path_exists(OPENAPI_TEMPLATE) { "buf generate --template \"" + join(SERVICE_MODULE, "api/buf.openapi.gen.yaml") + "\"" } else { "echo No OpenAPI template found for " + SERVICE_NAME + ", skipping" } }}
+    @buf generate --template buf.openapi.gen.yaml --path "api/protos/plateau/{{ SERVICE_NAME }}" -o "{{ SERVICE_MODULE }}"
 
 [working-directory(COMPONENT_DIR)]
 wire:
@@ -63,12 +63,12 @@ gen: api _gen
 [unix]
 [working-directory(COMPONENT_DIR)]
 _build:
-    @if [ -d "{{ CMD_DIR }}" ]; then mkdir -p ./bin && go build {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" -o ./bin/ ./...; else echo "No cmd directory found for {{ SERVICE_NAME }}, skipping build"; fi
+    @if [ -d "{{ CMD_DIR }}" ]; then mkdir -p ./bin && CGO_ENABLED="{{ CGO_ENABLED }}" go build {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" -o ./bin/ ./...; else echo "No cmd directory found for {{ SERVICE_NAME }}, skipping build"; fi
 
 [windows]
 [working-directory(COMPONENT_DIR)]
 _build:
-    @if (Test-Path -LiteralPath "{{ CMD_DIR }}" -PathType Container) { New-Item -ItemType Directory -Force -Path ./bin | Out-Null; go build {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" -o ./bin/ ./... } else { Write-Output "No cmd directory found for {{ SERVICE_NAME }}, skipping build" }
+    @if (Test-Path -LiteralPath "{{ CMD_DIR }}" -PathType Container) { New-Item -ItemType Directory -Force -Path ./bin | Out-Null; $env:CGO_ENABLED = "{{ CGO_ENABLED }}"; go build {{ GOFLAGS }} -ldflags "{{ LDFLAGS }}" -o ./bin/ ./... } else { Write-Output "No cmd directory found for {{ SERVICE_NAME }}, skipping build" }
 
 build: gen _build
 

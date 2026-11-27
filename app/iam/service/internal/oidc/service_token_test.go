@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	authnjwt "github.com/Servora-Kit/plateau/security/authn/jwt"
 	jwtlib "github.com/golang-jwt/jwt/v5"

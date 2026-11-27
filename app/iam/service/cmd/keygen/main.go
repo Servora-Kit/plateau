@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/oidc"
 	"github.com/Servora-Kit/servora/core/bootstrap"
 	"github.com/Servora-Kit/servora/core/bootstrap/config"

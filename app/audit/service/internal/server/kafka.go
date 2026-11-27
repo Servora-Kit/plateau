@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/conf/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
 	infrakafka "github.com/Servora-Kit/plateau/infra/kafka"

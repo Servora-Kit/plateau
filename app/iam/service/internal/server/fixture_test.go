@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	cappb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/cap/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"

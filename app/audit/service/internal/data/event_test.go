@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/conf/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	securityauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
@@ -175,7 +175,7 @@ func TestClickHouseSchemaTTLDeduplicationAndQueries(t *testing.T) {
 		Category:     securityauditpb.AuditCategory_AUDIT_CATEGORY_RESOURCE,
 		OccurredTime: timestamppb.New(octTime),
 		Service:      "iam.service",
-		Operation:    "/iam.user.v1.UserService/DisableUser",
+		Operation:    "/plateau.iam.user.v1.UserService/DisableUser",
 		ActorType:    "service",
 		ActorId:      "admin",
 		ResourceType: "iam.plateau.dev/User",
@@ -191,7 +191,7 @@ func TestClickHouseSchemaTTLDeduplicationAndQueries(t *testing.T) {
 		Category:     securityauditpb.AuditCategory_AUDIT_CATEGORY_RESOURCE,
 		OccurredTime: timestamppb.New(novTime1),
 		Service:      "admin.service",
-		Operation:    "/admin.user.v1.UserService/DisableUser",
+		Operation:    "/plateau.admin.user.v1.UserService/DisableUser",
 		ActorType:    "human",
 		ActorId:      "admin-1",
 		ResourceType: "iam.plateau.dev/User",
@@ -209,7 +209,7 @@ func TestClickHouseSchemaTTLDeduplicationAndQueries(t *testing.T) {
 		Category:     securityauditpb.AuditCategory_AUDIT_CATEGORY_AUTHZ,
 		OccurredTime: timestamppb.New(novTime2),
 		Service:      "admin.service",
-		Operation:    "/admin.user.v1.UserService/ExpungeUser",
+		Operation:    "/plateau.admin.user.v1.UserService/ExpungeUser",
 		ActorType:    "human",
 		ActorId:      "guest-9",
 		ResourceType: "admin",

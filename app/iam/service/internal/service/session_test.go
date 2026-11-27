@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
+	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/session/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 )
 

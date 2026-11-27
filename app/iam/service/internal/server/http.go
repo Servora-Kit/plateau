@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
-	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
-	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/iam/session/v1"
+	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/oidc"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/service"

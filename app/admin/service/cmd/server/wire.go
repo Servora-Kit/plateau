@@ -4,7 +4,7 @@
 package main
 
 import (
-	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
+	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/conf/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"

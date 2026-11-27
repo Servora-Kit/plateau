@@ -8,7 +8,7 @@ import (
 	"time"
 
 	entsql "entgo.io/ent/dialect/sql"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"

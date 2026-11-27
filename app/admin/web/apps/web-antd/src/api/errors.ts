@@ -1,11 +1,11 @@
 import {
   AdminAuditErrorReason,
   isAdminAuditErrorReason,
-} from '@plateau/api/admin/audit/v1/audit.errors';
+} from '@plateau/api/plateau/admin/audit/v1/audit.errors';
 import {
   AdminUserErrorReason,
   isAdminUserErrorReason,
-} from '@plateau/api/admin/user/v1/user.errors';
+} from '@plateau/api/plateau/admin/user/v1/user.errors';
 import { isCrudErrorReason } from '@servora/plateau-utils/error-reasons/plateau/crud/v1/errors';
 import {
   isSecurityErrorReason,

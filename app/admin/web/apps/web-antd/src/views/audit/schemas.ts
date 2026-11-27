@@ -1,5 +1,5 @@
-import type { ListEventsRequest } from '@plateau/api/admin/audit/v1';
-import type { Event } from '@plateau/api/audit/event/v1';
+import type { ListEventsRequest } from '@plateau/api/plateau/admin/audit/v1';
+import type { Event } from '@plateau/api/plateau/audit/event/v1';
 import type { AuditCategory } from '@plateau/api/plateau/security/audit/v1';
 import type { Dayjs } from 'dayjs';
 
@@ -581,7 +581,7 @@ export function getAuditSearchFormSchema(options: {
       component: 'Input',
       componentProps: {
         allowClear: true,
-        placeholder: '如 /admin.user.v1.UserService/DisableUser',
+        placeholder: '如 /plateau.admin.user.v1.UserService/DisableUser',
       },
       defaultValue: initialValues.operation ?? '',
       fieldName: 'operation',

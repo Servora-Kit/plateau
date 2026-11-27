@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
 	securityauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/data/schema"

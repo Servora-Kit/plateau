@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	"google.golang.org/protobuf/proto"

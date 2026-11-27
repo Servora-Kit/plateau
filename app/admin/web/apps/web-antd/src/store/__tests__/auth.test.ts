@@ -4,7 +4,7 @@ import type { AdminApi } from '#/api/client';
 
 import { useAccessStore, useUserStore } from '@vben/stores';
 
-import { AdminUserErrorReason } from '@plateau/api/admin/user/v1/user.errors';
+import { AdminUserErrorReason } from '@plateau/api/plateau/admin/user/v1/user.errors';
 import { SecurityErrorReason } from '@plateau/api/plateau/security/errors/v1/errors.errors';
 import { ApiError } from '@servora/proto-utils/errors';
 import { createPinia, setActivePinia } from 'pinia';

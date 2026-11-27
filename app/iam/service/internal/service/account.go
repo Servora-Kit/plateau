@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	accountpb "github.com/Servora-Kit/plateau/api/gen/go/iam/account/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/security"

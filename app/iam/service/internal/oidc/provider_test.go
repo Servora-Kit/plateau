@@ -22,7 +22,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	oidcconfv1 "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	oidcconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	sessionconfig "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"

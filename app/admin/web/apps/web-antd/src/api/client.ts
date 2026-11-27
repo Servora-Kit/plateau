@@ -1,10 +1,10 @@
-import type { AuditService } from '@plateau/api/admin/audit/v1';
-import type { AuthService } from '@plateau/api/admin/auth/v1';
-import type { UserService } from '@plateau/api/admin/user/v1';
+import type { AuditService } from '@plateau/api/plateau/admin/audit/v1';
+import type { AuthService } from '@plateau/api/plateau/admin/auth/v1';
+import type { UserService } from '@plateau/api/plateau/admin/user/v1';
 
-import { createAuditServiceClient } from '@plateau/api/admin/audit/v1';
-import { createAuthServiceClient } from '@plateau/api/admin/auth/v1';
-import { createUserServiceClient } from '@plateau/api/admin/user/v1';
+import { createAuditServiceClient } from '@plateau/api/plateau/admin/audit/v1';
+import { createAuthServiceClient } from '@plateau/api/plateau/admin/auth/v1';
+import { createUserServiceClient } from '@plateau/api/plateau/admin/user/v1';
 import {
   createHttpClient,
   createTransport,

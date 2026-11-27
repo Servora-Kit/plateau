@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { User } from '@plateau/api/iam/user/v1';
+import type { User } from '@plateau/api/plateau/iam/user/v1';
 
 import type { ProfileFormValues } from '../schemas';
 

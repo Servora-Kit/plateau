@@ -7,8 +7,8 @@
 package main
 
 import (
-	"github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
-	"github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
@@ -41,7 +41,7 @@ import (
 
 // Injectors from wire.go:
 
-func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oidcconfv1.OIDC, capv1CAP *capv1.CAP, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA, session *sessionv1.Session, kafkapbKafka *kafkapb.Kafka, auditEmitter *auditpb.AuditEmitter) (*kratos.App, func(), error) {
+func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, iamoidcconfv1OIDC *iamoidcconfv1.OIDC, capv1CAP *capv1.CAP, redis *redispb.Redis, mailpbMail *mailpb.Mail, openFGA *openfgaconfpb.OpenFGA, session *sessionv1.Session, kafkapbKafka *kafkapb.Kafka, auditEmitter *auditpb.AuditEmitter) (*kratos.App, func(), error) {
 	corev1Bootstrap := runtime.Bootstrap
 	corev1Registry := corev1Bootstrap.Registry
 	registrar := registry.NewRegistrar(corev1Registry)
@@ -102,7 +102,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	oidcStorage, err := oidc.NewOIDCStorage(client, oidcconfv1OIDC, oAuthRepo)
+	oidcStorage, err := oidc.NewOIDCStorage(client, iamoidcconfv1OIDC, oAuthRepo)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -118,7 +118,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	authenticator, cleanup5, err := authn.NewServiceAuthenticator(oidcconfv1OIDC, verifier)
+	authenticator, cleanup5, err := authn.NewServiceAuthenticator(iamoidcconfv1OIDC, verifier)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -308,7 +308,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	iamProvider, err := oidc.NewIAMProvider(oidcconfv1OIDC, oidcStorage, sessionUsecase, sessionManager)
+	iamProvider, err := oidc.NewIAMProvider(iamoidcconfv1OIDC, oidcStorage, sessionUsecase, sessionManager)
 	if err != nil {
 		cleanup7()
 		cleanup6()
@@ -407,7 +407,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, oidcconfv1OIDC *oid
 		cleanup()
 		return nil, nil, err
 	}
-	oidcInitializer, err := oidc.NewOIDCInitializer(oidcconfv1OIDC, oidcStorage)
+	oidcInitializer, err := oidc.NewOIDCInitializer(iamoidcconfv1OIDC, oidcStorage)
 	if err != nil {
 		cleanup7()
 		cleanup6()

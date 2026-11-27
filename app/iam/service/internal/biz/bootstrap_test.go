@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/security/password"
 	"google.golang.org/protobuf/proto"
 )

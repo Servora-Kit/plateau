@@ -28,10 +28,10 @@ import (
 	"testing"
 	"time"
 
-	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
-	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
-	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/auth/v1"
+	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/conf/v1"
+	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	sessionpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/session/v1"
@@ -906,7 +906,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 		t.Fatalf("handshake cookie was not deleted on callback: %+v", cbCookies)
 	}
 
-	// Verify GetSession returns iam.user.v1.User & BatchCheck permissions ["access", "manage_users", "expunge_users"].
+	// Verify GetSession returns plateau.iam.user.v1.User & BatchCheck permissions ["access", "manage_users", "expunge_users"].
 	sessRes, sessRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/auth/session", adminOrigin, "", adminCookie)
 	if sessRes.StatusCode != http.StatusOK {
 		t.Fatalf("GetSession status=%d body=%s", sessRes.StatusCode, string(sessRaw))

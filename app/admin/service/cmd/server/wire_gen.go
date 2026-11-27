@@ -7,7 +7,7 @@
 package main
 
 import (
-	"github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
+	"github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/conf/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	"github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"

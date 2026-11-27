@@ -134,7 +134,7 @@ func TestBackendRegistrationAndRealKgoClientEmit(t *testing.T) {
 	ev := audit.NewEvent(
 		ctx,
 		audit.WithSource("//iam.service"),
-		audit.WithSubject("/iam.user.v1.UserService/DisableUser"),
+		audit.WithSubject("/plateau.iam.user.v1.UserService/DisableUser"),
 		audit.WithCategory(audit.CategoryResource),
 		audit.WithActor(security.Actor{Type: security.ActorTypeHuman, ID: "admin-1"}),
 		audit.WithResource("iam.plateau.dev/User", "users/u-9"),
@@ -200,7 +200,7 @@ func sampleEvent(t *testing.T) cloudevents.Event {
 	ev.SetID("0196ed7a-0000-7000-8000-000000000001")
 	ev.SetSource("//iam.service")
 	ev.SetType(audit.DefaultRPCEventType)
-	ev.SetSubject("/iam.user.v1.UserService/CreateUser")
+	ev.SetSubject("/plateau.iam.user.v1.UserService/CreateUser")
 	ev.SetTime(time.Date(2026, 11, 24, 8, 0, 0, 123456789, time.UTC))
 	ev.SetExtension(audit.ExtCategory, audit.CategoryResource)
 	ev.SetExtension(audit.ExtActorType, string(security.ActorTypeHuman))

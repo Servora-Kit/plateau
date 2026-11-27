@@ -197,9 +197,9 @@ describe('audit detail formatting and user link extraction', () => {
   });
 
   it('extracts short RPC operation and canonical userId from resource names', () => {
-    expect(formatShortOperation('/admin.user.v1.UserService/DisableUser')).toBe(
-      'DisableUser',
-    );
+    expect(
+      formatShortOperation('/plateau.admin.user.v1.UserService/DisableUser'),
+    ).toBe('DisableUser');
     expect(formatShortOperation('GET /v1/admin/auth/callback')).toBe(
       'GET /v1/admin/auth/callback',
     );

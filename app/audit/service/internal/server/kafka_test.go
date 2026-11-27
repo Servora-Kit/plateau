@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/conf/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/service"
@@ -160,7 +160,7 @@ func TestKafkaServerDualModeDecodePoisonSkipAndRetryIntegration(t *testing.T) {
 		ev.SetID(id)
 		ev.SetType(audit.DefaultRPCEventType)
 		ev.SetSource("iam.service")
-		ev.SetSubject("/iam.authn.v1.AuthnService/Login")
+		ev.SetSubject("/plateau.iam.authn.v1.AuthnService/Login")
 		ev.SetTime(now)
 		ev.SetExtension(audit.ExtCategory, audit.CategoryAuthn)
 		ev.SetExtension(audit.ExtActorType, "human")

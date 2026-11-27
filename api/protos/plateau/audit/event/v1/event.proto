@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package plateau.audit.event.v1;
+
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/timestamp.proto";
+import "plateau/security/audit/v1/annotations.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1;auditeventv1";
+
+// EventService exposes read-only platform audit event retrieval to authorized services.
+service EventService {
+  option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
+  option (plateau.security.authz.v1.service_default) = {
+    mode: AUTHZ_MODE_REQUIRED
+    action: "read_events"
+    resource_type: "audit"
+    resource_id: "global"
+  };
+  option (plateau.security.audit.v1.service_default) = {mode: AUDIT_MODE_DISABLED};
+
+  // GetEvent returns a single platform audit event by canonical resource name.
+  rpc GetEvent(GetEventRequest) returns (Event) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // ListEvents returns a filtered page of platform audit events in reverse chronological order.
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse) {
+    option (google.api.method_signature) = "page_size,page_token";
+  }
+
+  // ListServices returns distinct producer service identifiers observed in audit storage.
+  rpc ListServices(ListServicesRequest) returns (ListServicesResponse) {}
+}
+
+// EventErrorReason classifies domain failures returned by EventService.
+enum EventErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  EVENT_ERROR_REASON_UNSPECIFIED = 0;
+  EVENT_ERROR_REASON_NOT_FOUND = 1 [(servora.errors.v1.code) = 404];
+  EVENT_ERROR_REASON_INVALID_ARGUMENT = 2 [(servora.errors.v1.code) = 400];
+  EVENT_ERROR_REASON_INVALID_PAGE_TOKEN = 3 [(servora.errors.v1.code) = 400];
+  EVENT_ERROR_REASON_STORAGE_UNAVAILABLE = 4 [(servora.errors.v1.code) = 503];
+}
+
+// Event represents one immutable platform accountability record.
+message Event {
+  option (google.api.resource) = {
+    type: "audit.plateau.dev/Event"
+    pattern: "events/{event}"
+    singular: "event"
+    plural: "events"
+  };
+
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+  string event_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string event_type = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  plateau.security.audit.v1.AuditCategory category = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp occurred_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  string service = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string operation = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  string actor_type = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string actor_id = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  string resource_type = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string resource_name = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  bool success = 12 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string error_code = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string error_message = 14 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  string trace_id = 15 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string request_id = 16 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string client_ip = 17 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string user_agent = 18 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Normalized JSON object string ("{}" when empty).
+  string detail_json = 19 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message GetEventRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "audit.plateau.dev/Event"}
+  ];
+}
+
+message ListEventsRequest {
+  google.protobuf.Timestamp start_time = 1 [(google.api.field_behavior) = OPTIONAL];
+  google.protobuf.Timestamp end_time = 2 [(google.api.field_behavior) = OPTIONAL];
+  plateau.security.audit.v1.AuditCategory category = 3 [(google.api.field_behavior) = OPTIONAL];
+  string service = 4 [(google.api.field_behavior) = OPTIONAL];
+  string event_type = 5 [(google.api.field_behavior) = OPTIONAL];
+  string operation = 6 [(google.api.field_behavior) = OPTIONAL];
+  string actor_type = 7 [(google.api.field_behavior) = OPTIONAL];
+  string actor_id = 8 [(google.api.field_behavior) = OPTIONAL];
+  string resource_type = 9 [(google.api.field_behavior) = OPTIONAL];
+  string resource_name = 10 [(google.api.field_behavior) = OPTIONAL];
+  optional bool success = 11 [(google.api.field_behavior) = OPTIONAL];
+  string trace_id = 12 [(google.api.field_behavior) = OPTIONAL];
+  int32 page_size = 13 [(google.api.field_behavior) = OPTIONAL];
+  string page_token = 14 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message ListEventsResponse {
+  repeated Event events = 1;
+  string next_page_token = 2;
+}
+
+message ListServicesRequest {}
+
+message ListServicesResponse {
+  repeated string services = 1;
+}

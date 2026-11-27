@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	kerrors "github.com/go-kratos/kratos/v3/errors"

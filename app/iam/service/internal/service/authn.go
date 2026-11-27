@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	authnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/security"

@@ -7,7 +7,7 @@ import (
 	"log/slog"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/audit/conf/v1"
+	auditconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/conf/v1"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	"github.com/Servora-Kit/plateau/app/audit/service/internal/data/schema"
 	pkgch "github.com/Servora-Kit/plateau/infra/clickhouse"

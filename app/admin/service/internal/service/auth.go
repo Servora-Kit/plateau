@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
+	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/auth/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
@@ -26,7 +26,7 @@ const (
 	webLoginPath     = "/auth/login"
 )
 
-// AuthService implements admin.auth.v1.AuthServiceServer and browser OIDC login/callback handlers.
+// AuthService implements plateau.admin.auth.v1.AuthServiceServer and browser OIDC login/callback handlers.
 type AuthService struct {
 	adminauthpb.UnimplementedAuthServiceServer
 	uc      *biz.AuthUsecase

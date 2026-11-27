@@ -9,9 +9,9 @@ import (
 	"slices"
 	"testing"
 
-	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
-	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/conf/v1"
+	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/authz/openfga"
 	fgaclient "github.com/openfga/go-sdk/client"

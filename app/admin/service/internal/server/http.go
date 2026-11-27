@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1"
-	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/admin/auth/v1"
-	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
+	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/audit/v1"
+	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/auth/v1"
+	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/audit"

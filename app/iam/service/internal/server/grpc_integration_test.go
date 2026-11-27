@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	jwtsecurity "github.com/Servora-Kit/plateau/security/authn/jwt"
 	jwtlib "github.com/golang-jwt/jwt/v5"

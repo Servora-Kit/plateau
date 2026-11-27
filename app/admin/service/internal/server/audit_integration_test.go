@@ -21,11 +21,11 @@ import (
 	"testing"
 	"time"
 
-	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1"
-	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/admin/conf/v1"
-	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/admin/user/v1"
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/audit/v1"
+	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/conf/v1"
+	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	clickhousepb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/clickhouse/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
@@ -860,13 +860,13 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 				hasIAMUpdate := false
 				hasAuthzDenied := false
 				for _, ev := range allEvents {
-					if ev.GetOperation() == "/admin.user.v1.UserService/UpdateUser" && ev.GetService() == "//admin.service" {
+					if ev.GetOperation() == "/plateau.admin.user.v1.UserService/UpdateUser" && ev.GetService() == "//admin.service" {
 						hasAdminUpdate = true
 					}
-					if ev.GetOperation() == "/iam.user.v1.UserService/UpdateUser" && ev.GetService() == "//iam.service" {
+					if ev.GetOperation() == "/plateau.iam.user.v1.UserService/UpdateUser" && ev.GetService() == "//iam.service" {
 						hasIAMUpdate = true
 					}
-					if ev.GetOperation() == "/admin.audit.v1.AuditService/ListEvents" && ev.GetEventType() == "plateau.security.authz.denied.v1" {
+					if ev.GetOperation() == "/plateau.admin.audit.v1.AuditService/ListEvents" && ev.GetEventType() == "plateau.security.authz.denied.v1" {
 						hasAuthzDenied = true
 					}
 				}
@@ -887,12 +887,12 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 	for _, ev := range allEvents {
 		// Read-only RPCs and successful token exchanges must NEVER appear!
 		switch ev.GetOperation() {
-		case "/admin.user.v1.UserService/ListUsers",
-			"/admin.user.v1.UserService/GetUser",
-			"/iam.user.v1.UserService/ListUsers",
-			"/iam.user.v1.UserService/GetUser",
-			"/admin.auth.v1.AuthService/GetSession",
-			"/iam.account.v1.AccountService/GetProfile",
+		case "/plateau.admin.user.v1.UserService/ListUsers",
+			"/plateau.admin.user.v1.UserService/GetUser",
+			"/plateau.iam.user.v1.UserService/ListUsers",
+			"/plateau.iam.user.v1.UserService/GetUser",
+			"/plateau.admin.auth.v1.AuthService/GetSession",
+			"/plateau.iam.account.v1.AccountService/GetProfile",
 			"POST /oauth/token":
 			t.Fatalf("unexpected noise event persisted for read-only/token operation: %+v", ev)
 		}
@@ -905,13 +905,13 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 		if ev.GetOperation() == "GET /v1/admin/auth/callback" && ev.GetSuccess() {
 			hasAdminCallback = true
 		}
-		if ev.GetOperation() == "/iam.authn.v1.AuthnService/Login" && !ev.GetSuccess() && ev.GetActorType() == "anonymous" {
+		if ev.GetOperation() == "/plateau.iam.authn.v1.AuthnService/Login" && !ev.GetSuccess() && ev.GetActorType() == "anonymous" {
 			hasFailedLogin = true
 		}
-		if ev.GetOperation() == "/admin.user.v1.UserService/UpdateUser" && ev.GetService() == "//admin.service" {
+		if ev.GetOperation() == "/plateau.admin.user.v1.UserService/UpdateUser" && ev.GetService() == "//admin.service" {
 			adminUpdateEv = ev
 		}
-		if ev.GetOperation() == "/iam.user.v1.UserService/UpdateUser" && ev.GetService() == "//iam.service" {
+		if ev.GetOperation() == "/plateau.iam.user.v1.UserService/UpdateUser" && ev.GetService() == "//iam.service" {
 			iamUpdateEv = ev
 		}
 

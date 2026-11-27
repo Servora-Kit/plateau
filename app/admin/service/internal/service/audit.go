@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/admin/audit/v1"
-	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/audit/event/v1"
+	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/audit/v1"
+	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	kerrors "github.com/go-kratos/kratos/v3/errors"
 )
 
-// AuditService implements admin.audit.v1.AuditServiceHTTPServer.
+// AuditService implements plateau.admin.audit.v1.AuditServiceHTTPServer.
 type AuditService struct {
 	adminauditpb.UnimplementedAuditServiceServer
 	uc *biz.AuditUsecase

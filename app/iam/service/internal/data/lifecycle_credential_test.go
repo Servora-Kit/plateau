@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
 	crudpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/crud/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/authenticator"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/emailverificationtoken"

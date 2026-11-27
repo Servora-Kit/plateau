@@ -4,8 +4,8 @@
 package main
 
 import (
-	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
-	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	iamconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1"
+	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	mailpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/mail/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"

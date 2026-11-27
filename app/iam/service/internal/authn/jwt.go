@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	jwtAuthn "github.com/Servora-Kit/plateau/security/authn/jwt"
 	securityjwt "github.com/Servora-Kit/plateau/security/jwt"

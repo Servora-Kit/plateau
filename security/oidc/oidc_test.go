@@ -20,7 +20,7 @@ import (
 	"testing/synctest"
 	"time"
 
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	oidcv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-kratos/kratos/v3/transport"
@@ -69,7 +69,7 @@ func (h headerMap) Values(key string) []string { return h[http.CanonicalHeaderKe
 
 func (t *fakeClientTransport) Kind() transport.Kind            { return transport.KindGRPC }
 func (t *fakeClientTransport) Endpoint() string                { return "127.0.0.1:10001" }
-func (t *fakeClientTransport) Operation() string               { return "/iam.user.v1.UserService/ListUsers" }
+func (t *fakeClientTransport) Operation() string               { return "/plateau.iam.user.v1.UserService/ListUsers" }
 func (t *fakeClientTransport) RequestHeader() transport.Header { return t.header }
 func (t *fakeClientTransport) ReplyHeader() transport.Header   { return t.header }
 

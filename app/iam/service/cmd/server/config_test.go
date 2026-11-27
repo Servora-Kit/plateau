@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	iampb "github.com/Servora-Kit/plateau/api/gen/go/iam/conf/v1"
-	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/iam/oidc/conf/v1"
+	iampb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/conf/v1"
+	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	kafkapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/kafka/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"

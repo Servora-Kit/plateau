@@ -13,8 +13,8 @@ import (
 	"sync"
 	"testing"
 
-	iamauthnpb "github.com/Servora-Kit/plateau/api/gen/go/iam/authn/v1"
-	userpb "github.com/Servora-Kit/plateau/api/gen/go/iam/user/v1"
+	iamauthnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	auditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/audit/v1"
 	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	security "github.com/Servora-Kit/plateau/security"
@@ -58,11 +58,11 @@ func TestNewEventActorTypesTraceAndDualProtocolMetadata(t *testing.T) {
 		httpReq.Header.Set("User-Agent", "Mozilla/5.0 PlateauTest")
 		httpReq.Header.Set("X-Request-Id", "req-http-123")
 		ctx = transport.NewServerContext(ctx, &fakeHTTPTransport{
-			operation: "/admin.user.v1.UserService/CreateUser",
+			operation: "/plateau.admin.user.v1.UserService/CreateUser",
 			req:       httpReq,
 		})
 
-		ev := NewEvent(ctx, WithSubject("/admin.user.v1.UserService/CreateUser"))
+		ev := NewEvent(ctx, WithSubject("/plateau.admin.user.v1.UserService/CreateUser"))
 		parsedID, parseErr := uuid.Parse(ev.ID())
 		if parseErr != nil || parsedID.Version() != 7 {
 			t.Fatalf("event ID = %q (err=%v), want UUIDv7", ev.ID(), parseErr)
@@ -94,7 +94,7 @@ func TestNewEventActorTypesTraceAndDualProtocolMetadata(t *testing.T) {
 			Addr: &net.TCPAddr{IP: net.ParseIP("172.18.0.5"), Port: 41230},
 		})
 		ctx = transport.NewServerContext(ctx, &fakeGRPCTransport{
-			operation: "/iam.user.v1.UserService/DisableUser",
+			operation: "/plateau.iam.user.v1.UserService/DisableUser",
 			headers: mapHeader{
 				"x-request-id": "req-grpc-456",
 				"user-agent":   "grpc-go/1.83.2",
@@ -136,11 +136,11 @@ func TestNewEventActorTypesTraceAndDualProtocolMetadata(t *testing.T) {
 
 func TestMiddlewareCreateFallbackRedactionErrorsAndAuthzDenied(t *testing.T) {
 	const (
-		createOp  = "/iam.user.v1.UserService/CreateUser"
-		setPwdOp  = "/iam.user.v1.UserService/SetUserPassword"
-		loginOp   = "/iam.authn.v1.AuthnService/Login"
-		listOp    = "/iam.user.v1.UserService/ListUsers"
-		disableOp = "/iam.user.v1.UserService/DisableUser"
+		createOp  = "/plateau.iam.user.v1.UserService/CreateUser"
+		setPwdOp  = "/plateau.iam.user.v1.UserService/SetUserPassword"
+		loginOp   = "/plateau.iam.authn.v1.AuthnService/Login"
+		listOp    = "/plateau.iam.user.v1.UserService/ListUsers"
+		disableOp = "/plateau.iam.user.v1.UserService/DisableUser"
 	)
 
 	rulesFn := func() map[string]*auditpb.AuditRule {
@@ -394,7 +394,7 @@ func TestNewAndStdlibBackendsNoopStdoutLogMulti(t *testing.T) {
 	failing := &recordingAuditor{err: errors.New("sink failed")}
 	fanout := Multi(NewStdout(&stdoutBuf), nil, logAud, failing)
 
-	ev := NewEvent(context.Background(), WithSubject("/iam.authn.v1.AuthnService/Login"), WithCategory(CategoryAuthn))
+	ev := NewEvent(context.Background(), WithSubject("/plateau.iam.authn.v1.AuthnService/Login"), WithCategory(CategoryAuthn))
 	if emitErr := fanout.Emit(context.Background(), ev); !errors.Is(emitErr, failing.err) {
 		t.Fatalf("Multi Emit() error = %v, want %v", emitErr, failing.err)
 	}

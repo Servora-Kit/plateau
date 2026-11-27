@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package plateau.iam.authn.v1;
+
+import "buf/validate/validate.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "plateau/iam/user/v1/user.proto";
+import "plateau/security/audit/v1/annotations.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+import "servora/redact/v3/redact.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1;iamauthnv1";
+
+// AuthnService owns email/password authentication.
+service AuthnService {
+  option (plateau.security.authz.v1.service_default) = {mode: AUTHZ_MODE_NONE};
+  // Login verifies credentials and establishes one opaque browser session.
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/login"
+      body: "*"
+    };
+    option (google.api.method_signature) = "email,password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_PUBLIC};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
+  }
+}
+
+// AuthnErrorReason contains intentionally generic credential failures.
+enum AuthnErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  AUTHN_ERROR_REASON_UNSPECIFIED = 0;
+  AUTHN_ERROR_REASON_INVALID_CREDENTIALS = 1 [(servora.errors.v1.code) = 401];
+}
+
+message LoginRequest {
+  // Service canonicalizes email before locating the Login Identifier.
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  string password = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {
+      min_len: 8
+      max_len: 128
+    },
+    (servora.redact.v3.value).string = ""
+  ];
+}
+
+message LoginResponse {
+  plateau.iam.user.v1.User user = 1;
+}
