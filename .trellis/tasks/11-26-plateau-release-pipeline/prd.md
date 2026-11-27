@@ -50,7 +50,7 @@
 - [x] **AC-2（对应 R2、R3）**：`prek.toml`、`ci.yml`、`buf-ci.yml` 已关闭自动 `breaking` 拦截且保留 `just breaking` 手动入口；`app/*/service/api/` 已删除，根级唯一 `buf.openapi.gen.yaml` 与单行 `just openapi` 工作正常，`app/{iam,admin,audit}/service/internal/assets/openapi.yaml` 零漂移。
 - [x] **AC-3（对应 R4、R5）**：`just/service.just`、`prek.toml` `pre-push` 与 `ci.yml` 三处强制 `CGO_ENABLED=0` 构建通过；`buf-ci.yml` 不再监听 `v*` 标签，`release.yml` 在 `ci.yml == success` 门禁后串行执行 BSR 标签推送与 GitHub Release 创建，YAML/TOML 通过 `prek` 校验。
 - [x] **AC-4（对应 R1、R6）**：`AGENTS.md`、`api/AGENTS.md`、`app/AGENTS.md`、`README.md` 与 `.trellis/spec/` 全部对齐 `plateau.*.*.v1`、`/v1/`、根级 `buf.openapi.gen.yaml` 与 `0.x` `breaking` 策略；`GOWORK=off` 下全量 Go 竞态单测/集成测试、Lint、IAM/Admin Web 构建与单测、`@servora/plateau-utils@0.1.0` 单测与打包校验全部通过。
-- [ ] **AC-5（对应 R6）**：远端 `main` 的 `CI` 与 `Buf CI` 绿灯，`buf.build/servora/plateau:v0.1.1` 与 `github.com/Servora-Kit/plateau@v0.1.1` 实发成功；仓库外隔离目录在 `GOWORK=off`、`CGO_ENABLED=0` 下引用 `plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 通过 `buf generate`、`go build` 与 TS 类型检查，临时目录已清理。
+- [x] **AC-5（对应 R6）**：远端 `main` 的 `CI` 与 `Buf CI` 绿灯，`buf.build/servora/plateau:v0.1.1` 与 `github.com/Servora-Kit/plateau@v0.1.1` 实发成功；仓库外隔离目录在 `GOWORK=off`、`CGO_ENABLED=0` 下引用 `plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 通过 `buf generate`、`go build` 与 TS 类型检查，临时目录已清理。
 
 ## 范围外事项
 

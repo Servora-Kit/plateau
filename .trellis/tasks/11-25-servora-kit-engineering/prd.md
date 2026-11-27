@@ -52,16 +52,16 @@
 
 ### 阶段四：Plateau 单一 BSR、Go 包与 NPM 自动化发布闭环（子任务：[11-26-plateau-release-pipeline](../11-26-plateau-release-pipeline/prd.md)）
 
-- [ ] **R4.1 全集中式 `api/protos/plateau/.../v1` 与单一 BSR 模块 `buf.build/servora/plateau`**：将全部 29 个公开 `.proto`（含服务 `conf`）统一归入 `api/protos/plateau/{security,crud,infra,iam,admin,audit}/.../v1/` 并声明单一模块 `name: buf.build/servora/plateau`，保留 `/v1/...` 路由并在 `0.x` 阶段关闭自动 `breaking` 拦截，移除 `app/*/service/api/` 并归拢为根级单一 `buf.openapi.gen.yaml`。
-- [ ] **R4.2 落地自动化发布工作流、三处 `CGO_ENABLED=0` 门禁与 `v0.1.1` 实发同步**：为 `plateau` 落地 `buf-ci.yml`（推送 BSR `main`）、`release.yml`（校验 `main` `ci.yml == success` 后串联推送 BSR 版本标签并发布 GitHub Release）及 `@servora/plateau-utils` NPM OIDC 自动发布工作流；在 `ci.yml`、`just/service.just` 与 `prek.toml` `pre-push` 三处强制 `CGO_ENABLED=0` 构建，更新双仓文档与 `.trellis/spec/` 并完成 `v0.1.1` 实发验证。
+- [x] **R4.1 全集中式 `api/protos/plateau/.../v1` 与单一 BSR 模块 `buf.build/servora/plateau`**：将全部 29 个公开 `.proto`（含服务 `conf`）统一归入 `api/protos/plateau/{security,crud,infra,iam,admin,audit}/.../v1/` 并声明单一模块 `name: buf.build/servora/plateau`，保留 `/v1/...` 路由并在 `0.x` 阶段关闭自动 `breaking` 拦截，移除 `app/*/service/api/` 并归拢为根级单一 `buf.openapi.gen.yaml`。
+- [x] **R4.2 落地自动化发布工作流、三处 `CGO_ENABLED=0` 门禁与 `v0.1.1` 实发同步**：为 `plateau` 落地 `buf-ci.yml`（推送 BSR `main`）、`release.yml`（校验 `main` `ci.yml == success` 后串联推送 BSR 版本标签并发布 GitHub Release）及 `@servora/plateau-utils` NPM OIDC 自动发布工作流；在 `ci.yml`、`just/service.just` 与 `prek.toml` `pre-push` 三处强制 `CGO_ENABLED=0` 构建，更新双仓文档与 `.trellis/spec/` 并完成 `v0.1.1` 实发验证。
 
 ## 验收标准
 
 - [x] `servora` 已移除 `Makefile`、`cmd/svr`、`crud` 及 `contrib/{db,cache}`，仅保留 4 款通用 `protoc` 插件（`conf`、`go-errors`、`redact`、`typescript-http`）、`core`（含 `k8s` 注册发现）、`obs`、`transport/{http,grpc}`、`security/tls` 与极简 `@servora/proto-utils`，且具备与 `plateau` 一致的 `mise + prek + ci-ok + govulncheck + Renovate` 门禁（R1.1–R2.2）。
 - [x] `plateau` 完整承载 `security`、AIP `crud`、`infra`（含 `entgo`、`gorm`、`redis`、`cache`、`openfga`、`clickhouse`、`kafka`、`mail`）、`transport/server/kafka` 及 4 款平台 `protoc` 插件（`crud`、`authn`、`authz`、`audit`）（R3.1–R3.2）。
 - [x] `plateau` 前端基础能力整合为单一公开 NPM 工具包 `@servora/plateau-utils`（含 `./client`、`./crud` 与 `./error-reasons/*`），通过基于 Git tag 的 NPM OIDC 流水线完成 `0.1.0` 实发（R3.3、R4.2）。
-- [ ] `plateau` 全部 29 个公开 `.proto` 统一归属单一模块 `buf.build/servora/plateau`（`plateau.*.*.v1`）；外部最小服务仅依赖 `github.com/Servora-Kit/plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 即可在 `CGO_ENABLED=0` 下完成构建并调用 `iam` / `audit` / `admin` 契约（R4.1–R4.2）。
-- [ ] 在 `GOWORK=off` 且无父级 `pnpm-workspace.yaml` 条件下，`servora` 与 `plateau` 各自独立执行全量门禁与集成测试全部通过，IAM / Admin / Audit 前后端 `/v1/` 全链路行为零回归（R1–R4）。
+- [x] `plateau` 全部 29 个公开 `.proto` 统一归属单一模块 `buf.build/servora/plateau`（`plateau.*.*.v1`）；外部最小服务仅依赖 `github.com/Servora-Kit/plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 即可在 `CGO_ENABLED=0` 下完成构建并调用 `iam` / `audit` / `admin` 契约（R4.1–R4.2）。
+- [x] 在 `GOWORK=off` 且无父级 `pnpm-workspace.yaml` 条件下，`servora` 与 `plateau` 各自独立执行全量门禁与集成测试全部通过，IAM / Admin / Audit 前后端 `/v1/` 全链路行为零回归（R1–R4）。
 
 ## 范围外事项
 

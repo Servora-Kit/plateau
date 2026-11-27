@@ -27,9 +27,9 @@
 - [x] 依次执行 §2 全部本地门禁、预提交钩子与 GitNexus 图变更分析，确认 100% 绿灯。
 
 ### 步骤五：确认后提交推送、`v0.1.1` 实发与外部隔离消费者验收（R6）
-- [ ] 经用户确认后提交并推送 `origin/main`，等待远端 `CI`（`ci-ok`）与 `Buf CI` 全部 `success`。
-- [ ] 推送 `v0.1.1` 标签，等待 `Release` 工作流完成 BSR `v0.1.1` 标签推送与 GitHub Release 创建。
-- [ ] 在仓库外隔离临时目录（`GOWORK=off`、`CGO_ENABLED=0`）验证引用 `github.com/Servora-Kit/plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 通过 `buf generate`、`go build` 与 TS 类型检查，清理临时目录并勾选本任务与父任务验收项。
+- [x] 经用户确认后提交并推送 `origin/main`，等待远端 `CI`（`ci-ok`）与 `Buf CI` 全部 `success`。
+- [x] 推送 `v0.1.1` 标签，等待 `Release` 工作流完成 BSR `v0.1.1` 标签推送与 GitHub Release 创建。
+- [x] 在仓库外隔离临时目录（`GOWORK=off`、`CGO_ENABLED=0`）验证引用 `github.com/Servora-Kit/plateau@v0.1.1`、`buf.build/servora/plateau:v0.1.1` 与 `@servora/plateau-utils@0.1.0` 通过 `buf generate`、`go build` 与 TS 类型检查，清理临时目录并勾选本任务与父任务验收项。
 
 ---
 
