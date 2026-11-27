@@ -47,6 +47,12 @@ jobs:
             exit 1
           fi
 
+      - name: Push Proto module tag to BSR
+        uses: bufbuild/buf-action@v1
+        with:
+          token: ${{ secrets.BUF_TOKEN }}
+          push_disable_create: true
+
       - name: Generate changelog
         id: changelog
         run: |

@@ -56,7 +56,6 @@ jobs:
               - 'buf.yaml'
               - 'buf.lock'
               - 'buf.*.gen.yaml'
-              - 'app/*/service/api/buf.*.gen.yaml'
             openfga:
               - 'manifests/openfga/**'
               - 'manifests/scripts/openfga/**'
@@ -179,13 +178,7 @@ jobs:
       - name: Check proto formatting
         run: just fmt-proto-check --error-format=github-actions
 
-      - name: Check breaking changes
-        if: github.event_name == 'pull_request'
-        env:
-          BUF_BREAKING_AGAINST: .git#ref=origin/${{ github.base_ref }}
-        run: |
-          git fetch --no-tags origin "${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
-          just breaking --error-format=github-actions
+      # 0.x 阶段关闭自动 breaking 拦截，待 v1.0.0 发布前恢复
 
   gen:
     name: gen

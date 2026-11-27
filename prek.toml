@@ -88,6 +88,16 @@ pass_filenames = 1
 stages = ["pre-commit"]
 
 [[repos.hooks]]
+id = "go-build-nocgo"
+name = "go build (CGO disabled)"
+entry = "go build ./..."
+language = "system"
+env = { CGO_ENABLED = "0", GOWORK = "off" }
+pass_filenames = false
+always_run = true
+stages = ["pre-push"]
+
+[[repos.hooks]]
 id = "lint-go"
 name = "just lint-go"
 entry = "just lint-go"
@@ -106,14 +116,7 @@ pass_filenames = false
 always_run = true
 stages = ["pre-push"]
 
-[[repos.hooks]]
-id = "buf-breaking"
-name = "just breaking"
-entry = "just breaking"
-language = "system"
-pass_filenames = false
-always_run = true
-stages = ["pre-push"]
+# 0.x 阶段关闭 buf-breaking 自动拦截（保留手动 just breaking），待 v1.0.0 发布前恢复
 
 [[repos.hooks]]
 id = "gen-check"

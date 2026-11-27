@@ -3,8 +3,6 @@ name: Buf CI
 on:
   push:
     branches: [main]
-    tags:
-      - "v*"
   pull_request:
     branches: [main]
     paths:
@@ -16,7 +14,7 @@ on:
 
 concurrency:
   group: buf-ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref_type != 'tag' && github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -32,3 +30,5 @@ jobs:
         with:
           token: ${{ secrets.BUF_TOKEN }}
           push_disable_create: true
+          # 0.x 阶段关闭自动 breaking 拦截，待 v1.0.0 发布前恢复
+          breaking: false
