@@ -561,3 +561,28 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 18: IAM Auth Flow 认证状态机一期落地、前端死循环修复与 Kafka 审计异步化
+<!-- trellis-session: v=2 fp=473b3c808777ac40 -->
+
+**Date**: 2026-11-27
+**Task**: IAM Auth Flow 认证状态机一期落地、前端死循环修复与 Kafka 审计异步化
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成 IAM Auth Flow 认证状态机一期（密码登录与首次改密）及 OIDC RFC 6749/8176/9207 对齐；修复登录页敏感输入回调依赖导致的 GetAuthFlow 无限循环请求；将审计 Kafka 发射器改为异步非阻塞并通过 WithBackend 统一透传 logger，同时补齐本地 kafka-provision 幂等 Topic 预建与 Trellis v0.7.0-beta.4 模板升级。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a732da4e` | chore(trellis): 升级 Trellis 模板与脚本至 v0.7.0-beta.4 |
+| `dddd821b` | feat(iam)!: 落地 Auth Flow 认证状态机一期并对齐 OIDC RFC 6749/8176/9207 |
+| `6fa42ca4` | fix(audit): 审计 Kafka 投递改为异步非阻塞并补齐本地 Topic 预建 |
+
+### Status
+
+[OK] **Completed**
