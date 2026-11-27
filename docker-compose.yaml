@@ -229,6 +229,20 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
 
+  kafka-provision:
+    image: apache/kafka:latest
+    restart: "no"
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka:9092"
+      AUDIT_KAFKA_TOPIC: "${AUDIT_KAFKA_TOPIC:-plateau.audit.events}"
+      KAFKA_TOPICS: "${KAFKA_TOPICS:-}"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/provision/create-topics.sh"]
+    volumes:
+      - ./manifests/scripts/kafka:/provision:ro
+
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     restart: unless-stopped

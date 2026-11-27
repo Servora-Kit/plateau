@@ -23,6 +23,23 @@ processes:
           fi
         done
         if [ "$unhealthy" -eq 0 ]; then
+          for svc in postgres-provision kafka-provision; do
+            cid="$(docker compose -f docker-compose.yaml ps -a -q "$svc" 2>/dev/null || true)"
+            state="$( [ -n "$cid" ] && docker inspect -f '{{.State.Status}}:{{.State.ExitCode}}' "$cid" 2>/dev/null || true )"
+            if [ "$state" = "exited:0" ]; then
+              continue
+            fi
+            case "$state" in
+              exited:*)
+                echo "Provision service $svc failed ($state)" >&2
+                exit 1
+                ;;
+            esac
+            unhealthy=1
+            break
+          done
+        fi
+        if [ "$unhealthy" -eq 0 ]; then
           exit 0
         fi
         sleep 1

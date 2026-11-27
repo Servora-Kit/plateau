@@ -409,11 +409,13 @@ func TestNewAndStdlibBackendsNoopStdoutLogMulti(t *testing.T) {
 	// 3. Registered external backend via WithBackend and unknown backend rejection
 	rec := &recordingAuditor{}
 	var gotTopic string
+	var gotLogger *slog.Logger
 	extAud, err := New(
 		&auditpb.AuditEmitter{Enabled: true, Backend: new("custom")},
 		logger,
-		WithBackend("custom", func(cfg *auditpb.AuditEmitter) (Auditor, error) {
+		WithBackend("custom", func(cfg *auditpb.AuditEmitter, l *slog.Logger) (Auditor, error) {
 			gotTopic = cfg.GetTopic()
+			gotLogger = l
 			return rec, nil
 		}),
 	)
@@ -422,6 +424,9 @@ func TestNewAndStdlibBackendsNoopStdoutLogMulti(t *testing.T) {
 	}
 	if gotTopic != "plateau.audit.events" {
 		t.Fatalf("Apply() default topic = %q, want plateau.audit.events", gotTopic)
+	}
+	if gotLogger != logger {
+		t.Fatalf("WithBackend logger = %v, want %v", gotLogger, logger)
 	}
 	if err := extAud.Emit(context.Background(), ev); err != nil || len(rec.Events()) != 1 {
 		t.Fatalf("custom backend Emit err = %v, events = %d", err, len(rec.Events()))

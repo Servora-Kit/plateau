@@ -18,7 +18,7 @@
 - `transport/server/kafka/`：与 `servora/transport/server/{http,grpc}` 同构的非泛型 Kafka 入站批消费 `transport.Server`。
 - `web/packages/plateau-utils/`：单一公开前端工具包 `@servora/plateau-utils`（`client`、`crud`、`error-reasons/*`），规则见 [plateau-utils](../../web/plateau-utils/index.md)。
 - `just/`：共享 Just settings、应用注册和 service/web 命令实现；根 `justfile` 是项目入口。
-- `manifests/`：scripts（含 `openfga.{sh,ps1}` 与 postgres 初始化）、openfga（模型与 `tuples/platform-services.yaml` 平台服务元组）、traefik（`traefik.yaml` 启用 Consul Catalog + File，`routes.yaml` 仅作纯前端兜底，Go 后端路由归各自 `bootstrap.yaml` 的 `registry.consul.tags`）、grafana、prometheus、otel、loki 等部署资源。
+- `manifests/`：scripts（含 `openfga.{sh,ps1}`、postgres 与 kafka 初始化）、openfga（模型与 `tuples/platform-services.yaml` 平台服务元组）、traefik（`traefik.yaml` 启用 Consul Catalog + File，`routes.yaml` 仅作纯前端兜底，Go 后端路由归各自 `bootstrap.yaml` 的 `registry.consul.tags`）、grafana、prometheus、otel、loki 等部署资源。
 - `docs/adr/`：架构决策；任务研究、迁移差异留在 `.trellis/tasks/`。
 - `pnpm-workspace.yaml`、`pnpm-lock.yaml`：根依赖 workspace 和共享锁文件；独立第三方 workspace 保留自己的依赖边界。
 - `buf.yaml`：单一模块（`buf.build/servora/plateau`）、依赖、lint 和 breaking 配置；`buf.go.gen.yaml`、`buf.typescript.gen.yaml`、`buf.openapi.gen.yaml`：仓库根级统一生成模板（Go、TS 与各服务 OpenAPI）。`buf.es.gen.yaml` 当前停用，只作参考。

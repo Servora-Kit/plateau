@@ -27,8 +27,8 @@
   - `(nil, nil)`：`cfg == nil` 或 `brokers` 为空（未配置 Kafka，由调用方决定禁用相关特性）；
   - `(nil, err)`：已配置但参数校验、TLS/SASL 构造或 `Ping` 失败；
   - `(client, nil)`：连接成功，调用方负责 `client.Close()`。
-- `New` 面向微服务 Wire 注入：当 `cfg == nil` 或 `brokers` 为空时返回 `(nil, noopCleanup, nil)`；一旦配置了非空 `brokers` 即同步执行 `Ping` 强校验并返回带 `client.Close()` 清理函数的客户端，连接不可达时启动立即失败。
-- `BuildOpts` 先深克隆输入 `cfg` 再执行 `Apply()`，绝不原地修改调用方传入的 Proto 消息；SASL `password` 标注 `(servora.redact.v3.value).string = ""`。
+- `New` 面向微服务 Wire 注入：当 `cfg == nil` 或 `brokers` 为空时返回 `(nil, noopCleanup, nil)`；一旦配置了非空 `brokers` 即同步执行 `Ping` 强校验并返回清理函数，清理函数在 `client.Close()` 前以 `DefaultCloseFlushTimeout`（5s）有界超时执行 `client.Flush`，尽量刷空异步缓冲尾批。
+- `BuildOpts` 先深克隆输入 `cfg` 再执行 `Apply()`，绝不原地修改调用方传入的 Proto 消息；默认注入 `kgo.MaxBufferedRecords(DefaultMaxBufferedRecords)`（4096）与 `kgo.RecordDeliveryTimeout(max(DefaultRecordDeliveryTimeout, write_timeout))`（默认 10s），并在 `retry_max > 0` 时同步映射 `RequestRetries`、`RecordRetries` 与 `UnknownTopicRetries`（均可由 `extra ...kgo.Opt` 覆盖）；刻意不默认开启 `kgo.AllowAutoTopicCreation()`，本地平台 Topic 统一由 `manifests/scripts/kafka/create-topics.sh` 经 `docker-compose.yaml` `kafka-provision` 幂等预建，并由 `process-compose.yaml` 等待其 `exited:0` 后再启动业务服务。SASL `password` 标注 `(servora.redact.v3.value).string = ""`。
 - `transport/server/kafka.Server` 保持非泛型协议传输定位（单实例通过 `WithTopicHandler(topic, handler)` 挂载一个或多个 Topic）：
   - 构造入口末尾强制注入 `kgo.ConsumerGroup`、`kgo.ConsumeTopics` 与 `kgo.DisableAutoCommit()`；
   - 按 Topic 聚合缓冲，达到 `batch_size` 或 `flush_interval` 触发 `BatchHandler(ctx, batch)`；
@@ -54,8 +54,8 @@
 ### 6. Tests Required
 
 - `go test -race -count=1 ./infra/kafka/... ./transport/server/kafka/...`：
-  - 断言 `BuildOpts` 不修改原始输入消息、默认值与 SASL/压缩分支校验生效；
-  - 断言 `NewClientOptional` 严格区分 `(nil, nil)`、`(nil, err)` 与 `(client, nil)`；
+  - 断言 `BuildOpts` 不修改原始输入消息、默认值（含 `MaxBufferedRecords`、`RecordDeliveryTimeout`、`UnknownTopicRetries` 与 `write_timeout` 联动）及 SASL/压缩分支校验生效；
+  - 断言 `NewClientOptional` 严格区分 `(nil, nil)`、`(nil, err)` 与 `(client, nil)`，以及 `New` 的 cleanup 在关闭前会先 `Flush` 已缓冲记录；
   - 断言 `NewServer` 强制开启 `DisableAutoCommit`、支持多 Topic 路由、`batch_size` 与 `flush_interval` 触发、失败保留未提交位点及 `Stop` 先刷盘提交再 `Close`。
 
 ### 7. Wrong vs Correct

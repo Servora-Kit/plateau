@@ -16,14 +16,14 @@
 - 生成器：[cmd/protoc-gen-plateau-audit](../../../../cmd/protoc-gen-plateau-audit/main.go) 输出 `audit_rules.gen.go` 与防御性克隆的 `AuditRules()`。
 - 运行时核心接口（[security/audit](../../../../security/audit/auditor.go)，仅依赖标准库与 CloudEvents/Kratos）：
   - `type Auditor interface { Emit(ctx context.Context, event cloudevents.Event) error }`
-  - `New(cfg *auditpb.AuditEmitter, logger *slog.Logger, opts ...Option) (Auditor, error)`（内置 `Noop`、`NewStdout`、`NewLog`、`Multi`；外部后端通过 `WithBackend` 注册）
+  - `New(cfg *auditpb.AuditEmitter, logger *slog.Logger, opts ...Option) (Auditor, error)`（内置 `Noop`、`NewStdout`、`NewLog`、`Multi`；外部后端通过 `WithBackend(name string, fn BackendFunc)` 注册并接收 `audit.New` 传入的 `logger`）
   - `Server(auditor Auditor, opts ...security.RulesOption[*auditpb.AuditRule]) middleware.Middleware`
   - `HTTPHandler(auditor Auditor, eventType, category string, opts ...HTTPOption) func(http.Handler) http.Handler`（支持 `WithHTTPOnlyErrors()`、`WithHTTPPostHook(...)`）
   - `NewEvent(ctx context.Context, opts ...EventOption) cloudevents.Event` 与 `SetJSONProtoData(e *cloudevents.Event, msg proto.Message) error`
   - `SetActor(ctx context.Context, actor security.Actor)` / `SetResource(ctx context.Context, resourceType, resourceName string)`（RPC 与 `HTTPHandler` 共用）；`SetDetail(ctx context.Context, detail map[string]any)` / `SetError(ctx context.Context, code, message string)` / `SetEventOverride(ctx context.Context, eventType, category string)` / `Skip(ctx context.Context)`（由 `HTTPHandler` 消费）
   - `ExtractResource(msg proto.Message) (resourceType, resourceName string)` / `RedactClone(msg proto.Message) proto.Message`
 - Kafka 审计后端与协议绑定（[security/audit/kafka](../../../../security/audit/kafka/kafka.go)）：
-  - `NewDefault(cfg *auditpb.AuditEmitter, client *kgo.Client, l *slog.Logger) (audit.Auditor, error)` / `Backend(client *kgo.Client) audit.Option` / `New(client *kgo.Client, cfg Config) (audit.Auditor, error)`（直接借用 `*kgo.Client`，连接生命周期归属 `infra/kafka` 调用方）
+  - `NewDefault(cfg *auditpb.AuditEmitter, client *kgo.Client, l *slog.Logger) (audit.Auditor, error)` / `Backend(client *kgo.Client) audit.Option` / `New(client *kgo.Client, cfg Config) (audit.Auditor, error)`（`Config{Topic, Mode, Logger}`，直接借用 `*kgo.Client`，连接与停机 `Flush`/`Close` 归属 `infra/kafka` 调用方）
   - `EncodeRecord(topic string, event cloudevents.Event, mode Mode) (*kgo.Record, error)` / `DecodeRecord(record *kgo.Record) (*cloudevents.Event, error)`
 
 ### 3. Contracts
@@ -37,6 +37,7 @@
   - 当下游返回 `SECURITY_ERROR_REASON_PERMISSION_DENIED`（403）时，即使方法规则为 `AUDIT_MODE_DISABLED` 也会自动发出 `authz` 拒绝事件；常规 `200 OK` 只读请求在 `DISABLED` 下零分配直接返回。
 - **AIP 资源提取回退**：优先从请求消息提取 `google.api.resource` 或 `google.api.resource_reference`；若请求无资源 ID（如 `CreateUserRequest`）且调用成功，自动回退从响应消息提取已分配的规范资源名。
 - **原生 HTTP 协议无侵入审计**：针对非 Kratos RPC 的协议路由（如 IAM OIDC `/authorize/callback`、`/end_session`、`/oauth/token` 与 Admin `/v1/admin/auth/callback`），在路由注册层使用 `audit.HTTPHandler` 包装（`subject = "<METHOD> <PATH>"`，内置 `defer` 保证外层会话落库 `panic(responseAborted{})` 或未捕获异常中止时仍按 `500` 记录失败审计），协议处理函数仅通过 `ctx` 被动调用 `SetActor`、`SetResource`、`SetDetail`、`SetError`、`SetEventOverride`、`Skip`；严禁读取或记录 `client_secret`、授权 `code`、`refresh_token`、`code_verifier` 或会话 Cookie。
+- **Kafka 异步非阻塞投递**：`security/audit/kafka` 的 `Emit` 仅在编码失败时同步返回错误，入队阶段使用 `context.WithoutCancel(ctx)` 配合 `kgo.Client.TryProduce` 异步非阻塞提交（保留 OTel `SpanContext` 且不因上游 HTTP 响应返回而取消在途发送），严禁在请求主路径同步阻塞等待 broker ACK（避免 Kafka 故障或 Topic 缺失拖死业务响应与 `Set-Cookie`）；缓冲满丢弃（`kgo.ErrMaxBuffered`）与后台投递失败均通过 `TryProduce` promise 回调由 `audit.New` 透传（或 `Config.Logger` 显式指定）的 `slog.Logger` 记录结构化错误日志。
 
 ### 4. Validation & Error Matrix
 
@@ -60,7 +61,7 @@
 - `go test -race -count=1 ./cmd/protoc-gen-plateau-audit/... ./security/audit/...`：
   - 覆盖 `human` / `service` / `anonymous` 主体映射、未采样 Span 的 `traceparent` 注入、HTTP/gRPC 与原生 `*http.Request` 元数据提取；
   - 覆盖 `Create*` 响应资源名回退、`protoc-gen-redact` 敏感字段递归脱敏且不污染原请求、Kratos `Reason` 提取与内部错误脱敏、`DISABLED` 路由上的 403 拒绝审计、`Emit` 失败不阻断业务返回；
-  - 覆盖 `audit.New` + `WithBackend` 配置构造、`security/audit/kafka` 真实 `*kgo.Client` 线协议发送及 `BinaryMode` / `StructuredJSONMode` 往返编解码。
+  - 覆盖 `audit.New` + `WithBackend` 配置构造、`security/audit/kafka` 真实 `*kgo.Client` 异步线协议发送（含请求 `ctx` 取消不中断在途投递、Topic 缺失非阻塞入队并记录异步失败日志、缓冲满非阻塞丢弃并记录 `kgo.ErrMaxBuffered` 日志）及 `BinaryMode` / `StructuredJSONMode` 往返编解码。
 
 ### 7. Wrong vs Correct
 

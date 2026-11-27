@@ -50,6 +50,32 @@ func TestBuildOptsClonesInputAndAppliesDefaults(t *testing.T) {
 	if got := cl.OptValue(kgo.RequestRetries); got != 3 && got != int64(3) {
 		t.Fatalf("RequestRetries = %T(%v), want 3", got, got)
 	}
+	if got := cl.OptValue(kgo.UnknownTopicRetries); got != 3 && got != int64(3) {
+		t.Fatalf("UnknownTopicRetries = %T(%v), want 3", got, got)
+	}
+	if got := cl.OptValue(kgo.MaxBufferedRecords); got != DefaultMaxBufferedRecords && got != int64(DefaultMaxBufferedRecords) {
+		t.Fatalf("MaxBufferedRecords = %T(%v), want %d", got, got, DefaultMaxBufferedRecords)
+	}
+	if got := cl.OptValue(kgo.RecordDeliveryTimeout); got != DefaultRecordDeliveryTimeout {
+		t.Fatalf("RecordDeliveryTimeout = %T(%v), want %s", got, got, DefaultRecordDeliveryTimeout)
+	}
+
+	longWriteCfg := &kafkapb.Kafka{
+		Brokers:      []string{"127.0.0.1:9092"},
+		WriteTimeout: durationpb.New(20 * time.Second),
+	}
+	longOpts, err := BuildOpts(longWriteCfg)
+	if err != nil {
+		t.Fatalf("BuildOpts(long write_timeout) error = %v", err)
+	}
+	longCl, err := kgo.NewClient(longOpts...)
+	if err != nil {
+		t.Fatalf("kgo.NewClient(long write_timeout) error = %v", err)
+	}
+	defer longCl.Close()
+	if got := longCl.OptValue(kgo.RecordDeliveryTimeout); got != 20*time.Second {
+		t.Fatalf("RecordDeliveryTimeout(write_timeout=20s) = %T(%v), want 20s", got, got)
+	}
 }
 
 func TestBuildOptsValidationErrors(t *testing.T) {
@@ -224,6 +250,38 @@ func TestNewWireProviderLifecycle(t *testing.T) {
 	cleanup()
 }
 
+func TestNewCleanupFlushesBufferedRecords(t *testing.T) {
+	brokerAddr := startStubKafkaProduceServer(t, 60*time.Millisecond)
+	client, cleanup, err := New(&kafkapb.Kafka{
+		Brokers:      []string{brokerAddr},
+		ClientId:     "plateau-flush-test",
+		DialTimeout:  durationpb.New(2 * time.Second),
+		RequiredAcks: -1,
+	}, testLogger())
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	producedErrCh := make(chan error, 1)
+	client.TryProduce(context.Background(), &kgo.Record{
+		Topic: "flush.test",
+		Value: []byte("hello"),
+	}, func(_ *kgo.Record, err error) {
+		producedErrCh <- err
+	})
+
+	cleanup()
+
+	select {
+	case produceErr := <-producedErrCh:
+		if produceErr != nil {
+			t.Fatalf("buffered record failed during cleanup flush: %v", produceErr)
+		}
+	default:
+		t.Fatal("cleanup returned before flushing buffered record")
+	}
+}
+
 func TestWithSlogLoggerExplicitOption(t *testing.T) {
 	if WithSlogLogger(testLogger()) == nil {
 		t.Fatal("WithSlogLogger() returned nil option")
@@ -309,6 +367,137 @@ func serveStubKafkaConn(conn net.Conn, host string, port int32) {
 		}
 		out = resp.AppendTo(out)
 
+		var frame []byte
+		frame = binary.BigEndian.AppendUint32(frame, uint32(len(out)))
+		frame = append(frame, out...)
+		if _, err := conn.Write(frame); err != nil {
+			return
+		}
+	}
+}
+
+func startStubKafkaProduceServer(t *testing.T, produceDelay time.Duration) string {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen stub produce kafka: %v", err)
+	}
+	t.Cleanup(func() { _ = ln.Close() })
+
+	host, portStr, err := net.SplitHostPort(ln.Addr().String())
+	if err != nil {
+		t.Fatalf("split host port: %v", err)
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Fatalf("atoi port: %v", err)
+	}
+
+	go func() {
+		for {
+			conn, acceptErr := ln.Accept()
+			if acceptErr != nil {
+				return
+			}
+			go serveStubProduceConn(conn, host, int32(port), produceDelay)
+		}
+	}()
+	return ln.Addr().String()
+}
+
+func serveStubProduceConn(conn net.Conn, host string, port int32, produceDelay time.Duration) {
+	defer func() { _ = conn.Close() }()
+	var sizeBuf [4]byte
+	for {
+		if _, err := io.ReadFull(conn, sizeBuf[:]); err != nil {
+			return
+		}
+		size := binary.BigEndian.Uint32(sizeBuf[:])
+		payload := make([]byte, size)
+		if _, err := io.ReadFull(conn, payload); err != nil {
+			return
+		}
+		if len(payload) < 10 {
+			return
+		}
+		apiKey := int16(binary.BigEndian.Uint16(payload[0:2]))
+		apiVersion := int16(binary.BigEndian.Uint16(payload[2:4]))
+		corrID := binary.BigEndian.Uint32(payload[4:8])
+		clientIDLen := int16(binary.BigEndian.Uint16(payload[8:10]))
+		pos := 10
+		if clientIDLen > 0 {
+			pos += int(clientIDLen)
+		}
+		body := payload[pos:]
+
+		var resp kmsg.Response
+		switch kmsg.Key(apiKey) {
+		case kmsg.ApiVersions:
+			av := kmsg.NewPtrApiVersionsResponse()
+			av.SetVersion(apiVersion)
+			av.ApiKeys = []kmsg.ApiVersionsResponseApiKey{
+				{ApiKey: int16(kmsg.ApiVersions), MinVersion: 0, MaxVersion: 2},
+				{ApiKey: int16(kmsg.Metadata), MinVersion: 0, MaxVersion: 8},
+				{ApiKey: int16(kmsg.Produce), MinVersion: 0, MaxVersion: 8},
+				{ApiKey: int16(kmsg.InitProducerID), MinVersion: 0, MaxVersion: 1},
+			}
+			resp = av
+		case kmsg.InitProducerID:
+			ip := kmsg.NewPtrInitProducerIDResponse()
+			ip.SetVersion(apiVersion)
+			ip.ProducerID = 1
+			ip.ProducerEpoch = 0
+			resp = ip
+		case kmsg.Metadata:
+			req := kmsg.NewPtrMetadataRequest()
+			req.SetVersion(apiVersion)
+			_ = req.ReadFrom(body)
+			md := kmsg.NewPtrMetadataResponse()
+			md.SetVersion(apiVersion)
+			md.Brokers = []kmsg.MetadataResponseBroker{
+				{NodeID: 0, Host: host, Port: port},
+			}
+			for _, rt := range req.Topics {
+				if rt.Topic != nil {
+					topic := kmsg.NewMetadataResponseTopic()
+					topic.Topic = rt.Topic
+					part := kmsg.NewMetadataResponseTopicPartition()
+					part.Partition = 0
+					part.Leader = 0
+					part.Replicas = []int32{0}
+					part.ISR = []int32{0}
+					topic.Partitions = append(topic.Partitions, part)
+					md.Topics = append(md.Topics, topic)
+				}
+			}
+			resp = md
+		case kmsg.Produce:
+			req := kmsg.NewPtrProduceRequest()
+			req.SetVersion(apiVersion)
+			_ = req.ReadFrom(body)
+			if produceDelay > 0 {
+				time.Sleep(produceDelay)
+			}
+			pr := kmsg.NewPtrProduceResponse()
+			pr.SetVersion(apiVersion)
+			for _, tp := range req.Topics {
+				respTopic := kmsg.NewProduceResponseTopic()
+				respTopic.Topic = tp.Topic
+				for _, part := range tp.Partitions {
+					p := kmsg.NewProduceResponseTopicPartition()
+					p.Partition = part.Partition
+					respTopic.Partitions = append(respTopic.Partitions, p)
+				}
+				pr.Topics = append(pr.Topics, respTopic)
+			}
+			resp = pr
+		default:
+			return
+		}
+
+		var out []byte
+		out = binary.BigEndian.AppendUint32(out, corrID)
+		out = resp.AppendTo(out)
 		var frame []byte
 		frame = binary.BigEndian.AppendUint32(frame, uint32(len(out)))
 		frame = append(frame, out...)

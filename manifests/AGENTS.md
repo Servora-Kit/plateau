@@ -21,6 +21,7 @@ manifests/
 │   ├── openfga/
 │   │   ├── openfga.sh                # Unix OpenFGA store / model / sync-tuples 脚本
 │   │   └── openfga.ps1               # Windows PowerShell 等价实现
+│   ├── kafka/                        # Compose Kafka 平台 Topic 预建脚本
 │   ├── postgres/                     # Compose PostgreSQL 多库与角色初始化脚本
 │   └── ci/                           # CI 辅助脚本
 ├── traefik/
@@ -43,6 +44,7 @@ manifests/
 | OpenFGA 平台服务元组 | `openfga/tuples/platform-services.yaml` | `just openfga-tuple-sync`（或本地 `just openfga-setup`） |
 | OpenFGA 管理脚本 | `scripts/openfga/openfga.{sh,ps1}` | 支持 `init`、`apply`、`sync-tuples` 三种子命令 |
 | PostgreSQL 初始化 | `scripts/postgres/create-databases.sh` | 供 `docker-compose.yaml` 中 `postgres-provision` 挂载执行 |
+| Kafka Topic 预建 | `scripts/kafka/create-topics.sh` | 供 `docker-compose.yaml` 中 `kafka-provision` 挂载执行（幂等创建 `plateau.audit.events` 等平台 Topic） |
 
 ## 关键约定
 

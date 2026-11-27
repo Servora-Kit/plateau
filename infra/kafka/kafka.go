@@ -18,6 +18,15 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const (
+	// DefaultMaxBufferedRecords bounds async producer memory when Kafka is unavailable.
+	DefaultMaxBufferedRecords = 4096
+	// DefaultRecordDeliveryTimeout bounds total async delivery/retry time per record.
+	DefaultRecordDeliveryTimeout = 10 * time.Second
+	// DefaultCloseFlushTimeout bounds how long Wire cleanup waits for in-flight records to flush.
+	DefaultCloseFlushTimeout = 5 * time.Second
+)
+
 // BuildOpts clones cfg, applies proto defaults/validation, maps Kafka config
 // into franz-go options, and appends caller-supplied options.
 func BuildOpts(cfg *kafkapb.Kafka, extra ...kgo.Opt) ([]kgo.Opt, error) {
@@ -29,7 +38,16 @@ func BuildOpts(cfg *kafkapb.Kafka, extra ...kgo.Opt) ([]kgo.Opt, error) {
 		return nil, err
 	}
 
-	opts := []kgo.Opt{kgo.SeedBrokers(config.GetBrokers()...)}
+	deliveryTimeout := DefaultRecordDeliveryTimeout
+	if d := config.GetWriteTimeout(); d != nil && d.AsDuration() > deliveryTimeout {
+		deliveryTimeout = d.AsDuration()
+	}
+
+	opts := []kgo.Opt{
+		kgo.SeedBrokers(config.GetBrokers()...),
+		kgo.MaxBufferedRecords(DefaultMaxBufferedRecords),
+		kgo.RecordDeliveryTimeout(deliveryTimeout),
+	}
 	if config.GetClientId() != "" {
 		opts = append(opts, kgo.ClientID(config.GetClientId()))
 	}
@@ -48,7 +66,12 @@ func BuildOpts(cfg *kafkapb.Kafka, extra ...kgo.Opt) ([]kgo.Opt, error) {
 		opts = append(opts, kgo.RetryBackoffFn(func(int) time.Duration { return backoff }))
 	}
 	if config.GetRetryMax() > 0 {
-		opts = append(opts, kgo.RequestRetries(int(config.GetRetryMax())), kgo.RecordRetries(int(config.GetRetryMax())))
+		retries := int(config.GetRetryMax())
+		opts = append(opts,
+			kgo.RequestRetries(retries),
+			kgo.RecordRetries(retries),
+			kgo.UnknownTopicRetries(retries),
+		)
 	}
 	if config.GetRequiredAcks() != 0 {
 		acks, err := requiredAcks(config.GetRequiredAcks())
@@ -130,6 +153,7 @@ func NewClientOptional(ctx context.Context, cfg *kafkapb.Kafka, extra ...kgo.Opt
 // New opens an optional franz-go client for Wire dependency injection,
 // validating connectivity via Ping whenever Kafka brokers are configured.
 // When Kafka is unconfigured (cfg nil or empty brokers), it returns (nil, noop, nil).
+// The returned cleanup flushes buffered produce records with a bounded timeout before closing.
 func New(cfg *kafkapb.Kafka, l *slog.Logger) (*kgo.Client, func(), error) {
 	client, err := NewClientOptional(context.Background(), cfg, WithSlogLogger(l))
 	if err != nil {
@@ -138,7 +162,15 @@ func New(cfg *kafkapb.Kafka, l *slog.Logger) (*kgo.Client, func(), error) {
 	if client == nil {
 		return nil, func() {}, nil
 	}
-	return client, client.Close, nil
+	cleanup := func() {
+		flushCtx, cancel := context.WithTimeout(context.Background(), DefaultCloseFlushTimeout)
+		defer cancel()
+		if flushErr := client.Flush(flushCtx); flushErr != nil && l != nil {
+			l.Warn("kafka: flush buffered records before close failed", "err", flushErr)
+		}
+		client.Close()
+	}
+	return client, cleanup, nil
 }
 
 func buildSASL(sasl *kafkapb.Kafka_SASL) (kgo.Opt, error) {

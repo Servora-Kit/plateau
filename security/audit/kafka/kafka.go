@@ -41,17 +41,19 @@ const (
 // Config configures a Kafka audit backend over an existing *kgo.Client whose
 // connection lifecycle is managed by infra/kafka.
 type Config struct {
-	Topic string
-	Mode  Mode
+	Topic  string
+	Mode   Mode
+	Logger *slog.Logger
 }
 
 // Backend returns an audit.Option that registers the "kafka" backend on audit.New.
 // Connection lifecycle of client remains owned by the caller (infra/kafka).
 func Backend(client *kgo.Client) audit.Option {
-	return audit.WithBackend("kafka", func(cfg *auditpb.AuditEmitter) (audit.Auditor, error) {
+	return audit.WithBackend("kafka", func(cfg *auditpb.AuditEmitter, logger *slog.Logger) (audit.Auditor, error) {
 		return New(client, Config{
-			Topic: cfg.GetTopic(),
-			Mode:  BinaryMode,
+			Topic:  cfg.GetTopic(),
+			Mode:   BinaryMode,
+			Logger: logger,
 		})
 	})
 }
@@ -63,8 +65,10 @@ func NewDefault(cfg *auditpb.AuditEmitter, client *kgo.Client, l *slog.Logger) (
 	return audit.New(cfg, l, Backend(client))
 }
 
-// New constructs a Kafka-backed audit.Auditor publishing to cfg.Topic (defaulting
-// to DefaultTopic). The caller retains ownership of client and closes it on shutdown.
+// New constructs a Kafka-backed audit.Auditor publishing asynchronously to
+// cfg.Topic (defaulting to DefaultTopic) via non-blocking TryProduce so broker
+// stalls never block business responses. The caller retains ownership of client
+// and flushes/closes it on shutdown.
 func New(client *kgo.Client, cfg Config) (audit.Auditor, error) {
 	if client == nil {
 		return nil, errors.New("audit/kafka: kgo client is nil")
@@ -76,10 +80,15 @@ func New(client *kgo.Client, cfg Config) (audit.Auditor, error) {
 	if topic == "" {
 		topic = DefaultTopic
 	}
+	logger := cfg.Logger
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return auditor{
 		client: client,
 		topic:  topic,
 		mode:   cfg.Mode,
+		logger: logger,
 	}, nil
 }
 
@@ -87,6 +96,7 @@ type auditor struct {
 	client *kgo.Client
 	topic  string
 	mode   Mode
+	logger *slog.Logger
 }
 
 func (a auditor) Emit(ctx context.Context, event cloudevents.Event) error {
@@ -94,7 +104,25 @@ func (a auditor) Emit(ctx context.Context, event cloudevents.Event) error {
 	if err != nil {
 		return err
 	}
-	return a.client.ProduceSync(ctx, rec).FirstErr()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	produceCtx := context.WithoutCancel(ctx)
+	eventID := event.ID()
+	operation := event.Subject()
+
+	a.client.TryProduce(produceCtx, rec, func(_ *kgo.Record, produceErr error) {
+		if produceErr == nil {
+			return
+		}
+		a.logger.ErrorContext(produceCtx, "audit kafka produce failed",
+			slog.String("topic", a.topic),
+			slog.String("event_id", eventID),
+			slog.String("operation", operation),
+			slog.String("error", produceErr.Error()),
+		)
+	})
+	return nil
 }
 
 // EncodeRecord encodes a CloudEvents v1.0 event into a Kafka record using the

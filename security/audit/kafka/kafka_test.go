@@ -1,12 +1,15 @@
 package kafka
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"io"
 	"log/slog"
 	"net"
 	"strconv"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/Servora-Kit/plateau/security"
 	"github.com/Servora-Kit/plateau/security/audit"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -131,17 +135,21 @@ func TestBackendRegistrationAndRealKgoClientEmit(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	reqCtx, cancelReq := context.WithCancel(ctx)
 	ev := audit.NewEvent(
-		ctx,
+		reqCtx,
 		audit.WithSource("//iam.service"),
 		audit.WithSubject("/plateau.iam.user.v1.UserService/DisableUser"),
 		audit.WithCategory(audit.CategoryResource),
 		audit.WithActor(security.Actor{Type: security.ActorTypeHuman, ID: "admin-1"}),
 		audit.WithResource("iam.plateau.dev/User", "users/u-9"),
 	)
-	if err := auditor.Emit(ctx, ev); err != nil {
+	if err := auditor.Emit(reqCtx, ev); err != nil {
 		t.Fatalf("Emit() error = %v", err)
 	}
+	// Canceling the request context immediately after Emit returns must not abort
+	// in-flight asynchronous delivery.
+	cancelReq()
 
 	select {
 	case rec := <-producedCh:
@@ -161,6 +169,117 @@ func TestBackendRegistrationAndRealKgoClientEmit(t *testing.T) {
 	case <-ctx.Done():
 		t.Fatal("timed out waiting for produced Kafka record")
 	}
+}
+
+func TestEmitNonBlockingOnUnknownTopicAndLogsAsyncError(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
+	}
+	defer func() { _ = ln.Close() }()
+
+	host, portStr, _ := net.SplitHostPort(ln.Addr().String())
+	port, _ := strconv.Atoi(portStr)
+	go func() {
+		for {
+			conn, acceptErr := ln.Accept()
+			if acceptErr != nil {
+				return
+			}
+			go serveUnknownTopicBroker(conn, host, int32(port))
+		}
+	}()
+
+	client, err := kgo.NewClient(
+		kgo.SeedBrokers(ln.Addr().String()),
+		kgo.UnknownTopicRetries(1),
+		kgo.MetadataMinAge(20*time.Millisecond),
+		kgo.RecordDeliveryTimeout(time.Second),
+		kgo.DisableIdempotentWrite(),
+	)
+	if err != nil {
+		t.Fatalf("kgo.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	logs := &lockedBuffer{}
+	logger := slog.New(slog.NewJSONHandler(logs, nil))
+	auditor, err := audit.New(&auditpb.AuditEmitter{
+		Enabled: true,
+		Backend: new("kafka"),
+		Topic:   new("missing.audit.topic"),
+	}, logger, Backend(client))
+	if err != nil {
+		t.Fatalf("audit.New(kafka): %v", err)
+	}
+
+	ev := sampleEvent(t)
+	start := time.Now()
+	if err := auditor.Emit(context.Background(), ev); err != nil {
+		t.Fatalf("Emit() error = %v, want nil (async enqueue)", err)
+	}
+	if elapsed := time.Since(start); elapsed > 100*time.Millisecond {
+		t.Fatalf("Emit() blocked for %s on missing topic, want non-blocking enqueue", elapsed)
+	}
+
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		out := logs.String()
+		if strings.Contains(out, "audit kafka produce failed") &&
+			strings.Contains(out, "missing.audit.topic") &&
+			strings.Contains(out, ev.ID()) {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("expected async produce failure log, got:\n%s", logs.String())
+}
+
+func TestEmitFailsFastWhenBufferFull(t *testing.T) {
+	client, err := kgo.NewClient(
+		kgo.SeedBrokers("127.0.0.1:9092"),
+		kgo.MaxBufferedRecords(1),
+		kgo.ManualFlushing(),
+	)
+	if err != nil {
+		t.Fatalf("kgo.NewClient: %v", err)
+	}
+	defer client.Close()
+
+	logs := &lockedBuffer{}
+	logger := slog.New(slog.NewJSONHandler(logs, nil))
+	auditor, err := New(client, Config{
+		Topic:  DefaultTopic,
+		Mode:   BinaryMode,
+		Logger: logger,
+	})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	ev := sampleEvent(t)
+	if err := auditor.Emit(context.Background(), ev); err != nil {
+		t.Fatalf("first Emit() error = %v, want nil", err)
+	}
+
+	start := time.Now()
+	if err := auditor.Emit(context.Background(), ev); err != nil {
+		t.Fatalf("second Emit() error = %v, want nil (async promise reporting)", err)
+	}
+	if elapsed := time.Since(start); elapsed > 100*time.Millisecond {
+		t.Fatalf("full-buffer Emit() blocked for %s, want non-blocking drop", elapsed)
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		out := logs.String()
+		if strings.Contains(out, "audit kafka produce failed") &&
+			strings.Contains(out, kgo.ErrMaxBuffered.Error()) {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("expected ErrMaxBuffered async log, got:\n%s", logs.String())
 }
 
 func TestNewDefault(t *testing.T) {
@@ -210,6 +329,94 @@ func sampleEvent(t *testing.T) cloudevents.Event {
 		t.Fatalf("SetData: %v", err)
 	}
 	return ev
+}
+
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *lockedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
+func serveUnknownTopicBroker(conn net.Conn, host string, port int32) {
+	defer func() { _ = conn.Close() }()
+	var sizeBuf [4]byte
+	for {
+		if _, err := io.ReadFull(conn, sizeBuf[:]); err != nil {
+			return
+		}
+		size := binary.BigEndian.Uint32(sizeBuf[:])
+		payload := make([]byte, size)
+		if _, err := io.ReadFull(conn, payload); err != nil {
+			return
+		}
+		if len(payload) < 10 {
+			return
+		}
+		apiKey := int16(binary.BigEndian.Uint16(payload[0:2]))
+		apiVersion := int16(binary.BigEndian.Uint16(payload[2:4]))
+		corrID := binary.BigEndian.Uint32(payload[4:8])
+		clientIDLen := int16(binary.BigEndian.Uint16(payload[8:10]))
+		pos := 10
+		if clientIDLen > 0 {
+			pos += int(clientIDLen)
+		}
+		body := payload[pos:]
+
+		var resp kmsg.Response
+		switch kmsg.Key(apiKey) {
+		case kmsg.ApiVersions:
+			av := kmsg.NewPtrApiVersionsResponse()
+			av.SetVersion(apiVersion)
+			av.ApiKeys = []kmsg.ApiVersionsResponseApiKey{
+				{ApiKey: int16(kmsg.ApiVersions), MinVersion: 0, MaxVersion: 2},
+				{ApiKey: int16(kmsg.Metadata), MinVersion: 0, MaxVersion: 8},
+			}
+			resp = av
+		case kmsg.Metadata:
+			req := kmsg.NewPtrMetadataRequest()
+			req.SetVersion(apiVersion)
+			_ = req.ReadFrom(body)
+			md := kmsg.NewPtrMetadataResponse()
+			md.SetVersion(apiVersion)
+			broker := kmsg.NewMetadataResponseBroker()
+			broker.NodeID = 0
+			broker.Host = host
+			broker.Port = port
+			md.Brokers = append(md.Brokers, broker)
+			for _, rt := range req.Topics {
+				if rt.Topic != nil {
+					topic := kmsg.NewMetadataResponseTopic()
+					topic.Topic = rt.Topic
+					topic.ErrorCode = kerr.UnknownTopicOrPartition.Code
+					md.Topics = append(md.Topics, topic)
+				}
+			}
+			resp = md
+		default:
+			return
+		}
+
+		var wire []byte
+		wire = binary.BigEndian.AppendUint32(wire, corrID)
+		wire = resp.AppendTo(wire)
+		var frame []byte
+		frame = binary.BigEndian.AppendUint32(frame, uint32(len(wire)))
+		frame = append(frame, wire...)
+		if _, err := conn.Write(frame); err != nil {
+			return
+		}
+	}
 }
 
 func serveProduceBroker(conn net.Conn, host string, port int32, outCh chan<- *kgo.Record) {

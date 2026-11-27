@@ -23,13 +23,16 @@ type Auditor interface {
 	Emit(ctx context.Context, event cloudevents.Event) error
 }
 
+// BackendFunc constructs an Auditor for an external backend registered via WithBackend.
+type BackendFunc func(cfg *auditpb.AuditEmitter, logger *slog.Logger) (Auditor, error)
+
 // Option configures external backend constructors for New.
-type Option func(map[string]func(*auditpb.AuditEmitter) (Auditor, error))
+type Option func(map[string]BackendFunc)
 
 // WithBackend registers an external backend constructor (such as kafka.Backend)
 // resolved when AuditEmitter.backend matches name.
-func WithBackend(name string, fn func(*auditpb.AuditEmitter) (Auditor, error)) Option {
-	return func(m map[string]func(*auditpb.AuditEmitter) (Auditor, error)) {
+func WithBackend(name string, fn BackendFunc) Option {
+	return func(m map[string]BackendFunc) {
 		if key := strings.ToLower(strings.TrimSpace(name)); key != "" && fn != nil {
 			m[key] = fn
 		}
@@ -48,7 +51,7 @@ func New(cfg *auditpb.AuditEmitter, logger *slog.Logger, opts ...Option) (Audito
 		return nil, err
 	}
 
-	backends := make(map[string]func(*auditpb.AuditEmitter) (Auditor, error), len(opts))
+	backends := make(map[string]BackendFunc, len(opts))
 	for _, opt := range opts {
 		if opt != nil {
 			opt(backends)
@@ -57,7 +60,7 @@ func New(cfg *auditpb.AuditEmitter, logger *slog.Logger, opts ...Option) (Audito
 
 	backend := strings.ToLower(strings.TrimSpace(config.GetBackend()))
 	if fn, ok := backends[backend]; ok {
-		return fn(config)
+		return fn(config, logger)
 	}
 	switch backend {
 	case "", "noop":
