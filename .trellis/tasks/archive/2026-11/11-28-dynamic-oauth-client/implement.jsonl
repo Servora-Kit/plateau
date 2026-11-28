@@ -1,0 +1,19 @@
+{"file":".trellis/tasks/11-28-dynamic-oauth-client/prd.md","reason":"需求目标、D1-D7 已确认决策、Logto/Casdoor 精简对照与 AC-1 至 AC-9"}
+{"file":".trellis/tasks/11-28-dynamic-oauth-client/design.md","reason":"数据模型、Proto 契约、OIDC 认证隔离、Consent 时序与前端交互架构设计"}
+{"file":".trellis/tasks/11-28-dynamic-oauth-client/implement.md","reason":"7 阶段执行顺序、高风险点防护与全量验证命令"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"平台集中式 Proto 契约、资源命名与错误原因规范"}
+{"file":".trellis/spec/api/proto/annotations.md","reason":"AuthN/AuthZ/Audit/Redact/Conf 注解规则"}
+{"file":".trellis/spec/api/proto/generation.md","reason":"Go/TS/OpenAPI 统一生成流程"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"ResourcePlan、ListPreparer、ListFields 与 ResourceMapper 消费约定"}
+{"file":".trellis/spec/service/backend/coding.md","reason":"Go 微服务分层与错误处理规范"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"单测与集成测试规范及无测试专用私有符号约束"}
+{"file":".trellis/spec/iam/oidc.md","reason":"IAM OIDC OP 协议约束、令牌签发与审计约定"}
+{"file":".trellis/spec/iam/auth-flows.md","reason":"IAM Web 认证与授权交互生命周期约定"}
+{"file":".trellis/spec/iam/sessions.md","reason":"IAM 浏览器 SCS 会话与撤销约定"}
+{"file":".trellis/spec/iam/authorization.md","reason":"IAM OpenFGA 授权约定"}
+{"file":".trellis/spec/iam/startup.md","reason":"IAM 启动期静态配置对账与初始化约定"}
+{"file":".trellis/spec/iam/frontend.md","reason":"IAM Web Next.js 页面、请求与无障碍约定"}
+{"file":".trellis/spec/admin/architecture.md","reason":"Admin 平台管理职责划分约定"}
+{"file":".trellis/spec/admin/backend.md","reason":"Admin BFF 服务调用与两层 OpenFGA 授权约定"}
+{"file":".trellis/spec/admin/frontend.md","reason":"Admin Web Vben 视图与表单开发规范"}
+{"file":".trellis/spec/plateau/security/audit.md","reason":"安全审计富化与敏感字段脱敏规范"}

@@ -1,0 +1,11 @@
+{"file":".trellis/tasks/11-28-dynamic-oauth-client/prd.md","reason":"逐条核验 D1-D7 决策与 AC-1 至 AC-9 验收结果"}
+{"file":".trellis/tasks/11-28-dynamic-oauth-client/design.md","reason":"核验双源隔离、多密钥零停机轮换、认证方式防降级、级联撤销与 Consent 防死循环实现"}
+{"file":".trellis/tasks/11-28-dynamic-oauth-client/implement.md","reason":"核验 7 阶段任务完成度与全部门禁验证结果"}
+{"file":".trellis/spec/api/proto/contracts.md","reason":"核验新契约命名、CRUD 描述符与生成产物零漂移"}
+{"file":".trellis/spec/service/backend/crud.md","reason":"核验 OAuthClient 列表过滤排序、FieldMask 与响应清理合规"}
+{"file":".trellis/spec/iam/oidc.md","reason":"核验三种应用类型、三种认证方法、发现文档与 Consent 重定向合规"}
+{"file":".trellis/spec/iam/frontend.md","reason":"核验 IAM Web /login 品牌、/consent 交互与 /account Google 风格布局及敏感清理"}
+{"file":".trellis/spec/admin/backend.md","reason":"核验 Admin BFF manage_clients 双层授权与错误映射"}
+{"file":".trellis/spec/admin/frontend.md","reason":"核验 Admin Web 客户端控制台交互、STATIC 只读保护与类型检查"}
+{"file":".trellis/spec/plateau/security/audit.md","reason":"核验一次性明文密钥全链路脱敏与审计事件完整性"}
+{"file":".trellis/spec/service/backend/testing.md","reason":"核验测试覆盖率且无测试专用私有方法或死代码"}
