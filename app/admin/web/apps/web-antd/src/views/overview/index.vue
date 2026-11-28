@@ -31,6 +31,9 @@ const avatarInitial = computed(() =>
 );
 
 const canManageUsers = computed(() => authStore.hasPermission('manage_users'));
+const canManageClients = computed(() =>
+  authStore.hasPermission('manage_clients'),
+);
 const canReadAudit = computed(() => authStore.hasPermission('read_audit'));
 
 const PERMISSION_CATALOG = [
@@ -45,6 +48,10 @@ const PERMISSION_CATALOG = [
   {
     code: 'expunge_users',
     label: '显式永久删除（expunge_users）',
+  },
+  {
+    code: 'manage_clients',
+    label: 'OAuth 客户端管理（manage_clients）',
   },
   {
     code: 'read_audit',
@@ -86,6 +93,10 @@ function goToCreateUser() {
 
 function goToRecycleBin() {
   router.push({ path: '/users', query: { view: 'deleted' } });
+}
+
+function goToOAuthClients() {
+  router.push('/oauth-clients');
 }
 
 function goToAuditLogs() {
@@ -194,6 +205,24 @@ function goToAuditLogs() {
               查看无限期保留的已软删除账号（原邮箱保持占用），支持恢复账号或核对完整邮箱后显式永久删除。
             </p>
             <Button @click="goToRecycleBin">打开回收站视图</Button>
+          </Card>
+
+          <Card size="small" title="OAuth 客户端管理">
+            <p class="text-muted-foreground mb-4 text-sm">
+              管理静态引导与动态注册的 OAuth 2.0 / OIDC
+              应用客户端，支持分场景接入向导与多密钥零停机轮换。
+            </p>
+            <Tooltip
+              :title="
+                canManageClients
+                  ? undefined
+                  : '当前账号缺少 manage_clients 权限'
+              "
+            >
+              <Button :disabled="!canManageClients" @click="goToOAuthClients">
+                管理 OAuth 客户端
+              </Button>
+            </Tooltip>
           </Card>
 
           <Card size="small" title="全平台审计日志">

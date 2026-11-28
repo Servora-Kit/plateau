@@ -2,8 +2,9 @@ import { ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
 interface AuthShellProps {
-  title: string
-  description: string
+  title: React.ReactNode
+  description: React.ReactNode
+  badge?: React.ReactNode
   children: React.ReactNode
   footer?: React.ReactNode
 }
@@ -11,6 +12,7 @@ interface AuthShellProps {
 export function AuthShell({
   title,
   description,
+  badge,
   children,
   footer,
 }: AuthShellProps) {
@@ -28,19 +30,20 @@ export function AuthShell({
           Plateau 账户
         </Link>
         <section
-          className="rounded-xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8"
+          className="rounded-2xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8"
           aria-labelledby="page-title"
         >
           <header className="mb-6 space-y-2">
+            {badge ? <div className="mb-3">{badge}</div> : null}
             <h1
               id="page-title"
               className="text-2xl font-semibold tracking-tight"
             >
               {title}
             </h1>
-            <p className="text-sm leading-6 text-muted-foreground">
+            <div className="text-sm leading-6 text-muted-foreground">
               {description}
-            </p>
+            </div>
           </header>
           {children}
         </section>

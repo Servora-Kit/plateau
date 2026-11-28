@@ -1,9 +1,11 @@
 import type { AuditService } from '@plateau/api/plateau/admin/audit/v1';
 import type { AuthService } from '@plateau/api/plateau/admin/auth/v1';
+import type { OAuthClientService } from '@plateau/api/plateau/admin/client/v1';
 import type { UserService } from '@plateau/api/plateau/admin/user/v1';
 
 import { createAuditServiceClient } from '@plateau/api/plateau/admin/audit/v1';
 import { createAuthServiceClient } from '@plateau/api/plateau/admin/auth/v1';
+import { createOAuthClientServiceClient } from '@plateau/api/plateau/admin/client/v1';
 import { createUserServiceClient } from '@plateau/api/plateau/admin/user/v1';
 import {
   createHttpClient,
@@ -15,6 +17,7 @@ const DEFAULT_RETURN_PATH = '/overview';
 export interface AdminApi {
   audit: AuditService;
   auth: AuthService;
+  oauthClients: OAuthClientService;
   users: UserService;
 }
 
@@ -31,6 +34,7 @@ export function createAdminApi(signal?: AbortSignal): AdminApi {
   return {
     audit: createAuditServiceClient(transport),
     auth: createAuthServiceClient(transport),
+    oauthClients: createOAuthClientServiceClient(transport),
     users: createUserServiceClient(transport),
   };
 }

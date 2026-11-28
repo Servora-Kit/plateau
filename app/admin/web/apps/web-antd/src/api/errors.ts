@@ -3,6 +3,10 @@ import {
   isAdminAuditErrorReason,
 } from '@plateau/api/plateau/admin/audit/v1/audit.errors';
 import {
+  AdminClientErrorReason,
+  isAdminClientErrorReason,
+} from '@plateau/api/plateau/admin/client/v1/client.errors';
+import {
   AdminUserErrorReason,
   isAdminUserErrorReason,
 } from '@plateau/api/plateau/admin/user/v1/user.errors';
@@ -31,6 +35,7 @@ export type AdminErrorCategory =
   | 'network'
   | 'not_found'
   | 'self_protected'
+  | 'static_immutable'
   | 'target_admin'
   | 'timeout'
   | 'unauthenticated'
@@ -123,6 +128,73 @@ function resolveKnownReason(
         return baseResult(
           'email_failed',
           '验证邮件投递失败，邮件服务暂时不可用，请稍后重试',
+        );
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
+  if (isAdminClientErrorReason(reason)) {
+    switch (reason) {
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_ALREADY_EXISTS: {
+        return baseResult(
+          'already_exists',
+          '该客户端 ID 已被占用（含静态托管客户端），请更换后重试',
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE: {
+        return baseResult(
+          'unavailable',
+          '下游身份或权限服务暂时不可用，当前管理会话仍有效，请稍后重试',
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_ETAG_MISMATCH: {
+        return baseResult(
+          'etag_mismatch',
+          '客户端数据已被更新，已刷新最新状态，请确认后重试',
+          { shouldRefreshRecord: true },
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_INVALID_CONFIG: {
+        return baseResult(
+          'invalid_argument',
+          '客户端协议或回调地址配置不符合安全规范，请检查授权类型、认证方式与 URI 格式',
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_INVALID_STATE: {
+        return baseResult('invalid_state', '当前客户端状态或类型不支持该操作', {
+          shouldRefreshRecord: true,
+        });
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_LAST_ACTIVE_SECRET: {
+        return baseResult(
+          'invalid_state',
+          '机密客户端至少需保留一把有效密钥，请先新增新密钥完成轮换后再删除旧密钥',
+          { shouldRefreshRecord: true },
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_NOT_FOUND: {
+        return baseResult(
+          'not_found',
+          action === 'delete'
+            ? '目标 OAuth 客户端不存在或已被删除'
+            : '目标 OAuth 客户端或密钥不存在，状态可能已变更',
+          { shouldRefreshRecord: true },
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_SECRET_LIMIT_EXCEEDED: {
+        return baseResult(
+          'invalid_state',
+          '单个动态客户端最多同时持有 5 把密钥，请先删除旧密钥后再新增',
+          { shouldRefreshRecord: true },
+        );
+      }
+      case AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_STATIC_CLIENT_IMMUTABLE: {
+        return baseResult(
+          'static_immutable',
+          '该客户端由 IAM 静态配置文件（oidc.yaml）引导托管，不支持在线修改、启停、轮换密钥或删除',
         );
       }
       default: {

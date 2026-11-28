@@ -5,6 +5,7 @@ import { AuthnErrorReason } from "@plateau/api/plateau/iam/authn/v1/authn.errors
 import Link from "next/link"
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 
+import { AppLogo } from "@/components/app-logo"
 import { AuthShell } from "@/components/auth-shell"
 import {
   PasswordField,
@@ -17,6 +18,7 @@ import { useSensitiveValue } from "@/hooks/use-sensitive-value"
 import { useSingleFlight } from "@/hooks/use-single-flight"
 import { authnErrorReason, requestErrorMessage } from "@/lib/errors"
 import { createIamApi } from "@/lib/iam-api"
+import { resolveOidcClientName } from "@/lib/oidc-display"
 import { validateEmail, validatePassword } from "@/lib/validation"
 
 function syncFlowUrl(flowId?: string) {
@@ -557,6 +559,12 @@ export default function LoginPage() {
   }
 
   const oidcClientId = flow.oidc?.clientId
+  const oidcAppName = oidcClientId
+    ? resolveOidcClientName(flow.oidc, oidcClientId)
+    : ""
+  const oidcBadge = oidcClientId ? (
+    <AppLogo src={flow.oidc?.logoUri} name={oidcAppName} size="md" />
+  ) : undefined
 
   if (flow.state === "AUTH_FLOW_STATE_REQUIRED_ACTION") {
     const isUpdatePassword =
@@ -565,6 +573,7 @@ export default function LoginPage() {
     if (!isUpdatePassword) {
       return (
         <AuthShell
+          badge={oidcBadge}
           title="需要完成账户操作"
           description="当前账户存在待处理的登录要求。"
         >
@@ -599,11 +608,20 @@ export default function LoginPage() {
 
     return (
       <AuthShell
+        badge={oidcBadge}
         title="修改初始密码"
         description={
-          oidcClientId
-            ? `当前账户需先设置新密码，完成后将继续授权访问 ${oidcClientId}。`
-            : "为保障账户安全，首次登录需设置新密码。"
+          oidcClientId ? (
+            <>
+              当前账户需先设置新密码，完成后将继续前往{" "}
+              <strong className="font-semibold text-foreground">
+                {oidcAppName}
+              </strong>
+              。
+            </>
+          ) : (
+            "为保障账户安全，首次登录需设置新密码。"
+          )
         }
       >
         <form
@@ -677,11 +695,19 @@ export default function LoginPage() {
 
   return (
     <AuthShell
+      badge={oidcBadge}
       title="登录"
       description={
-        oidcClientId
-          ? `登录后将继续授权访问 ${oidcClientId}。`
-          : "使用您的邮箱和密码继续。"
+        oidcClientId ? (
+          <>
+            登录以继续前往{" "}
+            <strong className="font-semibold text-foreground">
+              {oidcAppName}
+            </strong>
+          </>
+        ) : (
+          "使用您的邮箱和密码继续。"
+        )
       }
       footer={
         <>

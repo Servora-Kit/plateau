@@ -1,10 +1,10 @@
 "use client"
 
 import { LoaderCircle, LogOut, Trash2 } from "lucide-react"
-import { useId, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { useId, useState, type FormEvent } from "react"
 
-import { AccountShell } from "@/components/account-shell"
+import { AccountCard, AccountShell } from "@/components/account-shell"
 import { PasswordField, SubmitButton } from "@/components/form-controls"
 import { StatusMessage } from "@/components/status-message"
 import { Button } from "@/components/ui/button"
@@ -193,12 +193,14 @@ export default function AccountSecurityPage() {
   if (state.status === "loading" || state.status === "unauthenticated") {
     return (
       <AccountShell
-        title="账户安全"
-        description="更新密码、结束当前登录或删除账户。"
+        title="安全性与登录"
+        description="管理用于登录 Plateau 账户的密码、当前设备会话以及账户生命周期操作。"
       >
-        <p className="text-sm text-muted-foreground" role="status">
-          正在确认账户状态…
-        </p>
+        <div className="rounded-2xl border bg-card p-6 shadow-2xs">
+          <p className="text-sm text-muted-foreground" role="status">
+            正在确认账户状态…
+          </p>
+        </div>
       </AccountShell>
     )
   }
@@ -206,94 +208,96 @@ export default function AccountSecurityPage() {
   if (state.status === "error") {
     return (
       <AccountShell
-        title="账户安全"
-        description="更新密码、结束当前登录或删除账户。"
+        title="安全性与登录"
+        description="管理用于登录 Plateau 账户的密码、当前设备会话以及账户生命周期操作。"
       >
-        <StatusMessage tone="error">{state.message}</StatusMessage>
-        <Button className="mt-4 h-10" onClick={() => void reload()}>
-          重新加载
-        </Button>
+        <div className="rounded-2xl border bg-card p-6 shadow-2xs">
+          <StatusMessage tone="error">{state.message}</StatusMessage>
+          <Button className="mt-4 h-10" onClick={() => void reload()}>
+            重新加载
+          </Button>
+        </div>
       </AccountShell>
     )
   }
 
   return (
     <AccountShell
-      title="账户安全"
-      description="更新密码、结束当前登录或删除账户。"
+      title="安全性与登录"
+      description="管理用于登录 Plateau 账户的密码、当前设备会话以及账户生命周期操作。"
+      user={state.user}
       email={state.user.email}
     >
-      <div className="grid gap-8">
-        {message ? (
-          <StatusMessage tone={message.tone}>{message.text}</StatusMessage>
-        ) : null}
-        <section
-          className="rounded-xl border p-5 sm:p-6"
-          aria-labelledby="password-heading"
+      {message ? (
+        <StatusMessage tone={message.tone}>{message.text}</StatusMessage>
+      ) : null}
+
+      <AccountCard
+        id="password"
+        title="登录 Plateau — 修改密码"
+        description="修改密码后当前设备登录继续有效，其他设备的登录与第三方授权会话将立即失效。"
+      >
+        <form
+          className="grid gap-5 px-5 py-5 sm:px-6 sm:py-6"
+          onSubmit={changePassword}
+          noValidate
+          aria-busy={pending}
         >
-          <h2 id="password-heading" className="text-lg font-semibold">
-            修改密码
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            修改后当前登录继续有效，其他登录和授权会话将失效。
-          </p>
-          <form
-            className="mt-5 grid gap-5"
-            onSubmit={changePassword}
-            noValidate
-            aria-busy={pending}
-          >
-            <PasswordField
-              label="当前密码"
-              name="current-password"
-              autoComplete="current-password"
-              value={currentPassword.value}
-              error={errors.current}
-              disabled={pending}
-              onChange={(event) => currentPassword.setValue(event.target.value)}
-              required
-            />
-            <PasswordField
-              label="新密码"
-              name="new-password"
-              autoComplete="new-password"
-              value={newPassword.value}
-              error={errors.next}
-              hint="使用 8 至 128 个字符"
-              disabled={pending}
-              onChange={(event) => newPassword.setValue(event.target.value)}
-              required
-            />
-            <PasswordField
-              label="确认新密码"
-              name="new-password-confirmation"
-              autoComplete="new-password"
-              value={confirmation.value}
-              error={errors.confirmation}
-              disabled={pending}
-              onChange={(event) => confirmation.setValue(event.target.value)}
-              required
-            />
-            <SubmitButton pending={pending} className="sm:w-fit">
+          <PasswordField
+            label="当前密码"
+            name="current-password"
+            autoComplete="current-password"
+            value={currentPassword.value}
+            error={errors.current}
+            disabled={pending}
+            onChange={(event) => currentPassword.setValue(event.target.value)}
+            required
+          />
+          <PasswordField
+            label="新密码"
+            name="new-password"
+            autoComplete="new-password"
+            value={newPassword.value}
+            error={errors.next}
+            hint="使用 8 至 128 个字符"
+            disabled={pending}
+            onChange={(event) => newPassword.setValue(event.target.value)}
+            required
+          />
+          <PasswordField
+            label="确认新密码"
+            name="new-password-confirmation"
+            autoComplete="new-password"
+            value={confirmation.value}
+            error={errors.confirmation}
+            disabled={pending}
+            onChange={(event) => confirmation.setValue(event.target.value)}
+            required
+          />
+          <div>
+            <SubmitButton pending={pending} className="sm:w-fit sm:px-6">
               更新密码
             </SubmitButton>
-          </form>
-        </section>
+          </div>
+        </form>
+      </AccountCard>
 
-        <section
-          className="rounded-xl border p-5 sm:p-6"
-          aria-labelledby="logout-heading"
-        >
-          <h2 id="logout-heading" className="text-lg font-semibold">
-            退出当前账户
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            仅在服务确认注销成功后，页面才会返回登录入口。
-          </p>
+      <AccountCard
+        id="session"
+        title="会话管理 — 退出当前设备登录"
+        description="结束当前浏览器的登录会话。仅在服务端确认注销成功后，页面才会返回登录入口。"
+      >
+        <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">当前浏览器会话</p>
+            <p className="text-sm text-muted-foreground">
+              已登录账号：{state.user.email || "当前用户"}
+            </p>
+          </div>
           <Button
             type="button"
             variant="outline"
-            className="mt-5 h-10"
+            className="h-10 sm:w-fit"
             disabled={pending}
             onClick={() => void logout()}
           >
@@ -302,28 +306,23 @@ export default function AccountSecurityPage() {
             ) : (
               <LogOut aria-hidden="true" />
             )}
-            退出登录
+            退出当前设备登录
           </Button>
-        </section>
+        </div>
+      </AccountCard>
 
-        <section
-          className="rounded-xl border border-destructive/30 p-5 sm:p-6"
-          aria-labelledby="delete-account-heading"
-        >
-          <h2
-            id="delete-account-heading"
-            className="text-lg font-semibold text-destructive"
-          >
-            删除账户
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            删除账户将立即退出所有设备并撤销全部登录与授权会话。删除后该邮箱仍保持占用，无法用于重新注册；自助删除不会永久擦除账户数据，仅平台管理员可恢复。
-          </p>
+      <AccountCard
+        id="delete-account"
+        tone="danger"
+        title="危险区域 — 删除账户"
+        description="删除账户将立即退出所有设备并撤销全部登录与授权会话。删除后该邮箱仍保持占用，无法用于重新注册；自助删除不会永久擦除账户数据，仅平台管理员可恢复。"
+      >
+        <div className="px-5 py-5 sm:px-6 sm:py-6">
           {!deleteOpen ? (
             <Button
               type="button"
               variant="destructive"
-              className="mt-5 h-10"
+              className="h-10"
               disabled={pending}
               onClick={openDeleteConfirmation}
             >
@@ -332,7 +331,7 @@ export default function AccountSecurityPage() {
             </Button>
           ) : (
             <form
-              className="mt-5 grid gap-5"
+              className="grid gap-5"
               onSubmit={deleteAccount}
               noValidate
               aria-busy={pending}
@@ -412,8 +411,8 @@ export default function AccountSecurityPage() {
               </div>
             </form>
           )}
-        </section>
-      </div>
+        </div>
+      </AccountCard>
     </AccountShell>
   )
 }

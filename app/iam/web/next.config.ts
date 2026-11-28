@@ -10,7 +10,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${development ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https: http:",
   "font-src 'self'",
   "connect-src 'self' ws: wss:",
   "worker-src 'self' blob:",
@@ -28,7 +28,11 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@plateau/api", "@servora/plateau-utils"],
   logging: {
     incomingRequests: {
-      ignore: [/^\/login\/?(?:\?|$)/u, /^\/authorize\/callback\/?(?:\?|$)/u],
+      ignore: [
+        /^\/login\/?(?:\?|$)/u,
+        /^\/consent\/?(?:\?|$)/u,
+        /^\/authorize\/callback\/?(?:\?|$)/u,
+      ],
     },
     browserToTerminal: false,
     serverFunctions: false,

@@ -9,7 +9,7 @@ const routes: RouteRecordRaw[] = [
       authority: ['read_audit'],
       fullPathKey: false,
       icon: 'lucide:scroll-text',
-      order: 3,
+      order: 4,
       title: $t('page.audit.title'),
     },
     name: 'AuditLogs',

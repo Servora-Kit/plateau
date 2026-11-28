@@ -41,6 +41,7 @@ describe('useAuthStore', () => {
         GetSession: getSessionMock,
         Logout: logoutMock,
       },
+      oauthClients: {} as AdminApi['oauthClients'],
       users: {} as AdminApi['users'],
     });
   });

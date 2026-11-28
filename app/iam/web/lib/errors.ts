@@ -56,6 +56,24 @@ export function isAlreadyRegistered(error: unknown): boolean {
   )
 }
 
+export function isConsentRequestInvalid(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false
+  if (
+    error.httpStatus === 400 ||
+    error.httpStatus === 404 ||
+    error.httpStatus === 410
+  ) {
+    return true
+  }
+  const reason = authnErrorReason(error)
+  return (
+    reason === AuthnErrorReason.AUTHN_ERROR_REASON_OIDC_REQUEST_INVALID ||
+    reason === AuthnErrorReason.AUTHN_ERROR_REASON_FLOW_EXPIRED ||
+    reason === AuthnErrorReason.AUTHN_ERROR_REASON_FLOW_NOT_FOUND ||
+    reason === AuthnErrorReason.AUTHN_ERROR_REASON_FLOW_INVALIDATED
+  )
+}
+
 export function requestErrorMessage(
   error: unknown,
   fallback = "操作未完成，请重试"

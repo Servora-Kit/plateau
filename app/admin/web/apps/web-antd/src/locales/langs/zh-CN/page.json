@@ -5,6 +5,9 @@
   "auth": {
     "login": "管理员登录"
   },
+  "oauthClients": {
+    "title": "OAuth 客户端"
+  },
   "overview": {
     "title": "总览"
   },

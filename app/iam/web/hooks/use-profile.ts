@@ -1,19 +1,36 @@
 "use client"
 
 import type { plateauiamuserv1_User } from "@plateau/api/plateau/iam/account/v1"
-import { useEffect, useState } from "react"
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react"
 import { useRouter } from "next/navigation"
 
-import { createIamApi } from "@/lib/iam-api"
 import { isUnauthenticated, requestErrorMessage } from "@/lib/errors"
+import { createIamApi } from "@/lib/iam-api"
 
-type ProfileState =
+export type ProfileState =
   | { status: "loading"; user: null; message: null }
   | { status: "ready"; user: plateauiamuserv1_User; message: null }
   | { status: "error"; user: null; message: string }
   | { status: "unauthenticated"; user: null; message: null }
 
-export function useProfile() {
+export interface ProfileController {
+  state: ProfileState
+  reload(): void
+  setUser(user: plateauiamuserv1_User): void
+}
+
+const AccountProfileContext = createContext<ProfileController | null>(null)
+
+function useStandaloneProfile(enabled: boolean): ProfileController {
   const router = useRouter()
   const [revision, setRevision] = useState(0)
   const [state, setState] = useState<ProfileState>({
@@ -23,6 +40,7 @@ export function useProfile() {
   })
 
   useEffect(() => {
+    if (!enabled) return
     const controller = new AbortController()
     void createIamApi(controller.signal)
       .account.GetProfile({})
@@ -53,16 +71,50 @@ export function useProfile() {
           })
         }
       )
-    return () => controller.abort()
-  }, [router, revision])
 
-  return {
-    state,
-    reload: () => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return
       setState({ status: "loading", user: null, message: null })
       setRevision((current) => current + 1)
-    },
-    setUser: (user: plateauiamuserv1_User) =>
-      setState({ status: "ready", user, message: null }),
-  }
+    }
+    window.addEventListener("pageshow", handlePageShow)
+
+    return () => {
+      controller.abort()
+      window.removeEventListener("pageshow", handlePageShow)
+    }
+  }, [enabled, router, revision])
+
+  const reload = useCallback(() => {
+    setState({ status: "loading", user: null, message: null })
+    setRevision((current) => current + 1)
+  }, [])
+
+  const setUser = useCallback((user: plateauiamuserv1_User) => {
+    setState({ status: "ready", user, message: null })
+  }, [])
+
+  return useMemo(
+    () => ({
+      state,
+      reload,
+      setUser,
+    }),
+    [reload, setUser, state]
+  )
+}
+
+export function AccountProfileProvider({ children }: { children: ReactNode }) {
+  const controller = useStandaloneProfile(true)
+  return createElement(
+    AccountProfileContext.Provider,
+    { value: controller },
+    children
+  )
+}
+
+export function useProfile(): ProfileController {
+  const shared = useContext(AccountProfileContext)
+  const fallback = useStandaloneProfile(shared === null)
+  return shared ?? fallback
 }

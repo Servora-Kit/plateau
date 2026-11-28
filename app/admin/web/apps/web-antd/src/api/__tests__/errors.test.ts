@@ -1,12 +1,14 @@
 import { AdminAuditErrorReason } from '@plateau/api/plateau/admin/audit/v1/audit.errors';
+import { AdminClientErrorReason } from '@plateau/api/plateau/admin/client/v1/client.errors';
 import { AdminUserErrorReason } from '@plateau/api/plateau/admin/user/v1/user.errors';
 import { CrudErrorReason } from '@servora/plateau-utils/error-reasons/plateau/crud/v1/errors';
 import { SecurityErrorReason } from '@servora/plateau-utils/error-reasons/plateau/security/errors/v1/errors';
 import { ApiError } from '@servora/proto-utils/errors';
 import { describe, expect, it } from 'vitest';
 
-import { buildOidcLoginUrl, sanitizeReturnTo } from '../client';
+import { buildOidcLoginUrl, createAdminApi, sanitizeReturnTo } from '../client';
 import { resolveAdminApiError } from '../errors';
+import { createOAuthClientsApi } from '../oauth-clients';
 
 function httpError(
   httpStatus: number,
@@ -261,6 +263,131 @@ describe('resolveAdminApiError', () => {
       preserveSession: true,
       shouldRefreshRecord: true,
     });
+  });
+
+  it('maps all AdminClientErrorReason codes while preserving session and redacting internals', () => {
+    const api = createAdminApi();
+    expect(typeof api.oauthClients.ListOAuthClients).toBe('function');
+    expect(typeof createOAuthClientsApi().CreateOAuthClient).toBe('function');
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          409,
+          AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_ALREADY_EXISTS,
+        ),
+        'create',
+      ),
+    ).toMatchObject({
+      category: 'already_exists',
+      preserveSession: true,
+      shouldRefreshRecord: false,
+    });
+
+    const staticErr = resolveAdminApiError(
+      httpError(
+        403,
+        AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_STATIC_CLIENT_IMMUTABLE,
+      ),
+      'update',
+    );
+    expect(staticErr).toMatchObject({
+      category: 'static_immutable',
+      preserveSession: true,
+    });
+    expect(staticErr.message).toContain('oidc.yaml');
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          400,
+          AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_INVALID_CONFIG,
+        ),
+      ),
+    ).toMatchObject({
+      category: 'invalid_argument',
+      preserveSession: true,
+    });
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          409,
+          AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_INVALID_STATE,
+        ),
+      ),
+    ).toMatchObject({
+      category: 'invalid_state',
+      preserveSession: true,
+      shouldRefreshRecord: true,
+    });
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          409,
+          AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_ETAG_MISMATCH,
+        ),
+      ),
+    ).toMatchObject({
+      category: 'etag_mismatch',
+      preserveSession: true,
+      shouldRefreshRecord: true,
+    });
+
+    const limitErr = resolveAdminApiError(
+      httpError(
+        409,
+        AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_SECRET_LIMIT_EXCEEDED,
+      ),
+    );
+    expect(limitErr).toMatchObject({
+      category: 'invalid_state',
+      preserveSession: true,
+      shouldRefreshRecord: true,
+    });
+    expect(limitErr.message).toContain('5 把');
+
+    const lastSecretErr = resolveAdminApiError(
+      httpError(
+        409,
+        AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_LAST_ACTIVE_SECRET,
+      ),
+    );
+    expect(lastSecretErr).toMatchObject({
+      category: 'invalid_state',
+      preserveSession: true,
+      shouldRefreshRecord: true,
+    });
+    expect(lastSecretErr.message).toContain('至少需保留一把有效密钥');
+
+    expect(
+      resolveAdminApiError(
+        httpError(
+          404,
+          AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_NOT_FOUND,
+        ),
+        'delete',
+      ),
+    ).toMatchObject({
+      category: 'not_found',
+      message: '目标 OAuth 客户端不存在或已被删除',
+      preserveSession: true,
+      shouldRefreshRecord: true,
+    });
+
+    const clientDownstream = resolveAdminApiError(
+      httpError(
+        503,
+        AdminClientErrorReason.ADMIN_CLIENT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE,
+        'iam grpc dial failed client_secret=pcs_super_secret',
+      ),
+    );
+    expect(clientDownstream).toMatchObject({
+      category: 'unavailable',
+      preserveSession: true,
+    });
+    expect(clientDownstream.message).not.toContain('pcs_super_secret');
   });
 
   it('redacts unknown exceptions without echoing raw message or stack', () => {
