@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	securityerrorspb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/errors/v1"
 	iamauthn "github.com/Servora-Kit/plateau/app/iam/service/internal/authn"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/security"
@@ -140,6 +141,48 @@ func (s *AuthnService) CancelAuthFlow(
 	return &authnpb.CancelAuthFlowResponse{RedirectUri: redirectURI}, nil
 }
 
+func (s *AuthnService) GetConsentView(
+	ctx context.Context,
+	request *authnpb.GetConsentViewRequest,
+) (*authnpb.GetConsentViewResponse, error) {
+	if !sessions.Loaded(ctx, s.manager) {
+		return nil, authnError(fmt.Errorf("HTTP session is not loaded"))
+	}
+	user, _, err := iamauthn.From(ctx)
+	if err != nil {
+		return nil, authnError(err)
+	}
+	ownerToken := s.manager.GetString(ctx, iamauthn.AuthFlowOwnerKey)
+	view, err := s.authentication.GetConsentView(ctx, user, ownerToken, request.GetRequestId())
+	if err != nil {
+		return nil, authnError(err)
+	}
+	return &authnpb.GetConsentViewResponse{Consent: view}, nil
+}
+
+func (s *AuthnService) SubmitConsentDecision(
+	ctx context.Context,
+	request *authnpb.SubmitConsentDecisionRequest,
+) (*authnpb.SubmitConsentDecisionResponse, error) {
+	if !sessions.Loaded(ctx, s.manager) {
+		return nil, authnError(fmt.Errorf("HTTP session is not loaded"))
+	}
+	user, _, err := iamauthn.From(ctx)
+	if err != nil {
+		return nil, authnError(err)
+	}
+	enrichAuthnAudit(ctx, user.GetUserId())
+	ownerToken := s.manager.GetString(ctx, iamauthn.AuthFlowOwnerKey)
+	redirectURI, clientID, err := s.authentication.SubmitConsentDecision(ctx, user, ownerToken, request.GetRequestId(), request.GetApproved())
+	if clientID != "" {
+		audit.SetResource(ctx, "iam.plateau.dev/OAuthClient", "oauthClients/"+clientID)
+	}
+	if err != nil {
+		return nil, authnError(err)
+	}
+	return &authnpb.SubmitConsentDecisionResponse{RedirectUri: redirectURI}, nil
+}
+
 func (s *AuthnService) applyFlowSessionState(
 	ctx context.Context,
 	flow *authnpb.AuthFlow,
@@ -190,6 +233,8 @@ func authnError(err error) error {
 		return authnpb.ErrorAuthnErrorReasonInvalidPassword("password does not meet requirements").WithCause(err)
 	case errors.Is(err, biz.ErrOIDCRequestInvalid):
 		return authnpb.ErrorAuthnErrorReasonOidcRequestInvalid("authorization request is invalid or expired").WithCause(err)
+	case errors.Is(err, biz.ErrUnauthenticated):
+		return securityerrorspb.ErrorSecurityErrorReasonUnauthenticated("authentication required").WithCause(err)
 	default:
 		return kerrors.InternalServer("IAM authentication failed", "authentication failed").WithCause(err)
 	}

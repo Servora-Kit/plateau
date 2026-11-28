@@ -33,6 +33,12 @@ type OAuthAuthorizationCode func(*sql.Selector)
 // OAuthClient is the predicate function for oauthclient builders.
 type OAuthClient func(*sql.Selector)
 
+// OAuthClientSecret is the predicate function for oauthclientsecret builders.
+type OAuthClientSecret func(*sql.Selector)
+
+// OAuthConsent is the predicate function for oauthconsent builders.
+type OAuthConsent func(*sql.Selector)
+
 // OAuthRefreshToken is the predicate function for oauthrefreshtoken builders.
 type OAuthRefreshToken func(*sql.Selector)
 

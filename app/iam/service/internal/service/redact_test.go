@@ -6,7 +6,11 @@ import (
 
 	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
 	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
+	iamclientv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/client/v1"
+	oidcconfv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
+	"github.com/Servora-Kit/plateau/security/audit"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {
@@ -40,6 +44,33 @@ func TestIAMRequestRedactionDoesNotExposeSecrets(t *testing.T) {
 		{name: "admin set user password", redact: func() string {
 			return (&userpb.SetUserPasswordRequest{Name: "users/user-1", NewPassword: "admin-set-secret"}).Redact()
 		}, secrets: []string{"admin-set-secret"}},
+		{name: "register oauth client response secret", redact: func() string {
+			return (&iamclientv1.RegisterOAuthClientResponse{
+				Client:       &iamclientv1.OAuthClient{Name: "oauthClients/cli-1", ClientId: "cli-1"},
+				ClientSecret: "pcs_top_secret_initial_value",
+			}).Redact()
+		}, secrets: []string{"pcs_top_secret_initial_value"}},
+		{name: "create oauth client secret response value", redact: func() string {
+			return (&iamclientv1.CreateOAuthClientSecretResponse{
+				Secret:      &iamclientv1.OAuthClientSecret{SecretId: "sec-1", SecretPrefix: "pcs_abcd1234"},
+				SecretValue: "pcs_abcd1234_rotated_plaintext_secret",
+			}).Redact()
+		}, secrets: []string{"pcs_abcd1234_rotated_plaintext_secret"}},
+		{name: "static oidc config client secret", redact: func() string {
+			return (&oidcconfv1.OAuthClient{
+				ClientId:     new("admin"),
+				ClientSecret: new("static-yaml-client-secret-32-bytes"),
+			}).Redact()
+		}, secrets: []string{"static-yaml-client-secret-32-bytes"}},
+		{name: "audit redact clone strips oauth client secrets", redact: func() string {
+			regClone := audit.RedactClone(&iamclientv1.RegisterOAuthClientResponse{
+				ClientSecret: "pcs_audit_clone_initial_secret",
+			})
+			rotClone := audit.RedactClone(&iamclientv1.CreateOAuthClientSecretResponse{
+				SecretValue: "pcs_audit_clone_rotated_secret",
+			})
+			return protojson.Format(regClone) + " " + protojson.Format(rotClone)
+		}, secrets: []string{"pcs_audit_clone_initial_secret", "pcs_audit_clone_rotated_secret"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

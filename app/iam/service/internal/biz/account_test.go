@@ -3,13 +3,17 @@ package biz
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 	"time"
 
+	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
+	authnpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	corecrud "github.com/Servora-Kit/plateau/crud"
 	"github.com/Servora-Kit/plateau/security/password"
 	corepb "github.com/Servora-Kit/servora/api/gen/go/servora/core/v1"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -237,13 +241,69 @@ func timestamppbFromUnix(sec int64) *timestamppb.Timestamp {
 	return timestamppb.New(time.Unix(sec, 0).UTC())
 }
 
+type fakeConsentPending struct {
+	view        *authnpb.ConsentView
+	ownerHash   string
+	redirectURI string
+	state       string
+}
+
+type fakeConsents struct {
+	pending *fakeConsentPending
+	granted map[string][]string
+	apps    []*accountpb.AuthorizedApp
+	revoked []string
+}
+
+func (f *fakeConsents) GetConsentView(_ context.Context, userID, ownerHash, reqID string, _ time.Time) (*authnpb.ConsentView, error) {
+	if f.pending == nil || f.pending.view.GetRequestId() != reqID || f.pending.ownerHash != ownerHash {
+		return nil, ErrOIDCRequestInvalid
+	}
+	cp := proto.CloneOf(f.pending.view)
+	if f.granted != nil {
+		cp.GrantedScopes = slices.Clone(f.granted[userID+":"+cp.GetClientId()])
+	}
+	return cp, nil
+}
+
+func (f *fakeConsents) ApproveConsent(_ context.Context, userID, ownerHash, reqID string, _ time.Time) (string, error) {
+	if f.pending == nil || f.pending.view.GetRequestId() != reqID || f.pending.ownerHash != ownerHash {
+		return "", ErrOIDCRequestInvalid
+	}
+	if f.granted == nil {
+		f.granted = make(map[string][]string)
+	}
+	cid := f.pending.view.GetClientId()
+	key := userID + ":" + cid
+	f.granted[key] = MergeScopes(f.granted[key], f.pending.view.GetRequestedScopes())
+	return cid, nil
+}
+
+func (f *fakeConsents) DenyConsent(_ context.Context, ownerHash, reqID string, _ time.Time) (string, string, string, error) {
+	if f.pending == nil || f.pending.view.GetRequestId() != reqID || f.pending.ownerHash != ownerHash {
+		return "", "", "", ErrOIDCRequestInvalid
+	}
+	p := f.pending
+	f.pending = nil
+	return p.redirectURI, p.state, p.view.GetClientId(), nil
+}
+
+func (f *fakeConsents) ListAuthorizedApps(context.Context, string) ([]*accountpb.AuthorizedApp, error) {
+	return f.apps, nil
+}
+
+func (f *fakeConsents) RevokeAuthorizedApp(_ context.Context, _, clientID string, _ time.Time) error {
+	f.revoked = append(f.revoked, clientID)
+	return nil
+}
+
 func accountTestRuntime() *corepb.App {
 	return &corepb.App{ExternalUrl: "https://iam.example"}
 }
 
 func newAccountForTest(t *testing.T, users *fakeAccountUsers, tokens *fakeVerificationTokens, resetTokens *fakePasswordResetTokens, mailer *fakeMailSender) *AccountUsecase {
 	t.Helper()
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, resetTokens, &fakeCAP{valid: true}, mailer, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, resetTokens, new(fakeConsents), &fakeCAP{valid: true}, mailer, accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -255,7 +315,7 @@ func TestAccountRegisterConsumesCAPBeforeCreatingPendingUser(t *testing.T) {
 	users := new(fakeAccountUsers)
 	tokens := new(fakeVerificationTokens)
 	mailer := new(fakeMailSender)
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, new(fakePasswordResetTokens), captcha, mailer, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), tokens, new(fakePasswordResetTokens), new(fakeConsents), captcha, mailer, accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -279,7 +339,7 @@ func TestAccountRegisterConsumesCAPBeforeCreatingPendingUser(t *testing.T) {
 func TestAccountRejectsInvalidCAPWithoutUserSideEffects(t *testing.T) {
 	captcha := &fakeCAP{}
 	users := new(fakeAccountUsers)
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), new(fakePasswordResetTokens), captcha, new(fakeMailSender), accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), new(fakePasswordResetTokens), new(fakeConsents), captcha, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -314,7 +374,7 @@ func TestAccountPasswordResetUsesCAPAndRevokesSessions(t *testing.T) {
 		Status: userpb.UserStatus_USER_STATUS_ACTIVE, EmailVerified: true,
 	}}
 	resetTokens := new(fakePasswordResetTokens)
-	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), resetTokens, &fakeCAP{valid: true}, mail, accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, new(fakeCredentials), new(fakeVerificationTokens), resetTokens, new(fakeConsents), &fakeCAP{valid: true}, mail, accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -344,7 +404,7 @@ func TestAccountChangePasswordPreservesCurrentSessionAndRevokesOthers(t *testing
 	}
 	users := &fakeAccountUsers{user: activeUser()}
 	credentials := &fakeCredentials{credential: &PasswordCredential{UserID: "user-1", AuthenticatorID: "auth-1", PasswordHash: hash}}
-	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), new(fakeConsents), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatalf("NewAccountUsecase() error = %v", err)
 	}
@@ -402,7 +462,7 @@ func TestAccountDeleteAccount(t *testing.T) {
 		PasswordAuthenticatorID: "pa-1",
 		PasswordHash:            activeHash,
 	}}
-	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
+	usecase, err := NewAccountUsecase(users, credentials, new(fakeVerificationTokens), new(fakePasswordResetTokens), new(fakeConsents), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,7 +496,7 @@ func TestConfirmPasswordResetRejectsUnchangedPasswordWhenUpdateRequired(t *testi
 		userEtag:               "etag-1",
 		requiresPasswordChange: true,
 	}
-	usecase, err := NewAccountUsecase(new(fakeAccountUsers), new(fakeCredentials), new(fakeVerificationTokens), resetTokens, &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
+	usecase, err := NewAccountUsecase(new(fakeAccountUsers), new(fakeCredentials), new(fakeVerificationTokens), resetTokens, new(fakeConsents), &fakeCAP{valid: true}, new(fakeMailSender), accountTestRuntime())
 	if err != nil {
 		t.Fatal(err)
 	}

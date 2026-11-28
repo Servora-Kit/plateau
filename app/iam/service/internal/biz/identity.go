@@ -12,13 +12,18 @@ const (
 	MaxPasswordBytes = 128
 )
 
-// NewUserID returns a time-ordered UUIDv7 identity that callers cannot supply or reuse.
-func NewUserID() (string, error) {
+// NewID returns a time-ordered UUIDv7 identifier.
+func NewID() (string, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		return "", fmt.Errorf("generate User UUIDv7: %w", err)
+		return "", fmt.Errorf("generate UUIDv7: %w", err)
 	}
 	return id.String(), nil
+}
+
+// NewUserID returns a time-ordered UUIDv7 identity that callers cannot supply or reuse.
+func NewUserID() (string, error) {
+	return NewID()
 }
 
 // ValidatePassword enforces the shared 8..128 byte password policy before hashing.

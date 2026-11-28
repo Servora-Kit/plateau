@@ -17,4 +17,11 @@ var (
 	ErrAuthFlowExpired         = errors.New("authentication flow expired")
 	ErrAuthFlowInvalidated     = errors.New("authentication flow invalidated")
 	ErrOIDCRequestInvalid      = errors.New("OIDC authorization request is invalid")
+
+	ErrStaticClientImmutable = errors.New("static OAuth client is immutable")
+	ErrInvalidClientConfig   = errors.New("invalid OAuth client configuration")
+	ErrClientInvalidState    = errors.New("OAuth client lifecycle state is invalid")
+	ErrClientEtagMismatch    = errors.New("OAuth client etag does not match")
+	ErrSecretLimitExceeded   = errors.New("OAuth client secret limit exceeded")
+	ErrLastActiveSecret      = errors.New("cannot delete the last active OAuth client secret")
 )

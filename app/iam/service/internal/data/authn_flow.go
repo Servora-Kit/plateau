@@ -40,24 +40,12 @@ func (repo *authFlowRepository) FindPendingOIDCRequest(
 	ctx context.Context,
 	requestID string,
 	now time.Time,
-) (string, time.Time, error) {
-	if requestID == "" {
-		return "", time.Time{}, biz.ErrNotFound
-	}
-	if now.IsZero() {
-		now = time.Now()
-	}
-	entity, err := repo.ent.OIDCAuthorizationRequest.Query().
-		Where(
-			oidcauthorizationrequest.IDEQ(requestID),
-			oidcauthorizationrequest.DoneEQ(false),
-			oidcauthorizationrequest.ExpiresTimeGT(now.UTC()),
-		).
-		Only(ctx)
+) (*authnpb.AuthFlowOidcContext, time.Time, error) {
+	req, client, err := loadPendingOIDCRequestAndClient(ctx, repo.ent, requestID, false, now.UTC())
 	if err != nil {
-		return "", time.Time{}, translateEntError(err)
+		return nil, time.Time{}, err
 	}
-	return entity.ClientID, entity.ExpiresTime.UTC(), nil
+	return toAuthFlowOIDCContext(client), req.ExpiresTime.UTC(), nil
 }
 
 func (repo *authFlowRepository) Create(
@@ -76,19 +64,19 @@ func (repo *authFlowRepository) Create(
 	expiresTime := seed.GetExpiresTime().AsTime().UTC()
 
 	var (
-		saved    *entmodel.AuthFlow
-		clientID string
+		saved   *entmodel.AuthFlow
+		oidcCtx *authnpb.AuthFlowOidcContext
 	)
 	err := inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
 		if oidcRequestID != "" {
-			req, err := findPendingOIDCRequestTx(ctx, tx, oidcRequestID, now)
+			req, client, err := loadPendingOIDCRequestAndClient(ctx, tx.Client(), oidcRequestID, false, now)
 			if errors.Is(err, biz.ErrNotFound) {
 				return biz.ErrOIDCRequestInvalid
 			}
 			if err != nil {
 				return err
 			}
-			clientID = req.ClientID
+			oidcCtx = toAuthFlowOIDCContext(client)
 			if req.ExpiresTime.UTC().Before(expiresTime) {
 				expiresTime = req.ExpiresTime.UTC()
 			}
@@ -123,9 +111,7 @@ func (repo *authFlowRepository) Create(
 	if err != nil {
 		return nil, err
 	}
-	if clientID != "" {
-		snap.Flow.Oidc = &authnpb.AuthFlowOidcContext{ClientId: clientID}
-	}
+	snap.Flow.Oidc = oidcCtx
 	return snap.Flow, nil
 }
 
@@ -211,17 +197,17 @@ func (repo *authFlowRepository) AdvanceAfterPassword(
 			return biz.ErrAuthFlowInvalidated
 		}
 
-		var oidcClientID string
+		var oidcCtx *authnpb.AuthFlowOidcContext
 		oidcRequestID := derefString(flowRow.OidcRequestID)
 		if oidcRequestID != "" {
-			req, err := findPendingOIDCRequestTx(ctx, tx, oidcRequestID, now)
+			_, client, err := loadPendingOIDCRequestAndClient(ctx, tx.Client(), oidcRequestID, false, now)
 			if errors.Is(err, biz.ErrNotFound) {
 				return biz.ErrOIDCRequestInvalid
 			}
 			if err != nil {
 				return err
 			}
-			oidcClientID = req.ClientID
+			oidcCtx = toAuthFlowOIDCContext(client)
 		}
 
 		if current.Etag != userEtag {
@@ -280,9 +266,7 @@ func (repo *authFlowRepository) AdvanceAfterPassword(
 			if err != nil {
 				return err
 			}
-			if oidcClientID != "" {
-				snap.Flow.Oidc = &authnpb.AuthFlowOidcContext{ClientId: oidcClientID}
-			}
+			snap.Flow.Oidc = oidcCtx
 			outFlow = snap.Flow
 			return nil
 
@@ -309,12 +293,10 @@ func (repo *authFlowRepository) AdvanceAfterPassword(
 				State:        authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED,
 				CompletedAmr: completedAMR,
 				Email:        projectedUser.GetEmail(),
+				Oidc:         oidcCtx,
 				ExpiresTime:  timestamppb.New(saved.ExpiresTime.UTC()),
 				ContinueUrl:  biz.BuildContinueURL(oidcRequestID),
 				User:         projectedUser,
-			}
-			if oidcClientID != "" {
-				outFlow.Oidc = &authnpb.AuthFlowOidcContext{ClientId: oidcClientID}
 			}
 			loginSession = login
 			return nil
@@ -506,12 +488,12 @@ func (repo *authFlowRepository) CompleteUpdatePassword(
 		}
 		projectedUser := resources[0]
 
-		var oidcClientID string
+		var oidcCtx *authnpb.AuthFlowOidcContext
 		oidcRequestID := derefString(flowRow.OidcRequestID)
 		if oidcRequestID != "" {
-			req, reqErr := findPendingOIDCRequestTx(ctx, tx, oidcRequestID, now)
+			_, client, reqErr := loadPendingOIDCRequestAndClient(ctx, tx.Client(), oidcRequestID, false, now)
 			if reqErr == nil {
-				oidcClientID = req.ClientID
+				oidcCtx = toAuthFlowOIDCContext(client)
 			} else if !errors.Is(reqErr, biz.ErrNotFound) {
 				return reqErr
 			} else {
@@ -545,12 +527,10 @@ func (repo *authFlowRepository) CompleteUpdatePassword(
 				State:        authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED,
 				CompletedAmr: completedAMR,
 				Email:        projectedUser.GetEmail(),
+				Oidc:         oidcCtx,
 				ExpiresTime:  timestamppb.New(savedFlow.ExpiresTime.UTC()),
 				ContinueUrl:  biz.BuildContinueURL(oidcRequestID),
 				User:         projectedUser,
-			}
-			if oidcClientID != "" {
-				outFlow.Oidc = &authnpb.AuthFlowOidcContext{ClientId: oidcClientID}
 			}
 			loginSession = login
 			return nil
@@ -577,9 +557,7 @@ func (repo *authFlowRepository) CompleteUpdatePassword(
 		if err != nil {
 			return err
 		}
-		if oidcClientID != "" {
-			snap.Flow.Oidc = &authnpb.AuthFlowOidcContext{ClientId: oidcClientID}
-		}
+		snap.Flow.Oidc = oidcCtx
 		outFlow = snap.Flow
 		return nil
 	})
@@ -610,7 +588,7 @@ func (repo *authFlowRepository) Reset(
 
 	var (
 		savedNew    *entmodel.AuthFlow
-		clientID    string
+		oidcCtx     *authnpb.AuthFlowOidcContext
 		actorUserID string
 	)
 	err := inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
@@ -634,14 +612,14 @@ func (repo *authFlowRepository) Reset(
 
 		oidcRequestID := derefString(flowRow.OidcRequestID)
 		if oidcRequestID != "" {
-			req, err := findPendingOIDCRequestTx(ctx, tx, oidcRequestID, now)
+			_, client, err := loadPendingOIDCRequestAndClient(ctx, tx.Client(), oidcRequestID, false, now)
 			if errors.Is(err, biz.ErrNotFound) {
 				return biz.ErrOIDCRequestInvalid
 			}
 			if err != nil {
 				return err
 			}
-			clientID = req.ClientID
+			oidcCtx = toAuthFlowOIDCContext(client)
 		}
 
 		if _, err := tx.AuthFlow.UpdateOneID(flowRow.ID).
@@ -678,9 +656,7 @@ func (repo *authFlowRepository) Reset(
 	if err != nil {
 		return nil, actorUserID, err
 	}
-	if clientID != "" {
-		snap.Flow.Oidc = &authnpb.AuthFlowOidcContext{ClientId: clientID}
-	}
+	snap.Flow.Oidc = oidcCtx
 	return snap.Flow, actorUserID, nil
 }
 
@@ -733,7 +709,7 @@ func (repo *authFlowRepository) Cancel(
 
 		oidcRequestID := derefString(flowRow.OidcRequestID)
 		if oidcRequestID != "" {
-			req, err := findPendingOIDCRequestTx(ctx, tx, oidcRequestID, now)
+			req, _, err := loadPendingOIDCRequestAndClient(ctx, tx.Client(), oidcRequestID, false, now)
 			if err != nil && !errors.Is(err, biz.ErrNotFound) {
 				return err
 			}
@@ -758,20 +734,45 @@ func lockAuthFlow(ctx context.Context, tx *entmodel.Tx, flowID string) (*entmode
 	return entity, translateEntError(err)
 }
 
-func findPendingOIDCRequestTx(
+func loadPendingOIDCRequestAndClient(
 	ctx context.Context,
-	tx *entmodel.Tx,
+	client *entmodel.Client,
 	requestID string,
+	lock bool,
 	now time.Time,
-) (*entmodel.OIDCAuthorizationRequest, error) {
-	entity, err := tx.OIDCAuthorizationRequest.Query().
+) (*entmodel.OIDCAuthorizationRequest, *entmodel.OAuthClient, error) {
+	if requestID == "" {
+		return nil, nil, biz.ErrNotFound
+	}
+	query := client.OIDCAuthorizationRequest.Query().
 		Where(
 			oidcauthorizationrequest.IDEQ(requestID),
 			oidcauthorizationrequest.DoneEQ(false),
 			oidcauthorizationrequest.ExpiresTimeGT(now),
-		).
-		Only(ctx)
-	return entity, translateEntError(err)
+		)
+	if lock {
+		query = query.ForUpdate()
+	}
+	entity, err := query.Only(ctx)
+	if err != nil {
+		return nil, nil, translateEntError(err)
+	}
+	oauthClient, err := client.OAuthClient.Get(ctx, entity.ClientID)
+	if err != nil {
+		return nil, nil, translateEntError(err)
+	}
+	if oauthClient.Status != biz.ClientStatusActive {
+		return nil, nil, biz.ErrNotFound
+	}
+	return entity, oauthClient, nil
+}
+
+func toAuthFlowOIDCContext(client *entmodel.OAuthClient) *authnpb.AuthFlowOidcContext {
+	return &authnpb.AuthFlowOidcContext{
+		ClientId:   client.ID,
+		ClientName: client.DisplayName,
+		LogoUri:    derefString(client.LogoURI),
+	}
 }
 
 func verifyLockedRequiredActionSnapshot(

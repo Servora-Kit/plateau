@@ -112,24 +112,27 @@ func newFakeAuthFlows(users *fakeAccountUsers, credentials *fakeCredentials, ses
 	}
 }
 
-func (repo *fakeAuthFlows) FindPendingOIDCRequest(_ context.Context, requestID string, now time.Time) (string, time.Time, error) {
+func (repo *fakeAuthFlows) FindPendingOIDCRequest(_ context.Context, requestID string, now time.Time) (*authnpb.AuthFlowOidcContext, time.Time, error) {
 	entry, ok := repo.oidc[requestID]
 	if !ok || entry.done || !entry.expiresTime.After(now) {
-		return "", time.Time{}, ErrNotFound
+		return nil, time.Time{}, ErrNotFound
 	}
-	return entry.clientID, entry.expiresTime, nil
+	return &authnpb.AuthFlowOidcContext{
+		ClientId:   entry.clientID,
+		ClientName: entry.clientID,
+	}, entry.expiresTime, nil
 }
 
 func (repo *fakeAuthFlows) Create(_ context.Context, seed *authnpb.AuthFlow, ownerHash, oidcRequestID string, now time.Time) (*authnpb.AuthFlow, error) {
 	cloned := proto.CloneOf(seed)
 	if oidcRequestID != "" {
-		clientID, exp, err := repo.FindPendingOIDCRequest(context.Background(), oidcRequestID, now)
+		oidcCtx, oidcExpires, err := repo.FindPendingOIDCRequest(context.Background(), oidcRequestID, now)
 		if err != nil {
 			return nil, ErrOIDCRequestInvalid
 		}
-		cloned.Oidc = &authnpb.AuthFlowOidcContext{ClientId: clientID}
-		if exp.Before(cloned.GetExpiresTime().AsTime()) {
-			cloned.ExpiresTime = timestamppb.New(exp)
+		cloned.Oidc = oidcCtx
+		if oidcExpires.Before(cloned.GetExpiresTime().AsTime()) {
+			cloned.ExpiresTime = timestamppb.New(oidcExpires)
 		}
 	}
 	repo.flows[cloned.GetFlowId()] = &AuthFlowSnapshot{
@@ -342,7 +345,7 @@ func newAuthenticationForTest(
 	if flows == nil {
 		flows = newFakeAuthFlows(users, credentials, sessions)
 	}
-	usecase, err := NewAuthenticationUsecase(&iamconfpb.IAM{}, &oidcconfpb.OIDC{Issuer: new("https://iam.example.com/")}, users, credentials, sessionUsecase, flows)
+	usecase, err := NewAuthenticationUsecase(&iamconfpb.IAM{}, &oidcconfpb.OIDC{Issuer: new("https://iam.example.com/")}, users, credentials, sessionUsecase, flows, new(fakeConsents))
 	if err != nil {
 		t.Fatalf("NewAuthenticationUsecase() error = %v", err)
 	}
@@ -355,10 +358,11 @@ func TestAuthenticationConfigValidation(t *testing.T) {
 	sessions := new(fakeSessions)
 	sessionUC := newSessionForTest(t, users, sessions)
 	flows := newFakeAuthFlows(users, creds, sessions)
+	consents := new(fakeConsents)
 
 	// Default nil AuthFlow applies 30m/10m without mutating caller's config pointer.
 	origCfg := &iamconfpb.IAM{BootstrapUserEmail: new("admin@example.com")}
-	uc, err := NewAuthenticationUsecase(origCfg, &oidcconfpb.OIDC{Issuer: new("https://iam.example.com")}, users, creds, sessionUC, flows)
+	uc, err := NewAuthenticationUsecase(origCfg, &oidcconfpb.OIDC{Issuer: new("https://iam.example.com")}, users, creds, sessionUC, flows, consents)
 	if err != nil {
 		t.Fatalf("default config error = %v", err)
 	}
@@ -383,12 +387,12 @@ func TestAuthenticationConfigValidation(t *testing.T) {
 				Ttl:     durationpb.New(tc.ttl),
 				StepTtl: durationpb.New(tc.stepTTL),
 			},
-		}, &oidcconfpb.OIDC{Issuer: new("https://iam.example.com")}, users, creds, sessionUC, flows)
+		}, &oidcconfpb.OIDC{Issuer: new("https://iam.example.com")}, users, creds, sessionUC, flows, consents)
 		if err == nil {
 			t.Fatalf("%s: expected error", tc.name)
 		}
 	}
-	if _, err := NewAuthenticationUsecase(&iamconfpb.IAM{}, &oidcconfpb.OIDC{Issuer: new("http://evil.example.com")}, users, creds, sessionUC, flows); err == nil {
+	if _, err := NewAuthenticationUsecase(&iamconfpb.IAM{}, &oidcconfpb.OIDC{Issuer: new("http://evil.example.com")}, users, creds, sessionUC, flows, consents); err == nil {
 		t.Fatal("expected non-HTTPS non-loopback OIDC issuer to fail")
 	}
 }

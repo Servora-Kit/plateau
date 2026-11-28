@@ -60,6 +60,7 @@ type AccountUsecase struct {
 	credentials        CredentialRepo
 	verificationTokens VerificationTokenRepo
 	resetTokens        PasswordResetTokenRepo
+	consents           OAuthConsentRepo
 	cap                CAPVerifier
 	mailer             MailSender
 	verificationOrigin string
@@ -67,8 +68,8 @@ type AccountUsecase struct {
 }
 
 // NewAccountUsecase wires public account lifecycle, credential changes, recovery and mail delivery.
-func NewAccountUsecase(users UserRepo, credentials CredentialRepo, verificationTokens VerificationTokenRepo, resetTokens PasswordResetTokenRepo, captcha CAPVerifier, mailer MailSender, app *corepb.App) (*AccountUsecase, error) {
-	if users == nil || credentials == nil || verificationTokens == nil || resetTokens == nil || captcha == nil || mailer == nil {
+func NewAccountUsecase(users UserRepo, credentials CredentialRepo, verificationTokens VerificationTokenRepo, resetTokens PasswordResetTokenRepo, consents OAuthConsentRepo, captcha CAPVerifier, mailer MailSender, app *corepb.App) (*AccountUsecase, error) {
+	if users == nil || credentials == nil || verificationTokens == nil || resetTokens == nil || consents == nil || captcha == nil || mailer == nil {
 		return nil, fmt.Errorf("account: dependency is nil")
 	}
 	verificationOrigin := strings.TrimRight(strings.TrimSpace(app.GetExternalUrl()), "/")
@@ -77,7 +78,7 @@ func NewAccountUsecase(users UserRepo, credentials CredentialRepo, verificationT
 	}
 	return &AccountUsecase{
 		users: users, credentials: credentials, verificationTokens: verificationTokens, resetTokens: resetTokens,
-		cap: captcha, mailer: mailer,
+		consents: consents, cap: captcha, mailer: mailer,
 		verificationOrigin: verificationOrigin, now: time.Now,
 	}, nil
 }

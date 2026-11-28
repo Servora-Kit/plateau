@@ -13,10 +13,24 @@ const (
 	Label = "oauth_client"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldSecretHash holds the string denoting the secret_hash field in the database.
-	FieldSecretHash = "secret_hash"
+	// FieldSource holds the string denoting the source field in the database.
+	FieldSource = "source"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldDisplayName holds the string denoting the display_name field in the database.
+	FieldDisplayName = "display_name"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
+	// FieldLogoURI holds the string denoting the logo_uri field in the database.
+	FieldLogoURI = "logo_uri"
+	// FieldApplicationType holds the string denoting the application_type field in the database.
+	FieldApplicationType = "application_type"
+	// FieldTokenEndpointAuthMethod holds the string denoting the token_endpoint_auth_method field in the database.
+	FieldTokenEndpointAuthMethod = "token_endpoint_auth_method"
 	// FieldRedirectUris holds the string denoting the redirect_uris field in the database.
 	FieldRedirectUris = "redirect_uris"
+	// FieldPostLogoutRedirectUris holds the string denoting the post_logout_redirect_uris field in the database.
+	FieldPostLogoutRedirectUris = "post_logout_redirect_uris"
 	// FieldAllowedGrantTypes holds the string denoting the allowed_grant_types field in the database.
 	FieldAllowedGrantTypes = "allowed_grant_types"
 	// FieldAllowedResponseTypes holds the string denoting the allowed_response_types field in the database.
@@ -27,6 +41,8 @@ const (
 	FieldAudiences = "audiences"
 	// FieldTrusted holds the string denoting the trusted field in the database.
 	FieldTrusted = "trusted"
+	// FieldEtag holds the string denoting the etag field in the database.
+	FieldEtag = "etag"
 	// FieldCreateTime holds the string denoting the create_time field in the database.
 	FieldCreateTime = "create_time"
 	// FieldUpdateTime holds the string denoting the update_time field in the database.
@@ -38,13 +54,21 @@ const (
 // Columns holds all SQL columns for oauthclient fields.
 var Columns = []string{
 	FieldID,
-	FieldSecretHash,
+	FieldSource,
+	FieldStatus,
+	FieldDisplayName,
+	FieldDescription,
+	FieldLogoURI,
+	FieldApplicationType,
+	FieldTokenEndpointAuthMethod,
 	FieldRedirectUris,
+	FieldPostLogoutRedirectUris,
 	FieldAllowedGrantTypes,
 	FieldAllowedResponseTypes,
 	FieldAllowedScopes,
 	FieldAudiences,
 	FieldTrusted,
+	FieldEtag,
 	FieldCreateTime,
 	FieldUpdateTime,
 }
@@ -60,10 +84,32 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// SecretHashValidator is a validator for the "secret_hash" field. It is called by the builders before save.
-	SecretHashValidator func(string) error
+	// DefaultSource holds the default value on creation for the "source" field.
+	DefaultSource string
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
+	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	DisplayNameValidator func(string) error
+	// DefaultApplicationType holds the default value on creation for the "application_type" field.
+	DefaultApplicationType string
+	// DefaultTokenEndpointAuthMethod holds the default value on creation for the "token_endpoint_auth_method" field.
+	DefaultTokenEndpointAuthMethod string
+	// DefaultRedirectUris holds the default value on creation for the "redirect_uris" field.
+	DefaultRedirectUris []string
+	// DefaultPostLogoutRedirectUris holds the default value on creation for the "post_logout_redirect_uris" field.
+	DefaultPostLogoutRedirectUris []string
+	// DefaultAllowedGrantTypes holds the default value on creation for the "allowed_grant_types" field.
+	DefaultAllowedGrantTypes []string
+	// DefaultAllowedResponseTypes holds the default value on creation for the "allowed_response_types" field.
+	DefaultAllowedResponseTypes []string
+	// DefaultAllowedScopes holds the default value on creation for the "allowed_scopes" field.
+	DefaultAllowedScopes []string
+	// DefaultAudiences holds the default value on creation for the "audiences" field.
+	DefaultAudiences []string
 	// DefaultTrusted holds the default value on creation for the "trusted" field.
 	DefaultTrusted bool
+	// EtagValidator is a validator for the "etag" field. It is called by the builders before save.
+	EtagValidator func(string) error
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
 	DefaultCreateTime func() time.Time
 	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
@@ -80,14 +126,49 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// BySecretHash orders the results by the secret_hash field.
-func BySecretHash(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSecretHash, opts...).ToFunc()
+// BySource orders the results by the source field.
+func BySource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSource, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByDisplayName orders the results by the display_name field.
+func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByLogoURI orders the results by the logo_uri field.
+func ByLogoURI(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLogoURI, opts...).ToFunc()
+}
+
+// ByApplicationType orders the results by the application_type field.
+func ByApplicationType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApplicationType, opts...).ToFunc()
+}
+
+// ByTokenEndpointAuthMethod orders the results by the token_endpoint_auth_method field.
+func ByTokenEndpointAuthMethod(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTokenEndpointAuthMethod, opts...).ToFunc()
 }
 
 // ByTrusted orders the results by the trusted field.
 func ByTrusted(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTrusted, opts...).ToFunc()
+}
+
+// ByEtag orders the results by the etag field.
+func ByEtag(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEtag, opts...).ToFunc()
 }
 
 // ByCreateTime orders the results by the create_time field.

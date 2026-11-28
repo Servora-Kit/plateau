@@ -20,15 +20,105 @@ type OAuthClientCreate struct {
 	hooks    []Hook
 }
 
-// SetSecretHash sets the "secret_hash" field.
-func (_c *OAuthClientCreate) SetSecretHash(v string) *OAuthClientCreate {
-	_c.mutation.SetSecretHash(v)
+// SetSource sets the "source" field.
+func (_c *OAuthClientCreate) SetSource(v string) *OAuthClientCreate {
+	_c.mutation.SetSource(v)
+	return _c
+}
+
+// SetNillableSource sets the "source" field if the given value is not nil.
+func (_c *OAuthClientCreate) SetNillableSource(v *string) *OAuthClientCreate {
+	if v != nil {
+		_c.SetSource(*v)
+	}
+	return _c
+}
+
+// SetStatus sets the "status" field.
+func (_c *OAuthClientCreate) SetStatus(v string) *OAuthClientCreate {
+	_c.mutation.SetStatus(v)
+	return _c
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_c *OAuthClientCreate) SetNillableStatus(v *string) *OAuthClientCreate {
+	if v != nil {
+		_c.SetStatus(*v)
+	}
+	return _c
+}
+
+// SetDisplayName sets the "display_name" field.
+func (_c *OAuthClientCreate) SetDisplayName(v string) *OAuthClientCreate {
+	_c.mutation.SetDisplayName(v)
+	return _c
+}
+
+// SetDescription sets the "description" field.
+func (_c *OAuthClientCreate) SetDescription(v string) *OAuthClientCreate {
+	_c.mutation.SetDescription(v)
+	return _c
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_c *OAuthClientCreate) SetNillableDescription(v *string) *OAuthClientCreate {
+	if v != nil {
+		_c.SetDescription(*v)
+	}
+	return _c
+}
+
+// SetLogoURI sets the "logo_uri" field.
+func (_c *OAuthClientCreate) SetLogoURI(v string) *OAuthClientCreate {
+	_c.mutation.SetLogoURI(v)
+	return _c
+}
+
+// SetNillableLogoURI sets the "logo_uri" field if the given value is not nil.
+func (_c *OAuthClientCreate) SetNillableLogoURI(v *string) *OAuthClientCreate {
+	if v != nil {
+		_c.SetLogoURI(*v)
+	}
+	return _c
+}
+
+// SetApplicationType sets the "application_type" field.
+func (_c *OAuthClientCreate) SetApplicationType(v string) *OAuthClientCreate {
+	_c.mutation.SetApplicationType(v)
+	return _c
+}
+
+// SetNillableApplicationType sets the "application_type" field if the given value is not nil.
+func (_c *OAuthClientCreate) SetNillableApplicationType(v *string) *OAuthClientCreate {
+	if v != nil {
+		_c.SetApplicationType(*v)
+	}
+	return _c
+}
+
+// SetTokenEndpointAuthMethod sets the "token_endpoint_auth_method" field.
+func (_c *OAuthClientCreate) SetTokenEndpointAuthMethod(v string) *OAuthClientCreate {
+	_c.mutation.SetTokenEndpointAuthMethod(v)
+	return _c
+}
+
+// SetNillableTokenEndpointAuthMethod sets the "token_endpoint_auth_method" field if the given value is not nil.
+func (_c *OAuthClientCreate) SetNillableTokenEndpointAuthMethod(v *string) *OAuthClientCreate {
+	if v != nil {
+		_c.SetTokenEndpointAuthMethod(*v)
+	}
 	return _c
 }
 
 // SetRedirectUris sets the "redirect_uris" field.
 func (_c *OAuthClientCreate) SetRedirectUris(v []string) *OAuthClientCreate {
 	_c.mutation.SetRedirectUris(v)
+	return _c
+}
+
+// SetPostLogoutRedirectUris sets the "post_logout_redirect_uris" field.
+func (_c *OAuthClientCreate) SetPostLogoutRedirectUris(v []string) *OAuthClientCreate {
+	_c.mutation.SetPostLogoutRedirectUris(v)
 	return _c
 }
 
@@ -67,6 +157,12 @@ func (_c *OAuthClientCreate) SetNillableTrusted(v *bool) *OAuthClientCreate {
 	if v != nil {
 		_c.SetTrusted(*v)
 	}
+	return _c
+}
+
+// SetEtag sets the "etag" field.
+func (_c *OAuthClientCreate) SetEtag(v string) *OAuthClientCreate {
+	_c.mutation.SetEtag(v)
 	return _c
 }
 
@@ -139,6 +235,46 @@ func (_c *OAuthClientCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *OAuthClientCreate) defaults() {
+	if _, ok := _c.mutation.Source(); !ok {
+		v := oauthclient.DefaultSource
+		_c.mutation.SetSource(v)
+	}
+	if _, ok := _c.mutation.Status(); !ok {
+		v := oauthclient.DefaultStatus
+		_c.mutation.SetStatus(v)
+	}
+	if _, ok := _c.mutation.ApplicationType(); !ok {
+		v := oauthclient.DefaultApplicationType
+		_c.mutation.SetApplicationType(v)
+	}
+	if _, ok := _c.mutation.TokenEndpointAuthMethod(); !ok {
+		v := oauthclient.DefaultTokenEndpointAuthMethod
+		_c.mutation.SetTokenEndpointAuthMethod(v)
+	}
+	if _, ok := _c.mutation.RedirectUris(); !ok {
+		v := oauthclient.DefaultRedirectUris
+		_c.mutation.SetRedirectUris(v)
+	}
+	if _, ok := _c.mutation.PostLogoutRedirectUris(); !ok {
+		v := oauthclient.DefaultPostLogoutRedirectUris
+		_c.mutation.SetPostLogoutRedirectUris(v)
+	}
+	if _, ok := _c.mutation.AllowedGrantTypes(); !ok {
+		v := oauthclient.DefaultAllowedGrantTypes
+		_c.mutation.SetAllowedGrantTypes(v)
+	}
+	if _, ok := _c.mutation.AllowedResponseTypes(); !ok {
+		v := oauthclient.DefaultAllowedResponseTypes
+		_c.mutation.SetAllowedResponseTypes(v)
+	}
+	if _, ok := _c.mutation.AllowedScopes(); !ok {
+		v := oauthclient.DefaultAllowedScopes
+		_c.mutation.SetAllowedScopes(v)
+	}
+	if _, ok := _c.mutation.Audiences(); !ok {
+		v := oauthclient.DefaultAudiences
+		_c.mutation.SetAudiences(v)
+	}
 	if _, ok := _c.mutation.Trusted(); !ok {
 		v := oauthclient.DefaultTrusted
 		_c.mutation.SetTrusted(v)
@@ -155,16 +291,31 @@ func (_c *OAuthClientCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *OAuthClientCreate) check() error {
-	if _, ok := _c.mutation.SecretHash(); !ok {
-		return &ValidationError{Name: "secret_hash", err: errors.New(`ent: missing required field "OAuthClient.secret_hash"`)}
+	if _, ok := _c.mutation.Source(); !ok {
+		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "OAuthClient.source"`)}
 	}
-	if v, ok := _c.mutation.SecretHash(); ok {
-		if err := oauthclient.SecretHashValidator(v); err != nil {
-			return &ValidationError{Name: "secret_hash", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.secret_hash": %w`, err)}
+	if _, ok := _c.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "OAuthClient.status"`)}
+	}
+	if _, ok := _c.mutation.DisplayName(); !ok {
+		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "OAuthClient.display_name"`)}
+	}
+	if v, ok := _c.mutation.DisplayName(); ok {
+		if err := oauthclient.DisplayNameValidator(v); err != nil {
+			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.display_name": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.ApplicationType(); !ok {
+		return &ValidationError{Name: "application_type", err: errors.New(`ent: missing required field "OAuthClient.application_type"`)}
+	}
+	if _, ok := _c.mutation.TokenEndpointAuthMethod(); !ok {
+		return &ValidationError{Name: "token_endpoint_auth_method", err: errors.New(`ent: missing required field "OAuthClient.token_endpoint_auth_method"`)}
 	}
 	if _, ok := _c.mutation.RedirectUris(); !ok {
 		return &ValidationError{Name: "redirect_uris", err: errors.New(`ent: missing required field "OAuthClient.redirect_uris"`)}
+	}
+	if _, ok := _c.mutation.PostLogoutRedirectUris(); !ok {
+		return &ValidationError{Name: "post_logout_redirect_uris", err: errors.New(`ent: missing required field "OAuthClient.post_logout_redirect_uris"`)}
 	}
 	if _, ok := _c.mutation.AllowedGrantTypes(); !ok {
 		return &ValidationError{Name: "allowed_grant_types", err: errors.New(`ent: missing required field "OAuthClient.allowed_grant_types"`)}
@@ -175,8 +326,19 @@ func (_c *OAuthClientCreate) check() error {
 	if _, ok := _c.mutation.AllowedScopes(); !ok {
 		return &ValidationError{Name: "allowed_scopes", err: errors.New(`ent: missing required field "OAuthClient.allowed_scopes"`)}
 	}
+	if _, ok := _c.mutation.Audiences(); !ok {
+		return &ValidationError{Name: "audiences", err: errors.New(`ent: missing required field "OAuthClient.audiences"`)}
+	}
 	if _, ok := _c.mutation.Trusted(); !ok {
 		return &ValidationError{Name: "trusted", err: errors.New(`ent: missing required field "OAuthClient.trusted"`)}
+	}
+	if _, ok := _c.mutation.Etag(); !ok {
+		return &ValidationError{Name: "etag", err: errors.New(`ent: missing required field "OAuthClient.etag"`)}
+	}
+	if v, ok := _c.mutation.Etag(); ok {
+		if err := oauthclient.EtagValidator(v); err != nil {
+			return &ValidationError{Name: "etag", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.etag": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CreateTime(); !ok {
 		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "OAuthClient.create_time"`)}
@@ -219,13 +381,41 @@ func (_c *OAuthClientCreate) createSpec() (*OAuthClient, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := _c.mutation.SecretHash(); ok {
-		_spec.SetField(oauthclient.FieldSecretHash, field.TypeString, value)
-		_node.SecretHash = value
+	if value, ok := _c.mutation.Source(); ok {
+		_spec.SetField(oauthclient.FieldSource, field.TypeString, value)
+		_node.Source = value
+	}
+	if value, ok := _c.mutation.Status(); ok {
+		_spec.SetField(oauthclient.FieldStatus, field.TypeString, value)
+		_node.Status = value
+	}
+	if value, ok := _c.mutation.DisplayName(); ok {
+		_spec.SetField(oauthclient.FieldDisplayName, field.TypeString, value)
+		_node.DisplayName = value
+	}
+	if value, ok := _c.mutation.Description(); ok {
+		_spec.SetField(oauthclient.FieldDescription, field.TypeString, value)
+		_node.Description = &value
+	}
+	if value, ok := _c.mutation.LogoURI(); ok {
+		_spec.SetField(oauthclient.FieldLogoURI, field.TypeString, value)
+		_node.LogoURI = &value
+	}
+	if value, ok := _c.mutation.ApplicationType(); ok {
+		_spec.SetField(oauthclient.FieldApplicationType, field.TypeString, value)
+		_node.ApplicationType = value
+	}
+	if value, ok := _c.mutation.TokenEndpointAuthMethod(); ok {
+		_spec.SetField(oauthclient.FieldTokenEndpointAuthMethod, field.TypeString, value)
+		_node.TokenEndpointAuthMethod = value
 	}
 	if value, ok := _c.mutation.RedirectUris(); ok {
 		_spec.SetField(oauthclient.FieldRedirectUris, field.TypeJSON, value)
 		_node.RedirectUris = value
+	}
+	if value, ok := _c.mutation.PostLogoutRedirectUris(); ok {
+		_spec.SetField(oauthclient.FieldPostLogoutRedirectUris, field.TypeJSON, value)
+		_node.PostLogoutRedirectUris = value
 	}
 	if value, ok := _c.mutation.AllowedGrantTypes(); ok {
 		_spec.SetField(oauthclient.FieldAllowedGrantTypes, field.TypeJSON, value)
@@ -246,6 +436,10 @@ func (_c *OAuthClientCreate) createSpec() (*OAuthClient, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Trusted(); ok {
 		_spec.SetField(oauthclient.FieldTrusted, field.TypeBool, value)
 		_node.Trusted = value
+	}
+	if value, ok := _c.mutation.Etag(); ok {
+		_spec.SetField(oauthclient.FieldEtag, field.TypeString, value)
+		_node.Etag = value
 	}
 	if value, ok := _c.mutation.CreateTime(); ok {
 		_spec.SetField(oauthclient.FieldCreateTime, field.TypeTime, value)

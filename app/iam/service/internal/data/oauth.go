@@ -11,6 +11,7 @@ import (
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthconsent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
@@ -25,15 +26,20 @@ func NewOAuthRepository(data *Data) (biz.OAuthRepo, error) {
 	return &oauthRepository{ent: data.ent}, nil
 }
 
-func (repo *oauthRepository) CompleteAuthorizationRequest(ctx context.Context, requestID, userID, loginID string, now time.Time) error {
+func (repo *oauthRepository) CompleteAuthorizationRequest(
+	ctx context.Context,
+	requestID, userID, loginID, ownerHash string,
+	now time.Time,
+) (bool, error) {
 	if requestID == "" || userID == "" || loginID == "" {
-		return biz.ErrOAuthGrantInvalid
+		return false, biz.ErrOAuthGrantInvalid
 	}
 	if now.IsZero() {
 		now = time.Now()
 	}
 	now = now.UTC()
-	return inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
+	var needsConsent bool
+	err := inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
 		current, err := lockUser(ctx, tx, userID)
 		if err != nil {
 			if errors.Is(err, biz.ErrNotFound) {
@@ -64,6 +70,56 @@ func (repo *oauthRepository) CompleteAuthorizationRequest(ctx context.Context, r
 		if len(amr) == 0 {
 			return biz.ErrOAuthGrantInvalid
 		}
+		req, err := tx.OIDCAuthorizationRequest.Query().
+			Where(
+				oidcauthorizationrequest.IDEQ(requestID),
+				oidcauthorizationrequest.DoneEQ(false),
+				oidcauthorizationrequest.ExpiresTimeGT(now),
+			).
+			Only(ctx)
+		if entmodel.IsNotFound(err) {
+			return biz.ErrOAuthGrantInvalid
+		}
+		if err != nil {
+			return translateEntError(err)
+		}
+		oauthClient, err := tx.OAuthClient.Get(ctx, req.ClientID)
+		if entmodel.IsNotFound(err) {
+			return biz.ErrOAuthGrantInvalid
+		}
+		if err != nil {
+			return translateEntError(err)
+		}
+		if oauthClient.Status != biz.ClientStatusActive {
+			return biz.ErrOAuthGrantInvalid
+		}
+		if !oauthClient.Trusted {
+			required, err := consentRequiredTx(ctx, tx, req, oauthClient.ID, userID)
+			if err != nil {
+				return err
+			}
+			if required {
+				if ownerHash == "" {
+					return biz.ErrOAuthGrantInvalid
+				}
+				updated, err := tx.OIDCAuthorizationRequest.Update().
+					Where(
+						oidcauthorizationrequest.IDEQ(requestID),
+						oidcauthorizationrequest.DoneEQ(false),
+						oidcauthorizationrequest.ExpiresTimeGT(now),
+					).
+					SetConsentOwnerHash(ownerHash).
+					Save(ctx)
+				if err != nil {
+					return translateEntError(err)
+				}
+				if updated != 1 {
+					return biz.ErrOAuthGrantInvalid
+				}
+				needsConsent = true
+				return nil
+			}
+		}
 		updated, err := tx.OIDCAuthorizationRequest.Update().
 			Where(
 				oidcauthorizationrequest.IDEQ(requestID),
@@ -84,6 +140,37 @@ func (repo *oauthRepository) CompleteAuthorizationRequest(ctx context.Context, r
 		}
 		return nil
 	})
+	return needsConsent, err
+}
+
+func consentRequiredTx(
+	ctx context.Context,
+	tx *entmodel.Tx,
+	req *entmodel.OIDCAuthorizationRequest,
+	clientID, userID string,
+) (bool, error) {
+	approvedByCurrentUser := req.ConsentApproved && derefString(req.Subject) == userID
+	if slices.Contains(req.Prompt, "consent") && !approvedByCurrentUser {
+		return true, nil
+	}
+	consent, err := tx.OAuthConsent.Query().
+		Where(
+			oauthconsent.UserIDEQ(userID),
+			oauthconsent.ClientIDEQ(clientID),
+		).
+		Only(ctx)
+	if entmodel.IsNotFound(err) {
+		return true, nil
+	}
+	if err != nil {
+		return false, translateEntError(err)
+	}
+	for _, scope := range req.Scopes {
+		if !slices.Contains(consent.GrantedScopes, scope) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (repo *oauthRepository) SaveAuthorizationCode(ctx context.Context, requestID, codeID, codeHash string, now, expires time.Time) error {
@@ -139,6 +226,16 @@ func (repo *oauthRepository) SaveAuthorizationCode(ctx context.Context, requestI
 		if !request.Done || !request.ExpiresTime.After(now) || request.Subject == nil || *request.Subject != subject || request.LoginSessionID == nil || *request.LoginSessionID == "" {
 			return biz.ErrOAuthGrantInvalid
 		}
+		oauthClient, err := tx.OAuthClient.Get(ctx, request.ClientID)
+		if entmodel.IsNotFound(err) {
+			return biz.ErrOAuthGrantInvalid
+		}
+		if err != nil {
+			return translateEntError(err)
+		}
+		if oauthClient.Status != biz.ClientStatusActive {
+			return biz.ErrOAuthGrantInvalid
+		}
 		login, err := tx.LoginSession.Get(ctx, *request.LoginSessionID)
 		if entmodel.IsNotFound(err) {
 			return biz.ErrOAuthGrantInvalid
@@ -186,6 +283,16 @@ func (repo *oauthRepository) Issue(ctx context.Context, grant biz.OAuthGrant, is
 				return biz.ErrOAuthGrantInvalid
 			}
 			return err
+		}
+		oauthClient, err := tx.OAuthClient.Get(ctx, grant.ClientID)
+		if entmodel.IsNotFound(err) {
+			return biz.ErrOAuthGrantInvalid
+		}
+		if err != nil {
+			return translateEntError(err)
+		}
+		if oauthClient.Status != biz.ClientStatusActive {
+			return biz.ErrOAuthGrantInvalid
 		}
 		loginID := grant.LoginID
 		sessionID, familyID, parentID := grant.TokenSessionID, "", ""
@@ -292,13 +399,30 @@ func issueServiceToken(ctx context.Context, tx *entmodel.Tx, grant biz.OAuthGran
 	if err != nil {
 		return err
 	}
-	if grant.Subject != client.ID || issue.RefreshID != "" || !slices.Contains(client.AllowedGrantTypes, "client_credentials") || len(client.Audiences) == 0 || !slices.Equal(client.Audiences, grant.Audiences) {
+	if client.Status != biz.ClientStatusActive || grant.Subject != client.ID || issue.RefreshID != "" || !slices.Contains(client.AllowedGrantTypes, "client_credentials") || len(client.Audiences) == 0 || !slices.Equal(client.Audiences, grant.Audiences) {
 		return biz.ErrOAuthGrantInvalid
 	}
 	_, err = tx.OAuthAccessToken.Create().SetID(issue.AccessID).SetActorType(oauthaccesstoken.ActorTypeService).
 		SetSubject(client.ID).SetClientID(client.ID).SetScopes(grant.Scopes).SetAudiences(client.Audiences).
 		SetIssuedTime(issue.IssuedAt).SetExpiresTime(issue.AccessExpiresAt).Save(ctx)
 	return err
+}
+
+func (repo *oauthRepository) PurgeStaticClient(ctx context.Context, clientID string, now time.Time) error {
+	now = now.UTC()
+	return inTx(ctx, repo.ent, func(tx *entmodel.Tx) error {
+		current, err := lockOAuthClient(ctx, tx, clientID)
+		if errors.Is(err, biz.ErrNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if current.Source != biz.ClientSourceStatic {
+			return fmt.Errorf("refusing to purge non-static OAuth client %q", clientID)
+		}
+		return cascadeRevokeClientTx(ctx, tx, clientID, true, now)
+	})
 }
 
 func (repo *oauthRepository) RevokeSession(ctx context.Context, sessionID string, now time.Time) error {

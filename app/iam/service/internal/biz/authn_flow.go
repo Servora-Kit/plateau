@@ -95,13 +95,6 @@ func buildOIDCCancelRedirectURI(rawRedirectURI, state, issuer string) (string, e
 	return parsed.String(), nil
 }
 
-func buildOIDCContext(clientID string) *authnpb.AuthFlowOidcContext {
-	if clientID == "" {
-		return nil
-	}
-	return &authnpb.AuthFlowOidcContext{ClientId: clientID}
-}
-
 func isTerminalFlowStatus(status string) bool {
 	switch status {
 	case AuthFlowStatusCompleted, AuthFlowStatusCancelled, AuthFlowStatusReset:

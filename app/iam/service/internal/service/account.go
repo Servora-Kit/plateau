@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	accountpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
@@ -154,6 +155,40 @@ func (s *AccountService) DeleteAccount(ctx context.Context, request *accountpb.D
 		return nil, accountError(err)
 	}
 	return &accountpb.DeleteAccountResponse{}, nil
+}
+
+func (s *AccountService) ListAuthorizedApps(
+	ctx context.Context,
+	_ *accountpb.ListAuthorizedAppsRequest,
+) (*accountpb.ListAuthorizedAppsResponse, error) {
+	user, _, err := authn.From(ctx)
+	if err != nil {
+		return nil, accountError(err)
+	}
+	apps, err := s.account.ListAuthorizedApps(ctx, user.GetUserId())
+	if err != nil {
+		return nil, accountError(err)
+	}
+	return &accountpb.ListAuthorizedAppsResponse{Applications: apps}, nil
+}
+
+func (s *AccountService) RevokeAuthorizedApp(
+	ctx context.Context,
+	request *accountpb.RevokeAuthorizedAppRequest,
+) (*accountpb.RevokeAuthorizedAppResponse, error) {
+	clientID := strings.TrimSpace(request.GetClientId())
+	if clientID == "" {
+		return nil, kerrors.New(400, "INVALID_ARGUMENT", "client_id is required")
+	}
+	user, _, err := authn.From(ctx)
+	if err != nil {
+		return nil, accountError(err)
+	}
+	audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+user.GetUserId())
+	if err := s.account.RevokeAuthorizedApp(ctx, user.GetUserId(), clientID); err != nil {
+		return nil, accountError(err)
+	}
+	return &accountpb.RevokeAuthorizedAppResponse{}, nil
 }
 
 func mergeProfile(current, requested *userpb.UserProfile, mask *fieldmaskpb.FieldMask) (*userpb.UserProfile, error) {

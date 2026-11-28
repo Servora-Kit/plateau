@@ -57,6 +57,25 @@ func TestPostgresAuthFlowSnapshotsResetAndCancel(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if _, err := client.OAuthClient.Create().
+		SetID("admin-web").
+		SetSource(biz.ClientSourceStatic).
+		SetStatus(biz.ClientStatusActive).
+		SetDisplayName("Admin Console").
+		SetLogoURI("https://admin.example/logo.png").
+		SetApplicationType(biz.AppTypeWeb).
+		SetTokenEndpointAuthMethod(biz.AuthMethodBasic).
+		SetRedirectUris([]string{"https://admin.example/callback"}).
+		SetAllowedGrantTypes([]string{biz.GrantTypeAuthorizationCode}).
+		SetAllowedResponseTypes([]string{biz.ResponseTypeCode}).
+		SetAllowedScopes([]string{"openid"}).
+		SetTrusted(true).
+		SetEtag("etag-admin-web").
+		SetCreateTime(now).
+		SetUpdateTime(now).
+		Save(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := client.OIDCAuthorizationRequest.Create().
 		SetID("oidc-req-1").
 		SetClientID("admin-web").
@@ -84,7 +103,10 @@ func TestPostgresAuthFlowSnapshotsResetAndCancel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create(oidc): %v", err)
 	}
-	if created.GetOidc().GetClientId() != "admin-web" || !created.GetExpiresTime().AsTime().Equal(now.Add(20*time.Minute).Truncate(time.Microsecond)) {
+	if created.GetOidc().GetClientId() != "admin-web" ||
+		created.GetOidc().GetClientName() != "Admin Console" ||
+		created.GetOidc().GetLogoUri() != "https://admin.example/logo.png" ||
+		!created.GetExpiresTime().AsTime().Equal(now.Add(20*time.Minute).Truncate(time.Microsecond)) {
 		t.Fatalf("Create(oidc) = %#v", created)
 	}
 

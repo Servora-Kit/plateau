@@ -268,13 +268,21 @@ var (
 	// OauthClientsColumns holds the columns for the "oauth_clients" table.
 	OauthClientsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "secret_hash", Type: field.TypeString},
-		{Name: "redirect_uris", Type: field.TypeJSON},
-		{Name: "allowed_grant_types", Type: field.TypeJSON},
-		{Name: "allowed_response_types", Type: field.TypeJSON},
-		{Name: "allowed_scopes", Type: field.TypeJSON},
-		{Name: "audiences", Type: field.TypeJSON, Nullable: true},
+		{Name: "source", Type: field.TypeString, Default: "dynamic"},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "display_name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "logo_uri", Type: field.TypeString, Nullable: true},
+		{Name: "application_type", Type: field.TypeString, Default: "web"},
+		{Name: "token_endpoint_auth_method", Type: field.TypeString, Default: "client_secret_basic"},
+		{Name: "redirect_uris", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "post_logout_redirect_uris", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "allowed_grant_types", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "allowed_response_types", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "allowed_scopes", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "audiences", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "trusted", Type: field.TypeBool, Default: false},
+		{Name: "etag", Type: field.TypeString},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 	}
@@ -283,6 +291,79 @@ var (
 		Name:       "oauth_clients",
 		Columns:    OauthClientsColumns,
 		PrimaryKey: []*schema.Column{OauthClientsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "oauthclient_source",
+				Unique:  false,
+				Columns: []*schema.Column{OauthClientsColumns[1]},
+			},
+			{
+				Name:    "oauthclient_status",
+				Unique:  false,
+				Columns: []*schema.Column{OauthClientsColumns[2]},
+			},
+			{
+				Name:    "oauthclient_create_time",
+				Unique:  false,
+				Columns: []*schema.Column{OauthClientsColumns[16]},
+			},
+		},
+	}
+	// OauthClientSecretsColumns holds the columns for the "oauth_client_secrets" table.
+	OauthClientSecretsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "client_id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Default: "默认密钥"},
+		{Name: "secret_prefix", Type: field.TypeString},
+		{Name: "secret_hash", Type: field.TypeString},
+		{Name: "expires_time", Type: field.TypeTime, Nullable: true},
+		{Name: "last_used_time", Type: field.TypeTime, Nullable: true},
+		{Name: "create_time", Type: field.TypeTime},
+	}
+	// OauthClientSecretsTable holds the schema information for the "oauth_client_secrets" table.
+	OauthClientSecretsTable = &schema.Table{
+		Name:       "oauth_client_secrets",
+		Columns:    OauthClientSecretsColumns,
+		PrimaryKey: []*schema.Column{OauthClientSecretsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "oauthclientsecret_client_id_create_time",
+				Unique:  false,
+				Columns: []*schema.Column{OauthClientSecretsColumns[1], OauthClientSecretsColumns[7]},
+			},
+			{
+				Name:    "oauthclientsecret_client_id",
+				Unique:  false,
+				Columns: []*schema.Column{OauthClientSecretsColumns[1]},
+			},
+		},
+	}
+	// OauthConsentsColumns holds the columns for the "oauth_consents" table.
+	OauthConsentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "client_id", Type: field.TypeString},
+		{Name: "granted_scopes", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+	}
+	// OauthConsentsTable holds the schema information for the "oauth_consents" table.
+	OauthConsentsTable = &schema.Table{
+		Name:       "oauth_consents",
+		Columns:    OauthConsentsColumns,
+		PrimaryKey: []*schema.Column{OauthConsentsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "oauthconsent_user_id_client_id",
+				Unique:  true,
+				Columns: []*schema.Column{OauthConsentsColumns[1], OauthConsentsColumns[2]},
+			},
+			{
+				Name:    "oauthconsent_client_id",
+				Unique:  false,
+				Columns: []*schema.Column{OauthConsentsColumns[2]},
+			},
+		},
 	}
 	// OauthRefreshTokensColumns holds the columns for the "oauth_refresh_tokens" table.
 	OauthRefreshTokensColumns = []*schema.Column{
@@ -377,6 +458,9 @@ var (
 		{Name: "login_session_id", Type: field.TypeString, Nullable: true},
 		{Name: "auth_time", Type: field.TypeTime, Nullable: true},
 		{Name: "amr", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "prompt", Type: field.TypeJSON, Default: "[]", SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "consent_owner_hash", Type: field.TypeString, Nullable: true},
+		{Name: "consent_approved", Type: field.TypeBool, Default: false},
 		{Name: "done", Type: field.TypeBool, Default: false},
 		{Name: "expires_time", Type: field.TypeTime},
 		{Name: "create_time", Type: field.TypeTime},
@@ -391,17 +475,17 @@ var (
 			{
 				Name:    "oidcauthorizationrequest_client_id_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[1], OidcAuthorizationRequestsColumns[15]},
+				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[1], OidcAuthorizationRequestsColumns[18]},
 			},
 			{
 				Name:    "oidcauthorizationrequest_subject_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[10], OidcAuthorizationRequestsColumns[15]},
+				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[10], OidcAuthorizationRequestsColumns[18]},
 			},
 			{
 				Name:    "oidcauthorizationrequest_expires_time",
 				Unique:  false,
-				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[15]},
+				Columns: []*schema.Column{OidcAuthorizationRequestsColumns[18]},
 			},
 		},
 	}
@@ -538,6 +622,8 @@ var (
 		OauthAccessTokensTable,
 		OauthAuthorizationCodesTable,
 		OauthClientsTable,
+		OauthClientSecretsTable,
+		OauthConsentsTable,
 		OauthRefreshTokensTable,
 		OauthTokenSessionsTable,
 		OidcAuthorizationRequestsTable,
@@ -575,6 +661,12 @@ func init() {
 	}
 	OauthClientsTable.Annotation = &entsql.Annotation{
 		Table: "oauth_clients",
+	}
+	OauthClientSecretsTable.Annotation = &entsql.Annotation{
+		Table: "oauth_client_secrets",
+	}
+	OauthConsentsTable.Annotation = &entsql.Annotation{
+		Table: "oauth_consents",
 	}
 	OauthRefreshTokensTable.Annotation = &entsql.Annotation{
 		Table: "oauth_refresh_tokens",

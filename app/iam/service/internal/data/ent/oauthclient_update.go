@@ -30,16 +30,84 @@ func (_u *OAuthClientUpdate) Where(ps ...predicate.OAuthClient) *OAuthClientUpda
 	return _u
 }
 
-// SetSecretHash sets the "secret_hash" field.
-func (_u *OAuthClientUpdate) SetSecretHash(v string) *OAuthClientUpdate {
-	_u.mutation.SetSecretHash(v)
+// SetStatus sets the "status" field.
+func (_u *OAuthClientUpdate) SetStatus(v string) *OAuthClientUpdate {
+	_u.mutation.SetStatus(v)
 	return _u
 }
 
-// SetNillableSecretHash sets the "secret_hash" field if the given value is not nil.
-func (_u *OAuthClientUpdate) SetNillableSecretHash(v *string) *OAuthClientUpdate {
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *OAuthClientUpdate) SetNillableStatus(v *string) *OAuthClientUpdate {
 	if v != nil {
-		_u.SetSecretHash(*v)
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// SetDisplayName sets the "display_name" field.
+func (_u *OAuthClientUpdate) SetDisplayName(v string) *OAuthClientUpdate {
+	_u.mutation.SetDisplayName(v)
+	return _u
+}
+
+// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
+func (_u *OAuthClientUpdate) SetNillableDisplayName(v *string) *OAuthClientUpdate {
+	if v != nil {
+		_u.SetDisplayName(*v)
+	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *OAuthClientUpdate) SetDescription(v string) *OAuthClientUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *OAuthClientUpdate) SetNillableDescription(v *string) *OAuthClientUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *OAuthClientUpdate) ClearDescription() *OAuthClientUpdate {
+	_u.mutation.ClearDescription()
+	return _u
+}
+
+// SetLogoURI sets the "logo_uri" field.
+func (_u *OAuthClientUpdate) SetLogoURI(v string) *OAuthClientUpdate {
+	_u.mutation.SetLogoURI(v)
+	return _u
+}
+
+// SetNillableLogoURI sets the "logo_uri" field if the given value is not nil.
+func (_u *OAuthClientUpdate) SetNillableLogoURI(v *string) *OAuthClientUpdate {
+	if v != nil {
+		_u.SetLogoURI(*v)
+	}
+	return _u
+}
+
+// ClearLogoURI clears the value of the "logo_uri" field.
+func (_u *OAuthClientUpdate) ClearLogoURI() *OAuthClientUpdate {
+	_u.mutation.ClearLogoURI()
+	return _u
+}
+
+// SetTokenEndpointAuthMethod sets the "token_endpoint_auth_method" field.
+func (_u *OAuthClientUpdate) SetTokenEndpointAuthMethod(v string) *OAuthClientUpdate {
+	_u.mutation.SetTokenEndpointAuthMethod(v)
+	return _u
+}
+
+// SetNillableTokenEndpointAuthMethod sets the "token_endpoint_auth_method" field if the given value is not nil.
+func (_u *OAuthClientUpdate) SetNillableTokenEndpointAuthMethod(v *string) *OAuthClientUpdate {
+	if v != nil {
+		_u.SetTokenEndpointAuthMethod(*v)
 	}
 	return _u
 }
@@ -53,6 +121,18 @@ func (_u *OAuthClientUpdate) SetRedirectUris(v []string) *OAuthClientUpdate {
 // AppendRedirectUris appends value to the "redirect_uris" field.
 func (_u *OAuthClientUpdate) AppendRedirectUris(v []string) *OAuthClientUpdate {
 	_u.mutation.AppendRedirectUris(v)
+	return _u
+}
+
+// SetPostLogoutRedirectUris sets the "post_logout_redirect_uris" field.
+func (_u *OAuthClientUpdate) SetPostLogoutRedirectUris(v []string) *OAuthClientUpdate {
+	_u.mutation.SetPostLogoutRedirectUris(v)
+	return _u
+}
+
+// AppendPostLogoutRedirectUris appends value to the "post_logout_redirect_uris" field.
+func (_u *OAuthClientUpdate) AppendPostLogoutRedirectUris(v []string) *OAuthClientUpdate {
+	_u.mutation.AppendPostLogoutRedirectUris(v)
 	return _u
 }
 
@@ -104,12 +184,6 @@ func (_u *OAuthClientUpdate) AppendAudiences(v []string) *OAuthClientUpdate {
 	return _u
 }
 
-// ClearAudiences clears the value of the "audiences" field.
-func (_u *OAuthClientUpdate) ClearAudiences() *OAuthClientUpdate {
-	_u.mutation.ClearAudiences()
-	return _u
-}
-
 // SetTrusted sets the "trusted" field.
 func (_u *OAuthClientUpdate) SetTrusted(v bool) *OAuthClientUpdate {
 	_u.mutation.SetTrusted(v)
@@ -120,6 +194,20 @@ func (_u *OAuthClientUpdate) SetTrusted(v bool) *OAuthClientUpdate {
 func (_u *OAuthClientUpdate) SetNillableTrusted(v *bool) *OAuthClientUpdate {
 	if v != nil {
 		_u.SetTrusted(*v)
+	}
+	return _u
+}
+
+// SetEtag sets the "etag" field.
+func (_u *OAuthClientUpdate) SetEtag(v string) *OAuthClientUpdate {
+	_u.mutation.SetEtag(v)
+	return _u
+}
+
+// SetNillableEtag sets the "etag" field if the given value is not nil.
+func (_u *OAuthClientUpdate) SetNillableEtag(v *string) *OAuthClientUpdate {
+	if v != nil {
+		_u.SetEtag(*v)
 	}
 	return _u
 }
@@ -173,9 +261,14 @@ func (_u *OAuthClientUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *OAuthClientUpdate) check() error {
-	if v, ok := _u.mutation.SecretHash(); ok {
-		if err := oauthclient.SecretHashValidator(v); err != nil {
-			return &ValidationError{Name: "secret_hash", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.secret_hash": %w`, err)}
+	if v, ok := _u.mutation.DisplayName(); ok {
+		if err := oauthclient.DisplayNameValidator(v); err != nil {
+			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.display_name": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Etag(); ok {
+		if err := oauthclient.EtagValidator(v); err != nil {
+			return &ValidationError{Name: "etag", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.etag": %w`, err)}
 		}
 	}
 	return nil
@@ -199,8 +292,26 @@ func (_u *OAuthClientUpdate) sqlSave(ctx context.Context) (_node int, err error)
 			}
 		}
 	}
-	if value, ok := _u.mutation.SecretHash(); ok {
-		_spec.SetField(oauthclient.FieldSecretHash, field.TypeString, value)
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(oauthclient.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.DisplayName(); ok {
+		_spec.SetField(oauthclient.FieldDisplayName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(oauthclient.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(oauthclient.FieldDescription, field.TypeString)
+	}
+	if value, ok := _u.mutation.LogoURI(); ok {
+		_spec.SetField(oauthclient.FieldLogoURI, field.TypeString, value)
+	}
+	if _u.mutation.LogoURICleared() {
+		_spec.ClearField(oauthclient.FieldLogoURI, field.TypeString)
+	}
+	if value, ok := _u.mutation.TokenEndpointAuthMethod(); ok {
+		_spec.SetField(oauthclient.FieldTokenEndpointAuthMethod, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.RedirectUris(); ok {
 		_spec.SetField(oauthclient.FieldRedirectUris, field.TypeJSON, value)
@@ -208,6 +319,14 @@ func (_u *OAuthClientUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	if value, ok := _u.mutation.AppendedRedirectUris(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, oauthclient.FieldRedirectUris, value)
+		})
+	}
+	if value, ok := _u.mutation.PostLogoutRedirectUris(); ok {
+		_spec.SetField(oauthclient.FieldPostLogoutRedirectUris, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPostLogoutRedirectUris(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oauthclient.FieldPostLogoutRedirectUris, value)
 		})
 	}
 	if value, ok := _u.mutation.AllowedGrantTypes(); ok {
@@ -242,11 +361,11 @@ func (_u *OAuthClientUpdate) sqlSave(ctx context.Context) (_node int, err error)
 			sqljson.Append(u, oauthclient.FieldAudiences, value)
 		})
 	}
-	if _u.mutation.AudiencesCleared() {
-		_spec.ClearField(oauthclient.FieldAudiences, field.TypeJSON)
-	}
 	if value, ok := _u.mutation.Trusted(); ok {
 		_spec.SetField(oauthclient.FieldTrusted, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Etag(); ok {
+		_spec.SetField(oauthclient.FieldEtag, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.UpdateTime(); ok {
 		_spec.SetField(oauthclient.FieldUpdateTime, field.TypeTime, value)
@@ -273,16 +392,84 @@ type OAuthClientUpdateOne struct {
 	modifiers []func(*sql.UpdateBuilder)
 }
 
-// SetSecretHash sets the "secret_hash" field.
-func (_u *OAuthClientUpdateOne) SetSecretHash(v string) *OAuthClientUpdateOne {
-	_u.mutation.SetSecretHash(v)
+// SetStatus sets the "status" field.
+func (_u *OAuthClientUpdateOne) SetStatus(v string) *OAuthClientUpdateOne {
+	_u.mutation.SetStatus(v)
 	return _u
 }
 
-// SetNillableSecretHash sets the "secret_hash" field if the given value is not nil.
-func (_u *OAuthClientUpdateOne) SetNillableSecretHash(v *string) *OAuthClientUpdateOne {
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *OAuthClientUpdateOne) SetNillableStatus(v *string) *OAuthClientUpdateOne {
 	if v != nil {
-		_u.SetSecretHash(*v)
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// SetDisplayName sets the "display_name" field.
+func (_u *OAuthClientUpdateOne) SetDisplayName(v string) *OAuthClientUpdateOne {
+	_u.mutation.SetDisplayName(v)
+	return _u
+}
+
+// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
+func (_u *OAuthClientUpdateOne) SetNillableDisplayName(v *string) *OAuthClientUpdateOne {
+	if v != nil {
+		_u.SetDisplayName(*v)
+	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *OAuthClientUpdateOne) SetDescription(v string) *OAuthClientUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *OAuthClientUpdateOne) SetNillableDescription(v *string) *OAuthClientUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// ClearDescription clears the value of the "description" field.
+func (_u *OAuthClientUpdateOne) ClearDescription() *OAuthClientUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
+}
+
+// SetLogoURI sets the "logo_uri" field.
+func (_u *OAuthClientUpdateOne) SetLogoURI(v string) *OAuthClientUpdateOne {
+	_u.mutation.SetLogoURI(v)
+	return _u
+}
+
+// SetNillableLogoURI sets the "logo_uri" field if the given value is not nil.
+func (_u *OAuthClientUpdateOne) SetNillableLogoURI(v *string) *OAuthClientUpdateOne {
+	if v != nil {
+		_u.SetLogoURI(*v)
+	}
+	return _u
+}
+
+// ClearLogoURI clears the value of the "logo_uri" field.
+func (_u *OAuthClientUpdateOne) ClearLogoURI() *OAuthClientUpdateOne {
+	_u.mutation.ClearLogoURI()
+	return _u
+}
+
+// SetTokenEndpointAuthMethod sets the "token_endpoint_auth_method" field.
+func (_u *OAuthClientUpdateOne) SetTokenEndpointAuthMethod(v string) *OAuthClientUpdateOne {
+	_u.mutation.SetTokenEndpointAuthMethod(v)
+	return _u
+}
+
+// SetNillableTokenEndpointAuthMethod sets the "token_endpoint_auth_method" field if the given value is not nil.
+func (_u *OAuthClientUpdateOne) SetNillableTokenEndpointAuthMethod(v *string) *OAuthClientUpdateOne {
+	if v != nil {
+		_u.SetTokenEndpointAuthMethod(*v)
 	}
 	return _u
 }
@@ -296,6 +483,18 @@ func (_u *OAuthClientUpdateOne) SetRedirectUris(v []string) *OAuthClientUpdateOn
 // AppendRedirectUris appends value to the "redirect_uris" field.
 func (_u *OAuthClientUpdateOne) AppendRedirectUris(v []string) *OAuthClientUpdateOne {
 	_u.mutation.AppendRedirectUris(v)
+	return _u
+}
+
+// SetPostLogoutRedirectUris sets the "post_logout_redirect_uris" field.
+func (_u *OAuthClientUpdateOne) SetPostLogoutRedirectUris(v []string) *OAuthClientUpdateOne {
+	_u.mutation.SetPostLogoutRedirectUris(v)
+	return _u
+}
+
+// AppendPostLogoutRedirectUris appends value to the "post_logout_redirect_uris" field.
+func (_u *OAuthClientUpdateOne) AppendPostLogoutRedirectUris(v []string) *OAuthClientUpdateOne {
+	_u.mutation.AppendPostLogoutRedirectUris(v)
 	return _u
 }
 
@@ -347,12 +546,6 @@ func (_u *OAuthClientUpdateOne) AppendAudiences(v []string) *OAuthClientUpdateOn
 	return _u
 }
 
-// ClearAudiences clears the value of the "audiences" field.
-func (_u *OAuthClientUpdateOne) ClearAudiences() *OAuthClientUpdateOne {
-	_u.mutation.ClearAudiences()
-	return _u
-}
-
 // SetTrusted sets the "trusted" field.
 func (_u *OAuthClientUpdateOne) SetTrusted(v bool) *OAuthClientUpdateOne {
 	_u.mutation.SetTrusted(v)
@@ -363,6 +556,20 @@ func (_u *OAuthClientUpdateOne) SetTrusted(v bool) *OAuthClientUpdateOne {
 func (_u *OAuthClientUpdateOne) SetNillableTrusted(v *bool) *OAuthClientUpdateOne {
 	if v != nil {
 		_u.SetTrusted(*v)
+	}
+	return _u
+}
+
+// SetEtag sets the "etag" field.
+func (_u *OAuthClientUpdateOne) SetEtag(v string) *OAuthClientUpdateOne {
+	_u.mutation.SetEtag(v)
+	return _u
+}
+
+// SetNillableEtag sets the "etag" field if the given value is not nil.
+func (_u *OAuthClientUpdateOne) SetNillableEtag(v *string) *OAuthClientUpdateOne {
+	if v != nil {
+		_u.SetEtag(*v)
 	}
 	return _u
 }
@@ -429,9 +636,14 @@ func (_u *OAuthClientUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *OAuthClientUpdateOne) check() error {
-	if v, ok := _u.mutation.SecretHash(); ok {
-		if err := oauthclient.SecretHashValidator(v); err != nil {
-			return &ValidationError{Name: "secret_hash", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.secret_hash": %w`, err)}
+	if v, ok := _u.mutation.DisplayName(); ok {
+		if err := oauthclient.DisplayNameValidator(v); err != nil {
+			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.display_name": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Etag(); ok {
+		if err := oauthclient.EtagValidator(v); err != nil {
+			return &ValidationError{Name: "etag", err: fmt.Errorf(`ent: validator failed for field "OAuthClient.etag": %w`, err)}
 		}
 	}
 	return nil
@@ -472,8 +684,26 @@ func (_u *OAuthClientUpdateOne) sqlSave(ctx context.Context) (_node *OAuthClient
 			}
 		}
 	}
-	if value, ok := _u.mutation.SecretHash(); ok {
-		_spec.SetField(oauthclient.FieldSecretHash, field.TypeString, value)
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(oauthclient.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.DisplayName(); ok {
+		_spec.SetField(oauthclient.FieldDisplayName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(oauthclient.FieldDescription, field.TypeString, value)
+	}
+	if _u.mutation.DescriptionCleared() {
+		_spec.ClearField(oauthclient.FieldDescription, field.TypeString)
+	}
+	if value, ok := _u.mutation.LogoURI(); ok {
+		_spec.SetField(oauthclient.FieldLogoURI, field.TypeString, value)
+	}
+	if _u.mutation.LogoURICleared() {
+		_spec.ClearField(oauthclient.FieldLogoURI, field.TypeString)
+	}
+	if value, ok := _u.mutation.TokenEndpointAuthMethod(); ok {
+		_spec.SetField(oauthclient.FieldTokenEndpointAuthMethod, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.RedirectUris(); ok {
 		_spec.SetField(oauthclient.FieldRedirectUris, field.TypeJSON, value)
@@ -481,6 +711,14 @@ func (_u *OAuthClientUpdateOne) sqlSave(ctx context.Context) (_node *OAuthClient
 	if value, ok := _u.mutation.AppendedRedirectUris(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, oauthclient.FieldRedirectUris, value)
+		})
+	}
+	if value, ok := _u.mutation.PostLogoutRedirectUris(); ok {
+		_spec.SetField(oauthclient.FieldPostLogoutRedirectUris, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPostLogoutRedirectUris(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oauthclient.FieldPostLogoutRedirectUris, value)
 		})
 	}
 	if value, ok := _u.mutation.AllowedGrantTypes(); ok {
@@ -515,11 +753,11 @@ func (_u *OAuthClientUpdateOne) sqlSave(ctx context.Context) (_node *OAuthClient
 			sqljson.Append(u, oauthclient.FieldAudiences, value)
 		})
 	}
-	if _u.mutation.AudiencesCleared() {
-		_spec.ClearField(oauthclient.FieldAudiences, field.TypeJSON)
-	}
 	if value, ok := _u.mutation.Trusted(); ok {
 		_spec.SetField(oauthclient.FieldTrusted, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Etag(); ok {
+		_spec.SetField(oauthclient.FieldEtag, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.UpdateTime(); ok {
 		_spec.SetField(oauthclient.FieldUpdateTime, field.TypeTime, value)

@@ -202,6 +202,52 @@ func (_u *OIDCAuthorizationRequestUpdate) AppendAmr(v []string) *OIDCAuthorizati
 	return _u
 }
 
+// SetPrompt sets the "prompt" field.
+func (_u *OIDCAuthorizationRequestUpdate) SetPrompt(v []string) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.SetPrompt(v)
+	return _u
+}
+
+// AppendPrompt appends value to the "prompt" field.
+func (_u *OIDCAuthorizationRequestUpdate) AppendPrompt(v []string) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.AppendPrompt(v)
+	return _u
+}
+
+// SetConsentOwnerHash sets the "consent_owner_hash" field.
+func (_u *OIDCAuthorizationRequestUpdate) SetConsentOwnerHash(v string) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.SetConsentOwnerHash(v)
+	return _u
+}
+
+// SetNillableConsentOwnerHash sets the "consent_owner_hash" field if the given value is not nil.
+func (_u *OIDCAuthorizationRequestUpdate) SetNillableConsentOwnerHash(v *string) *OIDCAuthorizationRequestUpdate {
+	if v != nil {
+		_u.SetConsentOwnerHash(*v)
+	}
+	return _u
+}
+
+// ClearConsentOwnerHash clears the value of the "consent_owner_hash" field.
+func (_u *OIDCAuthorizationRequestUpdate) ClearConsentOwnerHash() *OIDCAuthorizationRequestUpdate {
+	_u.mutation.ClearConsentOwnerHash()
+	return _u
+}
+
+// SetConsentApproved sets the "consent_approved" field.
+func (_u *OIDCAuthorizationRequestUpdate) SetConsentApproved(v bool) *OIDCAuthorizationRequestUpdate {
+	_u.mutation.SetConsentApproved(v)
+	return _u
+}
+
+// SetNillableConsentApproved sets the "consent_approved" field if the given value is not nil.
+func (_u *OIDCAuthorizationRequestUpdate) SetNillableConsentApproved(v *bool) *OIDCAuthorizationRequestUpdate {
+	if v != nil {
+		_u.SetConsentApproved(*v)
+	}
+	return _u
+}
+
 // SetDone sets the "done" field.
 func (_u *OIDCAuthorizationRequestUpdate) SetDone(v bool) *OIDCAuthorizationRequestUpdate {
 	_u.mutation.SetDone(v)
@@ -348,6 +394,23 @@ func (_u *OIDCAuthorizationRequestUpdate) sqlSave(ctx context.Context) (_node in
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, oidcauthorizationrequest.FieldAmr, value)
 		})
+	}
+	if value, ok := _u.mutation.Prompt(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldPrompt, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPrompt(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oidcauthorizationrequest.FieldPrompt, value)
+		})
+	}
+	if value, ok := _u.mutation.ConsentOwnerHash(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldConsentOwnerHash, field.TypeString, value)
+	}
+	if _u.mutation.ConsentOwnerHashCleared() {
+		_spec.ClearField(oidcauthorizationrequest.FieldConsentOwnerHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.ConsentApproved(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldConsentApproved, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Done(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldDone, field.TypeBool, value)
@@ -549,6 +612,52 @@ func (_u *OIDCAuthorizationRequestUpdateOne) AppendAmr(v []string) *OIDCAuthoriz
 	return _u
 }
 
+// SetPrompt sets the "prompt" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetPrompt(v []string) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.SetPrompt(v)
+	return _u
+}
+
+// AppendPrompt appends value to the "prompt" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) AppendPrompt(v []string) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.AppendPrompt(v)
+	return _u
+}
+
+// SetConsentOwnerHash sets the "consent_owner_hash" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetConsentOwnerHash(v string) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.SetConsentOwnerHash(v)
+	return _u
+}
+
+// SetNillableConsentOwnerHash sets the "consent_owner_hash" field if the given value is not nil.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetNillableConsentOwnerHash(v *string) *OIDCAuthorizationRequestUpdateOne {
+	if v != nil {
+		_u.SetConsentOwnerHash(*v)
+	}
+	return _u
+}
+
+// ClearConsentOwnerHash clears the value of the "consent_owner_hash" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) ClearConsentOwnerHash() *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.ClearConsentOwnerHash()
+	return _u
+}
+
+// SetConsentApproved sets the "consent_approved" field.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetConsentApproved(v bool) *OIDCAuthorizationRequestUpdateOne {
+	_u.mutation.SetConsentApproved(v)
+	return _u
+}
+
+// SetNillableConsentApproved sets the "consent_approved" field if the given value is not nil.
+func (_u *OIDCAuthorizationRequestUpdateOne) SetNillableConsentApproved(v *bool) *OIDCAuthorizationRequestUpdateOne {
+	if v != nil {
+		_u.SetConsentApproved(*v)
+	}
+	return _u
+}
+
 // SetDone sets the "done" field.
 func (_u *OIDCAuthorizationRequestUpdateOne) SetDone(v bool) *OIDCAuthorizationRequestUpdateOne {
 	_u.mutation.SetDone(v)
@@ -725,6 +834,23 @@ func (_u *OIDCAuthorizationRequestUpdateOne) sqlSave(ctx context.Context) (_node
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, oidcauthorizationrequest.FieldAmr, value)
 		})
+	}
+	if value, ok := _u.mutation.Prompt(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldPrompt, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPrompt(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, oidcauthorizationrequest.FieldPrompt, value)
+		})
+	}
+	if value, ok := _u.mutation.ConsentOwnerHash(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldConsentOwnerHash, field.TypeString, value)
+	}
+	if _u.mutation.ConsentOwnerHashCleared() {
+		_spec.ClearField(oidcauthorizationrequest.FieldConsentOwnerHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.ConsentApproved(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldConsentApproved, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Done(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldDone, field.TypeBool, value)

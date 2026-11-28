@@ -119,6 +119,16 @@ func AuthTime(v time.Time) predicate.OIDCAuthorizationRequest {
 	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldAuthTime, v))
 }
 
+// ConsentOwnerHash applies equality check predicate on the "consent_owner_hash" field. It's identical to ConsentOwnerHashEQ.
+func ConsentOwnerHash(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldConsentOwnerHash, v))
+}
+
+// ConsentApproved applies equality check predicate on the "consent_approved" field. It's identical to ConsentApprovedEQ.
+func ConsentApproved(v bool) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldConsentApproved, v))
+}
+
 // Done applies equality check predicate on the "done" field. It's identical to DoneEQ.
 func Done(v bool) predicate.OIDCAuthorizationRequest {
 	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldDone, v))
@@ -887,6 +897,91 @@ func AuthTimeIsNil() predicate.OIDCAuthorizationRequest {
 // AuthTimeNotNil applies the NotNil predicate on the "auth_time" field.
 func AuthTimeNotNil() predicate.OIDCAuthorizationRequest {
 	return predicate.OIDCAuthorizationRequest(sql.FieldNotNull(FieldAuthTime))
+}
+
+// ConsentOwnerHashEQ applies the EQ predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashEQ(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashNEQ applies the NEQ predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashNEQ(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNEQ(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashIn applies the In predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashIn(vs ...string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldIn(FieldConsentOwnerHash, vs...))
+}
+
+// ConsentOwnerHashNotIn applies the NotIn predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashNotIn(vs ...string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNotIn(FieldConsentOwnerHash, vs...))
+}
+
+// ConsentOwnerHashGT applies the GT predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashGT(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldGT(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashGTE applies the GTE predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashGTE(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldGTE(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashLT applies the LT predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashLT(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldLT(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashLTE applies the LTE predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashLTE(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldLTE(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashContains applies the Contains predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashContains(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldContains(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashHasPrefix applies the HasPrefix predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashHasPrefix(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldHasPrefix(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashHasSuffix applies the HasSuffix predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashHasSuffix(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldHasSuffix(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashIsNil applies the IsNil predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashIsNil() predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldIsNull(FieldConsentOwnerHash))
+}
+
+// ConsentOwnerHashNotNil applies the NotNil predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashNotNil() predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNotNull(FieldConsentOwnerHash))
+}
+
+// ConsentOwnerHashEqualFold applies the EqualFold predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashEqualFold(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEqualFold(FieldConsentOwnerHash, v))
+}
+
+// ConsentOwnerHashContainsFold applies the ContainsFold predicate on the "consent_owner_hash" field.
+func ConsentOwnerHashContainsFold(v string) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldContainsFold(FieldConsentOwnerHash, v))
+}
+
+// ConsentApprovedEQ applies the EQ predicate on the "consent_approved" field.
+func ConsentApprovedEQ(v bool) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldEQ(FieldConsentApproved, v))
+}
+
+// ConsentApprovedNEQ applies the NEQ predicate on the "consent_approved" field.
+func ConsentApprovedNEQ(v bool) predicate.OIDCAuthorizationRequest {
+	return predicate.OIDCAuthorizationRequest(sql.FieldNEQ(FieldConsentApproved, v))
 }
 
 // DoneEQ applies the EQ predicate on the "done" field.

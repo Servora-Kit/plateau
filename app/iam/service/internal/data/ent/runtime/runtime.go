@@ -13,6 +13,8 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclientsecret"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthconsent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
@@ -185,24 +187,116 @@ func init() {
 	oauthauthorizationcode.DefaultCreateTime = oauthauthorizationcodeDescCreateTime.Default.(func() time.Time)
 	oauthclientFields := schema.OAuthClient{}.Fields()
 	_ = oauthclientFields
-	// oauthclientDescSecretHash is the schema descriptor for secret_hash field.
-	oauthclientDescSecretHash := oauthclientFields[1].Descriptor()
-	// oauthclient.SecretHashValidator is a validator for the "secret_hash" field. It is called by the builders before save.
-	oauthclient.SecretHashValidator = oauthclientDescSecretHash.Validators[0].(func(string) error)
+	// oauthclientDescSource is the schema descriptor for source field.
+	oauthclientDescSource := oauthclientFields[1].Descriptor()
+	// oauthclient.DefaultSource holds the default value on creation for the source field.
+	oauthclient.DefaultSource = oauthclientDescSource.Default.(string)
+	// oauthclientDescStatus is the schema descriptor for status field.
+	oauthclientDescStatus := oauthclientFields[2].Descriptor()
+	// oauthclient.DefaultStatus holds the default value on creation for the status field.
+	oauthclient.DefaultStatus = oauthclientDescStatus.Default.(string)
+	// oauthclientDescDisplayName is the schema descriptor for display_name field.
+	oauthclientDescDisplayName := oauthclientFields[3].Descriptor()
+	// oauthclient.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	oauthclient.DisplayNameValidator = oauthclientDescDisplayName.Validators[0].(func(string) error)
+	// oauthclientDescApplicationType is the schema descriptor for application_type field.
+	oauthclientDescApplicationType := oauthclientFields[6].Descriptor()
+	// oauthclient.DefaultApplicationType holds the default value on creation for the application_type field.
+	oauthclient.DefaultApplicationType = oauthclientDescApplicationType.Default.(string)
+	// oauthclientDescTokenEndpointAuthMethod is the schema descriptor for token_endpoint_auth_method field.
+	oauthclientDescTokenEndpointAuthMethod := oauthclientFields[7].Descriptor()
+	// oauthclient.DefaultTokenEndpointAuthMethod holds the default value on creation for the token_endpoint_auth_method field.
+	oauthclient.DefaultTokenEndpointAuthMethod = oauthclientDescTokenEndpointAuthMethod.Default.(string)
+	// oauthclientDescRedirectUris is the schema descriptor for redirect_uris field.
+	oauthclientDescRedirectUris := oauthclientFields[8].Descriptor()
+	// oauthclient.DefaultRedirectUris holds the default value on creation for the redirect_uris field.
+	oauthclient.DefaultRedirectUris = oauthclientDescRedirectUris.Default.([]string)
+	// oauthclientDescPostLogoutRedirectUris is the schema descriptor for post_logout_redirect_uris field.
+	oauthclientDescPostLogoutRedirectUris := oauthclientFields[9].Descriptor()
+	// oauthclient.DefaultPostLogoutRedirectUris holds the default value on creation for the post_logout_redirect_uris field.
+	oauthclient.DefaultPostLogoutRedirectUris = oauthclientDescPostLogoutRedirectUris.Default.([]string)
+	// oauthclientDescAllowedGrantTypes is the schema descriptor for allowed_grant_types field.
+	oauthclientDescAllowedGrantTypes := oauthclientFields[10].Descriptor()
+	// oauthclient.DefaultAllowedGrantTypes holds the default value on creation for the allowed_grant_types field.
+	oauthclient.DefaultAllowedGrantTypes = oauthclientDescAllowedGrantTypes.Default.([]string)
+	// oauthclientDescAllowedResponseTypes is the schema descriptor for allowed_response_types field.
+	oauthclientDescAllowedResponseTypes := oauthclientFields[11].Descriptor()
+	// oauthclient.DefaultAllowedResponseTypes holds the default value on creation for the allowed_response_types field.
+	oauthclient.DefaultAllowedResponseTypes = oauthclientDescAllowedResponseTypes.Default.([]string)
+	// oauthclientDescAllowedScopes is the schema descriptor for allowed_scopes field.
+	oauthclientDescAllowedScopes := oauthclientFields[12].Descriptor()
+	// oauthclient.DefaultAllowedScopes holds the default value on creation for the allowed_scopes field.
+	oauthclient.DefaultAllowedScopes = oauthclientDescAllowedScopes.Default.([]string)
+	// oauthclientDescAudiences is the schema descriptor for audiences field.
+	oauthclientDescAudiences := oauthclientFields[13].Descriptor()
+	// oauthclient.DefaultAudiences holds the default value on creation for the audiences field.
+	oauthclient.DefaultAudiences = oauthclientDescAudiences.Default.([]string)
 	// oauthclientDescTrusted is the schema descriptor for trusted field.
-	oauthclientDescTrusted := oauthclientFields[7].Descriptor()
+	oauthclientDescTrusted := oauthclientFields[14].Descriptor()
 	// oauthclient.DefaultTrusted holds the default value on creation for the trusted field.
 	oauthclient.DefaultTrusted = oauthclientDescTrusted.Default.(bool)
+	// oauthclientDescEtag is the schema descriptor for etag field.
+	oauthclientDescEtag := oauthclientFields[15].Descriptor()
+	// oauthclient.EtagValidator is a validator for the "etag" field. It is called by the builders before save.
+	oauthclient.EtagValidator = oauthclientDescEtag.Validators[0].(func(string) error)
 	// oauthclientDescCreateTime is the schema descriptor for create_time field.
-	oauthclientDescCreateTime := oauthclientFields[8].Descriptor()
+	oauthclientDescCreateTime := oauthclientFields[16].Descriptor()
 	// oauthclient.DefaultCreateTime holds the default value on creation for the create_time field.
 	oauthclient.DefaultCreateTime = oauthclientDescCreateTime.Default.(func() time.Time)
 	// oauthclientDescUpdateTime is the schema descriptor for update_time field.
-	oauthclientDescUpdateTime := oauthclientFields[9].Descriptor()
+	oauthclientDescUpdateTime := oauthclientFields[17].Descriptor()
 	// oauthclient.DefaultUpdateTime holds the default value on creation for the update_time field.
 	oauthclient.DefaultUpdateTime = oauthclientDescUpdateTime.Default.(func() time.Time)
 	// oauthclient.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	oauthclient.UpdateDefaultUpdateTime = oauthclientDescUpdateTime.UpdateDefault.(func() time.Time)
+	oauthclientsecretFields := schema.OAuthClientSecret{}.Fields()
+	_ = oauthclientsecretFields
+	// oauthclientsecretDescClientID is the schema descriptor for client_id field.
+	oauthclientsecretDescClientID := oauthclientsecretFields[1].Descriptor()
+	// oauthclientsecret.ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
+	oauthclientsecret.ClientIDValidator = oauthclientsecretDescClientID.Validators[0].(func(string) error)
+	// oauthclientsecretDescName is the schema descriptor for name field.
+	oauthclientsecretDescName := oauthclientsecretFields[2].Descriptor()
+	// oauthclientsecret.DefaultName holds the default value on creation for the name field.
+	oauthclientsecret.DefaultName = oauthclientsecretDescName.Default.(string)
+	// oauthclientsecret.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	oauthclientsecret.NameValidator = oauthclientsecretDescName.Validators[0].(func(string) error)
+	// oauthclientsecretDescSecretPrefix is the schema descriptor for secret_prefix field.
+	oauthclientsecretDescSecretPrefix := oauthclientsecretFields[3].Descriptor()
+	// oauthclientsecret.SecretPrefixValidator is a validator for the "secret_prefix" field. It is called by the builders before save.
+	oauthclientsecret.SecretPrefixValidator = oauthclientsecretDescSecretPrefix.Validators[0].(func(string) error)
+	// oauthclientsecretDescSecretHash is the schema descriptor for secret_hash field.
+	oauthclientsecretDescSecretHash := oauthclientsecretFields[4].Descriptor()
+	// oauthclientsecret.SecretHashValidator is a validator for the "secret_hash" field. It is called by the builders before save.
+	oauthclientsecret.SecretHashValidator = oauthclientsecretDescSecretHash.Validators[0].(func(string) error)
+	// oauthclientsecretDescCreateTime is the schema descriptor for create_time field.
+	oauthclientsecretDescCreateTime := oauthclientsecretFields[7].Descriptor()
+	// oauthclientsecret.DefaultCreateTime holds the default value on creation for the create_time field.
+	oauthclientsecret.DefaultCreateTime = oauthclientsecretDescCreateTime.Default.(func() time.Time)
+	oauthconsentFields := schema.OAuthConsent{}.Fields()
+	_ = oauthconsentFields
+	// oauthconsentDescUserID is the schema descriptor for user_id field.
+	oauthconsentDescUserID := oauthconsentFields[1].Descriptor()
+	// oauthconsent.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	oauthconsent.UserIDValidator = oauthconsentDescUserID.Validators[0].(func(string) error)
+	// oauthconsentDescClientID is the schema descriptor for client_id field.
+	oauthconsentDescClientID := oauthconsentFields[2].Descriptor()
+	// oauthconsent.ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
+	oauthconsent.ClientIDValidator = oauthconsentDescClientID.Validators[0].(func(string) error)
+	// oauthconsentDescGrantedScopes is the schema descriptor for granted_scopes field.
+	oauthconsentDescGrantedScopes := oauthconsentFields[3].Descriptor()
+	// oauthconsent.DefaultGrantedScopes holds the default value on creation for the granted_scopes field.
+	oauthconsent.DefaultGrantedScopes = oauthconsentDescGrantedScopes.Default.([]string)
+	// oauthconsentDescCreateTime is the schema descriptor for create_time field.
+	oauthconsentDescCreateTime := oauthconsentFields[4].Descriptor()
+	// oauthconsent.DefaultCreateTime holds the default value on creation for the create_time field.
+	oauthconsent.DefaultCreateTime = oauthconsentDescCreateTime.Default.(func() time.Time)
+	// oauthconsentDescUpdateTime is the schema descriptor for update_time field.
+	oauthconsentDescUpdateTime := oauthconsentFields[5].Descriptor()
+	// oauthconsent.DefaultUpdateTime holds the default value on creation for the update_time field.
+	oauthconsent.DefaultUpdateTime = oauthconsentDescUpdateTime.Default.(func() time.Time)
+	// oauthconsent.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	oauthconsent.UpdateDefaultUpdateTime = oauthconsentDescUpdateTime.UpdateDefault.(func() time.Time)
 	oauthrefreshtokenFields := schema.OAuthRefreshToken{}.Fields()
 	_ = oauthrefreshtokenFields
 	// oauthrefreshtokenDescTokenSessionID is the schema descriptor for token_session_id field.
@@ -279,16 +373,24 @@ func init() {
 	oidcauthorizationrequestDescAmr := oidcauthorizationrequestFields[13].Descriptor()
 	// oidcauthorizationrequest.DefaultAmr holds the default value on creation for the amr field.
 	oidcauthorizationrequest.DefaultAmr = oidcauthorizationrequestDescAmr.Default.([]string)
+	// oidcauthorizationrequestDescPrompt is the schema descriptor for prompt field.
+	oidcauthorizationrequestDescPrompt := oidcauthorizationrequestFields[14].Descriptor()
+	// oidcauthorizationrequest.DefaultPrompt holds the default value on creation for the prompt field.
+	oidcauthorizationrequest.DefaultPrompt = oidcauthorizationrequestDescPrompt.Default.([]string)
+	// oidcauthorizationrequestDescConsentApproved is the schema descriptor for consent_approved field.
+	oidcauthorizationrequestDescConsentApproved := oidcauthorizationrequestFields[16].Descriptor()
+	// oidcauthorizationrequest.DefaultConsentApproved holds the default value on creation for the consent_approved field.
+	oidcauthorizationrequest.DefaultConsentApproved = oidcauthorizationrequestDescConsentApproved.Default.(bool)
 	// oidcauthorizationrequestDescDone is the schema descriptor for done field.
-	oidcauthorizationrequestDescDone := oidcauthorizationrequestFields[14].Descriptor()
+	oidcauthorizationrequestDescDone := oidcauthorizationrequestFields[17].Descriptor()
 	// oidcauthorizationrequest.DefaultDone holds the default value on creation for the done field.
 	oidcauthorizationrequest.DefaultDone = oidcauthorizationrequestDescDone.Default.(bool)
 	// oidcauthorizationrequestDescCreateTime is the schema descriptor for create_time field.
-	oidcauthorizationrequestDescCreateTime := oidcauthorizationrequestFields[16].Descriptor()
+	oidcauthorizationrequestDescCreateTime := oidcauthorizationrequestFields[19].Descriptor()
 	// oidcauthorizationrequest.DefaultCreateTime holds the default value on creation for the create_time field.
 	oidcauthorizationrequest.DefaultCreateTime = oidcauthorizationrequestDescCreateTime.Default.(func() time.Time)
 	// oidcauthorizationrequestDescUpdateTime is the schema descriptor for update_time field.
-	oidcauthorizationrequestDescUpdateTime := oidcauthorizationrequestFields[17].Descriptor()
+	oidcauthorizationrequestDescUpdateTime := oidcauthorizationrequestFields[20].Descriptor()
 	// oidcauthorizationrequest.DefaultUpdateTime holds the default value on creation for the update_time field.
 	oidcauthorizationrequest.DefaultUpdateTime = oidcauthorizationrequestDescUpdateTime.Default.(func() time.Time)
 	// oidcauthorizationrequest.UpdateDefaultUpdateTime holds the default value on update for the update_time field.

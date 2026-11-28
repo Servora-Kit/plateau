@@ -49,7 +49,7 @@ type AuthFlowSnapshot struct {
 }
 
 type AuthFlowRepo interface {
-	FindPendingOIDCRequest(ctx context.Context, requestID string, now time.Time) (clientID string, expiresTime time.Time, err error)
+	FindPendingOIDCRequest(ctx context.Context, requestID string, now time.Time) (*authnpb.AuthFlowOidcContext, time.Time, error)
 	Create(ctx context.Context, flow *authnpb.AuthFlow, ownerHash, oidcRequestID string, now time.Time) (*authnpb.AuthFlow, error)
 	Get(ctx context.Context, flowID string) (*AuthFlowSnapshot, error)
 	Invalidate(ctx context.Context, flowID string, now time.Time) error
@@ -67,6 +67,7 @@ type AuthenticationUsecase struct {
 	credentials CredentialRepo
 	sessions    *SessionUsecase
 	flows       AuthFlowRepo
+	consents    OAuthConsentRepo
 	now         func() time.Time
 }
 
@@ -78,8 +79,9 @@ func NewAuthenticationUsecase(
 	credentials CredentialRepo,
 	sessions *SessionUsecase,
 	flows AuthFlowRepo,
+	consents OAuthConsentRepo,
 ) (*AuthenticationUsecase, error) {
-	if config == nil || oidcConfig == nil || users == nil || credentials == nil || sessions == nil || flows == nil {
+	if config == nil || oidcConfig == nil || users == nil || credentials == nil || sessions == nil || flows == nil || consents == nil {
 		return nil, fmt.Errorf("authentication: dependency is nil")
 	}
 	issuer, _, err := NormalizeOIDCIssuer(oidcConfig.GetIssuer())
@@ -118,6 +120,7 @@ func NewAuthenticationUsecase(
 		credentials: credentials,
 		sessions:    sessions,
 		flows:       flows,
+		consents:    consents,
 		now:         time.Now,
 	}, nil
 }
@@ -129,19 +132,18 @@ func (uc *AuthenticationUsecase) CreateAuthFlow(
 ) (*authnpb.AuthFlow, string, error) {
 	now := uc.now().UTC()
 	var (
-		oidcClientID string
-		oidcExpires  time.Time
+		oidcCtx     *authnpb.AuthFlowOidcContext
+		oidcExpires time.Time
 	)
 	if oidcRequestID != "" {
-		clientID, expiresTime, err := uc.flows.FindPendingOIDCRequest(ctx, oidcRequestID, now)
+		var err error
+		oidcCtx, oidcExpires, err = uc.flows.FindPendingOIDCRequest(ctx, oidcRequestID, now)
 		if errors.Is(err, ErrNotFound) {
 			return nil, "", ErrOIDCRequestInvalid
 		}
 		if err != nil {
 			return nil, "", fmt.Errorf("find pending OIDC request: %w", err)
 		}
-		oidcClientID = clientID
-		oidcExpires = expiresTime
 	}
 
 	if loginID != "" {
@@ -157,7 +159,7 @@ func (uc *AuthenticationUsecase) CreateAuthFlow(
 					State:        authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED,
 					CompletedAmr: amr,
 					Email:        user.GetEmail(),
-					Oidc:         buildOIDCContext(oidcClientID),
+					Oidc:         oidcCtx,
 					ContinueUrl:  BuildContinueURL(oidcRequestID),
 					User:         user,
 				}, "", nil
@@ -192,7 +194,7 @@ func (uc *AuthenticationUsecase) CreateAuthFlow(
 	}
 	seed := EvaluateFlowProgress(nil, DefaultAuthPolicy(), nil)
 	seed.FlowId = flowID
-	seed.Oidc = buildOIDCContext(oidcClientID)
+	seed.Oidc = oidcCtx
 	seed.ExpiresTime = timestamppb.New(expiresTime)
 	created, err := uc.flows.Create(ctx, seed, ownerHash, oidcRequestID, now)
 	if err != nil {
@@ -232,7 +234,7 @@ func (uc *AuthenticationUsecase) GetAuthFlow(
 				}, nil
 			}
 			if len(amr) > 0 {
-				clientID, _, err := uc.flows.FindPendingOIDCRequest(ctx, snapshot.OIDCRequestID, now)
+				oidcCtx, _, err := uc.flows.FindPendingOIDCRequest(ctx, snapshot.OIDCRequestID, now)
 				if err != nil && !errors.Is(err, ErrNotFound) {
 					return nil, fmt.Errorf("find pending OIDC request: %w", err)
 				}
@@ -245,7 +247,7 @@ func (uc *AuthenticationUsecase) GetAuthFlow(
 					State:        authnpb.AuthFlowState_AUTH_FLOW_STATE_COMPLETED,
 					CompletedAmr: amr,
 					Email:        user.GetEmail(),
-					Oidc:         buildOIDCContext(clientID),
+					Oidc:         oidcCtx,
 					ExpiresTime:  proto.CloneOf(snapshot.Flow.GetExpiresTime()),
 					ContinueUrl:  continueTarget,
 					User:         user,
@@ -271,14 +273,14 @@ func (uc *AuthenticationUsecase) GetAuthFlow(
 	}
 	out := proto.CloneOf(snapshot.Flow)
 	if snapshot.OIDCRequestID != "" {
-		clientID, _, err := uc.flows.FindPendingOIDCRequest(ctx, snapshot.OIDCRequestID, now)
+		oidcCtx, _, err := uc.flows.FindPendingOIDCRequest(ctx, snapshot.OIDCRequestID, now)
 		if errors.Is(err, ErrNotFound) {
 			return nil, ErrOIDCRequestInvalid
 		}
 		if err != nil {
 			return nil, fmt.Errorf("find pending OIDC request: %w", err)
 		}
-		out.Oidc = buildOIDCContext(clientID)
+		out.Oidc = oidcCtx
 	}
 	return out, nil
 }

@@ -3,18 +3,18 @@ package oidc
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"slices"
 	"strings"
 	"time"
 
+	iamclientv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/client/v1"
 	oidcconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
-	"github.com/Servora-Kit/plateau/security"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclientsecret"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/predicate"
 	"github.com/go-jose/go-jose/v4"
-	"github.com/zitadel/oidc/v3/pkg/oidc"
 )
 
 // OIDCInitializer reconciles static OAuth clients and current signing-key metadata before serving traffic.
@@ -33,9 +33,6 @@ func NewOIDCInitializer(config *oidcconfpb.OIDC, storage *OIDCStorage) (*OIDCIni
 	if _, _, err := biz.NormalizeOIDCIssuer(config.GetIssuer()); err != nil {
 		return nil, err
 	}
-	if len(config.GetClients()) == 0 {
-		return nil, fmt.Errorf("OIDC requires at least one static OAuth client")
-	}
 	return &OIDCInitializer{config: config, storage: storage}, nil
 }
 
@@ -43,22 +40,34 @@ func (initializer *OIDCInitializer) Initialize(ctx context.Context) error {
 	if err := initializer.reconcileSigningKey(ctx); err != nil {
 		return err
 	}
+	now := initializer.storage.now().UTC()
 	configuredIDs := make([]string, 0, len(initializer.config.GetClients()))
 	seenIDs := make(map[string]struct{}, len(initializer.config.GetClients()))
 	for _, configured := range initializer.config.GetClients() {
-		clientID, redirectURIs, scopes, err := validateConfiguredClient(configured, seenIDs)
+		normalized, rawSecret, err := parseAndValidateConfiguredClient(configured, seenIDs)
 		if err != nil {
 			return err
 		}
-		configuredIDs = append(configuredIDs, clientID)
-		if err := initializer.reconcileClient(ctx, configured, clientID, redirectURIs, scopes); err != nil {
+		configuredIDs = append(configuredIDs, normalized.GetClientId())
+		if err := initializer.reconcileClient(ctx, normalized, rawSecret, now); err != nil {
 			return err
 		}
 	}
-	if _, err := initializer.storage.client.OAuthClient.Delete().
-		Where(oauthclient.IDNotIn(configuredIDs...)).
-		Exec(ctx); err != nil {
-		return fmt.Errorf("delete OAuth clients removed from static configuration: %w", err)
+
+	removePreds := []predicate.OAuthClient{oauthclient.SourceEQ(biz.ClientSourceStatic)}
+	if len(configuredIDs) > 0 {
+		removePreds = append(removePreds, oauthclient.IDNotIn(configuredIDs...))
+	}
+	removedStaticIDs, err := initializer.storage.client.OAuthClient.Query().
+		Where(removePreds...).
+		IDs(ctx)
+	if err != nil {
+		return fmt.Errorf("query static OAuth clients to remove: %w", err)
+	}
+	for _, removedID := range removedStaticIDs {
+		if err := initializer.storage.tokens.PurgeStaticClient(ctx, removedID, now); err != nil {
+			return fmt.Errorf("delete OAuth client %q removed from static configuration: %w", removedID, err)
+		}
 	}
 	return nil
 }
@@ -92,141 +101,276 @@ func (initializer *OIDCInitializer) reconcileSigningKey(ctx context.Context) err
 
 func (initializer *OIDCInitializer) reconcileClient(
 	ctx context.Context,
-	configured *oidcconfpb.OAuthClient,
-	clientID string,
-	redirectURIs, scopes []string,
+	normalized *iamclientv1.OAuthClient,
+	rawSecret string,
+	now time.Time,
 ) error {
-	responseTypes := []string{}
-	if slices.Contains(configured.GetAllowedGrantTypes(), string(oidc.GrantTypeCode)) {
-		responseTypes = []string{string(oidc.ResponseTypeCode)}
+	clientID := normalized.GetClientId()
+	appType, err := biz.ApplicationTypeToStorage(normalized.GetApplicationType())
+	if err != nil {
+		return err
 	}
-	_, err := initializer.storage.client.OAuthClient.Get(ctx, clientID)
-	if ent.IsNotFound(err) {
-		secretHash := biz.HashOpaqueSecret(configured.GetClientSecret())
-		if _, err := initializer.storage.client.OAuthClient.Create().
+	authMethod, err := biz.AuthMethodToStorage(normalized.GetTokenEndpointAuthMethod())
+	if err != nil {
+		return err
+	}
+
+	tx, err := initializer.storage.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin static OAuth client reconciliation tx for %q: %w", clientID, err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	existing, err := tx.OAuthClient.Get(ctx, clientID)
+	if err != nil && !ent.IsNotFound(err) {
+		return fmt.Errorf("query OAuth client %q: %w", clientID, err)
+	}
+	if existing != nil && existing.Source != biz.ClientSourceStatic {
+		return fmt.Errorf("static OIDC client %q conflicts with existing %s OAuth client", clientID, existing.Source)
+	}
+
+	if existing != nil && existing.ApplicationType != appType {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("rollback before static OAuth client %q type replacement: %w", clientID, err)
+		}
+		if err := initializer.storage.tokens.PurgeStaticClient(ctx, clientID, now); err != nil {
+			return fmt.Errorf("purge static OAuth client %q for application_type change: %w", clientID, err)
+		}
+		tx, err = initializer.storage.client.Tx(ctx)
+		if err != nil {
+			return fmt.Errorf("restart static OAuth client reconciliation tx for %q: %w", clientID, err)
+		}
+		defer func() { _ = tx.Rollback() }()
+		existing = nil
+	}
+
+	if existing == nil {
+		etag, err := biz.NewID()
+		if err != nil {
+			return err
+		}
+		if _, err := tx.OAuthClient.Create().
 			SetID(clientID).
-			SetSecretHash(secretHash).
-			SetRedirectUris(redirectURIs).
-			SetAllowedGrantTypes(deduplicate(configured.GetAllowedGrantTypes())).
-			SetAllowedResponseTypes(responseTypes).
-			SetAllowedScopes(scopes).
-			SetAudiences(deduplicate(configured.GetAudiences())).
-			SetTrusted(configured.GetTrusted()).
+			SetSource(biz.ClientSourceStatic).
+			SetStatus(biz.ClientStatusActive).
+			SetDisplayName(normalized.GetDisplayName()).
+			SetNillableDescription(normalized.Description).
+			SetNillableLogoURI(normalized.LogoUri).
+			SetApplicationType(appType).
+			SetTokenEndpointAuthMethod(authMethod).
+			SetRedirectUris(normalized.GetRedirectUris()).
+			SetPostLogoutRedirectUris(normalized.GetPostLogoutRedirectUris()).
+			SetAllowedGrantTypes(normalized.GetAllowedGrantTypes()).
+			SetAllowedResponseTypes(normalized.GetAllowedResponseTypes()).
+			SetAllowedScopes(normalized.GetAllowedScopes()).
+			SetAudiences(normalized.GetAudiences()).
+			SetTrusted(normalized.GetTrusted()).
+			SetEtag(etag).
+			SetCreateTime(now).
+			SetUpdateTime(now).
 			Save(ctx); err != nil {
 			return fmt.Errorf("seed OAuth client %q: %w", clientID, err)
 		}
-		return nil
+	} else if !staticClientMatches(existing, normalized, appType, authMethod) {
+		etag, err := biz.NewID()
+		if err != nil {
+			return err
+		}
+		builder := tx.OAuthClient.UpdateOneID(clientID).
+			SetStatus(biz.ClientStatusActive).
+			SetDisplayName(normalized.GetDisplayName()).
+			SetTokenEndpointAuthMethod(authMethod).
+			SetRedirectUris(normalized.GetRedirectUris()).
+			SetPostLogoutRedirectUris(normalized.GetPostLogoutRedirectUris()).
+			SetAllowedGrantTypes(normalized.GetAllowedGrantTypes()).
+			SetAllowedResponseTypes(normalized.GetAllowedResponseTypes()).
+			SetAllowedScopes(normalized.GetAllowedScopes()).
+			SetAudiences(normalized.GetAudiences()).
+			SetTrusted(normalized.GetTrusted()).
+			SetEtag(etag).
+			SetUpdateTime(now)
+		if normalized.Description == nil {
+			builder.ClearDescription()
+		} else {
+			builder.SetDescription(normalized.GetDescription())
+		}
+		if normalized.LogoUri == nil {
+			builder.ClearLogoURI()
+		} else {
+			builder.SetLogoURI(normalized.GetLogoUri())
+		}
+		if _, err := builder.Save(ctx); err != nil {
+			return fmt.Errorf("reconcile OAuth client %q: %w", clientID, err)
+		}
 	}
-	if err != nil {
-		return fmt.Errorf("query OAuth client %q: %w", clientID, err)
+
+	if err := reconcileStaticClientSecret(ctx, tx, clientID, authMethod, rawSecret, now); err != nil {
+		return err
 	}
-	if _, err := initializer.storage.client.OAuthClient.UpdateOneID(clientID).
-		SetSecretHash(biz.HashOpaqueSecret(configured.GetClientSecret())).
-		SetRedirectUris(redirectURIs).
-		SetAllowedGrantTypes(deduplicate(configured.GetAllowedGrantTypes())).
-		SetAllowedResponseTypes(responseTypes).
-		SetAllowedScopes(scopes).
-		SetAudiences(deduplicate(configured.GetAudiences())).
-		SetTrusted(configured.GetTrusted()).
-		Save(ctx); err != nil {
-		return fmt.Errorf("reconcile OAuth client %q: %w", clientID, err)
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit OAuth client %q reconciliation: %w", clientID, err)
 	}
 	return nil
 }
 
-func validateConfiguredClient(
+func reconcileStaticClientSecret(
+	ctx context.Context,
+	tx *ent.Tx,
+	clientID, authMethod, rawSecret string,
+	now time.Time,
+) error {
+	if authMethod == biz.AuthMethodNone {
+		if _, err := tx.OAuthClientSecret.Delete().Where(oauthclientsecret.ClientIDEQ(clientID)).Exec(ctx); err != nil {
+			return fmt.Errorf("clear static public OAuth client %q secrets: %w", clientID, err)
+		}
+		return nil
+	}
+
+	wantHash := biz.HashOpaqueSecret(rawSecret)
+	wantPrefix := biz.SecretDisplayPrefix(rawSecret)
+	existingSecrets, err := tx.OAuthClientSecret.Query().
+		Where(oauthclientsecret.ClientIDEQ(clientID)).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("query static OAuth client %q secrets: %w", clientID, err)
+	}
+	if len(existingSecrets) == 1 &&
+		existingSecrets[0].SecretHash == wantHash &&
+		existingSecrets[0].SecretPrefix == wantPrefix &&
+		existingSecrets[0].ExpiresTime == nil {
+		return nil
+	}
+	if len(existingSecrets) == 1 {
+		if _, err := tx.OAuthClientSecret.UpdateOneID(existingSecrets[0].ID).
+			SetSecretHash(wantHash).
+			SetSecretPrefix(wantPrefix).
+			ClearExpiresTime().
+			Save(ctx); err != nil {
+			return fmt.Errorf("rotate static OAuth client %q secret: %w", clientID, err)
+		}
+		return nil
+	}
+
+	if len(existingSecrets) > 0 {
+		if _, err := tx.OAuthClientSecret.Delete().Where(oauthclientsecret.ClientIDEQ(clientID)).Exec(ctx); err != nil {
+			return fmt.Errorf("replace static OAuth client %q secrets: %w", clientID, err)
+		}
+	}
+	secretID, err := biz.NewID()
+	if err != nil {
+		return err
+	}
+	if _, err := tx.OAuthClientSecret.Create().
+		SetID(secretID).
+		SetClientID(clientID).
+		SetName(biz.DefaultSecretName).
+		SetSecretPrefix(wantPrefix).
+		SetSecretHash(wantHash).
+		SetCreateTime(now).
+		Save(ctx); err != nil {
+		return fmt.Errorf("seed static OAuth client %q secret: %w", clientID, err)
+	}
+	return nil
+}
+
+func staticClientMatches(
+	existing *ent.OAuthClient,
+	normalized *iamclientv1.OAuthClient,
+	appType, authMethod string,
+) bool {
+	existingDesc := ""
+	if existing.Description != nil {
+		existingDesc = *existing.Description
+	}
+	existingLogo := ""
+	if existing.LogoURI != nil {
+		existingLogo = *existing.LogoURI
+	}
+	return existing.Status == biz.ClientStatusActive &&
+		existing.DisplayName == normalized.GetDisplayName() &&
+		(existing.Description != nil) == (normalized.Description != nil) &&
+		existingDesc == normalized.GetDescription() &&
+		(existing.LogoURI != nil) == (normalized.LogoUri != nil) &&
+		existingLogo == normalized.GetLogoUri() &&
+		existing.ApplicationType == appType &&
+		existing.TokenEndpointAuthMethod == authMethod &&
+		slices.Equal(existing.RedirectUris, normalized.GetRedirectUris()) &&
+		slices.Equal(existing.PostLogoutRedirectUris, normalized.GetPostLogoutRedirectUris()) &&
+		slices.Equal(existing.AllowedGrantTypes, normalized.GetAllowedGrantTypes()) &&
+		slices.Equal(existing.AllowedResponseTypes, normalized.GetAllowedResponseTypes()) &&
+		slices.Equal(existing.AllowedScopes, normalized.GetAllowedScopes()) &&
+		slices.Equal(existing.Audiences, normalized.GetAudiences()) &&
+		existing.Trusted == normalized.GetTrusted()
+}
+
+func parseAndValidateConfiguredClient(
 	configured *oidcconfpb.OAuthClient,
 	seenIDs map[string]struct{},
-) (string, []string, []string, error) {
+) (*iamclientv1.OAuthClient, string, error) {
 	if configured == nil {
-		return "", nil, nil, fmt.Errorf("OIDC client configuration is nil")
+		return nil, "", fmt.Errorf("OIDC client configuration is nil")
 	}
 	clientID := strings.TrimSpace(configured.GetClientId())
 	if clientID == "" || clientID != configured.GetClientId() {
-		return "", nil, nil, fmt.Errorf("OIDC client ID is empty")
+		return nil, "", fmt.Errorf("OIDC client ID is empty")
 	}
 	if _, duplicate := seenIDs[clientID]; duplicate {
-		return "", nil, nil, fmt.Errorf("duplicate OIDC client ID %q", clientID)
+		return nil, "", fmt.Errorf("duplicate OIDC client ID %q", clientID)
 	}
 	seenIDs[clientID] = struct{}{}
-	if len(configured.GetClientSecret()) < 32 {
-		return "", nil, nil, fmt.Errorf("OIDC client %q secret must contain at least 32 bytes", clientID)
-	}
-	grants := deduplicate(configured.GetAllowedGrantTypes())
-	if len(grants) == 0 {
-		return "", nil, nil, fmt.Errorf("OAuth client %q requires allowed_grant_types", clientID)
-	}
-	for _, grant := range grants {
-		switch oidc.GrantType(grant) {
-		case oidc.GrantTypeCode, oidc.GrantTypeRefreshToken, oidc.GrantTypeClientCredentials:
-		default:
-			return "", nil, nil, fmt.Errorf("OAuth client %q has unsupported grant type %q", clientID, grant)
-		}
-	}
-	userFlow := slices.Contains(grants, string(oidc.GrantTypeCode))
-	if slices.Contains(grants, string(oidc.GrantTypeRefreshToken)) && !userFlow {
-		return "", nil, nil, fmt.Errorf("refresh grant requires authorization code grant")
-	}
-	if slices.Contains(grants, string(oidc.GrantTypeClientCredentials)) {
-		if len(configured.GetAudiences()) == 0 {
-			return "", nil, nil, fmt.Errorf("service OAuth client %q requires audiences", clientID)
-		}
-		for _, audience := range configured.GetAudiences() {
-			if strings.TrimSpace(audience) != audience || audience == "" {
-				return "", nil, nil, fmt.Errorf("service audience is empty or contains surrounding whitespace")
-			}
-		}
-	}
-	if userFlow && !configured.GetTrusted() {
-		return "", nil, nil, fmt.Errorf("OIDC client %q must be trusted because consent is unsupported", clientID)
-	}
-	redirectURIs := deduplicate(configured.GetRedirectUris())
-	if userFlow && len(redirectURIs) == 0 {
-		return "", nil, nil, fmt.Errorf("OIDC client %q requires a redirect URI", clientID)
-	}
-	for _, redirectURI := range redirectURIs {
-		if err := validateRedirectURI(redirectURI); err != nil {
-			return "", nil, nil, fmt.Errorf("OIDC client %q: %w", clientID, err)
-		}
-	}
-	scopes := deduplicate(configured.GetAllowedScopes())
-	if userFlow && !slices.Contains(scopes, oidc.ScopeOpenID) {
-		return "", nil, nil, fmt.Errorf("OIDC client %q must allow the openid scope", clientID)
-	}
-	for _, scope := range scopes {
-		if userFlow && !slices.Contains(supportedScopes, scope) {
-			return "", nil, nil, fmt.Errorf("OIDC client %q contains unsupported scope %q", clientID, scope)
-		}
-	}
-	return clientID, redirectURIs, scopes, nil
-}
 
-func validateRedirectURI(raw string) error {
-	if strings.Contains(raw, "*") {
-		return fmt.Errorf("redirect URI wildcards are forbidden")
+	appTypeRaw := strings.TrimSpace(configured.GetApplicationType())
+	if appTypeRaw == "" {
+		appTypeRaw = biz.AppTypeWeb
 	}
-	parsed, err := url.Parse(raw)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" || parsed.Fragment != "" {
-		return fmt.Errorf("redirect URI %q must be absolute and omit fragments", raw)
+	appType, err := biz.ApplicationTypeFromStorage(appTypeRaw)
+	if err != nil {
+		return nil, "", fmt.Errorf("OIDC client %q: %w", clientID, err)
 	}
-	if parsed.Scheme == "https" {
-		return nil
-	}
-	if parsed.Scheme == "http" && security.IsLoopbackHost(parsed.Hostname()) {
-		return nil
-	}
-	return fmt.Errorf("redirect URI %q must use HTTPS except on localhost", raw)
-}
 
-func deduplicate(values []string) []string {
-	result := make([]string, 0, len(values))
-	seen := make(map[string]struct{}, len(values))
-	for _, value := range values {
-		if _, ok := seen[value]; ok {
-			continue
-		}
-		seen[value] = struct{}{}
-		result = append(result, value)
+	authMethodRaw := strings.TrimSpace(configured.GetTokenEndpointAuthMethod())
+	if authMethodRaw == "" {
+		authMethodRaw = biz.AuthMethodBasic
 	}
-	return result
+	authMethod, err := biz.AuthMethodFromStorage(authMethodRaw)
+	if err != nil {
+		return nil, "", fmt.Errorf("OIDC client %q: %w", clientID, err)
+	}
+
+	rawSecret := configured.GetClientSecret()
+	if authMethodRaw == biz.AuthMethodNone {
+		if rawSecret != "" {
+			return nil, "", fmt.Errorf("public OIDC client %q must not configure client_secret", clientID)
+		}
+	} else if len(rawSecret) < 32 {
+		return nil, "", fmt.Errorf("OIDC client %q secret must contain at least 32 bytes", clientID)
+	}
+
+	displayName := strings.TrimSpace(configured.GetDisplayName())
+	if displayName == "" {
+		displayName = clientID
+	}
+
+	normalized, err := biz.ValidateAndNormalizeOAuthClient(
+		clientID,
+		&iamclientv1.OAuthClient{
+			DisplayName:             &displayName,
+			Description:             configured.Description,
+			LogoUri:                 configured.LogoUri,
+			ApplicationType:         &appType,
+			TokenEndpointAuthMethod: &authMethod,
+			RedirectUris:            configured.GetRedirectUris(),
+			PostLogoutRedirectUris:  configured.GetPostLogoutRedirectUris(),
+			AllowedGrantTypes:       configured.GetAllowedGrantTypes(),
+			AllowedScopes:           configured.GetAllowedScopes(),
+			Audiences:               configured.GetAudiences(),
+			Trusted:                 new(configured.GetTrusted()),
+		},
+		iamclientv1.ClientSource_CLIENT_SOURCE_STATIC,
+		iamclientv1.ClientStatus_CLIENT_STATUS_ACTIVE,
+	)
+	if err != nil {
+		return nil, "", fmt.Errorf("OIDC client %q: %w", clientID, err)
+	}
+	return normalized, rawSecret, nil
 }

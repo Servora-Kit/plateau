@@ -154,6 +154,40 @@ func (_c *OIDCAuthorizationRequestCreate) SetAmr(v []string) *OIDCAuthorizationR
 	return _c
 }
 
+// SetPrompt sets the "prompt" field.
+func (_c *OIDCAuthorizationRequestCreate) SetPrompt(v []string) *OIDCAuthorizationRequestCreate {
+	_c.mutation.SetPrompt(v)
+	return _c
+}
+
+// SetConsentOwnerHash sets the "consent_owner_hash" field.
+func (_c *OIDCAuthorizationRequestCreate) SetConsentOwnerHash(v string) *OIDCAuthorizationRequestCreate {
+	_c.mutation.SetConsentOwnerHash(v)
+	return _c
+}
+
+// SetNillableConsentOwnerHash sets the "consent_owner_hash" field if the given value is not nil.
+func (_c *OIDCAuthorizationRequestCreate) SetNillableConsentOwnerHash(v *string) *OIDCAuthorizationRequestCreate {
+	if v != nil {
+		_c.SetConsentOwnerHash(*v)
+	}
+	return _c
+}
+
+// SetConsentApproved sets the "consent_approved" field.
+func (_c *OIDCAuthorizationRequestCreate) SetConsentApproved(v bool) *OIDCAuthorizationRequestCreate {
+	_c.mutation.SetConsentApproved(v)
+	return _c
+}
+
+// SetNillableConsentApproved sets the "consent_approved" field if the given value is not nil.
+func (_c *OIDCAuthorizationRequestCreate) SetNillableConsentApproved(v *bool) *OIDCAuthorizationRequestCreate {
+	if v != nil {
+		_c.SetConsentApproved(*v)
+	}
+	return _c
+}
+
 // SetDone sets the "done" field.
 func (_c *OIDCAuthorizationRequestCreate) SetDone(v bool) *OIDCAuthorizationRequestCreate {
 	_c.mutation.SetDone(v)
@@ -255,6 +289,14 @@ func (_c *OIDCAuthorizationRequestCreate) defaults() {
 		v := oidcauthorizationrequest.DefaultAmr
 		_c.mutation.SetAmr(v)
 	}
+	if _, ok := _c.mutation.Prompt(); !ok {
+		v := oidcauthorizationrequest.DefaultPrompt
+		_c.mutation.SetPrompt(v)
+	}
+	if _, ok := _c.mutation.ConsentApproved(); !ok {
+		v := oidcauthorizationrequest.DefaultConsentApproved
+		_c.mutation.SetConsentApproved(v)
+	}
 	if _, ok := _c.mutation.Done(); !ok {
 		v := oidcauthorizationrequest.DefaultDone
 		_c.mutation.SetDone(v)
@@ -311,6 +353,12 @@ func (_c *OIDCAuthorizationRequestCreate) check() error {
 	}
 	if _, ok := _c.mutation.Amr(); !ok {
 		return &ValidationError{Name: "amr", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.amr"`)}
+	}
+	if _, ok := _c.mutation.Prompt(); !ok {
+		return &ValidationError{Name: "prompt", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.prompt"`)}
+	}
+	if _, ok := _c.mutation.ConsentApproved(); !ok {
+		return &ValidationError{Name: "consent_approved", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.consent_approved"`)}
 	}
 	if _, ok := _c.mutation.Done(); !ok {
 		return &ValidationError{Name: "done", err: errors.New(`ent: missing required field "OIDCAuthorizationRequest.done"`)}
@@ -410,6 +458,18 @@ func (_c *OIDCAuthorizationRequestCreate) createSpec() (*OIDCAuthorizationReques
 	if value, ok := _c.mutation.Amr(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldAmr, field.TypeJSON, value)
 		_node.Amr = value
+	}
+	if value, ok := _c.mutation.Prompt(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldPrompt, field.TypeJSON, value)
+		_node.Prompt = value
+	}
+	if value, ok := _c.mutation.ConsentOwnerHash(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldConsentOwnerHash, field.TypeString, value)
+		_node.ConsentOwnerHash = &value
+	}
+	if value, ok := _c.mutation.ConsentApproved(); ok {
+		_spec.SetField(oidcauthorizationrequest.FieldConsentApproved, field.TypeBool, value)
+		_node.ConsentApproved = value
 	}
 	if value, ok := _c.mutation.Done(); ok {
 		_spec.SetField(oidcauthorizationrequest.FieldDone, field.TypeBool, value)

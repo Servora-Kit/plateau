@@ -10,10 +10,22 @@ import (
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclientsecret"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
+
+type clientAuthTransportKey struct{}
+
+func withClientAuthTransport(ctx context.Context, method string) context.Context {
+	return context.WithValue(ctx, clientAuthTransportKey{}, method)
+}
+
+func clientAuthTransportFromContext(ctx context.Context) (string, bool) {
+	method, ok := ctx.Value(clientAuthTransportKey{}).(string)
+	return method, ok
+}
 
 func (storage *OIDCStorage) GetClientByClientID(ctx context.Context, clientID string) (op.Client, error) {
 	entity, err := storage.client.OAuthClient.Query().Where(oauthclient.IDEQ(clientID)).Only(ctx)
@@ -23,9 +35,16 @@ func (storage *OIDCStorage) GetClientByClientID(ctx context.Context, clientID st
 	if err != nil {
 		return nil, fmt.Errorf("query OAuth client: %w", err)
 	}
+	if entity.Status != biz.ClientStatusActive {
+		return nil, storageNotFoundError{cause: fmt.Errorf("OAuth client %q is inactive", clientID)}
+	}
 	return &client{entity: entity}, nil
 }
+
 func (storage *OIDCStorage) AuthorizeClientIDSecret(ctx context.Context, clientID, clientSecret string) error {
+	if clientID == "" || clientSecret == "" {
+		return fmt.Errorf("OAuth client credentials rejected")
+	}
 	entity, err := storage.client.OAuthClient.Query().Where(oauthclient.IDEQ(clientID)).Only(ctx)
 	if entmodel.IsNotFound(err) {
 		return storageNotFoundError{cause: fmt.Errorf("OAuth client %q not found", clientID)}
@@ -33,10 +52,49 @@ func (storage *OIDCStorage) AuthorizeClientIDSecret(ctx context.Context, clientI
 	if err != nil {
 		return fmt.Errorf("query OAuth client secret: %w", err)
 	}
-	expectedHash := biz.HashOpaqueSecret(clientSecret)
-	if entity.SecretHash == "" || subtle.ConstantTimeCompare([]byte(expectedHash), []byte(entity.SecretHash)) != 1 {
+	if entity.Status != biz.ClientStatusActive {
+		return fmt.Errorf("OAuth client %q is inactive", clientID)
+	}
+	if entity.TokenEndpointAuthMethod == biz.AuthMethodNone {
+		return fmt.Errorf("public OAuth client %q does not accept secrets", clientID)
+	}
+	if transportMethod, ok := clientAuthTransportFromContext(ctx); ok && transportMethod != entity.TokenEndpointAuthMethod {
+		return fmt.Errorf("OAuth client authentication method mismatch")
+	}
+
+	now := storage.now().UTC()
+	secrets, err := storage.client.OAuthClientSecret.Query().
+		Where(
+			oauthclientsecret.ClientIDEQ(clientID),
+			oauthclientsecret.Or(
+				oauthclientsecret.ExpiresTimeIsNil(),
+				oauthclientsecret.ExpiresTimeGT(now),
+			),
+		).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("query OAuth client secrets: %w", err)
+	}
+	if len(secrets) == 0 {
 		return fmt.Errorf("OAuth client credentials rejected")
 	}
+
+	candidateHash := []byte(biz.HashOpaqueSecret(clientSecret))
+	matched := 0
+	var matchedSecretID string
+	for _, sec := range secrets {
+		cmp := subtle.ConstantTimeCompare(candidateHash, []byte(sec.SecretHash))
+		if cmp == 1 {
+			matchedSecretID = sec.ID
+		}
+		matched |= cmp
+	}
+	if matched != 1 {
+		return fmt.Errorf("OAuth client credentials rejected")
+	}
+	_, _ = storage.client.OAuthClientSecret.UpdateOneID(matchedSecretID).
+		SetLastUsedTime(now).
+		Save(ctx)
 	return nil
 }
 

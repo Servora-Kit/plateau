@@ -18,10 +18,24 @@ type OAuthClient struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
-	// SecretHash holds the value of the "secret_hash" field.
-	SecretHash string `json:"-"`
+	// Source holds the value of the "source" field.
+	Source string `json:"source,omitempty"`
+	// Status holds the value of the "status" field.
+	Status string `json:"status,omitempty"`
+	// DisplayName holds the value of the "display_name" field.
+	DisplayName string `json:"display_name,omitempty"`
+	// Description holds the value of the "description" field.
+	Description *string `json:"description,omitempty"`
+	// LogoURI holds the value of the "logo_uri" field.
+	LogoURI *string `json:"logo_uri,omitempty"`
+	// ApplicationType holds the value of the "application_type" field.
+	ApplicationType string `json:"application_type,omitempty"`
+	// TokenEndpointAuthMethod holds the value of the "token_endpoint_auth_method" field.
+	TokenEndpointAuthMethod string `json:"token_endpoint_auth_method,omitempty"`
 	// RedirectUris holds the value of the "redirect_uris" field.
 	RedirectUris []string `json:"redirect_uris,omitempty"`
+	// PostLogoutRedirectUris holds the value of the "post_logout_redirect_uris" field.
+	PostLogoutRedirectUris []string `json:"post_logout_redirect_uris,omitempty"`
 	// AllowedGrantTypes holds the value of the "allowed_grant_types" field.
 	AllowedGrantTypes []string `json:"allowed_grant_types,omitempty"`
 	// AllowedResponseTypes holds the value of the "allowed_response_types" field.
@@ -32,6 +46,8 @@ type OAuthClient struct {
 	Audiences []string `json:"audiences,omitempty"`
 	// Trusted holds the value of the "trusted" field.
 	Trusted bool `json:"trusted,omitempty"`
+	// Etag holds the value of the "etag" field.
+	Etag string `json:"etag,omitempty"`
 	// CreateTime holds the value of the "create_time" field.
 	CreateTime time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
@@ -44,11 +60,11 @@ func (*OAuthClient) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case oauthclient.FieldRedirectUris, oauthclient.FieldAllowedGrantTypes, oauthclient.FieldAllowedResponseTypes, oauthclient.FieldAllowedScopes, oauthclient.FieldAudiences:
+		case oauthclient.FieldRedirectUris, oauthclient.FieldPostLogoutRedirectUris, oauthclient.FieldAllowedGrantTypes, oauthclient.FieldAllowedResponseTypes, oauthclient.FieldAllowedScopes, oauthclient.FieldAudiences:
 			values[i] = new([]byte)
 		case oauthclient.FieldTrusted:
 			values[i] = new(sql.NullBool)
-		case oauthclient.FieldID, oauthclient.FieldSecretHash:
+		case oauthclient.FieldID, oauthclient.FieldSource, oauthclient.FieldStatus, oauthclient.FieldDisplayName, oauthclient.FieldDescription, oauthclient.FieldLogoURI, oauthclient.FieldApplicationType, oauthclient.FieldTokenEndpointAuthMethod, oauthclient.FieldEtag:
 			values[i] = new(sql.NullString)
 		case oauthclient.FieldCreateTime, oauthclient.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -73,11 +89,49 @@ func (_m *OAuthClient) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ID = value.String
 			}
-		case oauthclient.FieldSecretHash:
+		case oauthclient.FieldSource:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field secret_hash", values[i])
+				return fmt.Errorf("unexpected type %T for field source", values[i])
 			} else if value.Valid {
-				_m.SecretHash = value.String
+				_m.Source = value.String
+			}
+		case oauthclient.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				_m.Status = value.String
+			}
+		case oauthclient.FieldDisplayName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field display_name", values[i])
+			} else if value.Valid {
+				_m.DisplayName = value.String
+			}
+		case oauthclient.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = new(string)
+				*_m.Description = value.String
+			}
+		case oauthclient.FieldLogoURI:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field logo_uri", values[i])
+			} else if value.Valid {
+				_m.LogoURI = new(string)
+				*_m.LogoURI = value.String
+			}
+		case oauthclient.FieldApplicationType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field application_type", values[i])
+			} else if value.Valid {
+				_m.ApplicationType = value.String
+			}
+		case oauthclient.FieldTokenEndpointAuthMethod:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field token_endpoint_auth_method", values[i])
+			} else if value.Valid {
+				_m.TokenEndpointAuthMethod = value.String
 			}
 		case oauthclient.FieldRedirectUris:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -85,6 +139,14 @@ func (_m *OAuthClient) assignValues(columns []string, values []any) error {
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.RedirectUris); err != nil {
 					return fmt.Errorf("unmarshal field redirect_uris: %w", err)
+				}
+			}
+		case oauthclient.FieldPostLogoutRedirectUris:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field post_logout_redirect_uris", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.PostLogoutRedirectUris); err != nil {
+					return fmt.Errorf("unmarshal field post_logout_redirect_uris: %w", err)
 				}
 			}
 		case oauthclient.FieldAllowedGrantTypes:
@@ -124,6 +186,12 @@ func (_m *OAuthClient) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field trusted", values[i])
 			} else if value.Valid {
 				_m.Trusted = value.Bool
+			}
+		case oauthclient.FieldEtag:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field etag", values[i])
+			} else if value.Valid {
+				_m.Etag = value.String
 			}
 		case oauthclient.FieldCreateTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -173,10 +241,36 @@ func (_m *OAuthClient) String() string {
 	var builder strings.Builder
 	builder.WriteString("OAuthClient(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("secret_hash=<sensitive>")
+	builder.WriteString("source=")
+	builder.WriteString(_m.Source)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(_m.Status)
+	builder.WriteString(", ")
+	builder.WriteString("display_name=")
+	builder.WriteString(_m.DisplayName)
+	builder.WriteString(", ")
+	if v := _m.Description; v != nil {
+		builder.WriteString("description=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.LogoURI; v != nil {
+		builder.WriteString("logo_uri=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("application_type=")
+	builder.WriteString(_m.ApplicationType)
+	builder.WriteString(", ")
+	builder.WriteString("token_endpoint_auth_method=")
+	builder.WriteString(_m.TokenEndpointAuthMethod)
 	builder.WriteString(", ")
 	builder.WriteString("redirect_uris=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RedirectUris))
+	builder.WriteString(", ")
+	builder.WriteString("post_logout_redirect_uris=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PostLogoutRedirectUris))
 	builder.WriteString(", ")
 	builder.WriteString("allowed_grant_types=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AllowedGrantTypes))
@@ -192,6 +286,9 @@ func (_m *OAuthClient) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("trusted=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Trusted))
+	builder.WriteString(", ")
+	builder.WriteString("etag=")
+	builder.WriteString(_m.Etag)
 	builder.WriteString(", ")
 	builder.WriteString("create_time=")
 	builder.WriteString(_m.CreateTime.Format(time.ANSIC))

@@ -16,6 +16,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthconsent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
@@ -500,12 +501,25 @@ func TestUserSoftDeleteUndeleteAndExpungeLifecycle(t *testing.T) {
 		t.Fatal("Undelete resurrected revoked login session")
 	}
 
-	// Re-soft-delete via management (nil proof) and then Expunge across all 12 tables.
+	// Re-soft-delete via management (nil proof) and then Expunge across all tables including oauth_consents.
+	if _, err := client.OAuthConsent.Create().
+		SetID("consent-target-1").
+		SetUserID(targetID).
+		SetClientID("web-client").
+		SetGrantedScopes([]string{"openid", "profile"}).
+		SetCreateTime(now).
+		SetUpdateTime(now).
+		Save(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := users.SoftDelete(ctx, targetID, nil, deletedAt.Add(2*time.Minute)); err != nil {
 		t.Fatalf("SoftDelete(nil) error = %v", err)
 	}
 	if err := users.Expunge(ctx, targetID); err != nil {
 		t.Fatalf("Expunge() error = %v", err)
+	}
+	if client.OAuthConsent.Query().Where(oauthconsent.UserIDEQ(targetID)).CountX(ctx) != 0 {
+		t.Fatal("oauth_consents row survived Expunge")
 	}
 	if _, err := users.GetUser(ctx, userpb.NewUserName(targetID)); !errors.Is(err, biz.ErrNotFound) {
 		t.Fatalf("GetUser(expunged) = %v, want ErrNotFound", err)
@@ -642,6 +656,24 @@ func TestOAuthRepositoryRejectsUsersWithPendingRequiredActionsOrDeletedState(t *
 	if _, err := client.LoginSession.Create().SetID("login-empty-amr").SetUserID("u-oidc").SetAmr([]string{}).SetCreateTime(now).Save(ctx); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := client.OAuthClient.Create().
+		SetID("oidc-web").
+		SetSource(biz.ClientSourceDynamic).
+		SetStatus(biz.ClientStatusActive).
+		SetDisplayName("OIDC Web").
+		SetApplicationType(biz.AppTypeWeb).
+		SetTokenEndpointAuthMethod(biz.AuthMethodBasic).
+		SetRedirectUris([]string{"https://app.example/cb"}).
+		SetAllowedGrantTypes([]string{biz.GrantTypeAuthorizationCode}).
+		SetAllowedResponseTypes([]string{biz.ResponseTypeCode}).
+		SetAllowedScopes([]string{"openid"}).
+		SetTrusted(true).
+		SetEtag("etag-oidc-web").
+		SetCreateTime(now).
+		SetUpdateTime(now).
+		Save(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := client.OIDCAuthorizationRequest.Create().
 		SetID("auth-req-1").
 		SetClientID("oidc-web").
@@ -655,7 +687,7 @@ func TestOAuthRepositoryRejectsUsersWithPendingRequiredActionsOrDeletedState(t *
 	}
 
 	// User has UPDATE_PASSWORD required action -> CompleteAuthorizationRequest must reject!
-	if err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-oidc", now); !errors.Is(err, biz.ErrOAuthGrantInvalid) {
+	if _, err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-oidc", "owner-hash", now); !errors.Is(err, biz.ErrOAuthGrantInvalid) {
 		t.Fatalf("CompleteAuthorizationRequest with UPDATE_PASSWORD = %v, want ErrOAuthGrantInvalid", err)
 	}
 
@@ -664,11 +696,11 @@ func TestOAuthRepositoryRejectsUsersWithPendingRequiredActionsOrDeletedState(t *
 		t.Fatal(err)
 	}
 	// Empty AMR on LoginSession must be rejected rather than fabricating "pwd".
-	if err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-empty-amr", now); !errors.Is(err, biz.ErrOAuthGrantInvalid) {
+	if _, err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-empty-amr", "owner-hash", now); !errors.Is(err, biz.ErrOAuthGrantInvalid) {
 		t.Fatalf("CompleteAuthorizationRequest with empty amr = %v, want ErrOAuthGrantInvalid", err)
 	}
-	if err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-oidc", now); err != nil {
-		t.Fatalf("CompleteAuthorizationRequest(clean) = %v", err)
+	if needsConsent, err := oauth.CompleteAuthorizationRequest(ctx, "auth-req-1", "u-oidc", "login-oidc", "owner-hash", now); err != nil || needsConsent {
+		t.Fatalf("CompleteAuthorizationRequest(clean) = (%v, %v), want (false, nil)", needsConsent, err)
 	}
 	if err := oauth.SaveAuthorizationCode(ctx, "auth-req-1", "code-id-1", "code-hash-1", now, now.Add(5*time.Minute)); err != nil {
 		t.Fatalf("SaveAuthorizationCode(clean) = %v", err)

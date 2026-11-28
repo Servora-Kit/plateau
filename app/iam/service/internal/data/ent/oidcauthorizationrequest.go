@@ -44,6 +44,12 @@ type OIDCAuthorizationRequest struct {
 	AuthTime *time.Time `json:"auth_time,omitempty"`
 	// Amr holds the value of the "amr" field.
 	Amr []string `json:"amr,omitempty"`
+	// Prompt holds the value of the "prompt" field.
+	Prompt []string `json:"prompt,omitempty"`
+	// ConsentOwnerHash holds the value of the "consent_owner_hash" field.
+	ConsentOwnerHash *string `json:"-"`
+	// ConsentApproved holds the value of the "consent_approved" field.
+	ConsentApproved bool `json:"consent_approved,omitempty"`
 	// Done holds the value of the "done" field.
 	Done bool `json:"done,omitempty"`
 	// ExpiresTime holds the value of the "expires_time" field.
@@ -60,11 +66,11 @@ func (*OIDCAuthorizationRequest) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case oidcauthorizationrequest.FieldScopes, oidcauthorizationrequest.FieldAmr:
+		case oidcauthorizationrequest.FieldScopes, oidcauthorizationrequest.FieldAmr, oidcauthorizationrequest.FieldPrompt:
 			values[i] = new([]byte)
-		case oidcauthorizationrequest.FieldDone:
+		case oidcauthorizationrequest.FieldConsentApproved, oidcauthorizationrequest.FieldDone:
 			values[i] = new(sql.NullBool)
-		case oidcauthorizationrequest.FieldID, oidcauthorizationrequest.FieldClientID, oidcauthorizationrequest.FieldRedirectURI, oidcauthorizationrequest.FieldResponseType, oidcauthorizationrequest.FieldResponseMode, oidcauthorizationrequest.FieldState, oidcauthorizationrequest.FieldNonce, oidcauthorizationrequest.FieldPkceChallenge, oidcauthorizationrequest.FieldPkceChallengeMethod, oidcauthorizationrequest.FieldSubject, oidcauthorizationrequest.FieldLoginSessionID:
+		case oidcauthorizationrequest.FieldID, oidcauthorizationrequest.FieldClientID, oidcauthorizationrequest.FieldRedirectURI, oidcauthorizationrequest.FieldResponseType, oidcauthorizationrequest.FieldResponseMode, oidcauthorizationrequest.FieldState, oidcauthorizationrequest.FieldNonce, oidcauthorizationrequest.FieldPkceChallenge, oidcauthorizationrequest.FieldPkceChallengeMethod, oidcauthorizationrequest.FieldSubject, oidcauthorizationrequest.FieldLoginSessionID, oidcauthorizationrequest.FieldConsentOwnerHash:
 			values[i] = new(sql.NullString)
 		case oidcauthorizationrequest.FieldAuthTime, oidcauthorizationrequest.FieldExpiresTime, oidcauthorizationrequest.FieldCreateTime, oidcauthorizationrequest.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -176,6 +182,27 @@ func (_m *OIDCAuthorizationRequest) assignValues(columns []string, values []any)
 					return fmt.Errorf("unmarshal field amr: %w", err)
 				}
 			}
+		case oidcauthorizationrequest.FieldPrompt:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field prompt", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Prompt); err != nil {
+					return fmt.Errorf("unmarshal field prompt: %w", err)
+				}
+			}
+		case oidcauthorizationrequest.FieldConsentOwnerHash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field consent_owner_hash", values[i])
+			} else if value.Valid {
+				_m.ConsentOwnerHash = new(string)
+				*_m.ConsentOwnerHash = value.String
+			}
+		case oidcauthorizationrequest.FieldConsentApproved:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field consent_approved", values[i])
+			} else if value.Valid {
+				_m.ConsentApproved = value.Bool
+			}
 		case oidcauthorizationrequest.FieldDone:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field done", values[i])
@@ -277,6 +304,14 @@ func (_m *OIDCAuthorizationRequest) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("amr=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Amr))
+	builder.WriteString(", ")
+	builder.WriteString("prompt=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Prompt))
+	builder.WriteString(", ")
+	builder.WriteString("consent_owner_hash=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("consent_approved=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ConsentApproved))
 	builder.WriteString(", ")
 	builder.WriteString("done=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Done))

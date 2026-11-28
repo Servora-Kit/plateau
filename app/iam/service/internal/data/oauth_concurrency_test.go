@@ -100,6 +100,23 @@ func TestPostgresOAuthIssuanceSerializesWithLogout(t *testing.T) {
 
 func prepareOAuthGrant(t *testing.T, client *entmodel.Client, kind string, login *biz.LoginSession) biz.OAuthGrant {
 	t.Helper()
+	if _, err := client.OAuthClient.Get(t.Context(), "web"); entmodel.IsNotFound(err) {
+		if _, err := client.OAuthClient.Create().
+			SetID("web").
+			SetSource(biz.ClientSourceStatic).
+			SetStatus(biz.ClientStatusActive).
+			SetDisplayName("Web").
+			SetApplicationType(biz.AppTypeWeb).
+			SetTokenEndpointAuthMethod(biz.AuthMethodBasic).
+			SetRedirectUris([]string{"https://web.example/callback"}).
+			SetAllowedGrantTypes([]string{biz.GrantTypeAuthorizationCode, biz.GrantTypeRefreshToken}).
+			SetAllowedResponseTypes([]string{biz.ResponseTypeCode}).
+			SetAllowedScopes([]string{"openid"}).
+			SetEtag("etag-web").
+			Save(t.Context()); err != nil {
+			t.Fatal(err)
+		}
+	}
 	grant := biz.OAuthGrant{Subject: login.UserID, ClientID: "web", LoginID: login.ID, Scopes: []string{"openid"}, Audiences: []string{"web"}, AuthTime: login.AuthTime, AMR: []string{"pwd"}}
 	if kind == "refresh" {
 		grant.TokenSessionID, grant.RefreshTokenID = login.ID, login.ID

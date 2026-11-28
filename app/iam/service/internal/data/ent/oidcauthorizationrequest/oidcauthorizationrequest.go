@@ -39,6 +39,12 @@ const (
 	FieldAuthTime = "auth_time"
 	// FieldAmr holds the string denoting the amr field in the database.
 	FieldAmr = "amr"
+	// FieldPrompt holds the string denoting the prompt field in the database.
+	FieldPrompt = "prompt"
+	// FieldConsentOwnerHash holds the string denoting the consent_owner_hash field in the database.
+	FieldConsentOwnerHash = "consent_owner_hash"
+	// FieldConsentApproved holds the string denoting the consent_approved field in the database.
+	FieldConsentApproved = "consent_approved"
 	// FieldDone holds the string denoting the done field in the database.
 	FieldDone = "done"
 	// FieldExpiresTime holds the string denoting the expires_time field in the database.
@@ -67,6 +73,9 @@ var Columns = []string{
 	FieldLoginSessionID,
 	FieldAuthTime,
 	FieldAmr,
+	FieldPrompt,
+	FieldConsentOwnerHash,
+	FieldConsentApproved,
 	FieldDone,
 	FieldExpiresTime,
 	FieldCreateTime,
@@ -98,6 +107,10 @@ var (
 	DefaultPkceChallengeMethod string
 	// DefaultAmr holds the default value on creation for the "amr" field.
 	DefaultAmr []string
+	// DefaultPrompt holds the default value on creation for the "prompt" field.
+	DefaultPrompt []string
+	// DefaultConsentApproved holds the default value on creation for the "consent_approved" field.
+	DefaultConsentApproved bool
 	// DefaultDone holds the default value on creation for the "done" field.
 	DefaultDone bool
 	// DefaultCreateTime holds the default value on creation for the "create_time" field.
@@ -169,6 +182,16 @@ func ByLoginSessionID(opts ...sql.OrderTermOption) OrderOption {
 // ByAuthTime orders the results by the auth_time field.
 func ByAuthTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAuthTime, opts...).ToFunc()
+}
+
+// ByConsentOwnerHash orders the results by the consent_owner_hash field.
+func ByConsentOwnerHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConsentOwnerHash, opts...).ToFunc()
+}
+
+// ByConsentApproved orders the results by the consent_approved field.
+func ByConsentApproved(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConsentApproved, opts...).ToFunc()
 }
 
 // ByDone orders the results by the done field.

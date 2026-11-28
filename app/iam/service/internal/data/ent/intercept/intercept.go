@@ -17,6 +17,8 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclientsecret"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthconsent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
@@ -326,6 +328,60 @@ func (f TraverseOAuthClient) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.OAuthClientQuery", q)
 }
 
+// The OAuthClientSecretFunc type is an adapter to allow the use of ordinary function as a Querier.
+type OAuthClientSecretFunc func(context.Context, *ent.OAuthClientSecretQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f OAuthClientSecretFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.OAuthClientSecretQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.OAuthClientSecretQuery", q)
+}
+
+// The TraverseOAuthClientSecret type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseOAuthClientSecret func(context.Context, *ent.OAuthClientSecretQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseOAuthClientSecret) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseOAuthClientSecret) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.OAuthClientSecretQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.OAuthClientSecretQuery", q)
+}
+
+// The OAuthConsentFunc type is an adapter to allow the use of ordinary function as a Querier.
+type OAuthConsentFunc func(context.Context, *ent.OAuthConsentQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f OAuthConsentFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.OAuthConsentQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.OAuthConsentQuery", q)
+}
+
+// The TraverseOAuthConsent type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseOAuthConsent func(context.Context, *ent.OAuthConsentQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseOAuthConsent) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseOAuthConsent) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.OAuthConsentQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.OAuthConsentQuery", q)
+}
+
 // The OAuthRefreshTokenFunc type is an adapter to allow the use of ordinary function as a Querier.
 type OAuthRefreshTokenFunc func(context.Context, *ent.OAuthRefreshTokenQuery) (ent.Value, error)
 
@@ -536,6 +592,10 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.OAuthAuthorizationCodeQuery, predicate.OAuthAuthorizationCode, oauthauthorizationcode.OrderOption]{typ: ent.TypeOAuthAuthorizationCode, tq: q}, nil
 	case *ent.OAuthClientQuery:
 		return &query[*ent.OAuthClientQuery, predicate.OAuthClient, oauthclient.OrderOption]{typ: ent.TypeOAuthClient, tq: q}, nil
+	case *ent.OAuthClientSecretQuery:
+		return &query[*ent.OAuthClientSecretQuery, predicate.OAuthClientSecret, oauthclientsecret.OrderOption]{typ: ent.TypeOAuthClientSecret, tq: q}, nil
+	case *ent.OAuthConsentQuery:
+		return &query[*ent.OAuthConsentQuery, predicate.OAuthConsent, oauthconsent.OrderOption]{typ: ent.TypeOAuthConsent, tq: q}, nil
 	case *ent.OAuthRefreshTokenQuery:
 		return &query[*ent.OAuthRefreshTokenQuery, predicate.OAuthRefreshToken, oauthrefreshtoken.OrderOption]{typ: ent.TypeOAuthRefreshToken, tq: q}, nil
 	case *ent.OAuthTokenSessionQuery:

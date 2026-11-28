@@ -18,6 +18,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginsession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthconsent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
@@ -754,11 +755,14 @@ func (repo *userRepository) Expunge(ctx context.Context, userID string) error {
 		if err := deleteIdentityBoundOIDCArtifacts(ctx, tx, userID, loginIDs, tokenSessionIDs); err != nil {
 			return err
 		}
-		// 5. oauth_token_sessions
+		// 5. oauth_token_sessions & oauth_consents
 		if len(tokenSessionIDs) > 0 {
 			if _, err := tx.OAuthTokenSession.Delete().Where(oauthtokensession.IDIn(tokenSessionIDs...)).Exec(ctx); err != nil {
 				return translateEntError(err)
 			}
+		}
+		if _, err := tx.OAuthConsent.Delete().Where(oauthconsent.UserIDEQ(userID)).Exec(ctx); err != nil {
+			return translateEntError(err)
 		}
 		// 6. login_sessions & auth_flows
 		if _, err := tx.LoginSession.Delete().Where(loginsession.UserIDEQ(userID)).Exec(ctx); err != nil {

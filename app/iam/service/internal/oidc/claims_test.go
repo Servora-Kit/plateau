@@ -16,12 +16,13 @@ import (
 )
 
 type stubOAuthRepo struct {
-	completeErr error
-	saveCodeErr error
+	needsConsent bool
+	completeErr  error
+	saveCodeErr  error
 }
 
-func (s stubOAuthRepo) CompleteAuthorizationRequest(context.Context, string, string, string, time.Time) error {
-	return s.completeErr
+func (s stubOAuthRepo) CompleteAuthorizationRequest(context.Context, string, string, string, string, time.Time) (bool, error) {
+	return s.needsConsent, s.completeErr
 }
 
 func (s stubOAuthRepo) SaveAuthorizationCode(context.Context, string, string, string, time.Time, time.Time) error {
@@ -37,6 +38,9 @@ func (s stubOAuthRepo) RevokeClient(context.Context, string, string, time.Time) 
 	return nil
 }
 func (s stubOAuthRepo) RevokeToken(context.Context, string, string, string, time.Time) error {
+	return nil
+}
+func (s stubOAuthRepo) PurgeStaticClient(context.Context, string, time.Time) error {
 	return nil
 }
 
@@ -131,7 +135,7 @@ func TestOIDCStorageCompleteAuthRequestAndSaveAuthCodeDelegateToOAuthRepo(t *tes
 		now:    time.Now,
 	}
 
-	if err := storage.CompleteAuthRequest(t.Context(), "req-1", "u-1", "login-1", time.Now()); !isStorageNotFound(err) {
+	if _, err := storage.CompleteAuthRequest(t.Context(), "req-1", "u-1", "login-1", "owner-hash"); !isStorageNotFound(err) {
 		t.Fatalf("CompleteAuthRequest(ErrOAuthGrantInvalid) = %v, want storageNotFoundError", err)
 	}
 	if err := storage.SaveAuthCode(t.Context(), "req-1", "raw-code"); !isStorageNotFound(err) {

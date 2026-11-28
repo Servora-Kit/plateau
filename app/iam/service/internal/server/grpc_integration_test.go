@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	iamclientv1 "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/client/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	jwtpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/authn/jwt/v1"
 	jwtsecurity "github.com/Servora-Kit/plateau/security/authn/jwt"
@@ -89,9 +90,14 @@ func TestServiceOAuthHTTPAndGRPC(t *testing.T) {
 	if _, ok := services[userpb.UserService_ServiceDesc.ServiceName]; !ok {
 		t.Fatal("UserService is not registered on gRPC")
 	}
+	if _, ok := services[iamclientv1.OAuthClientService_ServiceDesc.ServiceName]; !ok {
+		t.Fatal("OAuthClientService is not registered on gRPC")
+	}
 	for name := range services {
-		if strings.HasPrefix(name, "iam.") && name != userpb.UserService_ServiceDesc.ServiceName {
-			t.Fatalf("browser service registered on gRPC: %s", name)
+		if strings.HasPrefix(name, "plateau.iam.") &&
+			name != userpb.UserService_ServiceDesc.ServiceName &&
+			name != iamclientv1.OAuthClientService_ServiceDesc.ServiceName {
+			t.Fatalf("unexpected browser service registered on gRPC: %s", name)
 		}
 	}
 	request := &userpb.GetUserRequest{Name: f.user.GetName()}

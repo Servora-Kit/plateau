@@ -195,6 +195,16 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, iamoidcconfv1OIDC *
 		cleanup()
 		return nil, nil, err
 	}
+	oAuthConsentRepo, err := data.NewOAuthConsentRepository(dataData)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	capCap, err := cap2.New(capv1CAP, redisClient)
 	if err != nil {
 		cleanup6()
@@ -247,7 +257,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, iamoidcconfv1OIDC *
 		return nil, nil, err
 	}
 	mailSender := mail.NewMailSender(mailer)
-	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, capVerifier, mailSender, app)
+	accountUsecase, err := biz.NewAccountUsecase(userRepo, credentialRepo, verificationTokenRepo, passwordResetTokenRepo, oAuthConsentRepo, capVerifier, mailSender, app)
 	if err != nil {
 		cleanup6()
 		cleanup5()
@@ -287,7 +297,37 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, iamoidcconfv1OIDC *
 		cleanup()
 		return nil, nil, err
 	}
-	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, auditor, authorizer, userService, logger)
+	oAuthClientRepo, err := data.NewOAuthClientRepository(dataData)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	oAuthClientUsecase, err := biz.NewOAuthClientUsecase(oAuthClientRepo)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	oAuthClientService, err := service.NewOAuthClientService(oAuthClientUsecase)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	grpcServer := server.NewGRPCServer(corev1Server, observability, metricsMetrics, authenticator, auditor, authorizer, userService, oAuthClientService, logger)
 	sessionUsecase, err := biz.NewSessionUsecase(userRepo, sessionRepo)
 	if err != nil {
 		cleanup6()
@@ -341,7 +381,7 @@ func wireApp(runtime *bootstrap.Runtime, iam *iamconfv1.IAM, iamoidcconfv1OIDC *
 		cleanup()
 		return nil, nil, err
 	}
-	authenticationUsecase, err := biz.NewAuthenticationUsecase(iam, iamoidcconfv1OIDC, userRepo, credentialRepo, sessionUsecase, authFlowRepo)
+	authenticationUsecase, err := biz.NewAuthenticationUsecase(iam, iamoidcconfv1OIDC, userRepo, credentialRepo, sessionUsecase, authFlowRepo, oAuthConsentRepo)
 	if err != nil {
 		cleanup7()
 		cleanup6()

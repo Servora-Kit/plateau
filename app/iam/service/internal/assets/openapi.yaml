@@ -6,6 +6,44 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /v1/iam/account/applications:
+        get:
+            tags:
+                - AccountService
+            description: ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+            operationId: AccountService_ListAuthorizedApps
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListAuthorizedAppsResponse'
+    /v1/iam/account/applications/{clientId}:revoke:
+        post:
+            tags:
+                - AccountService
+            description: RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+            operationId: AccountService_RevokeAuthorizedApp
+            parameters:
+                - name: clientId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RevokeAuthorizedAppRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RevokeAuthorizedAppResponse'
     /v1/iam/account/change-password:
         post:
             tags:
@@ -176,6 +214,50 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/VerifyEmailResponse'
+    /v1/iam/authn/consents/{requestId}:
+        get:
+            tags:
+                - AuthnService
+            description: GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+            operationId: AuthnService_GetConsentView
+            parameters:
+                - name: requestId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetConsentViewResponse'
+    /v1/iam/authn/consents/{requestId}:decide:
+        post:
+            tags:
+                - AuthnService
+            description: SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+            operationId: AuthnService_SubmitConsentDecision
+            parameters:
+                - name: requestId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SubmitConsentDecisionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SubmitConsentDecisionResponse'
     /v1/iam/authn/flows:
         post:
             tags:
@@ -345,6 +427,35 @@ components:
                     pattern: ^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,9})?s$
                     type: string
             description: AuthFlow configures authentication flow expiration windows.
+        AuthorizedApp:
+            type: object
+            properties:
+                clientId:
+                    readOnly: true
+                    type: string
+                clientName:
+                    readOnly: true
+                    type: string
+                description:
+                    readOnly: true
+                    type: string
+                logoUri:
+                    readOnly: true
+                    type: string
+                grantedScopes:
+                    readOnly: true
+                    type: array
+                    items:
+                        type: string
+                createTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+                updateTime:
+                    readOnly: true
+                    type: string
+                    format: date-time
+            description: AuthorizedApp summarizes a third-party OAuth client granted access by the user.
         CancelAuthFlowRequest:
             required:
                 - flowId
@@ -402,6 +513,35 @@ components:
         ConfirmPasswordResetResponse:
             type: object
             properties: {}
+        ConsentView:
+            type: object
+            properties:
+                requestId:
+                    readOnly: true
+                    type: string
+                clientId:
+                    readOnly: true
+                    type: string
+                clientName:
+                    readOnly: true
+                    type: string
+                logoUri:
+                    readOnly: true
+                    type: string
+                userEmail:
+                    readOnly: true
+                    type: string
+                requestedScopes:
+                    readOnly: true
+                    type: array
+                    items:
+                        type: string
+                grantedScopes:
+                    readOnly: true
+                    type: array
+                    items:
+                        type: string
+            description: ConsentView describes the application and scopes awaiting user approval.
         CreateAuthFlowRequest:
             type: object
             properties:
@@ -428,11 +568,23 @@ components:
             properties:
                 flow:
                     $ref: '#/components/schemas/AuthFlow'
+        GetConsentViewResponse:
+            type: object
+            properties:
+                consent:
+                    $ref: '#/components/schemas/ConsentView'
         GetProfileResponse:
             type: object
             properties:
                 user:
                     $ref: '#/components/schemas/User'
+        ListAuthorizedAppsResponse:
+            type: object
+            properties:
+                applications:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/AuthorizedApp'
         LogoutRequest:
             type: object
             properties: {}
@@ -503,6 +655,31 @@ components:
             properties:
                 flow:
                     $ref: '#/components/schemas/AuthFlow'
+        RevokeAuthorizedAppRequest:
+            required:
+                - clientId
+            type: object
+            properties:
+                clientId:
+                    type: string
+        RevokeAuthorizedAppResponse:
+            type: object
+            properties: {}
+        SubmitConsentDecisionRequest:
+            required:
+                - requestId
+            type: object
+            properties:
+                requestId:
+                    type: string
+                approved:
+                    type: boolean
+        SubmitConsentDecisionResponse:
+            type: object
+            properties:
+                redirectUri:
+                    type: string
+                    description: Continuation target (/authorize/callback?id=...) on approval or external RFC 6749/9207 access_denied URI on denial.
         SubmitPasswordRequest:
             required:
                 - flowId

@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -191,12 +192,15 @@ func newStubAuthFlowRepo(users *stubUserRepo, creds *stubCredentialRepo, session
 	}
 }
 
-func (r *stubAuthFlowRepo) FindPendingOIDCRequest(_ context.Context, id string, _ time.Time) (string, time.Time, error) {
+func (r *stubAuthFlowRepo) FindPendingOIDCRequest(_ context.Context, id string, _ time.Time) (*authnpb.AuthFlowOidcContext, time.Time, error) {
 	req, ok := r.oidcReqs[id]
 	if !ok {
-		return "", time.Time{}, biz.ErrNotFound
+		return nil, time.Time{}, biz.ErrNotFound
 	}
-	return req.clientID, time.Now().Add(20 * time.Minute).UTC(), nil
+	return &authnpb.AuthFlowOidcContext{
+		ClientId:   req.clientID,
+		ClientName: req.clientID,
+	}, time.Now().Add(20 * time.Minute).UTC(), nil
 }
 
 func (r *stubAuthFlowRepo) Create(_ context.Context, seed *authnpb.AuthFlow, ownerHash, oidcReqID string, _ time.Time) (*authnpb.AuthFlow, error) {
@@ -335,6 +339,62 @@ type stubMailer struct{ err error }
 func (m stubMailer) SendVerification(context.Context, string, string, int) error  { return m.err }
 func (m stubMailer) SendPasswordReset(context.Context, string, string, int) error { return m.err }
 
+type stubConsentPending struct {
+	view        *authnpb.ConsentView
+	ownerHash   string
+	redirectURI string
+	state       string
+}
+
+type stubConsentRepo struct {
+	pending *stubConsentPending
+	granted map[string][]string
+	apps    []*accountpb.AuthorizedApp
+	revoked []string
+}
+
+func (r *stubConsentRepo) GetConsentView(_ context.Context, userID, ownerHash, id string, _ time.Time) (*authnpb.ConsentView, error) {
+	if r.pending == nil || r.pending.view.GetRequestId() != id || r.pending.ownerHash != ownerHash {
+		return nil, biz.ErrOIDCRequestInvalid
+	}
+	cp := proto.CloneOf(r.pending.view)
+	if r.granted != nil {
+		cp.GrantedScopes = slices.Clone(r.granted[userID+":"+cp.GetClientId()])
+	}
+	return cp, nil
+}
+
+func (r *stubConsentRepo) ApproveConsent(_ context.Context, userID, ownerHash, id string, _ time.Time) (string, error) {
+	if r.pending == nil || r.pending.view.GetRequestId() != id || r.pending.ownerHash != ownerHash {
+		return "", biz.ErrOIDCRequestInvalid
+	}
+	if r.granted == nil {
+		r.granted = make(map[string][]string)
+	}
+	cid := r.pending.view.GetClientId()
+	key := userID + ":" + cid
+	r.granted[key] = biz.MergeScopes(r.granted[key], r.pending.view.GetRequestedScopes())
+	return cid, nil
+}
+
+func (r *stubConsentRepo) DenyConsent(_ context.Context, ownerHash, id string, _ time.Time) (string, string, string, error) {
+	if r.pending == nil || r.pending.view.GetRequestId() != id || r.pending.ownerHash != ownerHash {
+		return "", "", "", biz.ErrOIDCRequestInvalid
+	}
+	p := r.pending
+	r.pending = nil
+	return p.redirectURI, p.state, p.view.GetClientId(), nil
+}
+
+func (r *stubConsentRepo) ListAuthorizedApps(context.Context, string) ([]*accountpb.AuthorizedApp, error) {
+	return r.apps, nil
+}
+
+func (r *stubConsentRepo) RevokeAuthorizedApp(_ context.Context, _, clientID string, _ time.Time) error {
+	r.revoked = append(r.revoked, clientID)
+	return nil
+}
+
 type failingSCSStore struct {
 	scs.Store
 	failCommit bool
@@ -397,12 +457,12 @@ func TestAuthnAndAccountServiceInitialPasswordAndDeleteFlows(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	authnUC, err := biz.NewAuthenticationUsecase(&iamconfpb.IAM{}, &oidcconfpb.OIDC{Issuer: proto.String("https://iam.example")}, users, creds, sessUC, flowRepo)
+	authnUC, err := biz.NewAuthenticationUsecase(&iamconfpb.IAM{}, &oidcconfpb.OIDC{Issuer: proto.String("https://iam.example")}, users, creds, sessUC, flowRepo, new(stubConsentRepo))
 	if err != nil {
 		t.Fatal(err)
 	}
 	app := &corepb.App{ExternalUrl: "https://iam.example"}
-	accUC, err := biz.NewAccountUsecase(users, creds, stubVerifyRepo{}, stubResetRepo{}, stubCAP{}, stubMailer{}, app)
+	accUC, err := biz.NewAccountUsecase(users, creds, stubVerifyRepo{}, stubResetRepo{}, new(stubConsentRepo), stubCAP{}, stubMailer{}, app)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -563,7 +623,7 @@ func TestUserServiceLifecycleAndErrorMappings(t *testing.T) {
 	sessRepo := &stubSessionRepo{}
 	app := &corepb.App{ExternalUrl: "https://iam.example"}
 	mailer := &stubMailer{err: errors.New("smtp unavailable")}
-	accUC, err := biz.NewAccountUsecase(users, creds, stubVerifyRepo{}, stubResetRepo{}, stubCAP{}, mailer, app)
+	accUC, err := biz.NewAccountUsecase(users, creds, stubVerifyRepo{}, stubResetRepo{}, new(stubConsentRepo), stubCAP{}, mailer, app)
 	if err != nil {
 		t.Fatal(err)
 	}

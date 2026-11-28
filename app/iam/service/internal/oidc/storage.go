@@ -9,7 +9,6 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcsigningkey"
-	"github.com/google/uuid"
 )
 
 // OIDCStorage adapts IAM persistence to ZITADEL's OpenID Provider interfaces.
@@ -81,12 +80,4 @@ func (storage *OIDCStorage) Health(ctx context.Context) error {
 		return fmt.Errorf("active OIDC signing key metadata not found")
 	}
 	return nil
-}
-
-func newID() (string, error) {
-	id, err := uuid.NewV7()
-	if err != nil {
-		return "", fmt.Errorf("generate UUIDv7: %w", err)
-	}
-	return id.String(), nil
 }

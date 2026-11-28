@@ -33,6 +33,12 @@ func (OIDCAuthorizationRequest) Fields() []ent.Field {
 			Default([]string{}).
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
 			Annotations(entsql.Default("[]")),
+		field.JSON("prompt", []string{}).
+			Default([]string{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Annotations(entsql.Default("[]")),
+		field.String("consent_owner_hash").Optional().Nillable().Sensitive(),
+		field.Bool("consent_approved").Default(false),
 		field.Bool("done").Default(false),
 		field.Time("expires_time").Immutable(),
 		field.Time("create_time").Default(time.Now).Immutable(),

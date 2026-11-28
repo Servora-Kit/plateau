@@ -30,6 +30,7 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclientsecret"
 	"github.com/Servora-Kit/plateau/security"
 	authnjwt "github.com/Servora-Kit/plateau/security/authn/jwt"
 	httpsession "github.com/Servora-Kit/plateau/security/session"
@@ -72,25 +73,33 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("query seeded OAuth client: %v", err)
 	}
-	originalHash := seeded.SecretHash
-	if originalHash == testClientSecret {
-		t.Fatal("OAuth client secret was stored in plaintext")
+	if seeded.Source != biz.ClientSourceStatic || seeded.Status != biz.ClientStatusActive {
+		t.Fatalf("seeded OAuth client source=%q status=%q", seeded.Source, seeded.Status)
+	}
+	seededSecret, err := fixture.client.OAuthClientSecret.Query().Where(oauthclientsecret.ClientIDEQ(testClientID)).Only(ctx)
+	if err != nil {
+		t.Fatalf("query seeded OAuth client secret: %v", err)
+	}
+	originalHash := seededSecret.SecretHash
+	if originalHash == "" || originalHash == testClientSecret {
+		t.Fatal("OAuth client secret was stored in plaintext or empty")
 	}
 	if err := fixture.bootstrap.Initialize(ctx); err != nil {
 		t.Fatalf("run OIDC initializer twice: %v", err)
 	}
-	seededAgain, err := fixture.client.OAuthClient.Get(ctx, testClientID)
+	seededSecretAgain, err := fixture.client.OAuthClientSecret.Query().Where(oauthclientsecret.ClientIDEQ(testClientID)).Only(ctx)
 	if err != nil {
-		t.Fatalf("query reconciled OAuth client: %v", err)
+		t.Fatalf("query reconciled OAuth client secret: %v", err)
 	}
-	if seededAgain.SecretHash != originalHash {
-		t.Fatal("idempotent bootstrap replaced the persisted client-secret hash")
+	if seededSecretAgain.SecretHash != originalHash || seededSecretAgain.ID != seededSecret.ID {
+		t.Fatal("idempotent bootstrap replaced the persisted client-secret record or hash")
 	}
 	fixture.config.Clients[0].ClientSecret = proto.String("different-client-secret-with-at-least-32-bytes")
 	if err := fixture.bootstrap.Initialize(ctx); err != nil {
 		t.Fatalf("rotate client secret: %v", err)
 	}
-	if fixture.client.OAuthClient.GetX(ctx, testClientID).SecretHash == originalHash {
+	rotatedSecret := fixture.client.OAuthClientSecret.Query().Where(oauthclientsecret.ClientIDEQ(testClientID)).OnlyX(ctx)
+	if rotatedSecret.SecretHash == originalHash {
 		t.Fatal("secret rotation was not persisted")
 	}
 	fixture.config.Clients[0].ClientSecret = proto.String(testClientSecret)
@@ -305,7 +314,7 @@ func TestAuthorizationCodeFlowWithRefreshRotation(t *testing.T) {
 	if !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeClientCredentials)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeCode)) || !contains(metadata.GrantTypes, string(oidcprotocol.GrantTypeRefreshToken)) {
 		t.Fatalf("discovery grant types = %v", metadata.GrantTypes)
 	}
-	if !sameStrings(metadata.CodeChallengeMethods, []string{"S256"}) || !sameStrings(metadata.TokenEndpointAuthenticationMethods, []string{"client_secret_basic"}) {
+	if !sameStrings(metadata.CodeChallengeMethods, []string{"S256"}) || !sameStrings(metadata.TokenEndpointAuthenticationMethods, []string{"client_secret_basic", "client_secret_post", "none"}) {
 		t.Fatalf("discovery PKCE/auth methods = %v / %v", metadata.CodeChallengeMethods, metadata.TokenEndpointAuthenticationMethods)
 	}
 
@@ -469,7 +478,7 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		t.Fatalf("create Session usecase: %v", err)
 	}
 
-	userID, err := newID()
+	userID, err := biz.NewID()
 	if err != nil {
 		t.Fatalf("generate test User ID: %v", err)
 	}
@@ -482,7 +491,7 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed active User: %v", err)
 	}
-	identifierID, err := newID()
+	identifierID, err := biz.NewID()
 	if err != nil {
 		t.Fatalf("generate Login Identifier ID: %v", err)
 	}
@@ -496,7 +505,7 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed Login Identifier: %v", err)
 	}
-	authID, err := newID()
+	authID, err := biz.NewID()
 	if err != nil {
 		t.Fatalf("generate Authenticator ID: %v", err)
 	}
@@ -508,7 +517,7 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed Authenticator: %v", err)
 	}
-	passAuthID, err := newID()
+	passAuthID, err := biz.NewID()
 	if err != nil {
 		t.Fatalf("generate Password Authenticator ID: %v", err)
 	}
@@ -520,7 +529,7 @@ func newProviderFixture(t *testing.T) *providerFixture {
 		Save(ctx); err != nil {
 		t.Fatalf("seed Password Authenticator: %v", err)
 	}
-	loginID, err := newID()
+	loginID, err := biz.NewID()
 	if err != nil {
 		t.Fatalf("generate LoginSession ID: %v", err)
 	}
@@ -822,8 +831,8 @@ func TestLoopbackHostIssuerAndRedirectURI(t *testing.T) {
 		"https://admin.example.com/v1/admin/auth/callback",
 	}
 	for _, raw := range allowedRedirects {
-		if err := validateRedirectURI(raw); err != nil {
-			t.Errorf("validateRedirectURI(%q) unexpected error: %v", raw, err)
+		if err := biz.ValidateClientRedirectURI(biz.AppTypeWeb, raw); err != nil {
+			t.Errorf("ValidateClientRedirectURI(%q) unexpected error: %v", raw, err)
 		}
 	}
 
@@ -834,8 +843,8 @@ func TestLoopbackHostIssuerAndRedirectURI(t *testing.T) {
 		"http://admin.plateau.localhost.evil.com/callback",
 	}
 	for _, raw := range rejectedRedirects {
-		if err := validateRedirectURI(raw); err == nil {
-			t.Errorf("validateRedirectURI(%q) succeeded; expected HTTPS requirement error", raw)
+		if err := biz.ValidateClientRedirectURI(biz.AppTypeWeb, raw); err == nil {
+			t.Errorf("ValidateClientRedirectURI(%q) succeeded; expected HTTPS requirement error", raw)
 		}
 	}
 }

@@ -45,7 +45,7 @@ func (storage *OIDCStorage) CreateAuthRequest(
 	if err := validateAuthorizationRequest(request); err != nil {
 		return nil, err
 	}
-	id, err := newID()
+	id, err := biz.NewID()
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +57,7 @@ func (storage *OIDCStorage) CreateAuthRequest(
 		SetResponseType(string(request.ResponseType)).
 		SetResponseMode(string(request.ResponseMode)).
 		SetScopes(slices.Clone(request.Scopes)).
+		SetPrompt(slices.Concat([]string{}, request.Prompt)).
 		SetPkceChallenge(request.CodeChallenge).
 		SetPkceChallengeMethod(string(request.CodeChallengeMethod)).
 		SetExpiresTime(now.Add(storage.authRequestTTL))
@@ -92,20 +93,31 @@ func (storage *OIDCStorage) AuthRequestByID(ctx context.Context, requestID strin
 	return &authorizationRequest{entity: entity}, nil
 }
 
-// CompleteAuthRequest binds a verified IAM browser session to a pending OAuth request.
-func (storage *OIDCStorage) CompleteAuthRequest(ctx context.Context, requestID, userID, iamSessionID string, _ time.Time) error {
+// CompleteAuthRequest binds a verified IAM browser session to a pending OAuth request,
+// or binds the browser owner hash and signals that interactive user consent is required.
+func (storage *OIDCStorage) CompleteAuthRequest(
+	ctx context.Context,
+	requestID, userID, iamSessionID, ownerHash string,
+) (bool, error) {
 	if userID != "" {
 		audit.SetActor(ctx, security.Actor{Type: security.ActorTypeHuman, ID: userID})
 		audit.SetResource(ctx, "iam.plateau.dev/User", "users/"+userID)
 	}
-	err := storage.tokens.CompleteAuthorizationRequest(ctx, requestID, userID, iamSessionID, storage.now().UTC())
+	needsConsent, err := storage.tokens.CompleteAuthorizationRequest(
+		ctx,
+		requestID,
+		userID,
+		iamSessionID,
+		ownerHash,
+		storage.now().UTC(),
+	)
 	if errors.Is(err, biz.ErrOAuthGrantInvalid) {
-		return storageNotFoundError{cause: fmt.Errorf("OIDC authorization request is missing, expired, or ineligible: %w", err)}
+		return false, storageNotFoundError{cause: fmt.Errorf("OIDC authorization request is missing, expired, or ineligible: %w", err)}
 	}
 	if err != nil {
-		return fmt.Errorf("complete OIDC authorization request: %w", err)
+		return false, fmt.Errorf("complete OIDC authorization request: %w", err)
 	}
-	return nil
+	return needsConsent, nil
 }
 func (storage *OIDCStorage) AuthRequestByCode(ctx context.Context, code string) (op.AuthRequest, error) {
 	codeEntity, err := storage.client.OAuthAuthorizationCode.Query().
@@ -134,7 +146,7 @@ func (storage *OIDCStorage) AuthRequestByCode(ctx context.Context, code string) 
 	return &authorizationRequest{entity: requestEntity, authorizationCodeID: codeEntity.ID}, nil
 }
 func (storage *OIDCStorage) SaveAuthCode(ctx context.Context, requestID, code string) error {
-	id, err := newID()
+	id, err := biz.NewID()
 	if err != nil {
 		return err
 	}
@@ -163,7 +175,7 @@ func (storage *OIDCStorage) CreateAccessToken(ctx context.Context, request op.To
 	if err != nil {
 		return "", time.Time{}, tokenGrantError(err)
 	}
-	id, err := newID()
+	id, err := biz.NewID()
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -184,11 +196,11 @@ func (storage *OIDCStorage) CreateAccessAndRefreshTokens(ctx context.Context, re
 	if err != nil || grant.Service {
 		return "", "", time.Time{}, oidc.ErrInvalidGrant().WithParent(err)
 	}
-	accessID, err := newID()
+	accessID, err := biz.NewID()
 	if err != nil {
 		return "", "", time.Time{}, err
 	}
-	refreshID, err := newID()
+	refreshID, err := biz.NewID()
 	if err != nil {
 		return "", "", time.Time{}, err
 	}
@@ -224,6 +236,10 @@ func (storage *OIDCStorage) TokenRequestByRefreshToken(ctx context.Context, refr
 		return nil, oidc.ErrInvalidGrant()
 	}
 	if token.RevokedTime != nil || session.RevokedTime != nil || !token.ExpiresTime.After(storage.now()) {
+		return nil, oidc.ErrInvalidGrant()
+	}
+	clientEntity, err := storage.client.OAuthClient.Get(ctx, session.ClientID)
+	if err != nil || clientEntity.Status != biz.ClientStatusActive {
 		return nil, oidc.ErrInvalidGrant()
 	}
 	return &refreshTokenRequest{tokenID: token.ID, tokenSessionID: session.ID, clientID: session.ClientID,

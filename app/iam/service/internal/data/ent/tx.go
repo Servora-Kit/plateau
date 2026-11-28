@@ -30,6 +30,10 @@ type Tx struct {
 	OAuthAuthorizationCode *OAuthAuthorizationCodeClient
 	// OAuthClient is the client for interacting with the OAuthClient builders.
 	OAuthClient *OAuthClientClient
+	// OAuthClientSecret is the client for interacting with the OAuthClientSecret builders.
+	OAuthClientSecret *OAuthClientSecretClient
+	// OAuthConsent is the client for interacting with the OAuthConsent builders.
+	OAuthConsent *OAuthConsentClient
 	// OAuthRefreshToken is the client for interacting with the OAuthRefreshToken builders.
 	OAuthRefreshToken *OAuthRefreshTokenClient
 	// OAuthTokenSession is the client for interacting with the OAuthTokenSession builders.
@@ -184,6 +188,8 @@ func (tx *Tx) init() {
 	tx.OAuthAccessToken = NewOAuthAccessTokenClient(tx.config)
 	tx.OAuthAuthorizationCode = NewOAuthAuthorizationCodeClient(tx.config)
 	tx.OAuthClient = NewOAuthClientClient(tx.config)
+	tx.OAuthClientSecret = NewOAuthClientSecretClient(tx.config)
+	tx.OAuthConsent = NewOAuthConsentClient(tx.config)
 	tx.OAuthRefreshToken = NewOAuthRefreshTokenClient(tx.config)
 	tx.OAuthTokenSession = NewOAuthTokenSessionClient(tx.config)
 	tx.OIDCAuthorizationRequest = NewOIDCAuthorizationRequestClient(tx.config)

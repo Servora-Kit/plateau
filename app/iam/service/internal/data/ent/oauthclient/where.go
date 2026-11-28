@@ -64,14 +64,49 @@ func IDContainsFold(id string) predicate.OAuthClient {
 	return predicate.OAuthClient(sql.FieldContainsFold(FieldID, id))
 }
 
-// SecretHash applies equality check predicate on the "secret_hash" field. It's identical to SecretHashEQ.
-func SecretHash(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldEQ(FieldSecretHash, v))
+// Source applies equality check predicate on the "source" field. It's identical to SourceEQ.
+func Source(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldSource, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldStatus, v))
+}
+
+// DisplayName applies equality check predicate on the "display_name" field. It's identical to DisplayNameEQ.
+func DisplayName(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldDisplayName, v))
+}
+
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldDescription, v))
+}
+
+// LogoURI applies equality check predicate on the "logo_uri" field. It's identical to LogoURIEQ.
+func LogoURI(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldLogoURI, v))
+}
+
+// ApplicationType applies equality check predicate on the "application_type" field. It's identical to ApplicationTypeEQ.
+func ApplicationType(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldApplicationType, v))
+}
+
+// TokenEndpointAuthMethod applies equality check predicate on the "token_endpoint_auth_method" field. It's identical to TokenEndpointAuthMethodEQ.
+func TokenEndpointAuthMethod(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldTokenEndpointAuthMethod, v))
 }
 
 // Trusted applies equality check predicate on the "trusted" field. It's identical to TrustedEQ.
 func Trusted(v bool) predicate.OAuthClient {
 	return predicate.OAuthClient(sql.FieldEQ(FieldTrusted, v))
+}
+
+// Etag applies equality check predicate on the "etag" field. It's identical to EtagEQ.
+func Etag(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldEtag, v))
 }
 
 // CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
@@ -84,79 +119,479 @@ func UpdateTime(v time.Time) predicate.OAuthClient {
 	return predicate.OAuthClient(sql.FieldEQ(FieldUpdateTime, v))
 }
 
-// SecretHashEQ applies the EQ predicate on the "secret_hash" field.
-func SecretHashEQ(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldEQ(FieldSecretHash, v))
+// SourceEQ applies the EQ predicate on the "source" field.
+func SourceEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldSource, v))
 }
 
-// SecretHashNEQ applies the NEQ predicate on the "secret_hash" field.
-func SecretHashNEQ(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldNEQ(FieldSecretHash, v))
+// SourceNEQ applies the NEQ predicate on the "source" field.
+func SourceNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldSource, v))
 }
 
-// SecretHashIn applies the In predicate on the "secret_hash" field.
-func SecretHashIn(vs ...string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldIn(FieldSecretHash, vs...))
+// SourceIn applies the In predicate on the "source" field.
+func SourceIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldSource, vs...))
 }
 
-// SecretHashNotIn applies the NotIn predicate on the "secret_hash" field.
-func SecretHashNotIn(vs ...string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldNotIn(FieldSecretHash, vs...))
+// SourceNotIn applies the NotIn predicate on the "source" field.
+func SourceNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldSource, vs...))
 }
 
-// SecretHashGT applies the GT predicate on the "secret_hash" field.
-func SecretHashGT(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldGT(FieldSecretHash, v))
+// SourceGT applies the GT predicate on the "source" field.
+func SourceGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldSource, v))
 }
 
-// SecretHashGTE applies the GTE predicate on the "secret_hash" field.
-func SecretHashGTE(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldGTE(FieldSecretHash, v))
+// SourceGTE applies the GTE predicate on the "source" field.
+func SourceGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldSource, v))
 }
 
-// SecretHashLT applies the LT predicate on the "secret_hash" field.
-func SecretHashLT(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldLT(FieldSecretHash, v))
+// SourceLT applies the LT predicate on the "source" field.
+func SourceLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldSource, v))
 }
 
-// SecretHashLTE applies the LTE predicate on the "secret_hash" field.
-func SecretHashLTE(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldLTE(FieldSecretHash, v))
+// SourceLTE applies the LTE predicate on the "source" field.
+func SourceLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldSource, v))
 }
 
-// SecretHashContains applies the Contains predicate on the "secret_hash" field.
-func SecretHashContains(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldContains(FieldSecretHash, v))
+// SourceContains applies the Contains predicate on the "source" field.
+func SourceContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldSource, v))
 }
 
-// SecretHashHasPrefix applies the HasPrefix predicate on the "secret_hash" field.
-func SecretHashHasPrefix(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldHasPrefix(FieldSecretHash, v))
+// SourceHasPrefix applies the HasPrefix predicate on the "source" field.
+func SourceHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldSource, v))
 }
 
-// SecretHashHasSuffix applies the HasSuffix predicate on the "secret_hash" field.
-func SecretHashHasSuffix(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldHasSuffix(FieldSecretHash, v))
+// SourceHasSuffix applies the HasSuffix predicate on the "source" field.
+func SourceHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldSource, v))
 }
 
-// SecretHashEqualFold applies the EqualFold predicate on the "secret_hash" field.
-func SecretHashEqualFold(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldEqualFold(FieldSecretHash, v))
+// SourceEqualFold applies the EqualFold predicate on the "source" field.
+func SourceEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldSource, v))
 }
 
-// SecretHashContainsFold applies the ContainsFold predicate on the "secret_hash" field.
-func SecretHashContainsFold(v string) predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldContainsFold(FieldSecretHash, v))
+// SourceContainsFold applies the ContainsFold predicate on the "source" field.
+func SourceContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldSource, v))
 }
 
-// AudiencesIsNil applies the IsNil predicate on the "audiences" field.
-func AudiencesIsNil() predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldIsNull(FieldAudiences))
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldStatus, v))
 }
 
-// AudiencesNotNil applies the NotNil predicate on the "audiences" field.
-func AudiencesNotNil() predicate.OAuthClient {
-	return predicate.OAuthClient(sql.FieldNotNull(FieldAudiences))
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// DisplayNameEQ applies the EQ predicate on the "display_name" field.
+func DisplayNameEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldDisplayName, v))
+}
+
+// DisplayNameNEQ applies the NEQ predicate on the "display_name" field.
+func DisplayNameNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldDisplayName, v))
+}
+
+// DisplayNameIn applies the In predicate on the "display_name" field.
+func DisplayNameIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldDisplayName, vs...))
+}
+
+// DisplayNameNotIn applies the NotIn predicate on the "display_name" field.
+func DisplayNameNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldDisplayName, vs...))
+}
+
+// DisplayNameGT applies the GT predicate on the "display_name" field.
+func DisplayNameGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldDisplayName, v))
+}
+
+// DisplayNameGTE applies the GTE predicate on the "display_name" field.
+func DisplayNameGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldDisplayName, v))
+}
+
+// DisplayNameLT applies the LT predicate on the "display_name" field.
+func DisplayNameLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldDisplayName, v))
+}
+
+// DisplayNameLTE applies the LTE predicate on the "display_name" field.
+func DisplayNameLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldDisplayName, v))
+}
+
+// DisplayNameContains applies the Contains predicate on the "display_name" field.
+func DisplayNameContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldDisplayName, v))
+}
+
+// DisplayNameHasPrefix applies the HasPrefix predicate on the "display_name" field.
+func DisplayNameHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldDisplayName, v))
+}
+
+// DisplayNameHasSuffix applies the HasSuffix predicate on the "display_name" field.
+func DisplayNameHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldDisplayName, v))
+}
+
+// DisplayNameEqualFold applies the EqualFold predicate on the "display_name" field.
+func DisplayNameEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldDisplayName, v))
+}
+
+// DisplayNameContainsFold applies the ContainsFold predicate on the "display_name" field.
+func DisplayNameContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldDisplayName, v))
+}
+
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldDescription, v))
+}
+
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldDescription, v))
+}
+
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldDescription, vs...))
+}
+
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldDescription, vs...))
+}
+
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldDescription, v))
+}
+
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldDescription, v))
+}
+
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldDescription, v))
+}
+
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldDescription, v))
+}
+
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldDescription, v))
+}
+
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldDescription, v))
+}
+
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldDescription, v))
+}
+
+// DescriptionIsNil applies the IsNil predicate on the "description" field.
+func DescriptionIsNil() predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIsNull(FieldDescription))
+}
+
+// DescriptionNotNil applies the NotNil predicate on the "description" field.
+func DescriptionNotNil() predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotNull(FieldDescription))
+}
+
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldDescription, v))
+}
+
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// LogoURIEQ applies the EQ predicate on the "logo_uri" field.
+func LogoURIEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldLogoURI, v))
+}
+
+// LogoURINEQ applies the NEQ predicate on the "logo_uri" field.
+func LogoURINEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldLogoURI, v))
+}
+
+// LogoURIIn applies the In predicate on the "logo_uri" field.
+func LogoURIIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldLogoURI, vs...))
+}
+
+// LogoURINotIn applies the NotIn predicate on the "logo_uri" field.
+func LogoURINotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldLogoURI, vs...))
+}
+
+// LogoURIGT applies the GT predicate on the "logo_uri" field.
+func LogoURIGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldLogoURI, v))
+}
+
+// LogoURIGTE applies the GTE predicate on the "logo_uri" field.
+func LogoURIGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldLogoURI, v))
+}
+
+// LogoURILT applies the LT predicate on the "logo_uri" field.
+func LogoURILT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldLogoURI, v))
+}
+
+// LogoURILTE applies the LTE predicate on the "logo_uri" field.
+func LogoURILTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldLogoURI, v))
+}
+
+// LogoURIContains applies the Contains predicate on the "logo_uri" field.
+func LogoURIContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldLogoURI, v))
+}
+
+// LogoURIHasPrefix applies the HasPrefix predicate on the "logo_uri" field.
+func LogoURIHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldLogoURI, v))
+}
+
+// LogoURIHasSuffix applies the HasSuffix predicate on the "logo_uri" field.
+func LogoURIHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldLogoURI, v))
+}
+
+// LogoURIIsNil applies the IsNil predicate on the "logo_uri" field.
+func LogoURIIsNil() predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIsNull(FieldLogoURI))
+}
+
+// LogoURINotNil applies the NotNil predicate on the "logo_uri" field.
+func LogoURINotNil() predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotNull(FieldLogoURI))
+}
+
+// LogoURIEqualFold applies the EqualFold predicate on the "logo_uri" field.
+func LogoURIEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldLogoURI, v))
+}
+
+// LogoURIContainsFold applies the ContainsFold predicate on the "logo_uri" field.
+func LogoURIContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldLogoURI, v))
+}
+
+// ApplicationTypeEQ applies the EQ predicate on the "application_type" field.
+func ApplicationTypeEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldApplicationType, v))
+}
+
+// ApplicationTypeNEQ applies the NEQ predicate on the "application_type" field.
+func ApplicationTypeNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldApplicationType, v))
+}
+
+// ApplicationTypeIn applies the In predicate on the "application_type" field.
+func ApplicationTypeIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldApplicationType, vs...))
+}
+
+// ApplicationTypeNotIn applies the NotIn predicate on the "application_type" field.
+func ApplicationTypeNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldApplicationType, vs...))
+}
+
+// ApplicationTypeGT applies the GT predicate on the "application_type" field.
+func ApplicationTypeGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldApplicationType, v))
+}
+
+// ApplicationTypeGTE applies the GTE predicate on the "application_type" field.
+func ApplicationTypeGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldApplicationType, v))
+}
+
+// ApplicationTypeLT applies the LT predicate on the "application_type" field.
+func ApplicationTypeLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldApplicationType, v))
+}
+
+// ApplicationTypeLTE applies the LTE predicate on the "application_type" field.
+func ApplicationTypeLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldApplicationType, v))
+}
+
+// ApplicationTypeContains applies the Contains predicate on the "application_type" field.
+func ApplicationTypeContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldApplicationType, v))
+}
+
+// ApplicationTypeHasPrefix applies the HasPrefix predicate on the "application_type" field.
+func ApplicationTypeHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldApplicationType, v))
+}
+
+// ApplicationTypeHasSuffix applies the HasSuffix predicate on the "application_type" field.
+func ApplicationTypeHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldApplicationType, v))
+}
+
+// ApplicationTypeEqualFold applies the EqualFold predicate on the "application_type" field.
+func ApplicationTypeEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldApplicationType, v))
+}
+
+// ApplicationTypeContainsFold applies the ContainsFold predicate on the "application_type" field.
+func ApplicationTypeContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldApplicationType, v))
+}
+
+// TokenEndpointAuthMethodEQ applies the EQ predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodNEQ applies the NEQ predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodIn applies the In predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldTokenEndpointAuthMethod, vs...))
+}
+
+// TokenEndpointAuthMethodNotIn applies the NotIn predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldTokenEndpointAuthMethod, vs...))
+}
+
+// TokenEndpointAuthMethodGT applies the GT predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodGTE applies the GTE predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodLT applies the LT predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodLTE applies the LTE predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodContains applies the Contains predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodHasPrefix applies the HasPrefix predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodHasSuffix applies the HasSuffix predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodEqualFold applies the EqualFold predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldTokenEndpointAuthMethod, v))
+}
+
+// TokenEndpointAuthMethodContainsFold applies the ContainsFold predicate on the "token_endpoint_auth_method" field.
+func TokenEndpointAuthMethodContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldTokenEndpointAuthMethod, v))
 }
 
 // TrustedEQ applies the EQ predicate on the "trusted" field.
@@ -167,6 +602,71 @@ func TrustedEQ(v bool) predicate.OAuthClient {
 // TrustedNEQ applies the NEQ predicate on the "trusted" field.
 func TrustedNEQ(v bool) predicate.OAuthClient {
 	return predicate.OAuthClient(sql.FieldNEQ(FieldTrusted, v))
+}
+
+// EtagEQ applies the EQ predicate on the "etag" field.
+func EtagEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEQ(FieldEtag, v))
+}
+
+// EtagNEQ applies the NEQ predicate on the "etag" field.
+func EtagNEQ(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNEQ(FieldEtag, v))
+}
+
+// EtagIn applies the In predicate on the "etag" field.
+func EtagIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldIn(FieldEtag, vs...))
+}
+
+// EtagNotIn applies the NotIn predicate on the "etag" field.
+func EtagNotIn(vs ...string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldNotIn(FieldEtag, vs...))
+}
+
+// EtagGT applies the GT predicate on the "etag" field.
+func EtagGT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGT(FieldEtag, v))
+}
+
+// EtagGTE applies the GTE predicate on the "etag" field.
+func EtagGTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldGTE(FieldEtag, v))
+}
+
+// EtagLT applies the LT predicate on the "etag" field.
+func EtagLT(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLT(FieldEtag, v))
+}
+
+// EtagLTE applies the LTE predicate on the "etag" field.
+func EtagLTE(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldLTE(FieldEtag, v))
+}
+
+// EtagContains applies the Contains predicate on the "etag" field.
+func EtagContains(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContains(FieldEtag, v))
+}
+
+// EtagHasPrefix applies the HasPrefix predicate on the "etag" field.
+func EtagHasPrefix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasPrefix(FieldEtag, v))
+}
+
+// EtagHasSuffix applies the HasSuffix predicate on the "etag" field.
+func EtagHasSuffix(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldHasSuffix(FieldEtag, v))
+}
+
+// EtagEqualFold applies the EqualFold predicate on the "etag" field.
+func EtagEqualFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldEqualFold(FieldEtag, v))
+}
+
+// EtagContainsFold applies the ContainsFold predicate on the "etag" field.
+func EtagContainsFold(v string) predicate.OAuthClient {
+	return predicate.OAuthClient(sql.FieldContainsFold(FieldEtag, v))
 }
 
 // CreateTimeEQ applies the EQ predicate on the "create_time" field.

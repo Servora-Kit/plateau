@@ -128,7 +128,7 @@ func TestServiceTokenProtocolAndClientReload(t *testing.T) {
 
 func TestServiceConfigValidation(t *testing.T) {
 	valid := &oidcpb.OAuthClient{ClientId: proto.String("service-a"), ClientSecret: proto.String("service-secret-with-at-least-32-bytes"), AllowedGrantTypes: []string{"client_credentials"}, Audiences: []string{"iam"}}
-	if _, _, _, err := validateConfiguredClient(valid, map[string]struct{}{}); err != nil {
+	if _, _, err := parseAndValidateConfiguredClient(valid, map[string]struct{}{}); err != nil {
 		t.Fatal(err)
 	}
 	for _, mutate := range []func(*oidcpb.OAuthClient){
@@ -140,7 +140,7 @@ func TestServiceConfigValidation(t *testing.T) {
 	} {
 		c := proto.Clone(valid).(*oidcpb.OAuthClient)
 		mutate(c)
-		if _, _, _, err := validateConfiguredClient(c, map[string]struct{}{}); err == nil {
+		if _, _, err := parseAndValidateConfiguredClient(c, map[string]struct{}{}); err == nil {
 			t.Fatal("invalid machine configuration accepted")
 		}
 	}

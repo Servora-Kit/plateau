@@ -9,6 +9,7 @@ import (
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/loginidentifier"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/user"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
@@ -33,6 +34,15 @@ func (storage *OIDCStorage) activeAccessToken(
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query OAuth access token: %w", err)
+	}
+	clientActive, err := storage.client.OAuthClient.Query().
+		Where(oauthclient.IDEQ(token.ClientID), oauthclient.StatusEQ(biz.ClientStatusActive)).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("check OAuth client status: %w", err)
+	}
+	if !clientActive {
+		return nil, storageNotFoundError{cause: fmt.Errorf("OAuth client is inactive")}
 	}
 	if token.ActorType == oauthaccesstoken.ActorTypeService {
 		return token, nil

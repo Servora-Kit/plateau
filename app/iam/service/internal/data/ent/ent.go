@@ -21,6 +21,8 @@ import (
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthaccesstoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthauthorizationcode"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclient"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthclientsecret"
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthconsent"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthrefreshtoken"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oauthtokensession"
 	"github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent/oidcauthorizationrequest"
@@ -97,6 +99,8 @@ func checkColumn(t, c string) error {
 			oauthaccesstoken.Table:         oauthaccesstoken.ValidColumn,
 			oauthauthorizationcode.Table:   oauthauthorizationcode.ValidColumn,
 			oauthclient.Table:              oauthclient.ValidColumn,
+			oauthclientsecret.Table:        oauthclientsecret.ValidColumn,
+			oauthconsent.Table:             oauthconsent.ValidColumn,
 			oauthrefreshtoken.Table:        oauthrefreshtoken.ValidColumn,
 			oauthtokensession.Table:        oauthtokensession.ValidColumn,
 			oidcauthorizationrequest.Table: oidcauthorizationrequest.ValidColumn,

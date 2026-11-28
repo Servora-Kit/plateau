@@ -5,7 +5,9 @@ import (
 	"slices"
 	"time"
 
+	"github.com/Servora-Kit/plateau/app/iam/service/internal/biz"
 	entmodel "github.com/Servora-Kit/plateau/app/iam/service/internal/data/ent"
+	"github.com/Servora-Kit/plateau/security"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
@@ -18,11 +20,31 @@ func (client *client) GetID() string { return client.entity.ID }
 
 func (client *client) RedirectURIs() []string { return slices.Clone(client.entity.RedirectUris) }
 
-func (client *client) PostLogoutRedirectURIs() []string { return nil }
+func (client *client) PostLogoutRedirectURIs() []string {
+	return slices.Clone(client.entity.PostLogoutRedirectUris)
+}
 
-func (client *client) ApplicationType() op.ApplicationType { return op.ApplicationTypeWeb }
+func (client *client) ApplicationType() op.ApplicationType {
+	switch client.entity.ApplicationType {
+	case biz.AppTypeUserAgent:
+		return op.ApplicationTypeUserAgent
+	case biz.AppTypeNative:
+		return op.ApplicationTypeNative
+	default:
+		return op.ApplicationTypeWeb
+	}
+}
 
-func (client *client) AuthMethod() oidc.AuthMethod { return oidc.AuthMethodBasic }
+func (client *client) AuthMethod() oidc.AuthMethod {
+	switch client.entity.TokenEndpointAuthMethod {
+	case biz.AuthMethodPost:
+		return oidc.AuthMethodPost
+	case biz.AuthMethodNone:
+		return oidc.AuthMethodNone
+	default:
+		return oidc.AuthMethodBasic
+	}
+}
 
 func (client *client) ResponseTypes() []oidc.ResponseType {
 	result := make([]oidc.ResponseType, len(client.entity.AllowedResponseTypes))
@@ -48,7 +70,22 @@ func (client *client) AccessTokenType() op.AccessTokenType { return op.AccessTok
 
 func (client *client) IDTokenLifetime() time.Duration { return idTokenTTL }
 
-func (client *client) DevMode() bool { return false }
+func (client *client) DevMode() bool {
+	hasHTTP := false
+	for _, raw := range slices.Concat(client.entity.RedirectUris, client.entity.PostLogoutRedirectUris) {
+		parsed, err := url.Parse(raw)
+		if err != nil {
+			return false
+		}
+		if parsed.Scheme == "http" {
+			if !security.IsLoopbackHost(parsed.Hostname()) {
+				return false
+			}
+			hasHTTP = true
+		}
+	}
+	return hasHTTP
+}
 
 func (client *client) RestrictAdditionalIdTokenScopes() func([]string) []string {
 	return func(scopes []string) []string { return slices.Clone(scopes) }
