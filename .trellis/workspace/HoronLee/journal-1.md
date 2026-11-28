@@ -586,3 +586,30 @@ Servora 合并生成代码到根 module、发布 v0.9.7 并验证 Buf CI 自动�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 19: 动态 OAuth Client 管理全栈落地
+<!-- trellis-session: v=2 fp=12c670f503b3c3e6 -->
+
+**Date**: 2026-11-28
+**Task**: 动态 OAuth Client 管理全栈落地
+**Package**: plateau
+**Branch**: `main`
+
+### Summary
+
+完成动态与静态双源 OAuth Client 管理、多密钥零停机轮换、第三方 Consent 流程与 Google 风格个人中心应用管理，并通过全仓静态检查与集成测试
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `98a876e` | feat(api): add OAuth client and consent contracts |
+| `d8fe703` | feat(iam): add dynamic OAuth client and consent |
+| `c9c6f95` | feat(admin): add OAuth client BFF endpoints |
+| `2c344ce` | feat(web): add OAuth client UI and consent flow |
+| `ec01735` | docs(iam): document dual-source OAuth clients |
+
+### Status
+
+[OK] **Completed**
