@@ -13,12 +13,14 @@ import (
 	annotations "google.golang.org/genproto/googleapis/api/annotations"
 	proto "google.golang.org/protobuf/proto"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var _ validate.Rule
 var _ annotations.CommonLanguageSettings
 var _ annotations.FieldBehavior
 var _ fieldmaskpb.FieldMask
+var _ timestamppb.Timestamp
 var _ iamuserv1.UserProfile
 var _ auditpb.AuditRule
 var _ authnpb.AuthnRule
@@ -336,6 +338,91 @@ func (x *DeleteAccountResponse) Redact() string {
 
 // RedactFields applies annotated field replacements in place.
 func (x *DeleteAccountResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *AuthorizedApp) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*AuthorizedApp)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *AuthorizedApp) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *ListAuthorizedAppsRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*ListAuthorizedAppsRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *ListAuthorizedAppsRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *ListAuthorizedAppsResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*ListAuthorizedAppsResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *ListAuthorizedAppsResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *RevokeAuthorizedAppRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*RevokeAuthorizedAppRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *RevokeAuthorizedAppRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *RevokeAuthorizedAppResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*RevokeAuthorizedAppResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *RevokeAuthorizedAppResponse) RedactFields() {
 	if x == nil {
 		return
 	}

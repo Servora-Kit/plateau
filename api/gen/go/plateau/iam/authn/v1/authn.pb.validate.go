@@ -63,6 +63,10 @@ func (m *AuthFlowOidcContext) validate(all bool) error {
 
 	// no validation rules for ClientId
 
+	// no validation rules for ClientName
+
+	// no validation rules for LogoUri
+
 	if len(errors) > 0 {
 		return AuthFlowOidcContextMultiError(errors)
 	}
@@ -1758,3 +1762,559 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CancelAuthFlowResponseValidationError{}
+
+// Validate checks the field values on ConsentView with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ConsentView) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConsentView with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ConsentViewMultiError, or
+// nil if none found.
+func (m *ConsentView) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConsentView) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for RequestId
+
+	// no validation rules for ClientId
+
+	// no validation rules for ClientName
+
+	// no validation rules for LogoUri
+
+	// no validation rules for UserEmail
+
+	if len(errors) > 0 {
+		return ConsentViewMultiError(errors)
+	}
+
+	return nil
+}
+
+// ConsentViewMultiError is an error wrapping multiple validation errors
+// returned by ConsentView.ValidateAll() if the designated constraints aren't met.
+type ConsentViewMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConsentViewMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConsentViewMultiError) AllErrors() []error { return m }
+
+// ConsentViewValidationError is the validation error returned by
+// ConsentView.Validate if the designated constraints aren't met.
+type ConsentViewValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConsentViewValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConsentViewValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConsentViewValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConsentViewValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConsentViewValidationError) ErrorName() string { return "ConsentViewValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ConsentViewValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConsentView.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConsentViewValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConsentViewValidationError{}
+
+// Validate checks the field values on GetConsentViewRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetConsentViewRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetConsentViewRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetConsentViewRequestMultiError, or nil if none found.
+func (m *GetConsentViewRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetConsentViewRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for RequestId
+
+	if len(errors) > 0 {
+		return GetConsentViewRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetConsentViewRequestMultiError is an error wrapping multiple validation
+// errors returned by GetConsentViewRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetConsentViewRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetConsentViewRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetConsentViewRequestMultiError) AllErrors() []error { return m }
+
+// GetConsentViewRequestValidationError is the validation error returned by
+// GetConsentViewRequest.Validate if the designated constraints aren't met.
+type GetConsentViewRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetConsentViewRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetConsentViewRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetConsentViewRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetConsentViewRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetConsentViewRequestValidationError) ErrorName() string {
+	return "GetConsentViewRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetConsentViewRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetConsentViewRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetConsentViewRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetConsentViewRequestValidationError{}
+
+// Validate checks the field values on GetConsentViewResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetConsentViewResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetConsentViewResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetConsentViewResponseMultiError, or nil if none found.
+func (m *GetConsentViewResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetConsentViewResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetConsent()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetConsentViewResponseValidationError{
+					field:  "Consent",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetConsentViewResponseValidationError{
+					field:  "Consent",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConsent()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetConsentViewResponseValidationError{
+				field:  "Consent",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetConsentViewResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetConsentViewResponseMultiError is an error wrapping multiple validation
+// errors returned by GetConsentViewResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetConsentViewResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetConsentViewResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetConsentViewResponseMultiError) AllErrors() []error { return m }
+
+// GetConsentViewResponseValidationError is the validation error returned by
+// GetConsentViewResponse.Validate if the designated constraints aren't met.
+type GetConsentViewResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetConsentViewResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetConsentViewResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetConsentViewResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetConsentViewResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetConsentViewResponseValidationError) ErrorName() string {
+	return "GetConsentViewResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetConsentViewResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetConsentViewResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetConsentViewResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetConsentViewResponseValidationError{}
+
+// Validate checks the field values on SubmitConsentDecisionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SubmitConsentDecisionRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubmitConsentDecisionRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SubmitConsentDecisionRequestMultiError, or nil if none found.
+func (m *SubmitConsentDecisionRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubmitConsentDecisionRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for RequestId
+
+	// no validation rules for Approved
+
+	if len(errors) > 0 {
+		return SubmitConsentDecisionRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubmitConsentDecisionRequestMultiError is an error wrapping multiple
+// validation errors returned by SubmitConsentDecisionRequest.ValidateAll() if
+// the designated constraints aren't met.
+type SubmitConsentDecisionRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubmitConsentDecisionRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubmitConsentDecisionRequestMultiError) AllErrors() []error { return m }
+
+// SubmitConsentDecisionRequestValidationError is the validation error returned
+// by SubmitConsentDecisionRequest.Validate if the designated constraints
+// aren't met.
+type SubmitConsentDecisionRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubmitConsentDecisionRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubmitConsentDecisionRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubmitConsentDecisionRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubmitConsentDecisionRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubmitConsentDecisionRequestValidationError) ErrorName() string {
+	return "SubmitConsentDecisionRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SubmitConsentDecisionRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubmitConsentDecisionRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubmitConsentDecisionRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubmitConsentDecisionRequestValidationError{}
+
+// Validate checks the field values on SubmitConsentDecisionResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SubmitConsentDecisionResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubmitConsentDecisionResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// SubmitConsentDecisionResponseMultiError, or nil if none found.
+func (m *SubmitConsentDecisionResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubmitConsentDecisionResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for RedirectUri
+
+	if len(errors) > 0 {
+		return SubmitConsentDecisionResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SubmitConsentDecisionResponseMultiError is an error wrapping multiple
+// validation errors returned by SubmitConsentDecisionResponse.ValidateAll()
+// if the designated constraints aren't met.
+type SubmitConsentDecisionResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubmitConsentDecisionResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubmitConsentDecisionResponseMultiError) AllErrors() []error { return m }
+
+// SubmitConsentDecisionResponseValidationError is the validation error
+// returned by SubmitConsentDecisionResponse.Validate if the designated
+// constraints aren't met.
+type SubmitConsentDecisionResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubmitConsentDecisionResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubmitConsentDecisionResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubmitConsentDecisionResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubmitConsentDecisionResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubmitConsentDecisionResponseValidationError) ErrorName() string {
+	return "SubmitConsentDecisionResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SubmitConsentDecisionResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubmitConsentDecisionResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubmitConsentDecisionResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubmitConsentDecisionResponseValidationError{}

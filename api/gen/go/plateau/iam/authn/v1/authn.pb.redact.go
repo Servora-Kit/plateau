@@ -262,3 +262,88 @@ func (x *CancelAuthFlowResponse) RedactFields() {
 		return
 	}
 }
+
+// Redact returns a redacted representation without mutating x.
+func (x *ConsentView) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*ConsentView)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *ConsentView) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *GetConsentViewRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*GetConsentViewRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *GetConsentViewRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *GetConsentViewResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*GetConsentViewResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *GetConsentViewResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *SubmitConsentDecisionRequest) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*SubmitConsentDecisionRequest)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *SubmitConsentDecisionRequest) RedactFields() {
+	if x == nil {
+		return
+	}
+}
+
+// Redact returns a redacted representation without mutating x.
+func (x *SubmitConsentDecisionResponse) Redact() string {
+	if x == nil {
+		return ""
+	}
+	clone := proto.Clone(x).(*SubmitConsentDecisionResponse)
+	clone.RedactFields()
+	return clone.String()
+}
+
+// RedactFields applies annotated field replacements in place.
+func (x *SubmitConsentDecisionResponse) RedactFields() {
+	if x == nil {
+		return
+	}
+}

@@ -15,18 +15,26 @@ export type OIDC = {
   signingKeyPath?: string;
 };
 
-// OAuthClient 配置使用客户端 ID 和密钥认证的应用。
+// OAuthClient 配置启动期协调的静态引导应用。
 export type OAuthClient = {
   allowedGrantTypes?: string[];
   // 请求 scope 必须在允许集合中；用户流程还须符合提供方支持的用户 scope。
   allowedScopes?: string[];
+  // Application runtime type: "web" (default), "user_agent", or "native".
+  applicationType?: string;
   audiences?: string[];
   clientId?: string;
-  // Raw secret is configuration input only; IAM persists only its hash.
+  // Raw secret is configuration input only; required for confidential clients, omitted for public clients.
   clientSecret?: string;
+  description?: string;
+  displayName?: string;
+  logoUri?: string;
+  postLogoutRedirectUris?: string[];
   // Redirect URIs are compared exactly; wildcards are not supported.
   redirectUris?: string[];
-  // 用户交互流程须为受信应用，当前未实现同意页面；机器流程不依赖此项。
+  // Token endpoint auth method: "client_secret_basic" (default), "client_secret_post", or "none".
+  tokenEndpointAuthMethod?: string;
+  // 第一方受信应用跳过授权同意页；非受信应用进入第三方 Consent 流程。
   trusted?: boolean;
 };
 

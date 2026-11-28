@@ -195,6 +195,8 @@ func (AuthFactorMethod) EnumDescriptor() ([]byte, []int) {
 type AuthFlowOidcContext struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientName    string                 `protobuf:"bytes,2,opt,name=client_name,json=clientName,proto3" json:"client_name,omitempty"`
+	LogoUri       string                 `protobuf:"bytes,3,opt,name=logo_uri,json=logoUri,proto3" json:"logo_uri,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -232,6 +234,20 @@ func (*AuthFlowOidcContext) Descriptor() ([]byte, []int) {
 func (x *AuthFlowOidcContext) GetClientId() string {
 	if x != nil {
 		return x.ClientId
+	}
+	return ""
+}
+
+func (x *AuthFlowOidcContext) GetClientName() string {
+	if x != nil {
+		return x.ClientName
+	}
+	return ""
+}
+
+func (x *AuthFlowOidcContext) GetLogoUri() string {
+	if x != nil {
+		return x.LogoUri
 	}
 	return ""
 }
@@ -929,13 +945,294 @@ func (x *CancelAuthFlowResponse) GetRedirectUri() string {
 	return ""
 }
 
+// ConsentView describes the application and scopes awaiting user approval.
+type ConsentView struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	RequestId       string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	ClientId        string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientName      string                 `protobuf:"bytes,3,opt,name=client_name,json=clientName,proto3" json:"client_name,omitempty"`
+	LogoUri         string                 `protobuf:"bytes,4,opt,name=logo_uri,json=logoUri,proto3" json:"logo_uri,omitempty"`
+	UserEmail       string                 `protobuf:"bytes,5,opt,name=user_email,json=userEmail,proto3" json:"user_email,omitempty"`
+	RequestedScopes []string               `protobuf:"bytes,6,rep,name=requested_scopes,json=requestedScopes,proto3" json:"requested_scopes,omitempty"`
+	GrantedScopes   []string               `protobuf:"bytes,7,rep,name=granted_scopes,json=grantedScopes,proto3" json:"granted_scopes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ConsentView) Reset() {
+	*x = ConsentView{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConsentView) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConsentView) ProtoMessage() {}
+
+func (x *ConsentView) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConsentView.ProtoReflect.Descriptor instead.
+func (*ConsentView) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ConsentView) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *ConsentView) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *ConsentView) GetClientName() string {
+	if x != nil {
+		return x.ClientName
+	}
+	return ""
+}
+
+func (x *ConsentView) GetLogoUri() string {
+	if x != nil {
+		return x.LogoUri
+	}
+	return ""
+}
+
+func (x *ConsentView) GetUserEmail() string {
+	if x != nil {
+		return x.UserEmail
+	}
+	return ""
+}
+
+func (x *ConsentView) GetRequestedScopes() []string {
+	if x != nil {
+		return x.RequestedScopes
+	}
+	return nil
+}
+
+func (x *ConsentView) GetGrantedScopes() []string {
+	if x != nil {
+		return x.GrantedScopes
+	}
+	return nil
+}
+
+type GetConsentViewRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetConsentViewRequest) Reset() {
+	*x = GetConsentViewRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetConsentViewRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetConsentViewRequest) ProtoMessage() {}
+
+func (x *GetConsentViewRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetConsentViewRequest.ProtoReflect.Descriptor instead.
+func (*GetConsentViewRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GetConsentViewRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+type GetConsentViewResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Consent       *ConsentView           `protobuf:"bytes,1,opt,name=consent,proto3" json:"consent,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetConsentViewResponse) Reset() {
+	*x = GetConsentViewResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetConsentViewResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetConsentViewResponse) ProtoMessage() {}
+
+func (x *GetConsentViewResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetConsentViewResponse.ProtoReflect.Descriptor instead.
+func (*GetConsentViewResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *GetConsentViewResponse) GetConsent() *ConsentView {
+	if x != nil {
+		return x.Consent
+	}
+	return nil
+}
+
+type SubmitConsentDecisionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Approved      bool                   `protobuf:"varint,2,opt,name=approved,proto3" json:"approved,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitConsentDecisionRequest) Reset() {
+	*x = SubmitConsentDecisionRequest{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitConsentDecisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitConsentDecisionRequest) ProtoMessage() {}
+
+func (x *SubmitConsentDecisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitConsentDecisionRequest.ProtoReflect.Descriptor instead.
+func (*SubmitConsentDecisionRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *SubmitConsentDecisionRequest) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *SubmitConsentDecisionRequest) GetApproved() bool {
+	if x != nil {
+		return x.Approved
+	}
+	return false
+}
+
+type SubmitConsentDecisionResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Continuation target (/authorize/callback?id=...) on approval or external RFC 6749/9207 access_denied URI on denial.
+	RedirectUri   string `protobuf:"bytes,1,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitConsentDecisionResponse) Reset() {
+	*x = SubmitConsentDecisionResponse{}
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitConsentDecisionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitConsentDecisionResponse) ProtoMessage() {}
+
+func (x *SubmitConsentDecisionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_authn_v1_authn_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitConsentDecisionResponse.ProtoReflect.Descriptor instead.
+func (*SubmitConsentDecisionResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_authn_v1_authn_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *SubmitConsentDecisionResponse) GetRedirectUri() string {
+	if x != nil {
+		return x.RedirectUri
+	}
+	return ""
+}
+
 var File_plateau_iam_authn_v1_authn_proto protoreflect.FileDescriptor
 
 const file_plateau_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\n" +
-	" plateau/iam/authn/v1/authn.proto\x12\x14plateau.iam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eplateau/iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"8\n" +
+	" plateau/iam/authn/v1/authn.proto\x12\x14plateau.iam.authn.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eplateau/iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\x80\x01\n" +
 	"\x13AuthFlowOidcContext\x12!\n" +
-	"\tclient_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\bclientId\"\x90\x06\n" +
+	"\tclient_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\bclientId\x12%\n" +
+	"\vclient_name\x18\x02 \x01(\tB\x04\xe2A\x01\x03R\n" +
+	"clientName\x12\x1f\n" +
+	"\blogo_uri\x18\x03 \x01(\tB\x04\xe2A\x01\x03R\alogoUri\"\x90\x06\n" +
 	"\bAuthFlow\x12\x1d\n" +
 	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\x06flowId\x12?\n" +
 	"\x05state\x18\x02 \x01(\x0e2#.plateau.iam.authn.v1.AuthFlowStateB\x04\xe2A\x01\x03R\x05state\x12Y\n" +
@@ -978,6 +1275,28 @@ const file_plateau_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\x15CancelAuthFlowRequest\x12\x1d\n" +
 	"\aflow_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06flowId\";\n" +
 	"\x16CancelAuthFlowResponse\x12!\n" +
+	"\fredirect_uri\x18\x01 \x01(\tR\vredirectUri\"\xa0\x02\n" +
+	"\vConsentView\x12#\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\trequestId\x12!\n" +
+	"\tclient_id\x18\x02 \x01(\tB\x04\xe2A\x01\x03R\bclientId\x12%\n" +
+	"\vclient_name\x18\x03 \x01(\tB\x04\xe2A\x01\x03R\n" +
+	"clientName\x12\x1f\n" +
+	"\blogo_uri\x18\x04 \x01(\tB\x04\xe2A\x01\x03R\alogoUri\x12#\n" +
+	"\n" +
+	"user_email\x18\x05 \x01(\tB\x04\xe2A\x01\x03R\tuserEmail\x12/\n" +
+	"\x10requested_scopes\x18\x06 \x03(\tB\x04\xe2A\x01\x03R\x0frequestedScopes\x12+\n" +
+	"\x0egranted_scopes\x18\a \x03(\tB\x04\xe2A\x01\x03R\rgrantedScopes\"<\n" +
+	"\x15GetConsentViewRequest\x12#\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\trequestId\"U\n" +
+	"\x16GetConsentViewResponse\x12;\n" +
+	"\aconsent\x18\x01 \x01(\v2!.plateau.iam.authn.v1.ConsentViewR\aconsent\"e\n" +
+	"\x1cSubmitConsentDecisionRequest\x12#\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\trequestId\x12 \n" +
+	"\bapproved\x18\x02 \x01(\bB\x04\xe2A\x01\x01R\bapproved\"B\n" +
+	"\x1dSubmitConsentDecisionResponse\x12!\n" +
 	"\fredirect_uri\x18\x01 \x01(\tR\vredirectUri*\xde\x02\n" +
 	"\x10AuthnErrorReason\x12\"\n" +
 	"\x1eAUTHN_ERROR_REASON_UNSPECIFIED\x10\x00\x121\n" +
@@ -994,14 +1313,17 @@ const file_plateau_iam_authn_v1_authn_proto_rawDesc = "" +
 	"\x19AUTH_FLOW_STATE_COMPLETED\x10\x03*W\n" +
 	"\x10AuthFactorMethod\x12\"\n" +
 	"\x1eAUTH_FACTOR_METHOD_UNSPECIFIED\x10\x00\x12\x1f\n" +
-	"\x1bAUTH_FACTOR_METHOD_PASSWORD\x10\x012\xd8\b\n" +
+	"\x1bAUTH_FACTOR_METHOD_PASSWORD\x10\x012\xea\v\n" +
 	"\fAuthnService\x12\x91\x01\n" +
 	"\x0eCreateAuthFlow\x12+.plateau.iam.authn.v1.CreateAuthFlowRequest\x1a,.plateau.iam.authn.v1.CreateAuthFlowResponse\"$\xa2\xbb\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/iam/authn/flows\x12\x99\x01\n" +
 	"\vGetAuthFlow\x12(.plateau.iam.authn.v1.GetAuthFlowRequest\x1a).plateau.iam.authn.v1.GetAuthFlowResponse\"5\xdaA\aflow_id\xa2\xbb\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1f\x12\x1d/v1/iam/authn/flows/{flow_id}\x12\xc5\x01\n" +
 	"\x0eSubmitPassword\x12+.plateau.iam.authn.v1.SubmitPasswordRequest\x1a,.plateau.iam.authn.v1.SubmitPasswordResponse\"X\xdaA\x16flow_id,email,password\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x021:\x01*\",/v1/iam/authn/flows/{flow_id}:submitPassword\x12\xe3\x01\n" +
 	"\x16CompleteUpdatePassword\x123.plateau.iam.authn.v1.CompleteUpdatePasswordRequest\x1a4.plateau.iam.authn.v1.CompleteUpdatePasswordResponse\"^\xdaA\x14flow_id,new_password\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x029:\x01*\"4/v1/iam/authn/flows/{flow_id}:completeUpdatePassword\x12\xaa\x01\n" +
 	"\rResetAuthFlow\x12*.plateau.iam.authn.v1.ResetAuthFlowRequest\x1a+.plateau.iam.authn.v1.ResetAuthFlowResponse\"@\xdaA\aflow_id\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/iam/authn/flows/{flow_id}:reset\x12\xae\x01\n" +
-	"\x0eCancelAuthFlow\x12+.plateau.iam.authn.v1.CancelAuthFlowRequest\x1a,.plateau.iam.authn.v1.CancelAuthFlowResponse\"A\xdaA\aflow_id\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x02):\x01*\"$/v1/iam/authn/flows/{flow_id}:cancel\x1a\f\xca\xc1\x18\x02\b\x01\xea\xc7\x18\x02\b\x01BKZIgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1;iamauthnv1b\x06proto3"
+	"\x0eCancelAuthFlow\x12+.plateau.iam.authn.v1.CancelAuthFlowRequest\x1a,.plateau.iam.authn.v1.CancelAuthFlowResponse\"A\xdaA\aflow_id\xa2\xbb\x18\x04\b\x02\x10\x01\x82\xd3\xe4\x93\x02):\x01*\"$/v1/iam/authn/flows/{flow_id}:cancel\x12\xb1\x01\n" +
+	"\x0eGetConsentView\x12+.plateau.iam.authn.v1.GetConsentViewRequest\x1a,.plateau.iam.authn.v1.GetConsentViewResponse\"D\xdaA\n" +
+	"request_id\xa2\xbb\x18\x02\b\x01\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02%\x12#/v1/iam/authn/consents/{request_id}\x12\xdb\x01\n" +
+	"\x15SubmitConsentDecision\x122.plateau.iam.authn.v1.SubmitConsentDecisionRequest\x1a3.plateau.iam.authn.v1.SubmitConsentDecisionResponse\"Y\xdaA\x13request_id,approved\xa2\xbb\x18\x04\b\x02\x10\x01\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02/:\x01*\"*/v1/iam/authn/consents/{request_id}:decide\x1a\f\xca\xc1\x18\x02\b\x01\xea\xc7\x18\x02\b\x01BKZIgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/authn/v1;iamauthnv1b\x06proto3"
 
 var (
 	file_plateau_iam_authn_v1_authn_proto_rawDescOnce sync.Once
@@ -1016,7 +1338,7 @@ func file_plateau_iam_authn_v1_authn_proto_rawDescGZIP() []byte {
 }
 
 var file_plateau_iam_authn_v1_authn_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_plateau_iam_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_plateau_iam_authn_v1_authn_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_plateau_iam_authn_v1_authn_proto_goTypes = []any{
 	(AuthnErrorReason)(0),                  // 0: plateau.iam.authn.v1.AuthnErrorReason
 	(AuthFlowState)(0),                     // 1: plateau.iam.authn.v1.AuthFlowState
@@ -1035,41 +1357,51 @@ var file_plateau_iam_authn_v1_authn_proto_goTypes = []any{
 	(*ResetAuthFlowResponse)(nil),          // 14: plateau.iam.authn.v1.ResetAuthFlowResponse
 	(*CancelAuthFlowRequest)(nil),          // 15: plateau.iam.authn.v1.CancelAuthFlowRequest
 	(*CancelAuthFlowResponse)(nil),         // 16: plateau.iam.authn.v1.CancelAuthFlowResponse
-	(v1.UserRequiredAction)(0),             // 17: plateau.iam.user.v1.UserRequiredAction
-	(*timestamppb.Timestamp)(nil),          // 18: google.protobuf.Timestamp
-	(*v1.User)(nil),                        // 19: plateau.iam.user.v1.User
+	(*ConsentView)(nil),                    // 17: plateau.iam.authn.v1.ConsentView
+	(*GetConsentViewRequest)(nil),          // 18: plateau.iam.authn.v1.GetConsentViewRequest
+	(*GetConsentViewResponse)(nil),         // 19: plateau.iam.authn.v1.GetConsentViewResponse
+	(*SubmitConsentDecisionRequest)(nil),   // 20: plateau.iam.authn.v1.SubmitConsentDecisionRequest
+	(*SubmitConsentDecisionResponse)(nil),  // 21: plateau.iam.authn.v1.SubmitConsentDecisionResponse
+	(v1.UserRequiredAction)(0),             // 22: plateau.iam.user.v1.UserRequiredAction
+	(*timestamppb.Timestamp)(nil),          // 23: google.protobuf.Timestamp
+	(*v1.User)(nil),                        // 24: plateau.iam.user.v1.User
 }
 var file_plateau_iam_authn_v1_authn_proto_depIdxs = []int32{
 	1,  // 0: plateau.iam.authn.v1.AuthFlow.state:type_name -> plateau.iam.authn.v1.AuthFlowState
 	2,  // 1: plateau.iam.authn.v1.AuthFlow.available_methods:type_name -> plateau.iam.authn.v1.AuthFactorMethod
-	17, // 2: plateau.iam.authn.v1.AuthFlow.remaining_required_actions:type_name -> plateau.iam.user.v1.UserRequiredAction
-	17, // 3: plateau.iam.authn.v1.AuthFlow.next_required_action:type_name -> plateau.iam.user.v1.UserRequiredAction
+	22, // 2: plateau.iam.authn.v1.AuthFlow.remaining_required_actions:type_name -> plateau.iam.user.v1.UserRequiredAction
+	22, // 3: plateau.iam.authn.v1.AuthFlow.next_required_action:type_name -> plateau.iam.user.v1.UserRequiredAction
 	3,  // 4: plateau.iam.authn.v1.AuthFlow.oidc:type_name -> plateau.iam.authn.v1.AuthFlowOidcContext
-	18, // 5: plateau.iam.authn.v1.AuthFlow.expires_time:type_name -> google.protobuf.Timestamp
-	18, // 6: plateau.iam.authn.v1.AuthFlow.step_expires_time:type_name -> google.protobuf.Timestamp
-	19, // 7: plateau.iam.authn.v1.AuthFlow.user:type_name -> plateau.iam.user.v1.User
+	23, // 5: plateau.iam.authn.v1.AuthFlow.expires_time:type_name -> google.protobuf.Timestamp
+	23, // 6: plateau.iam.authn.v1.AuthFlow.step_expires_time:type_name -> google.protobuf.Timestamp
+	24, // 7: plateau.iam.authn.v1.AuthFlow.user:type_name -> plateau.iam.user.v1.User
 	4,  // 8: plateau.iam.authn.v1.CreateAuthFlowResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
 	4,  // 9: plateau.iam.authn.v1.GetAuthFlowResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
 	4,  // 10: plateau.iam.authn.v1.SubmitPasswordResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
 	4,  // 11: plateau.iam.authn.v1.CompleteUpdatePasswordResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
 	4,  // 12: plateau.iam.authn.v1.ResetAuthFlowResponse.flow:type_name -> plateau.iam.authn.v1.AuthFlow
-	5,  // 13: plateau.iam.authn.v1.AuthnService.CreateAuthFlow:input_type -> plateau.iam.authn.v1.CreateAuthFlowRequest
-	7,  // 14: plateau.iam.authn.v1.AuthnService.GetAuthFlow:input_type -> plateau.iam.authn.v1.GetAuthFlowRequest
-	9,  // 15: plateau.iam.authn.v1.AuthnService.SubmitPassword:input_type -> plateau.iam.authn.v1.SubmitPasswordRequest
-	11, // 16: plateau.iam.authn.v1.AuthnService.CompleteUpdatePassword:input_type -> plateau.iam.authn.v1.CompleteUpdatePasswordRequest
-	13, // 17: plateau.iam.authn.v1.AuthnService.ResetAuthFlow:input_type -> plateau.iam.authn.v1.ResetAuthFlowRequest
-	15, // 18: plateau.iam.authn.v1.AuthnService.CancelAuthFlow:input_type -> plateau.iam.authn.v1.CancelAuthFlowRequest
-	6,  // 19: plateau.iam.authn.v1.AuthnService.CreateAuthFlow:output_type -> plateau.iam.authn.v1.CreateAuthFlowResponse
-	8,  // 20: plateau.iam.authn.v1.AuthnService.GetAuthFlow:output_type -> plateau.iam.authn.v1.GetAuthFlowResponse
-	10, // 21: plateau.iam.authn.v1.AuthnService.SubmitPassword:output_type -> plateau.iam.authn.v1.SubmitPasswordResponse
-	12, // 22: plateau.iam.authn.v1.AuthnService.CompleteUpdatePassword:output_type -> plateau.iam.authn.v1.CompleteUpdatePasswordResponse
-	14, // 23: plateau.iam.authn.v1.AuthnService.ResetAuthFlow:output_type -> plateau.iam.authn.v1.ResetAuthFlowResponse
-	16, // 24: plateau.iam.authn.v1.AuthnService.CancelAuthFlow:output_type -> plateau.iam.authn.v1.CancelAuthFlowResponse
-	19, // [19:25] is the sub-list for method output_type
-	13, // [13:19] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	17, // 13: plateau.iam.authn.v1.GetConsentViewResponse.consent:type_name -> plateau.iam.authn.v1.ConsentView
+	5,  // 14: plateau.iam.authn.v1.AuthnService.CreateAuthFlow:input_type -> plateau.iam.authn.v1.CreateAuthFlowRequest
+	7,  // 15: plateau.iam.authn.v1.AuthnService.GetAuthFlow:input_type -> plateau.iam.authn.v1.GetAuthFlowRequest
+	9,  // 16: plateau.iam.authn.v1.AuthnService.SubmitPassword:input_type -> plateau.iam.authn.v1.SubmitPasswordRequest
+	11, // 17: plateau.iam.authn.v1.AuthnService.CompleteUpdatePassword:input_type -> plateau.iam.authn.v1.CompleteUpdatePasswordRequest
+	13, // 18: plateau.iam.authn.v1.AuthnService.ResetAuthFlow:input_type -> plateau.iam.authn.v1.ResetAuthFlowRequest
+	15, // 19: plateau.iam.authn.v1.AuthnService.CancelAuthFlow:input_type -> plateau.iam.authn.v1.CancelAuthFlowRequest
+	18, // 20: plateau.iam.authn.v1.AuthnService.GetConsentView:input_type -> plateau.iam.authn.v1.GetConsentViewRequest
+	20, // 21: plateau.iam.authn.v1.AuthnService.SubmitConsentDecision:input_type -> plateau.iam.authn.v1.SubmitConsentDecisionRequest
+	6,  // 22: plateau.iam.authn.v1.AuthnService.CreateAuthFlow:output_type -> plateau.iam.authn.v1.CreateAuthFlowResponse
+	8,  // 23: plateau.iam.authn.v1.AuthnService.GetAuthFlow:output_type -> plateau.iam.authn.v1.GetAuthFlowResponse
+	10, // 24: plateau.iam.authn.v1.AuthnService.SubmitPassword:output_type -> plateau.iam.authn.v1.SubmitPasswordResponse
+	12, // 25: plateau.iam.authn.v1.AuthnService.CompleteUpdatePassword:output_type -> plateau.iam.authn.v1.CompleteUpdatePasswordResponse
+	14, // 26: plateau.iam.authn.v1.AuthnService.ResetAuthFlow:output_type -> plateau.iam.authn.v1.ResetAuthFlowResponse
+	16, // 27: plateau.iam.authn.v1.AuthnService.CancelAuthFlow:output_type -> plateau.iam.authn.v1.CancelAuthFlowResponse
+	19, // 28: plateau.iam.authn.v1.AuthnService.GetConsentView:output_type -> plateau.iam.authn.v1.GetConsentViewResponse
+	21, // 29: plateau.iam.authn.v1.AuthnService.SubmitConsentDecision:output_type -> plateau.iam.authn.v1.SubmitConsentDecisionResponse
+	22, // [22:30] is the sub-list for method output_type
+	14, // [14:22] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_plateau_iam_authn_v1_authn_proto_init() }
@@ -1083,7 +1415,7 @@ func file_plateau_iam_authn_v1_authn_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plateau_iam_authn_v1_authn_proto_rawDesc), len(file_plateau_iam_authn_v1_authn_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   14,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -28,6 +28,12 @@ export type AuthFlowOidcContext = {
   //
   // Behaviors: OUTPUT_ONLY
   clientId?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  clientName?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  logoUri?: string;
 };
 
 // AuthFlow is the client-facing snapshot of a browser-bound authentication flow.
@@ -234,6 +240,55 @@ export type CancelAuthFlowResponse = {
   redirectUri?: string;
 };
 
+// ConsentView describes the application and scopes awaiting user approval.
+export type ConsentView = {
+  //
+  // Behaviors: OUTPUT_ONLY
+  clientId?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  clientName?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  grantedScopes?: string[];
+  //
+  // Behaviors: OUTPUT_ONLY
+  logoUri?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  requestId?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  requestedScopes?: string[];
+  //
+  // Behaviors: OUTPUT_ONLY
+  userEmail?: string;
+};
+
+export type GetConsentViewRequest = {
+  //
+  // Behaviors: REQUIRED
+  requestId?: string;
+};
+
+export type GetConsentViewResponse = {
+  consent?: ConsentView;
+};
+
+export type SubmitConsentDecisionRequest = {
+  //
+  // Behaviors: OPTIONAL
+  approved?: boolean;
+  //
+  // Behaviors: REQUIRED
+  requestId?: string;
+};
+
+export type SubmitConsentDecisionResponse = {
+  // Continuation target (/authorize/callback?id=...) on approval or external RFC 6749/9207 access_denied URI on denial.
+  redirectUri?: string;
+};
+
 // AuthnService owns server-side browser authentication flows.
 export interface AuthnService {
   // CreateAuthFlow initializes one browser-bound authentication flow or short-circuits when already signed in.
@@ -260,6 +315,14 @@ export interface AuthnService {
   CancelAuthFlow(
     request: CancelAuthFlowRequest,
   ): Promise<CancelAuthFlowResponse>;
+  // GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+  GetConsentView(
+    request: GetConsentViewRequest,
+  ): Promise<GetConsentViewResponse>;
+  // SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+  SubmitConsentDecision(
+    request: SubmitConsentDecisionRequest,
+  ): Promise<SubmitConsentDecisionResponse>;
 }
 
 export function createAuthnServiceClient(
@@ -336,6 +399,28 @@ export function createAuthnServiceClient(
       return transport.unary<CancelAuthFlowResponse>(path, 'POST', body, {
         service: 'AuthnService',
         method: 'CancelAuthFlow',
+      });
+    },
+    GetConsentView(request) {
+      if (request.requestId === undefined || request.requestId === null || request.requestId === '') {
+        throw new Error('missing required field request.request_id');
+      }
+      const path = `v1/iam/authn/consents/${encodePathSegment(request.requestId)}`;
+      const body = null;
+      return transport.unary<GetConsentViewResponse>(path, 'GET', body, {
+        service: 'AuthnService',
+        method: 'GetConsentView',
+      });
+    },
+    SubmitConsentDecision(request) {
+      if (request.requestId === undefined || request.requestId === null || request.requestId === '') {
+        throw new Error('missing required field request.request_id');
+      }
+      const path = `v1/iam/authn/consents/${encodePathSegment(request.requestId)}:decide`;
+      const body = JSON.stringify(request);
+      return transport.unary<SubmitConsentDecisionResponse>(path, 'POST', body, {
+        service: 'AuthnService',
+        method: 'SubmitConsentDecision',
       });
     },
   };

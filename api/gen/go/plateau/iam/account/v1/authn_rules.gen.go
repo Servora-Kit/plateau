@@ -21,6 +21,9 @@ var _authnRules = map[string]*v1.AuthnRule{
 	"/plateau.iam.account.v1.AccountService/GetProfile": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
+	"/plateau.iam.account.v1.AccountService/ListAuthorizedApps": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
 	"/plateau.iam.account.v1.AccountService/Register": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
 	},
@@ -29,6 +32,9 @@ var _authnRules = map[string]*v1.AuthnRule{
 	},
 	"/plateau.iam.account.v1.AccountService/ResendVerificationEmail": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.account.v1.AccountService/RevokeAuthorizedApp": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
 	"/plateau.iam.account.v1.AccountService/UpdateProfile": {
 		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,

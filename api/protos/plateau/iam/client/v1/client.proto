@@ -1,0 +1,263 @@
+syntax = "proto3";
+
+package plateau.iam.client.v1;
+
+import "buf/validate/validate.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "plateau/security/audit/v1/annotations.proto";
+import "plateau/security/authn/v1/annotations.proto";
+import "plateau/security/authz/v1/annotations.proto";
+import "servora/errors/v1/errors.proto";
+import "servora/redact/v3/redact.proto";
+
+option go_package = "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/client/v1;iamclientv1";
+
+// OAuthClientService exposes administrator-facing OAuth 2.0 / OIDC client management over gRPC.
+service OAuthClientService {
+  option (plateau.security.authn.v1.service_default) = {mode: AUTHN_MODE_REQUIRED};
+  option (plateau.security.authz.v1.service_default) = {
+    mode: AUTHZ_MODE_REQUIRED
+    action: "manage_clients"
+    resource_type: "iam"
+    resource_id: "global"
+  };
+  option (plateau.security.audit.v1.service_default) = {
+    mode: AUDIT_MODE_ENABLED
+    category: AUDIT_CATEGORY_RESOURCE
+  };
+
+  // RegisterOAuthClient creates a dynamic OAuth client and returns any generated initial secret once.
+  rpc RegisterOAuthClient(RegisterOAuthClientRequest) returns (RegisterOAuthClientResponse) {
+    option (google.api.method_signature) = "oauth_client,oauth_client_id";
+  }
+
+  // GetOAuthClient returns one OAuth client by canonical resource name.
+  rpc GetOAuthClient(GetOAuthClientRequest) returns (OAuthClient) {
+    option (google.api.method_signature) = "name";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
+  }
+
+  // ListOAuthClients returns a page of static and dynamic OAuth clients.
+  rpc ListOAuthClients(ListOAuthClientsRequest) returns (ListOAuthClientsResponse) {
+    option (google.api.method_signature) = "page_size,page_token,filter,order_by";
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
+  }
+
+  // UpdateOAuthClient updates mutable metadata and protocol fields of a dynamic OAuth client.
+  rpc UpdateOAuthClient(UpdateOAuthClientRequest) returns (OAuthClient) {
+    option (google.api.method_signature) = "oauth_client,update_mask";
+  }
+
+  // DisableOAuthClient disables a dynamic OAuth client and revokes its active tokens and pending flows.
+  rpc DisableOAuthClient(DisableOAuthClientRequest) returns (OAuthClient) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // EnableOAuthClient re-enables a disabled dynamic OAuth client without restoring revoked tokens.
+  rpc EnableOAuthClient(EnableOAuthClientRequest) returns (OAuthClient) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // DeleteOAuthClient permanently deletes a dynamic OAuth client and revokes all associated tokens and consents.
+  rpc DeleteOAuthClient(DeleteOAuthClientRequest) returns (google.protobuf.Empty) {
+    option (google.api.method_signature) = "name";
+  }
+
+  // CreateOAuthClientSecret generates a new CSPRNG secret for a confidential dynamic client and returns the plaintext once.
+  rpc CreateOAuthClientSecret(CreateOAuthClientSecretRequest) returns (CreateOAuthClientSecretResponse) {
+    option (google.api.method_signature) = "name,secret_name";
+  }
+
+  // DeleteOAuthClientSecret removes one secret from a confidential dynamic client while preserving at least one active secret.
+  rpc DeleteOAuthClientSecret(DeleteOAuthClientSecretRequest) returns (google.protobuf.Empty) {
+    option (google.api.method_signature) = "name,secret_id";
+  }
+}
+
+// ClientErrorReason contains administrator-visible OAuth client management failures.
+enum ClientErrorReason {
+  option (servora.errors.v1.default_code) = 500;
+
+  CLIENT_ERROR_REASON_UNSPECIFIED = 0;
+  CLIENT_ERROR_REASON_NOT_FOUND = 1 [(servora.errors.v1.code) = 404];
+  CLIENT_ERROR_REASON_ALREADY_EXISTS = 2 [(servora.errors.v1.code) = 409];
+  CLIENT_ERROR_REASON_STATIC_CLIENT_IMMUTABLE = 3 [(servora.errors.v1.code) = 403];
+  CLIENT_ERROR_REASON_INVALID_CONFIG = 4 [(servora.errors.v1.code) = 400];
+  CLIENT_ERROR_REASON_INVALID_STATE = 5 [(servora.errors.v1.code) = 409];
+  CLIENT_ERROR_REASON_ETAG_MISMATCH = 6 [(servora.errors.v1.code) = 409];
+  CLIENT_ERROR_REASON_SECRET_LIMIT_EXCEEDED = 7 [(servora.errors.v1.code) = 409];
+  CLIENT_ERROR_REASON_LAST_ACTIVE_SECRET = 8 [(servora.errors.v1.code) = 409];
+}
+
+// ClientSource distinguishes YAML-reconciled bootstrap clients from API-managed dynamic clients.
+enum ClientSource {
+  CLIENT_SOURCE_UNSPECIFIED = 0;
+  CLIENT_SOURCE_STATIC = 1;
+  CLIENT_SOURCE_DYNAMIC = 2;
+}
+
+// ClientStatus describes the operational state of an OAuth client.
+enum ClientStatus {
+  CLIENT_STATUS_UNSPECIFIED = 0;
+  CLIENT_STATUS_ACTIVE = 1;
+  CLIENT_STATUS_DISABLED = 2;
+}
+
+// ApplicationType classifies the OAuth client runtime architecture.
+enum ApplicationType {
+  APPLICATION_TYPE_UNSPECIFIED = 0;
+  APPLICATION_TYPE_WEB = 1;
+  APPLICATION_TYPE_USER_AGENT = 2;
+  APPLICATION_TYPE_NATIVE = 3;
+}
+
+// TokenEndpointAuthMethod defines how the client authenticates at token, introspection, and revocation endpoints.
+enum TokenEndpointAuthMethod {
+  TOKEN_ENDPOINT_AUTH_METHOD_UNSPECIFIED = 0;
+  TOKEN_ENDPOINT_AUTH_METHOD_CLIENT_SECRET_BASIC = 1;
+  TOKEN_ENDPOINT_AUTH_METHOD_CLIENT_SECRET_POST = 2;
+  TOKEN_ENDPOINT_AUTH_METHOD_NONE = 3;
+}
+
+// OAuthClientSecret exposes non-sensitive metadata for one client secret.
+message OAuthClientSecret {
+  string secret_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string name = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string secret_prefix = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp expires_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp last_used_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// OAuthClient represents a registered OAuth 2.0 / OpenID Connect client application.
+message OAuthClient {
+  option (google.api.resource) = {
+    type: "iam.plateau.dev/OAuthClient"
+    pattern: "oauthClients/{oauth_client}"
+    singular: "oauth_client"
+    plural: "OAuthClients"
+  };
+
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+  string client_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  ClientSource source = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  ClientStatus status = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  optional string display_name = 5 [(google.api.field_behavior) = REQUIRED];
+  optional string description = 6 [(google.api.field_behavior) = OPTIONAL];
+  optional string logo_uri = 7 [(google.api.field_behavior) = OPTIONAL];
+  optional ApplicationType application_type = 8 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IMMUTABLE
+  ];
+  optional TokenEndpointAuthMethod token_endpoint_auth_method = 9 [(google.api.field_behavior) = REQUIRED];
+  repeated string redirect_uris = 10 [(google.api.field_behavior) = OPTIONAL];
+  repeated string post_logout_redirect_uris = 11 [(google.api.field_behavior) = OPTIONAL];
+  repeated string allowed_grant_types = 12 [(google.api.field_behavior) = REQUIRED];
+  repeated string allowed_response_types = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated string allowed_scopes = 14 [(google.api.field_behavior) = OPTIONAL];
+  repeated string audiences = 15 [(google.api.field_behavior) = OPTIONAL];
+  optional bool trusted = 16 [(google.api.field_behavior) = OPTIONAL];
+  repeated OAuthClientSecret secrets = 17 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 18 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 19 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string etag = 20 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message RegisterOAuthClientRequest {
+  OAuthClient oauth_client = 1 [(google.api.field_behavior) = REQUIRED];
+  // Optional readable slug (1-63 lowercase alphanumeric or hyphen chars); auto-generated when omitted.
+  string oauth_client_id = 2 [
+    (google.api.field_behavior) = OPTIONAL,
+    (buf.validate.field).string.pattern = "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$",
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE
+  ];
+  // Optional display label for the initial secret when creating a confidential client.
+  string initial_secret_name = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message RegisterOAuthClientResponse {
+  OAuthClient client = 1;
+  // Populated once when a confidential client is created; empty for public clients.
+  string client_secret = 2 [(servora.redact.v3.value).string = ""];
+}
+
+message GetOAuthClientRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/OAuthClient"}
+  ];
+}
+
+message ListOAuthClientsRequest {
+  int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
+  string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+  string filter = 3 [(google.api.field_behavior) = OPTIONAL];
+  string order_by = 4 [(google.api.field_behavior) = OPTIONAL];
+  bool include_total = 5 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message ListOAuthClientsResponse {
+  repeated OAuthClient clients = 1;
+  string next_page_token = 2;
+  optional int64 total_size = 3;
+}
+
+message UpdateOAuthClientRequest {
+  OAuthClient oauth_client = 1 [(google.api.field_behavior) = REQUIRED];
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message DisableOAuthClientRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/OAuthClient"}
+  ];
+  string etag = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message EnableOAuthClientRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/OAuthClient"}
+  ];
+  string etag = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message DeleteOAuthClientRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/OAuthClient"}
+  ];
+  string etag = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message CreateOAuthClientSecretRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/OAuthClient"}
+  ];
+  string secret_name = 2 [(google.api.field_behavior) = OPTIONAL];
+  google.protobuf.Timestamp expires_time = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message CreateOAuthClientSecretResponse {
+  OAuthClientSecret secret = 1;
+  // Returned only once at creation time; never persisted in plaintext.
+  string secret_value = 2 [(servora.redact.v3.value).string = ""];
+}
+
+message DeleteOAuthClientSecretRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "iam.plateau.dev/OAuthClient"}
+  ];
+  string secret_id = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string.min_len = 1
+  ];
+}

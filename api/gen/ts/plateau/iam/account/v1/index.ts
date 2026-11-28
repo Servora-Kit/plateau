@@ -2,6 +2,7 @@
 /* eslint-disable no-use-before-define, @typescript-eslint/no-unused-vars, prettier/prettier */
 
 import type { ClientTransport } from '@servora/proto-utils/transport';
+import { encodePathSegment } from '@servora/proto-utils/transport';
 
 // AccountErrorReason contains account lifecycle and recovery failures.
 export type AccountErrorReason =
@@ -244,6 +245,47 @@ export type DeleteAccountRequest = {
 export type DeleteAccountResponse = {
 };
 
+// AuthorizedApp summarizes a third-party OAuth client granted access by the user.
+export type AuthorizedApp = {
+  //
+  // Behaviors: OUTPUT_ONLY
+  clientId?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  clientName?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  createTime?: wellKnownTimestamp;
+  //
+  // Behaviors: OUTPUT_ONLY
+  description?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  grantedScopes?: string[];
+  //
+  // Behaviors: OUTPUT_ONLY
+  logoUri?: string;
+  //
+  // Behaviors: OUTPUT_ONLY
+  updateTime?: wellKnownTimestamp;
+};
+
+export type ListAuthorizedAppsRequest = {
+};
+
+export type ListAuthorizedAppsResponse = {
+  applications?: AuthorizedApp[];
+};
+
+export type RevokeAuthorizedAppRequest = {
+  //
+  // Behaviors: REQUIRED
+  clientId?: string;
+};
+
+export type RevokeAuthorizedAppResponse = {
+};
+
 // AccountService owns self-service registration, profile and recovery flows.
 export interface AccountService {
   // Register creates a pending user and sends an email-verification message.
@@ -282,6 +324,14 @@ export interface AccountService {
   DeleteAccount(
     request: DeleteAccountRequest,
   ): Promise<DeleteAccountResponse>;
+  // ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+  ListAuthorizedApps(
+    request: ListAuthorizedAppsRequest,
+  ): Promise<ListAuthorizedAppsResponse>;
+  // RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+  RevokeAuthorizedApp(
+    request: RevokeAuthorizedAppRequest,
+  ): Promise<RevokeAuthorizedAppResponse>;
 }
 
 export function createAccountServiceClient(
@@ -410,6 +460,25 @@ export function createAccountServiceClient(
       return transport.unary<DeleteAccountResponse>(path, 'POST', body, {
         service: 'AccountService',
         method: 'DeleteAccount',
+      });
+    },
+    ListAuthorizedApps(_request) {
+      const path = `v1/iam/account/applications`;
+      const body = null;
+      return transport.unary<ListAuthorizedAppsResponse>(path, 'GET', body, {
+        service: 'AccountService',
+        method: 'ListAuthorizedApps',
+      });
+    },
+    RevokeAuthorizedApp(request) {
+      if (request.clientId === undefined || request.clientId === null || request.clientId === '') {
+        throw new Error('missing required field request.client_id');
+      }
+      const path = `v1/iam/account/applications/${encodePathSegment(request.clientId)}:revoke`;
+      const body = JSON.stringify(request);
+      return transport.unary<RevokeAuthorizedAppResponse>(path, 'POST', body, {
+        service: 'AccountService',
+        method: 'RevokeAuthorizedApp',
       });
     },
   };

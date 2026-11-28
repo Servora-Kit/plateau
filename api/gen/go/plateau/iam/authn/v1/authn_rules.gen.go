@@ -21,8 +21,14 @@ var _authnRules = map[string]*v1.AuthnRule{
 	"/plateau.iam.authn.v1.AuthnService/GetAuthFlow": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
 	},
+	"/plateau.iam.authn.v1.AuthnService/GetConsentView": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
+	},
 	"/plateau.iam.authn.v1.AuthnService/ResetAuthFlow": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,
+	},
+	"/plateau.iam.authn.v1.AuthnService/SubmitConsentDecision": {
+		Mode: v1.AuthnMode_AUTHN_MODE_REQUIRED,
 	},
 	"/plateau.iam.authn.v1.AuthnService/SubmitPassword": {
 		Mode: v1.AuthnMode_AUTHN_MODE_PUBLIC,

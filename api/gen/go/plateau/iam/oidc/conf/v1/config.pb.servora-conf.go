@@ -19,9 +19,6 @@ func (m *OAuthClient) Apply() error {
 	if m.ClientId == nil {
 		return fmt.Errorf("client_id is required")
 	}
-	if m.ClientSecret == nil {
-		return fmt.Errorf("client_secret is required")
-	}
 	if err := protovalidate.Validate(m, protovalidate.WithFilter(protovalidate.FilterFunc(func(current protoreflect.Message, _ protoreflect.Descriptor) bool {
 		return current.Interface() == m
 	}))); err != nil {

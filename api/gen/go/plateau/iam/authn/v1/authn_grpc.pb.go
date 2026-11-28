@@ -25,6 +25,8 @@ const (
 	AuthnService_CompleteUpdatePassword_FullMethodName = "/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword"
 	AuthnService_ResetAuthFlow_FullMethodName          = "/plateau.iam.authn.v1.AuthnService/ResetAuthFlow"
 	AuthnService_CancelAuthFlow_FullMethodName         = "/plateau.iam.authn.v1.AuthnService/CancelAuthFlow"
+	AuthnService_GetConsentView_FullMethodName         = "/plateau.iam.authn.v1.AuthnService/GetConsentView"
+	AuthnService_SubmitConsentDecision_FullMethodName  = "/plateau.iam.authn.v1.AuthnService/SubmitConsentDecision"
 )
 
 // AuthnServiceClient is the client API for AuthnService service.
@@ -45,6 +47,10 @@ type AuthnServiceClient interface {
 	ResetAuthFlow(ctx context.Context, in *ResetAuthFlowRequest, opts ...grpc.CallOption) (*ResetAuthFlowResponse, error)
 	// CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
 	CancelAuthFlow(ctx context.Context, in *CancelAuthFlowRequest, opts ...grpc.CallOption) (*CancelAuthFlowResponse, error)
+	// GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+	GetConsentView(ctx context.Context, in *GetConsentViewRequest, opts ...grpc.CallOption) (*GetConsentViewResponse, error)
+	// SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+	SubmitConsentDecision(ctx context.Context, in *SubmitConsentDecisionRequest, opts ...grpc.CallOption) (*SubmitConsentDecisionResponse, error)
 }
 
 type authnServiceClient struct {
@@ -115,6 +121,26 @@ func (c *authnServiceClient) CancelAuthFlow(ctx context.Context, in *CancelAuthF
 	return out, nil
 }
 
+func (c *authnServiceClient) GetConsentView(ctx context.Context, in *GetConsentViewRequest, opts ...grpc.CallOption) (*GetConsentViewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetConsentViewResponse)
+	err := c.cc.Invoke(ctx, AuthnService_GetConsentView_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authnServiceClient) SubmitConsentDecision(ctx context.Context, in *SubmitConsentDecisionRequest, opts ...grpc.CallOption) (*SubmitConsentDecisionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubmitConsentDecisionResponse)
+	err := c.cc.Invoke(ctx, AuthnService_SubmitConsentDecision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthnServiceServer is the server API for AuthnService service.
 // All implementations must embed UnimplementedAuthnServiceServer
 // for forward compatibility.
@@ -133,6 +159,10 @@ type AuthnServiceServer interface {
 	ResetAuthFlow(context.Context, *ResetAuthFlowRequest) (*ResetAuthFlowResponse, error)
 	// CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
 	CancelAuthFlow(context.Context, *CancelAuthFlowRequest) (*CancelAuthFlowResponse, error)
+	// GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+	GetConsentView(context.Context, *GetConsentViewRequest) (*GetConsentViewResponse, error)
+	// SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+	SubmitConsentDecision(context.Context, *SubmitConsentDecisionRequest) (*SubmitConsentDecisionResponse, error)
 	mustEmbedUnimplementedAuthnServiceServer()
 }
 
@@ -160,6 +190,12 @@ func (UnimplementedAuthnServiceServer) ResetAuthFlow(context.Context, *ResetAuth
 }
 func (UnimplementedAuthnServiceServer) CancelAuthFlow(context.Context, *CancelAuthFlowRequest) (*CancelAuthFlowResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CancelAuthFlow not implemented")
+}
+func (UnimplementedAuthnServiceServer) GetConsentView(context.Context, *GetConsentViewRequest) (*GetConsentViewResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetConsentView not implemented")
+}
+func (UnimplementedAuthnServiceServer) SubmitConsentDecision(context.Context, *SubmitConsentDecisionRequest) (*SubmitConsentDecisionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SubmitConsentDecision not implemented")
 }
 func (UnimplementedAuthnServiceServer) mustEmbedUnimplementedAuthnServiceServer() {}
 func (UnimplementedAuthnServiceServer) testEmbeddedByValue()                      {}
@@ -290,6 +326,42 @@ func _AuthnService_CancelAuthFlow_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthnService_GetConsentView_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConsentViewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).GetConsentView(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_GetConsentView_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).GetConsentView(ctx, req.(*GetConsentViewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthnService_SubmitConsentDecision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitConsentDecisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthnServiceServer).SubmitConsentDecision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthnService_SubmitConsentDecision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthnServiceServer).SubmitConsentDecision(ctx, req.(*SubmitConsentDecisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthnService_ServiceDesc is the grpc.ServiceDesc for AuthnService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -320,6 +392,14 @@ var AuthnService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelAuthFlow",
 			Handler:    _AuthnService_CancelAuthFlow_Handler,
+		},
+		{
+			MethodName: "GetConsentView",
+			Handler:    _AuthnService_GetConsentView_Handler,
+		},
+		{
+			MethodName: "SubmitConsentDecision",
+			Handler:    _AuthnService_SubmitConsentDecision_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

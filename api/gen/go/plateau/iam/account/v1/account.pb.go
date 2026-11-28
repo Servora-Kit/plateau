@@ -18,6 +18,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -913,11 +914,264 @@ func (*DeleteAccountResponse) Descriptor() ([]byte, []int) {
 	return file_plateau_iam_account_v1_account_proto_rawDescGZIP(), []int{17}
 }
 
+// AuthorizedApp summarizes a third-party OAuth client granted access by the user.
+type AuthorizedApp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientName    string                 `protobuf:"bytes,2,opt,name=client_name,json=clientName,proto3" json:"client_name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	LogoUri       string                 `protobuf:"bytes,4,opt,name=logo_uri,json=logoUri,proto3" json:"logo_uri,omitempty"`
+	GrantedScopes []string               `protobuf:"bytes,5,rep,name=granted_scopes,json=grantedScopes,proto3" json:"granted_scopes,omitempty"`
+	CreateTime    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	UpdateTime    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthorizedApp) Reset() {
+	*x = AuthorizedApp{}
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthorizedApp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthorizedApp) ProtoMessage() {}
+
+func (x *AuthorizedApp) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthorizedApp.ProtoReflect.Descriptor instead.
+func (*AuthorizedApp) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_account_v1_account_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *AuthorizedApp) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *AuthorizedApp) GetClientName() string {
+	if x != nil {
+		return x.ClientName
+	}
+	return ""
+}
+
+func (x *AuthorizedApp) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *AuthorizedApp) GetLogoUri() string {
+	if x != nil {
+		return x.LogoUri
+	}
+	return ""
+}
+
+func (x *AuthorizedApp) GetGrantedScopes() []string {
+	if x != nil {
+		return x.GrantedScopes
+	}
+	return nil
+}
+
+func (x *AuthorizedApp) GetCreateTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreateTime
+	}
+	return nil
+}
+
+func (x *AuthorizedApp) GetUpdateTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdateTime
+	}
+	return nil
+}
+
+type ListAuthorizedAppsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAuthorizedAppsRequest) Reset() {
+	*x = ListAuthorizedAppsRequest{}
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAuthorizedAppsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAuthorizedAppsRequest) ProtoMessage() {}
+
+func (x *ListAuthorizedAppsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAuthorizedAppsRequest.ProtoReflect.Descriptor instead.
+func (*ListAuthorizedAppsRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_account_v1_account_proto_rawDescGZIP(), []int{19}
+}
+
+type ListAuthorizedAppsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Applications  []*AuthorizedApp       `protobuf:"bytes,1,rep,name=applications,proto3" json:"applications,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAuthorizedAppsResponse) Reset() {
+	*x = ListAuthorizedAppsResponse{}
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAuthorizedAppsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAuthorizedAppsResponse) ProtoMessage() {}
+
+func (x *ListAuthorizedAppsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAuthorizedAppsResponse.ProtoReflect.Descriptor instead.
+func (*ListAuthorizedAppsResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_account_v1_account_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListAuthorizedAppsResponse) GetApplications() []*AuthorizedApp {
+	if x != nil {
+		return x.Applications
+	}
+	return nil
+}
+
+type RevokeAuthorizedAppRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeAuthorizedAppRequest) Reset() {
+	*x = RevokeAuthorizedAppRequest{}
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeAuthorizedAppRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeAuthorizedAppRequest) ProtoMessage() {}
+
+func (x *RevokeAuthorizedAppRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeAuthorizedAppRequest.ProtoReflect.Descriptor instead.
+func (*RevokeAuthorizedAppRequest) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_account_v1_account_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *RevokeAuthorizedAppRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+type RevokeAuthorizedAppResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeAuthorizedAppResponse) Reset() {
+	*x = RevokeAuthorizedAppResponse{}
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeAuthorizedAppResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeAuthorizedAppResponse) ProtoMessage() {}
+
+func (x *RevokeAuthorizedAppResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plateau_iam_account_v1_account_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeAuthorizedAppResponse.ProtoReflect.Descriptor instead.
+func (*RevokeAuthorizedAppResponse) Descriptor() ([]byte, []int) {
+	return file_plateau_iam_account_v1_account_proto_rawDescGZIP(), []int{22}
+}
+
 var File_plateau_iam_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_plateau_iam_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"$plateau/iam/account/v1/account.proto\x12\x16plateau.iam.account.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1eplateau/iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xca\x01\n" +
+	"$plateau/iam/account/v1/account.proto\x12\x16plateau.iam.account.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eplateau/iam/user/v1/user.proto\x1a+plateau/security/audit/v1/annotations.proto\x1a+plateau/security/authn/v1/annotations.proto\x1a+plateau/security/authz/v1/annotations.proto\x1a\x1eservora/errors/v1/errors.proto\x1a\x1eservora/redact/v3/redact.proto\"\xca\x01\n" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\x05email\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x05email\x120\n" +
 	"\bpassword\x18\x02 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\bpassword\x12@\n" +
@@ -961,7 +1215,24 @@ const file_plateau_iam_account_v1_account_proto_rawDesc = "" +
 	"\x1cConfirmPasswordResetResponse\"W\n" +
 	"\x14DeleteAccountRequest\x12?\n" +
 	"\x10current_password\x18\x01 \x01(\tB\x14\xe2A\x01\x02\xbaH\ar\x05\x10\b\x18\x80\x01ڶ\x1a\x02z\x00R\x0fcurrentPassword\"\x17\n" +
-	"\x15DeleteAccountResponse*\x9a\x03\n" +
+	"\x15DeleteAccountResponse\"\xd5\x02\n" +
+	"\rAuthorizedApp\x12!\n" +
+	"\tclient_id\x18\x01 \x01(\tB\x04\xe2A\x01\x03R\bclientId\x12%\n" +
+	"\vclient_name\x18\x02 \x01(\tB\x04\xe2A\x01\x03R\n" +
+	"clientName\x12&\n" +
+	"\vdescription\x18\x03 \x01(\tB\x04\xe2A\x01\x03R\vdescription\x12\x1f\n" +
+	"\blogo_uri\x18\x04 \x01(\tB\x04\xe2A\x01\x03R\alogoUri\x12+\n" +
+	"\x0egranted_scopes\x18\x05 \x03(\tB\x04\xe2A\x01\x03R\rgrantedScopes\x12A\n" +
+	"\vcreate_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\n" +
+	"createTime\x12A\n" +
+	"\vupdate_time\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x04\xe2A\x01\x03R\n" +
+	"updateTime\"\x1b\n" +
+	"\x19ListAuthorizedAppsRequest\"g\n" +
+	"\x1aListAuthorizedAppsResponse\x12I\n" +
+	"\fapplications\x18\x01 \x03(\v2%.plateau.iam.account.v1.AuthorizedAppR\fapplications\"F\n" +
+	"\x1aRevokeAuthorizedAppRequest\x12(\n" +
+	"\tclient_id\x18\x01 \x01(\tB\v\xe2A\x01\x02\xbaH\x04r\x02\x10\x01R\bclientId\"\x1d\n" +
+	"\x1bRevokeAuthorizedAppResponse*\x9a\x03\n" +
 	"\x12AccountErrorReason\x12$\n" +
 	" ACCOUNT_ERROR_REASON_UNSPECIFIED\x10\x00\x12-\n" +
 	"\"ACCOUNT_ERROR_REASON_INVALID_TOKEN\x10\x01\x1a\x05\xa8\xd4\x18\x90\x03\x12-\n" +
@@ -970,7 +1241,7 @@ const file_plateau_iam_account_v1_account_proto_rawDesc = "" +
 	"-ACCOUNT_ERROR_REASON_EMAIL_ALREADY_REGISTERED\x10\x04\x1a\x05\xa8\xd4\x18\x99\x03\x12-\n" +
 	"\"ACCOUNT_ERROR_REASON_USER_DISABLED\x10\x05\x1a\x05\xa8\xd4\x18\x93\x03\x12/\n" +
 	"$ACCOUNT_ERROR_REASON_UNAUTHENTICATED\x10\x06\x1a\x05\xa8\xd4\x18\x91\x03\x12-\n" +
-	"\"ACCOUNT_ERROR_REASON_INVALID_STATE\x10\a\x1a\x05\xa8\xd4\x18\x99\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xb3\r\n" +
+	"\"ACCOUNT_ERROR_REASON_INVALID_STATE\x10\a\x1a\x05\xa8\xd4\x18\x99\x03\x1a\x05\xa0\xd4\x18\xf4\x032\xba\x10\n" +
 	"\x0eAccountService\x12\xb3\x01\n" +
 	"\bRegister\x12'.plateau.iam.account.v1.RegisterRequest\x1a(.plateau.iam.account.v1.RegisterResponse\"T\xdaA email,password,profile,cap_token\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/iam/account/register\x12\x9d\x01\n" +
 	"\vVerifyEmail\x12*.plateau.iam.account.v1.VerifyEmailRequest\x1a+.plateau.iam.account.v1.VerifyEmailResponse\"5\xdaA\x05token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/iam/account/verify-email\x12\xd2\x01\n" +
@@ -981,7 +1252,9 @@ const file_plateau_iam_account_v1_account_proto_rawDesc = "" +
 	"\x0eChangePassword\x12-.plateau.iam.account.v1.ChangePasswordRequest\x1a..plateau.iam.account.v1.ChangePasswordResponse\"P\xdaA\x1dcurrent_password,new_password\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/iam/account/change-password\x12\xcc\x01\n" +
 	"\x14RequestPasswordReset\x123.plateau.iam.account.v1.RequestPasswordResetRequest\x1a4.plateau.iam.account.v1.RequestPasswordResetResponse\"I\xdaA\x0femail,cap_token\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/request\x12\xcf\x01\n" +
 	"\x14ConfirmPasswordReset\x123.plateau.iam.account.v1.ConfirmPasswordResetRequest\x1a4.plateau.iam.account.v1.ConfirmPasswordResetResponse\"L\xdaA\x12token,new_password\xe2\xc7\x18\x02\b\x01\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/iam/account/password-reset/confirm\x12\xb0\x01\n" +
-	"\rDeleteAccount\x12,.plateau.iam.account.v1.DeleteAccountRequest\x1a-.plateau.iam.account.v1.DeleteAccountResponse\"B\xdaA\x10current_password\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/iam/account/delete\x1a\x0e\xaa\xbb\x18\x04\b\x02\x10\x01\xca\xc1\x18\x02\b\x01BOZMgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1;iamaccountv1b\x06proto3"
+	"\rDeleteAccount\x12,.plateau.iam.account.v1.DeleteAccountRequest\x1a-.plateau.iam.account.v1.DeleteAccountResponse\"B\xdaA\x10current_password\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/iam/account/delete\x12\xad\x01\n" +
+	"\x12ListAuthorizedApps\x121.plateau.iam.account.v1.ListAuthorizedAppsRequest\x1a2.plateau.iam.account.v1.ListAuthorizedAppsResponse\"0\xa2\xbb\x18\x02\b\x01\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/iam/account/applications\x12\xd4\x01\n" +
+	"\x13RevokeAuthorizedApp\x122.plateau.iam.account.v1.RevokeAuthorizedAppRequest\x1a3.plateau.iam.account.v1.RevokeAuthorizedAppResponse\"T\xdaA\tclient_id\xa2\xbb\x18\x04\b\x02\x10\x02\xe2\xc7\x18\x02\b\x02\x82\xd3\xe4\x93\x024:\x01*\"//v1/iam/account/applications/{client_id}:revoke\x1a\x0e\xaa\xbb\x18\x04\b\x02\x10\x01\xca\xc1\x18\x02\b\x01BOZMgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/account/v1;iamaccountv1b\x06proto3"
 
 var (
 	file_plateau_iam_account_v1_account_proto_rawDescOnce sync.Once
@@ -996,7 +1269,7 @@ func file_plateau_iam_account_v1_account_proto_rawDescGZIP() []byte {
 }
 
 var file_plateau_iam_account_v1_account_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_plateau_iam_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_plateau_iam_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_plateau_iam_account_v1_account_proto_goTypes = []any{
 	(AccountErrorReason)(0),                 // 0: plateau.iam.account.v1.AccountErrorReason
 	(*RegisterRequest)(nil),                 // 1: plateau.iam.account.v1.RegisterRequest
@@ -1017,41 +1290,54 @@ var file_plateau_iam_account_v1_account_proto_goTypes = []any{
 	(*ConfirmPasswordResetResponse)(nil),    // 16: plateau.iam.account.v1.ConfirmPasswordResetResponse
 	(*DeleteAccountRequest)(nil),            // 17: plateau.iam.account.v1.DeleteAccountRequest
 	(*DeleteAccountResponse)(nil),           // 18: plateau.iam.account.v1.DeleteAccountResponse
-	(*v1.UserProfile)(nil),                  // 19: plateau.iam.user.v1.UserProfile
-	(*v1.User)(nil),                         // 20: plateau.iam.user.v1.User
-	(*fieldmaskpb.FieldMask)(nil),           // 21: google.protobuf.FieldMask
+	(*AuthorizedApp)(nil),                   // 19: plateau.iam.account.v1.AuthorizedApp
+	(*ListAuthorizedAppsRequest)(nil),       // 20: plateau.iam.account.v1.ListAuthorizedAppsRequest
+	(*ListAuthorizedAppsResponse)(nil),      // 21: plateau.iam.account.v1.ListAuthorizedAppsResponse
+	(*RevokeAuthorizedAppRequest)(nil),      // 22: plateau.iam.account.v1.RevokeAuthorizedAppRequest
+	(*RevokeAuthorizedAppResponse)(nil),     // 23: plateau.iam.account.v1.RevokeAuthorizedAppResponse
+	(*v1.UserProfile)(nil),                  // 24: plateau.iam.user.v1.UserProfile
+	(*v1.User)(nil),                         // 25: plateau.iam.user.v1.User
+	(*fieldmaskpb.FieldMask)(nil),           // 26: google.protobuf.FieldMask
+	(*timestamppb.Timestamp)(nil),           // 27: google.protobuf.Timestamp
 }
 var file_plateau_iam_account_v1_account_proto_depIdxs = []int32{
-	19, // 0: plateau.iam.account.v1.RegisterRequest.profile:type_name -> plateau.iam.user.v1.UserProfile
-	20, // 1: plateau.iam.account.v1.RegisterResponse.user:type_name -> plateau.iam.user.v1.User
-	20, // 2: plateau.iam.account.v1.VerifyEmailResponse.user:type_name -> plateau.iam.user.v1.User
-	19, // 3: plateau.iam.account.v1.UpdateProfileRequest.profile:type_name -> plateau.iam.user.v1.UserProfile
-	21, // 4: plateau.iam.account.v1.UpdateProfileRequest.update_mask:type_name -> google.protobuf.FieldMask
-	20, // 5: plateau.iam.account.v1.GetProfileResponse.user:type_name -> plateau.iam.user.v1.User
-	20, // 6: plateau.iam.account.v1.UpdateProfileResponse.user:type_name -> plateau.iam.user.v1.User
-	1,  // 7: plateau.iam.account.v1.AccountService.Register:input_type -> plateau.iam.account.v1.RegisterRequest
-	3,  // 8: plateau.iam.account.v1.AccountService.VerifyEmail:input_type -> plateau.iam.account.v1.VerifyEmailRequest
-	5,  // 9: plateau.iam.account.v1.AccountService.ResendVerificationEmail:input_type -> plateau.iam.account.v1.ResendVerificationEmailRequest
-	6,  // 10: plateau.iam.account.v1.AccountService.GetProfile:input_type -> plateau.iam.account.v1.GetProfileRequest
-	7,  // 11: plateau.iam.account.v1.AccountService.UpdateProfile:input_type -> plateau.iam.account.v1.UpdateProfileRequest
-	8,  // 12: plateau.iam.account.v1.AccountService.ChangePassword:input_type -> plateau.iam.account.v1.ChangePasswordRequest
-	9,  // 13: plateau.iam.account.v1.AccountService.RequestPasswordReset:input_type -> plateau.iam.account.v1.RequestPasswordResetRequest
-	10, // 14: plateau.iam.account.v1.AccountService.ConfirmPasswordReset:input_type -> plateau.iam.account.v1.ConfirmPasswordResetRequest
-	17, // 15: plateau.iam.account.v1.AccountService.DeleteAccount:input_type -> plateau.iam.account.v1.DeleteAccountRequest
-	2,  // 16: plateau.iam.account.v1.AccountService.Register:output_type -> plateau.iam.account.v1.RegisterResponse
-	4,  // 17: plateau.iam.account.v1.AccountService.VerifyEmail:output_type -> plateau.iam.account.v1.VerifyEmailResponse
-	11, // 18: plateau.iam.account.v1.AccountService.ResendVerificationEmail:output_type -> plateau.iam.account.v1.ResendVerificationEmailResponse
-	12, // 19: plateau.iam.account.v1.AccountService.GetProfile:output_type -> plateau.iam.account.v1.GetProfileResponse
-	13, // 20: plateau.iam.account.v1.AccountService.UpdateProfile:output_type -> plateau.iam.account.v1.UpdateProfileResponse
-	14, // 21: plateau.iam.account.v1.AccountService.ChangePassword:output_type -> plateau.iam.account.v1.ChangePasswordResponse
-	15, // 22: plateau.iam.account.v1.AccountService.RequestPasswordReset:output_type -> plateau.iam.account.v1.RequestPasswordResetResponse
-	16, // 23: plateau.iam.account.v1.AccountService.ConfirmPasswordReset:output_type -> plateau.iam.account.v1.ConfirmPasswordResetResponse
-	18, // 24: plateau.iam.account.v1.AccountService.DeleteAccount:output_type -> plateau.iam.account.v1.DeleteAccountResponse
-	16, // [16:25] is the sub-list for method output_type
-	7,  // [7:16] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	24, // 0: plateau.iam.account.v1.RegisterRequest.profile:type_name -> plateau.iam.user.v1.UserProfile
+	25, // 1: plateau.iam.account.v1.RegisterResponse.user:type_name -> plateau.iam.user.v1.User
+	25, // 2: plateau.iam.account.v1.VerifyEmailResponse.user:type_name -> plateau.iam.user.v1.User
+	24, // 3: plateau.iam.account.v1.UpdateProfileRequest.profile:type_name -> plateau.iam.user.v1.UserProfile
+	26, // 4: plateau.iam.account.v1.UpdateProfileRequest.update_mask:type_name -> google.protobuf.FieldMask
+	25, // 5: plateau.iam.account.v1.GetProfileResponse.user:type_name -> plateau.iam.user.v1.User
+	25, // 6: plateau.iam.account.v1.UpdateProfileResponse.user:type_name -> plateau.iam.user.v1.User
+	27, // 7: plateau.iam.account.v1.AuthorizedApp.create_time:type_name -> google.protobuf.Timestamp
+	27, // 8: plateau.iam.account.v1.AuthorizedApp.update_time:type_name -> google.protobuf.Timestamp
+	19, // 9: plateau.iam.account.v1.ListAuthorizedAppsResponse.applications:type_name -> plateau.iam.account.v1.AuthorizedApp
+	1,  // 10: plateau.iam.account.v1.AccountService.Register:input_type -> plateau.iam.account.v1.RegisterRequest
+	3,  // 11: plateau.iam.account.v1.AccountService.VerifyEmail:input_type -> plateau.iam.account.v1.VerifyEmailRequest
+	5,  // 12: plateau.iam.account.v1.AccountService.ResendVerificationEmail:input_type -> plateau.iam.account.v1.ResendVerificationEmailRequest
+	6,  // 13: plateau.iam.account.v1.AccountService.GetProfile:input_type -> plateau.iam.account.v1.GetProfileRequest
+	7,  // 14: plateau.iam.account.v1.AccountService.UpdateProfile:input_type -> plateau.iam.account.v1.UpdateProfileRequest
+	8,  // 15: plateau.iam.account.v1.AccountService.ChangePassword:input_type -> plateau.iam.account.v1.ChangePasswordRequest
+	9,  // 16: plateau.iam.account.v1.AccountService.RequestPasswordReset:input_type -> plateau.iam.account.v1.RequestPasswordResetRequest
+	10, // 17: plateau.iam.account.v1.AccountService.ConfirmPasswordReset:input_type -> plateau.iam.account.v1.ConfirmPasswordResetRequest
+	17, // 18: plateau.iam.account.v1.AccountService.DeleteAccount:input_type -> plateau.iam.account.v1.DeleteAccountRequest
+	20, // 19: plateau.iam.account.v1.AccountService.ListAuthorizedApps:input_type -> plateau.iam.account.v1.ListAuthorizedAppsRequest
+	22, // 20: plateau.iam.account.v1.AccountService.RevokeAuthorizedApp:input_type -> plateau.iam.account.v1.RevokeAuthorizedAppRequest
+	2,  // 21: plateau.iam.account.v1.AccountService.Register:output_type -> plateau.iam.account.v1.RegisterResponse
+	4,  // 22: plateau.iam.account.v1.AccountService.VerifyEmail:output_type -> plateau.iam.account.v1.VerifyEmailResponse
+	11, // 23: plateau.iam.account.v1.AccountService.ResendVerificationEmail:output_type -> plateau.iam.account.v1.ResendVerificationEmailResponse
+	12, // 24: plateau.iam.account.v1.AccountService.GetProfile:output_type -> plateau.iam.account.v1.GetProfileResponse
+	13, // 25: plateau.iam.account.v1.AccountService.UpdateProfile:output_type -> plateau.iam.account.v1.UpdateProfileResponse
+	14, // 26: plateau.iam.account.v1.AccountService.ChangePassword:output_type -> plateau.iam.account.v1.ChangePasswordResponse
+	15, // 27: plateau.iam.account.v1.AccountService.RequestPasswordReset:output_type -> plateau.iam.account.v1.RequestPasswordResetResponse
+	16, // 28: plateau.iam.account.v1.AccountService.ConfirmPasswordReset:output_type -> plateau.iam.account.v1.ConfirmPasswordResetResponse
+	18, // 29: plateau.iam.account.v1.AccountService.DeleteAccount:output_type -> plateau.iam.account.v1.DeleteAccountResponse
+	21, // 30: plateau.iam.account.v1.AccountService.ListAuthorizedApps:output_type -> plateau.iam.account.v1.ListAuthorizedAppsResponse
+	23, // 31: plateau.iam.account.v1.AccountService.RevokeAuthorizedApp:output_type -> plateau.iam.account.v1.RevokeAuthorizedAppResponse
+	21, // [21:32] is the sub-list for method output_type
+	10, // [10:21] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_plateau_iam_account_v1_account_proto_init() }
@@ -1065,7 +1351,7 @@ func file_plateau_iam_account_v1_account_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plateau_iam_account_v1_account_proto_rawDesc), len(file_plateau_iam_account_v1_account_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   18,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

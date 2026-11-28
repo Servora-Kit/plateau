@@ -23,7 +23,14 @@ var _auditRules = map[string]*v1.AuditRule{
 	"/plateau.iam.authn.v1.AuthnService/GetAuthFlow": {
 		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
 	},
+	"/plateau.iam.authn.v1.AuthnService/GetConsentView": {
+		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
+	},
 	"/plateau.iam.authn.v1.AuthnService/ResetAuthFlow": {
+		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
+		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
+	},
+	"/plateau.iam.authn.v1.AuthnService/SubmitConsentDecision": {
 		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
 		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
 	},

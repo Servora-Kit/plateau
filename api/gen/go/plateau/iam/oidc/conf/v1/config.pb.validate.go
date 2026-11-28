@@ -269,6 +269,26 @@ func (m *OAuthClient) validate(all bool) error {
 		// no validation rules for ClientSecret
 	}
 
+	if m.DisplayName != nil {
+		// no validation rules for DisplayName
+	}
+
+	if m.Description != nil {
+		// no validation rules for Description
+	}
+
+	if m.LogoUri != nil {
+		// no validation rules for LogoUri
+	}
+
+	if m.ApplicationType != nil {
+		// no validation rules for ApplicationType
+	}
+
+	if m.TokenEndpointAuthMethod != nil {
+		// no validation rules for TokenEndpointAuthMethod
+	}
+
 	if len(errors) > 0 {
 		return OAuthClientMultiError(errors)
 	}

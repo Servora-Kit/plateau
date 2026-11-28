@@ -24,6 +24,9 @@ var _auditRules = map[string]*v1.AuditRule{
 	"/plateau.iam.account.v1.AccountService/GetProfile": {
 		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
 	},
+	"/plateau.iam.account.v1.AccountService/ListAuthorizedApps": {
+		Mode: v1.AuditMode_AUDIT_MODE_DISABLED,
+	},
 	"/plateau.iam.account.v1.AccountService/Register": {
 		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
 		Category: v1.AuditCategory_AUDIT_CATEGORY_RESOURCE,
@@ -35,6 +38,10 @@ var _auditRules = map[string]*v1.AuditRule{
 	"/plateau.iam.account.v1.AccountService/ResendVerificationEmail": {
 		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
 		Category: v1.AuditCategory_AUDIT_CATEGORY_AUTHN,
+	},
+	"/plateau.iam.account.v1.AccountService/RevokeAuthorizedApp": {
+		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,
+		Category: v1.AuditCategory_AUDIT_CATEGORY_RESOURCE,
 	},
 	"/plateau.iam.account.v1.AccountService/UpdateProfile": {
 		Mode:     v1.AuditMode_AUDIT_MODE_ENABLED,

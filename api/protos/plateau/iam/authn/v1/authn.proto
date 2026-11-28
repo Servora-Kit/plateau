@@ -87,6 +87,28 @@ service AuthnService {
       category: AUDIT_CATEGORY_AUTHN
     };
   }
+
+  // GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+  rpc GetConsentView(GetConsentViewRequest) returns (GetConsentViewResponse) {
+    option (google.api.http) = {get: "/v1/iam/authn/consents/{request_id}"};
+    option (google.api.method_signature) = "request_id";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
+  }
+
+  // SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+  rpc SubmitConsentDecision(SubmitConsentDecisionRequest) returns (SubmitConsentDecisionResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/authn/consents/{request_id}:decide"
+      body: "*"
+    };
+    option (google.api.method_signature) = "request_id,approved";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_AUTHN
+    };
+  }
 }
 
 // AuthnErrorReason contains authentication flow failures.
@@ -119,6 +141,8 @@ enum AuthFactorMethod {
 // AuthFlowOidcContext exposes non-sensitive OIDC application context for the login UI.
 message AuthFlowOidcContext {
   string client_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string client_name = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string logo_uri = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // AuthFlow is the client-facing snapshot of a browser-bound authentication flow.
@@ -199,5 +223,34 @@ message CancelAuthFlowRequest {
 
 message CancelAuthFlowResponse {
   // RFC 6749/9207 error redirect URI when an active OIDC request was aborted; empty otherwise.
+  string redirect_uri = 1;
+}
+
+// ConsentView describes the application and scopes awaiting user approval.
+message ConsentView {
+  string request_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string client_id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string client_name = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string logo_uri = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string user_email = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated string requested_scopes = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated string granted_scopes = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message GetConsentViewRequest {
+  string request_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message GetConsentViewResponse {
+  ConsentView consent = 1;
+}
+
+message SubmitConsentDecisionRequest {
+  string request_id = 1 [(google.api.field_behavior) = REQUIRED];
+  bool approved = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message SubmitConsentDecisionResponse {
+  // Continuation target (/authorize/callback?id=...) on approval or external RFC 6749/9207 access_denied URI on denial.
   string redirect_uri = 1;
 }

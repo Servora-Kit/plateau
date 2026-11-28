@@ -2101,3 +2101,614 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteAccountResponseValidationError{}
+
+// Validate checks the field values on AuthorizedApp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *AuthorizedApp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AuthorizedApp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AuthorizedAppMultiError, or
+// nil if none found.
+func (m *AuthorizedApp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AuthorizedApp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClientId
+
+	// no validation rules for ClientName
+
+	// no validation rules for Description
+
+	// no validation rules for LogoUri
+
+	if all {
+		switch v := interface{}(m.GetCreateTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthorizedAppValidationError{
+					field:  "CreateTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthorizedAppValidationError{
+					field:  "CreateTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthorizedAppValidationError{
+				field:  "CreateTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpdateTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AuthorizedAppValidationError{
+					field:  "UpdateTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AuthorizedAppValidationError{
+					field:  "UpdateTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpdateTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AuthorizedAppValidationError{
+				field:  "UpdateTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return AuthorizedAppMultiError(errors)
+	}
+
+	return nil
+}
+
+// AuthorizedAppMultiError is an error wrapping multiple validation errors
+// returned by AuthorizedApp.ValidateAll() if the designated constraints
+// aren't met.
+type AuthorizedAppMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AuthorizedAppMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AuthorizedAppMultiError) AllErrors() []error { return m }
+
+// AuthorizedAppValidationError is the validation error returned by
+// AuthorizedApp.Validate if the designated constraints aren't met.
+type AuthorizedAppValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AuthorizedAppValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AuthorizedAppValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AuthorizedAppValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AuthorizedAppValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AuthorizedAppValidationError) ErrorName() string { return "AuthorizedAppValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AuthorizedAppValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAuthorizedApp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AuthorizedAppValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AuthorizedAppValidationError{}
+
+// Validate checks the field values on ListAuthorizedAppsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListAuthorizedAppsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListAuthorizedAppsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListAuthorizedAppsRequestMultiError, or nil if none found.
+func (m *ListAuthorizedAppsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListAuthorizedAppsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ListAuthorizedAppsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListAuthorizedAppsRequestMultiError is an error wrapping multiple validation
+// errors returned by ListAuthorizedAppsRequest.ValidateAll() if the
+// designated constraints aren't met.
+type ListAuthorizedAppsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListAuthorizedAppsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListAuthorizedAppsRequestMultiError) AllErrors() []error { return m }
+
+// ListAuthorizedAppsRequestValidationError is the validation error returned by
+// ListAuthorizedAppsRequest.Validate if the designated constraints aren't met.
+type ListAuthorizedAppsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAuthorizedAppsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAuthorizedAppsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAuthorizedAppsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAuthorizedAppsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAuthorizedAppsRequestValidationError) ErrorName() string {
+	return "ListAuthorizedAppsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAuthorizedAppsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAuthorizedAppsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAuthorizedAppsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAuthorizedAppsRequestValidationError{}
+
+// Validate checks the field values on ListAuthorizedAppsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListAuthorizedAppsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListAuthorizedAppsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListAuthorizedAppsResponseMultiError, or nil if none found.
+func (m *ListAuthorizedAppsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListAuthorizedAppsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetApplications() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListAuthorizedAppsResponseValidationError{
+						field:  fmt.Sprintf("Applications[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListAuthorizedAppsResponseValidationError{
+						field:  fmt.Sprintf("Applications[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListAuthorizedAppsResponseValidationError{
+					field:  fmt.Sprintf("Applications[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListAuthorizedAppsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListAuthorizedAppsResponseMultiError is an error wrapping multiple
+// validation errors returned by ListAuthorizedAppsResponse.ValidateAll() if
+// the designated constraints aren't met.
+type ListAuthorizedAppsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListAuthorizedAppsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListAuthorizedAppsResponseMultiError) AllErrors() []error { return m }
+
+// ListAuthorizedAppsResponseValidationError is the validation error returned
+// by ListAuthorizedAppsResponse.Validate if the designated constraints aren't met.
+type ListAuthorizedAppsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAuthorizedAppsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAuthorizedAppsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAuthorizedAppsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAuthorizedAppsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAuthorizedAppsResponseValidationError) ErrorName() string {
+	return "ListAuthorizedAppsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAuthorizedAppsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAuthorizedAppsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAuthorizedAppsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAuthorizedAppsResponseValidationError{}
+
+// Validate checks the field values on RevokeAuthorizedAppRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RevokeAuthorizedAppRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RevokeAuthorizedAppRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RevokeAuthorizedAppRequestMultiError, or nil if none found.
+func (m *RevokeAuthorizedAppRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RevokeAuthorizedAppRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClientId
+
+	if len(errors) > 0 {
+		return RevokeAuthorizedAppRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// RevokeAuthorizedAppRequestMultiError is an error wrapping multiple
+// validation errors returned by RevokeAuthorizedAppRequest.ValidateAll() if
+// the designated constraints aren't met.
+type RevokeAuthorizedAppRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RevokeAuthorizedAppRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RevokeAuthorizedAppRequestMultiError) AllErrors() []error { return m }
+
+// RevokeAuthorizedAppRequestValidationError is the validation error returned
+// by RevokeAuthorizedAppRequest.Validate if the designated constraints aren't met.
+type RevokeAuthorizedAppRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RevokeAuthorizedAppRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RevokeAuthorizedAppRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RevokeAuthorizedAppRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RevokeAuthorizedAppRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RevokeAuthorizedAppRequestValidationError) ErrorName() string {
+	return "RevokeAuthorizedAppRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RevokeAuthorizedAppRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRevokeAuthorizedAppRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RevokeAuthorizedAppRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RevokeAuthorizedAppRequestValidationError{}
+
+// Validate checks the field values on RevokeAuthorizedAppResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RevokeAuthorizedAppResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RevokeAuthorizedAppResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RevokeAuthorizedAppResponseMultiError, or nil if none found.
+func (m *RevokeAuthorizedAppResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RevokeAuthorizedAppResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return RevokeAuthorizedAppResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// RevokeAuthorizedAppResponseMultiError is an error wrapping multiple
+// validation errors returned by RevokeAuthorizedAppResponse.ValidateAll() if
+// the designated constraints aren't met.
+type RevokeAuthorizedAppResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RevokeAuthorizedAppResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RevokeAuthorizedAppResponseMultiError) AllErrors() []error { return m }
+
+// RevokeAuthorizedAppResponseValidationError is the validation error returned
+// by RevokeAuthorizedAppResponse.Validate if the designated constraints
+// aren't met.
+type RevokeAuthorizedAppResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RevokeAuthorizedAppResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RevokeAuthorizedAppResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RevokeAuthorizedAppResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RevokeAuthorizedAppResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RevokeAuthorizedAppResponseValidationError) ErrorName() string {
+	return "RevokeAuthorizedAppResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RevokeAuthorizedAppResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRevokeAuthorizedAppResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RevokeAuthorizedAppResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RevokeAuthorizedAppResponseValidationError{}

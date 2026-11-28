@@ -21,9 +21,11 @@ const OperationAccountServiceChangePassword = "/plateau.iam.account.v1.AccountSe
 const OperationAccountServiceConfirmPasswordReset = "/plateau.iam.account.v1.AccountService/ConfirmPasswordReset"
 const OperationAccountServiceDeleteAccount = "/plateau.iam.account.v1.AccountService/DeleteAccount"
 const OperationAccountServiceGetProfile = "/plateau.iam.account.v1.AccountService/GetProfile"
+const OperationAccountServiceListAuthorizedApps = "/plateau.iam.account.v1.AccountService/ListAuthorizedApps"
 const OperationAccountServiceRegister = "/plateau.iam.account.v1.AccountService/Register"
 const OperationAccountServiceRequestPasswordReset = "/plateau.iam.account.v1.AccountService/RequestPasswordReset"
 const OperationAccountServiceResendVerificationEmail = "/plateau.iam.account.v1.AccountService/ResendVerificationEmail"
+const OperationAccountServiceRevokeAuthorizedApp = "/plateau.iam.account.v1.AccountService/RevokeAuthorizedApp"
 const OperationAccountServiceUpdateProfile = "/plateau.iam.account.v1.AccountService/UpdateProfile"
 const OperationAccountServiceVerifyEmail = "/plateau.iam.account.v1.AccountService/VerifyEmail"
 
@@ -36,12 +38,16 @@ type AccountServiceHTTPServer interface {
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
 	// GetProfile GetProfile returns the currently authenticated user's IAM resource.
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
+	// ListAuthorizedApps ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+	ListAuthorizedApps(context.Context, *ListAuthorizedAppsRequest) (*ListAuthorizedAppsResponse, error)
 	// Register Register creates a pending user and sends an email-verification message.
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	// RequestPasswordReset RequestPasswordReset always returns a generic success response.
 	RequestPasswordReset(context.Context, *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
 	// ResendVerificationEmail ResendVerificationEmail uses a generic response to prevent account enumeration.
 	ResendVerificationEmail(context.Context, *ResendVerificationEmailRequest) (*ResendVerificationEmailResponse, error)
+	// RevokeAuthorizedApp RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+	RevokeAuthorizedApp(context.Context, *RevokeAuthorizedAppRequest) (*RevokeAuthorizedAppResponse, error)
 	// UpdateProfile UpdateProfile updates the currently authenticated user's OIDC profile.
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error)
 	// VerifyEmail VerifyEmail consumes a one-time email-verification token.
@@ -59,6 +65,8 @@ func RegisterAccountServiceHTTPServer(s *http.Server, srv AccountServiceHTTPServ
 	r.Handle("POST", "/v1/iam/account/password-reset/request", _AccountService_RequestPasswordReset0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/password-reset/confirm", _AccountService_ConfirmPasswordReset0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/account/delete", _AccountService_DeleteAccount0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/iam/account/applications", _AccountService_ListAuthorizedApps0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/account/applications/{client_id}:revoke", _AccountService_RevokeAuthorizedApp0_HTTP_Handler(srv))
 }
 
 func _AccountService_Register0_HTTP_Handler(srv AccountServiceHTTPServer) func(ctx http.Context) error {
@@ -235,6 +243,47 @@ func _AccountService_DeleteAccount0_HTTP_Handler(srv AccountServiceHTTPServer) f
 	}
 }
 
+func _AccountService_ListAuthorizedApps0_HTTP_Handler(srv AccountServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListAuthorizedAppsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAccountServiceListAuthorizedApps)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListAuthorizedApps(ctx, req.(*ListAuthorizedAppsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListAuthorizedAppsResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AccountService_RevokeAuthorizedApp0_HTTP_Handler(srv AccountServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in RevokeAuthorizedAppRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAccountServiceRevokeAuthorizedApp)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.RevokeAuthorizedApp(ctx, req.(*RevokeAuthorizedAppRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*RevokeAuthorizedAppResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AccountServiceHTTPClient interface {
 	// ChangePassword ChangePassword changes the current password and revokes other sessions.
 	ChangePassword(ctx context.Context, req *ChangePasswordRequest, opts ...http.CallOption) (rsp *ChangePasswordResponse, err error)
@@ -244,12 +293,16 @@ type AccountServiceHTTPClient interface {
 	DeleteAccount(ctx context.Context, req *DeleteAccountRequest, opts ...http.CallOption) (rsp *DeleteAccountResponse, err error)
 	// GetProfile GetProfile returns the currently authenticated user's IAM resource.
 	GetProfile(ctx context.Context, req *GetProfileRequest, opts ...http.CallOption) (rsp *GetProfileResponse, err error)
+	// ListAuthorizedApps ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+	ListAuthorizedApps(ctx context.Context, req *ListAuthorizedAppsRequest, opts ...http.CallOption) (rsp *ListAuthorizedAppsResponse, err error)
 	// Register Register creates a pending user and sends an email-verification message.
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *RegisterResponse, err error)
 	// RequestPasswordReset RequestPasswordReset always returns a generic success response.
 	RequestPasswordReset(ctx context.Context, req *RequestPasswordResetRequest, opts ...http.CallOption) (rsp *RequestPasswordResetResponse, err error)
 	// ResendVerificationEmail ResendVerificationEmail uses a generic response to prevent account enumeration.
 	ResendVerificationEmail(ctx context.Context, req *ResendVerificationEmailRequest, opts ...http.CallOption) (rsp *ResendVerificationEmailResponse, err error)
+	// RevokeAuthorizedApp RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+	RevokeAuthorizedApp(ctx context.Context, req *RevokeAuthorizedAppRequest, opts ...http.CallOption) (rsp *RevokeAuthorizedAppResponse, err error)
 	// UpdateProfile UpdateProfile updates the currently authenticated user's OIDC profile.
 	UpdateProfile(ctx context.Context, req *UpdateProfileRequest, opts ...http.CallOption) (rsp *UpdateProfileResponse, err error)
 	// VerifyEmail VerifyEmail consumes a one-time email-verification token.
@@ -335,6 +388,23 @@ func (c *AccountServiceHTTPClientImpl) GetProfile(ctx context.Context, in *GetPr
 	return &out, nil
 }
 
+// ListAuthorizedApps ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+func (c *AccountServiceHTTPClientImpl) ListAuthorizedApps(ctx context.Context, in *ListAuthorizedAppsRequest, opts ...http.CallOption) (*ListAuthorizedAppsResponse, error) {
+	var out ListAuthorizedAppsResponse
+	pattern := "/v1/iam/account/applications"
+	path := http.BuildPath(pattern, in, http.WithQueryParams())
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.Operation(OperationAccountServiceListAuthorizedApps),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Register Register creates a pending user and sends an email-verification message.
 func (c *AccountServiceHTTPClientImpl) Register(ctx context.Context, in *RegisterRequest, opts ...http.CallOption) (*RegisterResponse, error) {
 	var out RegisterResponse
@@ -380,6 +450,24 @@ func (c *AccountServiceHTTPClientImpl) ResendVerificationEmail(ctx context.Conte
 		http.Accept("application/protojson"),
 		http.ContentType("application/protojson"),
 		http.Operation(OperationAccountServiceResendVerificationEmail),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// RevokeAuthorizedApp RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+func (c *AccountServiceHTTPClientImpl) RevokeAuthorizedApp(ctx context.Context, in *RevokeAuthorizedAppRequest, opts ...http.CallOption) (*RevokeAuthorizedAppResponse, error) {
+	var out RevokeAuthorizedAppResponse
+	pattern := "/v1/iam/account/applications/{client_id}:revoke"
+	path := http.BuildPath(pattern, in)
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.ContentType("application/protojson"),
+		http.Operation(OperationAccountServiceRevokeAuthorizedApp),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)

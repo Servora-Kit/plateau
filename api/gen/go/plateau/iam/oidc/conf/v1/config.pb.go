@@ -9,6 +9,7 @@ package iamoidcconfv1
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/Servora-Kit/servora/api/gen/go/servora/conf/v1"
+	_ "github.com/Servora-Kit/servora/api/gen/go/servora/redact/v3"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
@@ -113,22 +114,30 @@ func (x *OIDC) GetAuthRequestTtl() *durationpb.Duration {
 	return nil
 }
 
-// OAuthClient 配置使用客户端 ID 和密钥认证的应用。
+// OAuthClient 配置启动期协调的静态引导应用。
 type OAuthClient struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	ClientId *string                `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3,oneof" json:"client_id,omitempty"`
-	// Raw secret is configuration input only; IAM persists only its hash.
+	// Raw secret is configuration input only; required for confidential clients, omitted for public clients.
 	ClientSecret *string `protobuf:"bytes,2,opt,name=client_secret,json=clientSecret,proto3,oneof" json:"client_secret,omitempty"`
 	// Redirect URIs are compared exactly; wildcards are not supported.
 	RedirectUris []string `protobuf:"bytes,3,rep,name=redirect_uris,json=redirectUris,proto3" json:"redirect_uris,omitempty"`
 	// 请求 scope 必须在允许集合中；用户流程还须符合提供方支持的用户 scope。
 	AllowedScopes []string `protobuf:"bytes,4,rep,name=allowed_scopes,json=allowedScopes,proto3" json:"allowed_scopes,omitempty"`
-	// 用户交互流程须为受信应用，当前未实现同意页面；机器流程不依赖此项。
-	Trusted           bool     `protobuf:"varint,5,opt,name=trusted,proto3" json:"trusted,omitempty"`
-	AllowedGrantTypes []string `protobuf:"bytes,6,rep,name=allowed_grant_types,json=allowedGrantTypes,proto3" json:"allowed_grant_types,omitempty"`
-	Audiences         []string `protobuf:"bytes,7,rep,name=audiences,proto3" json:"audiences,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// 第一方受信应用跳过授权同意页；非受信应用进入第三方 Consent 流程。
+	Trusted                bool     `protobuf:"varint,5,opt,name=trusted,proto3" json:"trusted,omitempty"`
+	AllowedGrantTypes      []string `protobuf:"bytes,6,rep,name=allowed_grant_types,json=allowedGrantTypes,proto3" json:"allowed_grant_types,omitempty"`
+	Audiences              []string `protobuf:"bytes,7,rep,name=audiences,proto3" json:"audiences,omitempty"`
+	DisplayName            *string  `protobuf:"bytes,8,opt,name=display_name,json=displayName,proto3,oneof" json:"display_name,omitempty"`
+	Description            *string  `protobuf:"bytes,9,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	LogoUri                *string  `protobuf:"bytes,10,opt,name=logo_uri,json=logoUri,proto3,oneof" json:"logo_uri,omitempty"`
+	PostLogoutRedirectUris []string `protobuf:"bytes,11,rep,name=post_logout_redirect_uris,json=postLogoutRedirectUris,proto3" json:"post_logout_redirect_uris,omitempty"`
+	// Application runtime type: "web" (default), "user_agent", or "native".
+	ApplicationType *string `protobuf:"bytes,12,opt,name=application_type,json=applicationType,proto3,oneof" json:"application_type,omitempty"`
+	// Token endpoint auth method: "client_secret_basic" (default), "client_secret_post", or "none".
+	TokenEndpointAuthMethod *string `protobuf:"bytes,13,opt,name=token_endpoint_auth_method,json=tokenEndpointAuthMethod,proto3,oneof" json:"token_endpoint_auth_method,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *OAuthClient) Reset() {
@@ -210,11 +219,53 @@ func (x *OAuthClient) GetAudiences() []string {
 	return nil
 }
 
+func (x *OAuthClient) GetDisplayName() string {
+	if x != nil && x.DisplayName != nil {
+		return *x.DisplayName
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetLogoUri() string {
+	if x != nil && x.LogoUri != nil {
+		return *x.LogoUri
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetPostLogoutRedirectUris() []string {
+	if x != nil {
+		return x.PostLogoutRedirectUris
+	}
+	return nil
+}
+
+func (x *OAuthClient) GetApplicationType() string {
+	if x != nil && x.ApplicationType != nil {
+		return *x.ApplicationType
+	}
+	return ""
+}
+
+func (x *OAuthClient) GetTokenEndpointAuthMethod() string {
+	if x != nil && x.TokenEndpointAuthMethod != nil {
+		return *x.TokenEndpointAuthMethod
+	}
+	return ""
+}
+
 var File_plateau_iam_oidc_conf_v1_config_proto protoreflect.FileDescriptor
 
 const file_plateau_iam_oidc_conf_v1_config_proto_rawDesc = "" +
 	"\n" +
-	"%plateau/iam/oidc/conf/v1/config.proto\x12\x18plateau.iam.oidc.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\"\xd5\x03\n" +
+	"%plateau/iam/oidc/conf/v1/config.proto\x12\x18plateau.iam.oidc.conf.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a!servora/conf/v1/annotations.proto\x1a\x1eservora/redact/v3/redact.proto\"\xd5\x03\n" +
 	"\x04OIDC\x12*\n" +
 	"\x06issuer\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\x06issuer\x88\x01\x01\x12<\n" +
 	"\x10signing_key_path\x18\x02 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x01R\x0esigningKeyPath\x88\x01\x01\x12:\n" +
@@ -226,18 +277,30 @@ const file_plateau_iam_oidc_conf_v1_config_proto_rawDesc = "" +
 	"\x0330mR\x0eauthRequestTtl:\x04\x80\xce\x18\x01B\t\n" +
 	"\a_issuerB\x13\n" +
 	"\x11_signing_key_pathB\x12\n" +
-	"\x10_crypto_key_path\"\xd5\x02\n" +
+	"\x10_crypto_key_path\"\xcc\x05\n" +
 	"\vOAuthClient\x12/\n" +
-	"\tclient_id\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\bclientId\x88\x01\x01\x127\n" +
-	"\rclient_secret\x18\x02 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x01R\fclientSecret\x88\x01\x01\x12#\n" +
+	"\tclient_id\x18\x01 \x01(\tB\r\xbaH\x04r\x02\x10\x01\x8a\xce\x18\x02\x10\x01H\x00R\bclientId\x88\x01\x01\x120\n" +
+	"\rclient_secret\x18\x02 \x01(\tB\x06ڶ\x1a\x02z\x00H\x01R\fclientSecret\x88\x01\x01\x12#\n" +
 	"\rredirect_uris\x18\x03 \x03(\tR\fredirectUris\x12%\n" +
 	"\x0eallowed_scopes\x18\x04 \x03(\tR\rallowedScopes\x12\x18\n" +
 	"\atrusted\x18\x05 \x01(\bR\atrusted\x128\n" +
 	"\x13allowed_grant_types\x18\x06 \x03(\tB\b\xbaH\x05\x92\x01\x02\b\x01R\x11allowedGrantTypes\x12\x1c\n" +
-	"\taudiences\x18\a \x03(\tR\taudiencesB\f\n" +
+	"\taudiences\x18\a \x03(\tR\taudiences\x12&\n" +
+	"\fdisplay_name\x18\b \x01(\tH\x02R\vdisplayName\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\t \x01(\tH\x03R\vdescription\x88\x01\x01\x12\x1e\n" +
+	"\blogo_uri\x18\n" +
+	" \x01(\tH\x04R\alogoUri\x88\x01\x01\x129\n" +
+	"\x19post_logout_redirect_uris\x18\v \x03(\tR\x16postLogoutRedirectUris\x12.\n" +
+	"\x10application_type\x18\f \x01(\tH\x05R\x0fapplicationType\x88\x01\x01\x12@\n" +
+	"\x1atoken_endpoint_auth_method\x18\r \x01(\tH\x06R\x17tokenEndpointAuthMethod\x88\x01\x01B\f\n" +
 	"\n" +
 	"_client_idB\x10\n" +
-	"\x0e_client_secretBRZPgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1;iamoidcconfv1b\x06proto3"
+	"\x0e_client_secretB\x0f\n" +
+	"\r_display_nameB\x0e\n" +
+	"\f_descriptionB\v\n" +
+	"\t_logo_uriB\x13\n" +
+	"\x11_application_typeB\x1d\n" +
+	"\x1b_token_endpoint_auth_methodBRZPgithub.com/Servora-Kit/plateau/api/gen/go/plateau/iam/oidc/conf/v1;iamoidcconfv1b\x06proto3"
 
 var (
 	file_plateau_iam_oidc_conf_v1_config_proto_rawDescOnce sync.Once

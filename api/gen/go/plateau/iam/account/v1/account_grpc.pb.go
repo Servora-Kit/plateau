@@ -28,6 +28,8 @@ const (
 	AccountService_RequestPasswordReset_FullMethodName    = "/plateau.iam.account.v1.AccountService/RequestPasswordReset"
 	AccountService_ConfirmPasswordReset_FullMethodName    = "/plateau.iam.account.v1.AccountService/ConfirmPasswordReset"
 	AccountService_DeleteAccount_FullMethodName           = "/plateau.iam.account.v1.AccountService/DeleteAccount"
+	AccountService_ListAuthorizedApps_FullMethodName      = "/plateau.iam.account.v1.AccountService/ListAuthorizedApps"
+	AccountService_RevokeAuthorizedApp_FullMethodName     = "/plateau.iam.account.v1.AccountService/RevokeAuthorizedApp"
 )
 
 // AccountServiceClient is the client API for AccountService service.
@@ -54,6 +56,10 @@ type AccountServiceClient interface {
 	ConfirmPasswordReset(ctx context.Context, in *ConfirmPasswordResetRequest, opts ...grpc.CallOption) (*ConfirmPasswordResetResponse, error)
 	// DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
 	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
+	// ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+	ListAuthorizedApps(ctx context.Context, in *ListAuthorizedAppsRequest, opts ...grpc.CallOption) (*ListAuthorizedAppsResponse, error)
+	// RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+	RevokeAuthorizedApp(ctx context.Context, in *RevokeAuthorizedAppRequest, opts ...grpc.CallOption) (*RevokeAuthorizedAppResponse, error)
 }
 
 type accountServiceClient struct {
@@ -154,6 +160,26 @@ func (c *accountServiceClient) DeleteAccount(ctx context.Context, in *DeleteAcco
 	return out, nil
 }
 
+func (c *accountServiceClient) ListAuthorizedApps(ctx context.Context, in *ListAuthorizedAppsRequest, opts ...grpc.CallOption) (*ListAuthorizedAppsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAuthorizedAppsResponse)
+	err := c.cc.Invoke(ctx, AccountService_ListAuthorizedApps_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountServiceClient) RevokeAuthorizedApp(ctx context.Context, in *RevokeAuthorizedAppRequest, opts ...grpc.CallOption) (*RevokeAuthorizedAppResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeAuthorizedAppResponse)
+	err := c.cc.Invoke(ctx, AccountService_RevokeAuthorizedApp_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServiceServer is the server API for AccountService service.
 // All implementations must embed UnimplementedAccountServiceServer
 // for forward compatibility.
@@ -178,6 +204,10 @@ type AccountServiceServer interface {
 	ConfirmPasswordReset(context.Context, *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error)
 	// DeleteAccount soft-deletes the currently authenticated user's account after verifying the current password.
 	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
+	// ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+	ListAuthorizedApps(context.Context, *ListAuthorizedAppsRequest) (*ListAuthorizedAppsResponse, error)
+	// RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+	RevokeAuthorizedApp(context.Context, *RevokeAuthorizedAppRequest) (*RevokeAuthorizedAppResponse, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
 
@@ -214,6 +244,12 @@ func (UnimplementedAccountServiceServer) ConfirmPasswordReset(context.Context, *
 }
 func (UnimplementedAccountServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAccount not implemented")
+}
+func (UnimplementedAccountServiceServer) ListAuthorizedApps(context.Context, *ListAuthorizedAppsRequest) (*ListAuthorizedAppsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAuthorizedApps not implemented")
+}
+func (UnimplementedAccountServiceServer) RevokeAuthorizedApp(context.Context, *RevokeAuthorizedAppRequest) (*RevokeAuthorizedAppResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeAuthorizedApp not implemented")
 }
 func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}
 func (UnimplementedAccountServiceServer) testEmbeddedByValue()                        {}
@@ -398,6 +434,42 @@ func _AccountService_DeleteAccount_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AccountService_ListAuthorizedApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuthorizedAppsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).ListAuthorizedApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AccountService_ListAuthorizedApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).ListAuthorizedApps(ctx, req.(*ListAuthorizedAppsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountService_RevokeAuthorizedApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeAuthorizedAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).RevokeAuthorizedApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AccountService_RevokeAuthorizedApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).RevokeAuthorizedApp(ctx, req.(*RevokeAuthorizedAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AccountService_ServiceDesc is the grpc.ServiceDesc for AccountService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -440,6 +512,14 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAccount",
 			Handler:    _AccountService_DeleteAccount_Handler,
+		},
+		{
+			MethodName: "ListAuthorizedApps",
+			Handler:    _AccountService_ListAuthorizedApps_Handler,
+		},
+		{
+			MethodName: "RevokeAuthorizedApp",
+			Handler:    _AccountService_RevokeAuthorizedApp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

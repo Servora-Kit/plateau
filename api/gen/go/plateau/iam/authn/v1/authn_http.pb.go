@@ -21,7 +21,9 @@ const OperationAuthnServiceCancelAuthFlow = "/plateau.iam.authn.v1.AuthnService/
 const OperationAuthnServiceCompleteUpdatePassword = "/plateau.iam.authn.v1.AuthnService/CompleteUpdatePassword"
 const OperationAuthnServiceCreateAuthFlow = "/plateau.iam.authn.v1.AuthnService/CreateAuthFlow"
 const OperationAuthnServiceGetAuthFlow = "/plateau.iam.authn.v1.AuthnService/GetAuthFlow"
+const OperationAuthnServiceGetConsentView = "/plateau.iam.authn.v1.AuthnService/GetConsentView"
 const OperationAuthnServiceResetAuthFlow = "/plateau.iam.authn.v1.AuthnService/ResetAuthFlow"
+const OperationAuthnServiceSubmitConsentDecision = "/plateau.iam.authn.v1.AuthnService/SubmitConsentDecision"
 const OperationAuthnServiceSubmitPassword = "/plateau.iam.authn.v1.AuthnService/SubmitPassword"
 
 type AuthnServiceHTTPServer interface {
@@ -33,8 +35,12 @@ type AuthnServiceHTTPServer interface {
 	CreateAuthFlow(context.Context, *CreateAuthFlowRequest) (*CreateAuthFlowResponse, error)
 	// GetAuthFlow GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
 	GetAuthFlow(context.Context, *GetAuthFlowRequest) (*GetAuthFlowResponse, error)
+	// GetConsentView GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+	GetConsentView(context.Context, *GetConsentViewRequest) (*GetConsentViewResponse, error)
 	// ResetAuthFlow ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
 	ResetAuthFlow(context.Context, *ResetAuthFlowRequest) (*ResetAuthFlowResponse, error)
+	// SubmitConsentDecision SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+	SubmitConsentDecision(context.Context, *SubmitConsentDecisionRequest) (*SubmitConsentDecisionResponse, error)
 	// SubmitPassword SubmitPassword verifies email and password credentials and advances or completes the flow.
 	SubmitPassword(context.Context, *SubmitPasswordRequest) (*SubmitPasswordResponse, error)
 }
@@ -47,6 +53,8 @@ func RegisterAuthnServiceHTTPServer(s *http.Server, srv AuthnServiceHTTPServer) 
 	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:completeUpdatePassword", _AuthnService_CompleteUpdatePassword0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:reset", _AuthnService_ResetAuthFlow0_HTTP_Handler(srv))
 	r.Handle("POST", "/v1/iam/authn/flows/{flow_id}:cancel", _AuthnService_CancelAuthFlow0_HTTP_Handler(srv))
+	r.Handle("GET", "/v1/iam/authn/consents/{request_id}", _AuthnService_GetConsentView0_HTTP_Handler(srv))
+	r.Handle("POST", "/v1/iam/authn/consents/{request_id}:decide", _AuthnService_SubmitConsentDecision0_HTTP_Handler(srv))
 }
 
 func _AuthnService_CreateAuthFlow0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
@@ -178,6 +186,50 @@ func _AuthnService_CancelAuthFlow0_HTTP_Handler(srv AuthnServiceHTTPServer) func
 	}
 }
 
+func _AuthnService_GetConsentView0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetConsentViewRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceGetConsentView)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetConsentView(ctx, req.(*GetConsentViewRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetConsentViewResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AuthnService_SubmitConsentDecision0_HTTP_Handler(srv AuthnServiceHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in SubmitConsentDecisionRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAuthnServiceSubmitConsentDecision)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.SubmitConsentDecision(ctx, req.(*SubmitConsentDecisionRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*SubmitConsentDecisionResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AuthnServiceHTTPClient interface {
 	// CancelAuthFlow CancelAuthFlow terminates the flow and aborts any bound OIDC authorization request.
 	CancelAuthFlow(ctx context.Context, req *CancelAuthFlowRequest, opts ...http.CallOption) (rsp *CancelAuthFlowResponse, err error)
@@ -187,8 +239,12 @@ type AuthnServiceHTTPClient interface {
 	CreateAuthFlow(ctx context.Context, req *CreateAuthFlowRequest, opts ...http.CallOption) (rsp *CreateAuthFlowResponse, err error)
 	// GetAuthFlow GetAuthFlow returns the current state of an owned authentication flow without mutating server state.
 	GetAuthFlow(ctx context.Context, req *GetAuthFlowRequest, opts ...http.CallOption) (rsp *GetAuthFlowResponse, err error)
+	// GetConsentView GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+	GetConsentView(ctx context.Context, req *GetConsentViewRequest, opts ...http.CallOption) (rsp *GetConsentViewResponse, err error)
 	// ResetAuthFlow ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
 	ResetAuthFlow(ctx context.Context, req *ResetAuthFlowRequest, opts ...http.CallOption) (rsp *ResetAuthFlowResponse, err error)
+	// SubmitConsentDecision SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+	SubmitConsentDecision(ctx context.Context, req *SubmitConsentDecisionRequest, opts ...http.CallOption) (rsp *SubmitConsentDecisionResponse, err error)
 	// SubmitPassword SubmitPassword verifies email and password credentials and advances or completes the flow.
 	SubmitPassword(ctx context.Context, req *SubmitPasswordRequest, opts ...http.CallOption) (rsp *SubmitPasswordResponse, err error)
 }
@@ -272,6 +328,23 @@ func (c *AuthnServiceHTTPClientImpl) GetAuthFlow(ctx context.Context, in *GetAut
 	return &out, nil
 }
 
+// GetConsentView GetConsentView returns the pending OIDC consent details for an authenticated browser session.
+func (c *AuthnServiceHTTPClientImpl) GetConsentView(ctx context.Context, in *GetConsentViewRequest, opts ...http.CallOption) (*GetConsentViewResponse, error) {
+	var out GetConsentViewResponse
+	pattern := "/v1/iam/authn/consents/{request_id}"
+	path := http.BuildPath(pattern, in, http.WithQueryParams())
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.Operation(OperationAuthnServiceGetConsentView),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ResetAuthFlow ResetAuthFlow rotates flow_id back to the initial authentication stage while preserving a valid OIDC request.
 func (c *AuthnServiceHTTPClientImpl) ResetAuthFlow(ctx context.Context, in *ResetAuthFlowRequest, opts ...http.CallOption) (*ResetAuthFlowResponse, error) {
 	var out ResetAuthFlowResponse
@@ -281,6 +354,24 @@ func (c *AuthnServiceHTTPClientImpl) ResetAuthFlow(ctx context.Context, in *Rese
 		http.Accept("application/protojson"),
 		http.ContentType("application/protojson"),
 		http.Operation(OperationAuthnServiceResetAuthFlow),
+		http.PathTemplate(pattern),
+	}, opts...)
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// SubmitConsentDecision SubmitConsentDecision approves or denies a pending OIDC consent request for the signed-in user.
+func (c *AuthnServiceHTTPClientImpl) SubmitConsentDecision(ctx context.Context, in *SubmitConsentDecisionRequest, opts ...http.CallOption) (*SubmitConsentDecisionResponse, error) {
+	var out SubmitConsentDecisionResponse
+	pattern := "/v1/iam/authn/consents/{request_id}:decide"
+	path := http.BuildPath(pattern, in)
+	opts = append([]http.CallOption{
+		http.Accept("application/protojson"),
+		http.ContentType("application/protojson"),
+		http.Operation(OperationAuthnServiceSubmitConsentDecision),
 		http.PathTemplate(pattern),
 	}, opts...)
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)

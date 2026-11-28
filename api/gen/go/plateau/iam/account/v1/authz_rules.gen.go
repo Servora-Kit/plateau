@@ -21,6 +21,9 @@ var _authzRules = map[string]*v1.AuthzRule{
 	"/plateau.iam.account.v1.AccountService/GetProfile": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
+	"/plateau.iam.account.v1.AccountService/ListAuthorizedApps": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
 	"/plateau.iam.account.v1.AccountService/Register": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
@@ -28,6 +31,9 @@ var _authzRules = map[string]*v1.AuthzRule{
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
 	"/plateau.iam.account.v1.AccountService/ResendVerificationEmail": {
+		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
+	},
+	"/plateau.iam.account.v1.AccountService/RevokeAuthorizedApp": {
 		Mode: v1.AuthzMode_AUTHZ_MODE_NONE,
 	},
 	"/plateau.iam.account.v1.AccountService/UpdateProfile": {

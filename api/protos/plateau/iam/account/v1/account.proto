@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
 import "plateau/iam/user/v1/user.proto";
 import "plateau/security/audit/v1/annotations.proto";
 import "plateau/security/authn/v1/annotations.proto";
@@ -115,6 +116,27 @@ service AccountService {
       body: "*"
     };
     option (google.api.method_signature) = "current_password";
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {
+      mode: AUDIT_MODE_ENABLED
+      category: AUDIT_CATEGORY_RESOURCE
+    };
+  }
+
+  // ListAuthorizedApps lists third-party OAuth applications granted consent by the current user.
+  rpc ListAuthorizedApps(ListAuthorizedAppsRequest) returns (ListAuthorizedAppsResponse) {
+    option (google.api.http) = {get: "/v1/iam/account/applications"};
+    option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
+    option (plateau.security.audit.v1.rule) = {mode: AUDIT_MODE_DISABLED};
+  }
+
+  // RevokeAuthorizedApp revokes stored consent and active OAuth sessions for one application.
+  rpc RevokeAuthorizedApp(RevokeAuthorizedAppRequest) returns (RevokeAuthorizedAppResponse) {
+    option (google.api.http) = {
+      post: "/v1/iam/account/applications/{client_id}:revoke"
+      body: "*"
+    };
+    option (google.api.method_signature) = "client_id";
     option (plateau.security.authn.v1.rule) = {mode: AUTHN_MODE_REQUIRED};
     option (plateau.security.audit.v1.rule) = {
       mode: AUDIT_MODE_ENABLED
@@ -264,3 +286,29 @@ message DeleteAccountRequest {
 }
 
 message DeleteAccountResponse {}
+
+// AuthorizedApp summarizes a third-party OAuth client granted access by the user.
+message AuthorizedApp {
+  string client_id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string client_name = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string description = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  string logo_uri = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  repeated string granted_scopes = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp create_time = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  google.protobuf.Timestamp update_time = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message ListAuthorizedAppsRequest {}
+
+message ListAuthorizedAppsResponse {
+  repeated AuthorizedApp applications = 1;
+}
+
+message RevokeAuthorizedAppRequest {
+  string client_id = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string.min_len = 1
+  ];
+}
+
+message RevokeAuthorizedAppResponse {}
