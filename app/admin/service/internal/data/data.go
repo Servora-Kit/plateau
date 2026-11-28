@@ -27,6 +27,8 @@ import (
 	"github.com/google/wire"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	fgaclient "github.com/openfga/go-sdk/client"
+	gogrpc "google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 )
 
 // ProviderSet provides the Admin database, SCS session store, OpenFGA client, and IAM gRPC client.
@@ -38,6 +40,7 @@ var ProviderSet = wire.NewSet(
 	NewDialer,
 	NewData,
 	NewIAMUserRepo,
+	NewIAMOAuthClientRepo,
 	NewAdminSeedRepo,
 	NewAuditEventRepo,
 	fgapkg.New,
@@ -141,4 +144,22 @@ func NewDialer(
 		grpcclient.WithMiddleware(mw...),
 	)
 	return dialer, cleanup, nil
+}
+
+func recoverConnTransientFailure(ctx context.Context, conn *gogrpc.ClientConn) {
+	if conn.GetState() != connectivity.TransientFailure {
+		return
+	}
+	conn.ResetConnectBackoff()
+	waitCtx, cancel := context.WithTimeout(ctx, 250*time.Millisecond)
+	defer cancel()
+	for waitCtx.Err() == nil {
+		state := conn.GetState()
+		if state == connectivity.Ready {
+			return
+		}
+		if !conn.WaitForStateChange(waitCtx, state) {
+			return
+		}
+	}
 }

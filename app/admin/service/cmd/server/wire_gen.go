@@ -209,8 +209,44 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	auditEventRepo, cleanup8, err := data.NewAuditEventRepo(dataData)
+	iamoAuthClientRepo, cleanup8, err := data.NewIAMOAuthClientRepo(dataData)
 	if err != nil {
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	oAuthClientUsecase, err := biz.NewOAuthClientUsecase(iamoAuthClientRepo)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	oAuthClientService, err := service.NewOAuthClientService(oAuthClientUsecase)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	auditEventRepo, cleanup9, err := data.NewAuditEventRepo(dataData)
+	if err != nil {
+		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -222,6 +258,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	auditUsecase, err := biz.NewAuditUsecase(auditEventRepo)
 	if err != nil {
+		cleanup9()
 		cleanup8()
 		cleanup7()
 		cleanup6()
@@ -234,6 +271,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	auditService, err := service.NewAuditService(auditUsecase)
 	if err != nil {
+		cleanup9()
 		cleanup8()
 		cleanup7()
 		cleanup6()
@@ -244,8 +282,9 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 		cleanup()
 		return nil, nil, err
 	}
-	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, sessionManager, v, auditor, authorizer, authService, userService, auditService, logger)
+	httpServer, err := server.NewHTTPServer(corev1Server, observability, app, metricsMetrics, sessionManager, v, auditor, authorizer, authService, userService, oAuthClientService, auditService, logger)
 	if err != nil {
+		cleanup9()
 		cleanup8()
 		cleanup7()
 		cleanup6()
@@ -258,6 +297,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	initializer, err := startup.NewInitializer(seedInitializer, logger)
 	if err != nil {
+		cleanup9()
 		cleanup8()
 		cleanup7()
 		cleanup6()
@@ -270,6 +310,7 @@ func wireApp(runtime *bootstrap.Runtime, admin *adminconfv1.Admin, oidcClient *o
 	}
 	kratosApp := newApp(runtime, registrar, httpServer, initializer, dataData)
 	return kratosApp, func() {
+		cleanup9()
 		cleanup8()
 		cleanup7()
 		cleanup6()

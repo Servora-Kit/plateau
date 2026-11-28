@@ -188,9 +188,9 @@ func (uc *UserUsecase) ExpungeUser(ctx context.Context, name userpb.UserName) er
 }
 
 func (uc *UserUsecase) ensureTargetNotProtected(ctx context.Context, targetUserID string) error {
-	actor, ok := security.ActorFrom(ctx)
-	if !ok || !actor.Valid() || actor.Type != security.ActorTypeHuman {
-		return ErrUnauthenticated
+	actor, err := requireHumanActor(ctx)
+	if err != nil {
+		return err
 	}
 	if actor.ID == targetUserID {
 		return ErrSelfActionForbidden

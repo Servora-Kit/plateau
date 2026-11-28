@@ -12,17 +12,19 @@ const (
 	AdminResourceType = "admin"
 	AdminResourceID   = "global"
 
-	RelationAdmin    = "admin"
-	PermAccess       = "access"
-	PermManageUsers  = "manage_users"
-	PermExpungeUsers = "expunge_users"
-	PermReadAudit    = "read_audit"
+	RelationAdmin     = "admin"
+	PermAccess        = "access"
+	PermManageUsers   = "manage_users"
+	PermExpungeUsers  = "expunge_users"
+	PermManageClients = "manage_clients"
+	PermReadAudit     = "read_audit"
 )
 
 var adminPermissionOrder = []string{
 	PermAccess,
 	PermManageUsers,
 	PermExpungeUsers,
+	PermManageClients,
 	PermReadAudit,
 }
 
@@ -72,4 +74,12 @@ func (uc *AuthUsecase) Permissions(ctx context.Context, actor security.Actor) ([
 		}
 	}
 	return perms, nil
+}
+
+func requireHumanActor(ctx context.Context) (security.Actor, error) {
+	actor, ok := security.ActorFrom(ctx)
+	if !ok || actor.Type != security.ActorTypeHuman {
+		return security.Actor{}, ErrUnauthenticated
+	}
+	return actor, nil
 }

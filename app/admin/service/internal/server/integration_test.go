@@ -29,8 +29,10 @@ import (
 	"time"
 
 	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/auth/v1"
+	adminclientpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/client/v1"
 	adminconfpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/conf/v1"
 	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
+	iamclientpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/client/v1"
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	openfgapb "github.com/Servora-Kit/plateau/api/gen/go/plateau/infra/openfga/v1"
 	oidcpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/security/oidc/v1"
@@ -321,6 +323,7 @@ func createTempOpenFGAStore(t *testing.T) (string, string, string, *fgaclient.Op
 		Writes: []fgaclient.ClientTupleKey{
 			{User: "service:admin", Relation: "manage_users", Object: "iam:global"},
 			{User: "service:admin", Relation: "expunge_users", Object: "iam:global"},
+			{User: "service:admin", Relation: "manage_clients", Object: "iam:global"},
 		},
 	}).Execute(); err != nil {
 		t.Fatalf("seed service:admin tuples: %v", err)
@@ -597,6 +600,12 @@ func buildAdminInstance(
 	}
 	t.Cleanup(closeIAMRepo)
 
+	iamClientRepo, closeIAMClientRepo, err := data.NewIAMOAuthClientRepo(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(closeIAMClientRepo)
+
 	auditRepo, closeAuditRepo, err := data.NewAuditEventRepo(d)
 	if err != nil {
 		t.Fatal(err)
@@ -615,6 +624,10 @@ func buildAdminInstance(
 		t.Fatal(err)
 	}
 	userUC, err := biz.NewUserUsecase(iamRepo, authorizer, logger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	oauthClientUC, err := biz.NewOAuthClientUsecase(iamClientRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -644,6 +657,10 @@ func buildAdminInstance(
 	if err != nil {
 		t.Fatal(err)
 	}
+	oauthClientSvc, err := service.NewOAuthClientService(oauthClientUC)
+	if err != nil {
+		t.Fatal(err)
+	}
 	auditSvc, err := service.NewAuditService(auditUC)
 	if err != nil {
 		t.Fatal(err)
@@ -661,6 +678,7 @@ func buildAdminInstance(
 		authorizer,
 		authSvc,
 		userSvc,
+		oauthClientSvc,
 		auditSvc,
 		logger,
 	)
@@ -1032,7 +1050,7 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	if adminUserID == "" || sessionPayload.GetUser().GetName() != "users/"+adminUserID || sessionPayload.GetUser().GetEmail() != adminBootstrapEml || !sessionPayload.GetUser().GetEmailVerified() {
 		t.Fatalf("unexpected GetSession user: %+v", sessionPayload.GetUser())
 	}
-	wantPerms := []string{"access", "manage_users", "expunge_users", "read_audit"}
+	wantPerms := []string{"access", "manage_users", "expunge_users", "manage_clients", "read_audit"}
 	if !slices.Equal(sessionPayload.GetPermissions(), wantPerms) {
 		t.Fatalf("GetSession permissions = %v, want %v", sessionPayload.GetPermissions(), wantPerms)
 	}
@@ -1414,6 +1432,150 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 	getExpungedRes, getExpungedRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/"+bobName, adminOrigin, "", adminCookie)
 	assertErrorReason(t, getExpungedRes.StatusCode, getExpungedRaw, http.StatusNotFound, "ADMIN_USER_ERROR_REASON_USER_NOT_FOUND")
 
+	// AC-8: OAuthClientService end-to-end orchestration (static protection, dynamic CRUD, secret rotation, 503 isolation).
+	listCliRes, listCliRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/oauth-clients?includeTotal=true", adminOrigin, "", adminCookie)
+	if listCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("ListOAuthClients status=%d body=%s", listCliRes.StatusCode, string(listCliRaw))
+	}
+	listClientsPayload := new(adminclientpb.ListOAuthClientsResponse)
+	if err := protojson.Unmarshal(listCliRaw, listClientsPayload); err != nil {
+		t.Fatal(err)
+	}
+	hasStaticAdmin := false
+	for _, c := range listClientsPayload.GetClients() {
+		if c.GetClientId() == "admin" && c.GetSource() == iamclientpb.ClientSource_CLIENT_SOURCE_STATIC {
+			hasStaticAdmin = true
+		}
+	}
+	if !hasStaticAdmin {
+		t.Fatalf("expected static admin OAuthClient in ListOAuthClients: %+v", listClientsPayload.GetClients())
+	}
+
+	// Mutating a STATIC client returns 403 ADMIN_CLIENT_ERROR_REASON_STATIC_CLIENT_IMMUTABLE.
+	staticDisRes, staticDisRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/oauthClients/admin:disable", adminOrigin, `{}`, adminCookie)
+	assertErrorReason(t, staticDisRes.StatusCode, staticDisRaw, http.StatusForbidden, "ADMIN_CLIENT_ERROR_REASON_STATIC_CLIENT_IMMUTABLE")
+
+	// Create a dynamic confidential Web OAuth client and receive one-time client_secret.
+	createCliRes, createCliRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/oauth-clients", adminOrigin, `{
+		"oauthClientId": "e2e-web-app",
+		"initialSecretName": "初始生产密钥",
+		"oauthClient": {
+			"displayName": "E2E Web App",
+			"applicationType": "APPLICATION_TYPE_WEB",
+			"tokenEndpointAuthMethod": "TOKEN_ENDPOINT_AUTH_METHOD_CLIENT_SECRET_BASIC",
+			"redirectUris": ["https://e2e.example.com/callback"],
+			"allowedGrantTypes": ["authorization_code", "refresh_token"],
+			"allowedScopes": ["openid", "profile", "email", "offline_access"],
+			"trusted": false
+		}
+	}`, adminCookie)
+	if createCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("CreateOAuthClient status=%d body=%s", createCliRes.StatusCode, string(createCliRaw))
+	}
+	createdClientResp := new(adminclientpb.CreateOAuthClientResponse)
+	if err := protojson.Unmarshal(createCliRaw, createdClientResp); err != nil {
+		t.Fatal(err)
+	}
+	dynamicClientSecret := createdClientResp.GetClientSecret()
+	dynamicClientName := createdClientResp.GetClient().GetName()
+	if dynamicClientName != "oauthClients/e2e-web-app" || dynamicClientSecret == "" ||
+		createdClientResp.GetClient().GetSource() != iamclientpb.ClientSource_CLIENT_SOURCE_DYNAMIC ||
+		len(createdClientResp.GetClient().GetSecrets()) != 1 {
+		t.Fatalf("unexpected CreateOAuthClient response: %+v", createdClientResp)
+	}
+	initialSecretID := createdClientResp.GetClient().GetSecrets()[0].GetSecretId()
+
+	// UpdateOAuthClient display_name with ETag optimistic concurrency.
+	updCliRes, updCliRaw := doJSON(
+		t,
+		http.MethodPatch,
+		adminOrigin+"/v1/admin/"+dynamicClientName+"?updateMask=display_name",
+		adminOrigin,
+		fmt.Sprintf(`{"etag":%q,"displayName":"E2E Web App Renamed"}`, createdClientResp.GetClient().GetEtag()),
+		adminCookie,
+	)
+	if updCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("UpdateOAuthClient status=%d body=%s", updCliRes.StatusCode, string(updCliRaw))
+	}
+	updatedClient := new(iamclientpb.OAuthClient)
+	if err := protojson.Unmarshal(updCliRaw, updatedClient); err != nil || updatedClient.GetDisplayName() != "E2E Web App Renamed" {
+		t.Fatalf("UpdateOAuthClient got=%+v err=%v", updatedClient, err)
+	}
+
+	// Zero-downtime secret rotation: add 2nd secret -> delete 1st secret -> deleting last active secret fails with 409 LAST_ACTIVE_SECRET.
+	addSecRes, addSecRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/"+dynamicClientName+"/secrets", adminOrigin, `{"secretName":"轮换密钥"}`, adminCookie)
+	if addSecRes.StatusCode != http.StatusOK {
+		t.Fatalf("CreateOAuthClientSecret status=%d body=%s", addSecRes.StatusCode, string(addSecRaw))
+	}
+	createdSecResp := new(adminclientpb.CreateOAuthClientSecretResponse)
+	if err := protojson.Unmarshal(addSecRaw, createdSecResp); err != nil {
+		t.Fatal(err)
+	}
+	rotatedClientSecret := createdSecResp.GetSecretValue()
+	rotatedSecretID := createdSecResp.GetSecret().GetSecretId()
+	if rotatedClientSecret == "" || rotatedSecretID == "" {
+		t.Fatalf("unexpected CreateOAuthClientSecret response: %+v", createdSecResp)
+	}
+
+	delOldSecRes, delOldSecRaw := doJSON(t, http.MethodDelete, adminOrigin+"/v1/admin/"+dynamicClientName+"/secrets/"+initialSecretID, adminOrigin, "", adminCookie)
+	if delOldSecRes.StatusCode != http.StatusOK {
+		t.Fatalf("DeleteOAuthClientSecret(old) status=%d body=%s", delOldSecRes.StatusCode, string(delOldSecRaw))
+	}
+
+	delLastSecRes, delLastSecRaw := doJSON(t, http.MethodDelete, adminOrigin+"/v1/admin/"+dynamicClientName+"/secrets/"+rotatedSecretID, adminOrigin, "", adminCookie)
+	assertErrorReason(t, delLastSecRes.StatusCode, delLastSecRaw, http.StatusConflict, "ADMIN_CLIENT_ERROR_REASON_LAST_ACTIVE_SECRET")
+
+	// Disable -> Enable -> Delete dynamic OAuth client.
+	getCliRes, getCliRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/"+dynamicClientName, adminOrigin, "", adminCookie)
+	if getCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("GetOAuthClient status=%d body=%s", getCliRes.StatusCode, string(getCliRaw))
+	}
+	fetchedClient := new(iamclientpb.OAuthClient)
+	if err := protojson.Unmarshal(getCliRaw, fetchedClient); err != nil {
+		t.Fatal(err)
+	}
+
+	disCliRes, disCliRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/"+dynamicClientName+":disable", adminOrigin, fmt.Sprintf(`{"etag":%q}`, fetchedClient.GetEtag()), adminCookie)
+	if disCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("DisableOAuthClient status=%d body=%s", disCliRes.StatusCode, string(disCliRaw))
+	}
+	disabledClient := new(iamclientpb.OAuthClient)
+	_ = protojson.Unmarshal(disCliRaw, disabledClient)
+	if disabledClient.GetStatus() != iamclientpb.ClientStatus_CLIENT_STATUS_DISABLED {
+		t.Fatalf("DisableOAuthClient status = %v, want DISABLED", disabledClient.GetStatus())
+	}
+
+	enCliRes, enCliRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/"+dynamicClientName+":enable", adminOrigin, fmt.Sprintf(`{"etag":%q}`, disabledClient.GetEtag()), adminCookie)
+	if enCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("EnableOAuthClient status=%d body=%s", enCliRes.StatusCode, string(enCliRaw))
+	}
+	enabledClient := new(iamclientpb.OAuthClient)
+	_ = protojson.Unmarshal(enCliRaw, enabledClient)
+	if enabledClient.GetStatus() != iamclientpb.ClientStatus_CLIENT_STATUS_ACTIVE {
+		t.Fatalf("EnableOAuthClient status = %v, want ACTIVE", enabledClient.GetStatus())
+	}
+
+	// Removing service:admin manage_clients on iam:global translates downstream 403 to 503 DOWNSTREAM_UNAVAILABLE.
+	if _, err := fgaSDK.Write(t.Context()).Body(fgaclient.ClientWriteRequest{
+		Deletes: []fgaclient.ClientTupleKeyWithoutCondition{{User: "service:admin", Relation: "manage_clients", Object: "iam:global"}},
+	}).Execute(); err != nil {
+		t.Fatal(err)
+	}
+	cliSvcDeniedRes, cliSvcDeniedRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/oauth-clients", adminOrigin, "", adminCookie)
+	assertErrorReason(t, cliSvcDeniedRes.StatusCode, cliSvcDeniedRaw, http.StatusServiceUnavailable, "ADMIN_CLIENT_ERROR_REASON_DOWNSTREAM_UNAVAILABLE")
+	if _, err := fgaSDK.Write(t.Context()).Body(fgaclient.ClientWriteRequest{
+		Writes: []fgaclient.ClientTupleKey{{User: "service:admin", Relation: "manage_clients", Object: "iam:global"}},
+	}).Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	delCliRes, delCliRaw := doJSON(t, http.MethodDelete, adminOrigin+"/v1/admin/"+dynamicClientName, adminOrigin, "", adminCookie)
+	if delCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("DeleteOAuthClient status=%d body=%s", delCliRes.StatusCode, string(delCliRaw))
+	}
+	getDelCliRes, getDelCliRaw := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/"+dynamicClientName, adminOrigin, "", adminCookie)
+	assertErrorReason(t, getDelCliRes.StatusCode, getDelCliRaw, http.StatusNotFound, "ADMIN_CLIENT_ERROR_REASON_NOT_FOUND")
+
 	// AC-B7: Misconfigured service client_secret -> 503 DOWNSTREAM_UNAVAILABLE, preserves Admin session, leaks zero secrets!
 	badSecretVal := "wrong-client-secret-must-not-leak-32b"
 	badSecretAdmin := buildAdminInstance(t, adminDB, adminDataCfg, iamOrigin, iamGRPCAddr, badSecretVal, fgaURL, storeID, modelID, nil)
@@ -1435,6 +1597,8 @@ func TestAdminEndToEndIntegration(t *testing.T) {
 		bobInitialPass,
 		bobResetPass,
 		charliePass,
+		dynamicClientSecret,
+		rotatedClientSecret,
 	} {
 		if strings.Contains(allLogs, secret) {
 			t.Fatalf("sensitive credential %q leaked into Admin structured logs!", secret)

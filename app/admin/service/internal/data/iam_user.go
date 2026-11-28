@@ -3,12 +3,10 @@ package data
 import (
 	"context"
 	"fmt"
-	"time"
 
 	userpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/iam/user/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/biz"
 	gogrpc "google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 )
 
 const iamServiceName = "iam.service"
@@ -32,47 +30,45 @@ func NewIAMUserRepo(data *Data) (biz.IAMUserRepo, func(), error) {
 }
 
 func (r *iamUserRepo) ListUsers(ctx context.Context, req *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {
-	if r.conn.GetState() == connectivity.TransientFailure {
-		r.conn.ResetConnectBackoff()
-		waitCtx, cancel := context.WithTimeout(ctx, 250*time.Millisecond)
-		for r.conn.GetState() != connectivity.Ready && waitCtx.Err() == nil {
-			if !r.conn.WaitForStateChange(waitCtx, r.conn.GetState()) {
-				break
-			}
-		}
-		cancel()
-	}
+	recoverConnTransientFailure(ctx, r.conn)
 	return r.client.ListUsers(ctx, req)
 }
 
 func (r *iamUserRepo) GetUser(ctx context.Context, req *userpb.GetUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	return r.client.GetUser(ctx, req)
 }
 
 func (r *iamUserRepo) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	return r.client.CreateUser(ctx, req)
 }
 
 func (r *iamUserRepo) SendUserVerificationEmail(ctx context.Context, req *userpb.SendUserVerificationEmailRequest) error {
+	recoverConnTransientFailure(ctx, r.conn)
 	_, err := r.client.SendUserVerificationEmail(ctx, req)
 	return err
 }
 
 func (r *iamUserRepo) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	return r.client.UpdateUser(ctx, req)
 }
 
 func (r *iamUserRepo) SetUserPassword(ctx context.Context, req *userpb.SetUserPasswordRequest) error {
+	recoverConnTransientFailure(ctx, r.conn)
 	_, err := r.client.SetUserPassword(ctx, req)
 	return err
 }
 
 func (r *iamUserRepo) RevokeUserSessions(ctx context.Context, req *userpb.RevokeUserSessionsRequest) error {
+	recoverConnTransientFailure(ctx, r.conn)
 	_, err := r.client.RevokeUserSessions(ctx, req)
 	return err
 }
 
 func (r *iamUserRepo) DisableUser(ctx context.Context, req *userpb.DisableUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	resp, err := r.client.DisableUser(ctx, req)
 	if err != nil {
 		return nil, err
@@ -81,6 +77,7 @@ func (r *iamUserRepo) DisableUser(ctx context.Context, req *userpb.DisableUserRe
 }
 
 func (r *iamUserRepo) EnableUser(ctx context.Context, req *userpb.EnableUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	resp, err := r.client.EnableUser(ctx, req)
 	if err != nil {
 		return nil, err
@@ -89,14 +86,17 @@ func (r *iamUserRepo) EnableUser(ctx context.Context, req *userpb.EnableUserRequ
 }
 
 func (r *iamUserRepo) DeleteUser(ctx context.Context, req *userpb.DeleteUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	return r.client.DeleteUser(ctx, req)
 }
 
 func (r *iamUserRepo) UndeleteUser(ctx context.Context, req *userpb.UndeleteUserRequest) (*userpb.User, error) {
+	recoverConnTransientFailure(ctx, r.conn)
 	return r.client.UndeleteUser(ctx, req)
 }
 
 func (r *iamUserRepo) ExpungeUser(ctx context.Context, req *userpb.ExpungeUserRequest) error {
+	recoverConnTransientFailure(ctx, r.conn)
 	_, err := r.client.ExpungeUser(ctx, req)
 	return err
 }

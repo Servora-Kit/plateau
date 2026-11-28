@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	auditeventpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/audit/event/v1"
-	"github.com/Servora-Kit/plateau/security"
 )
 
 // ErrInvalidAuditArgument indicates invalid query parameters supplied to AuditUsecase.
@@ -34,9 +33,8 @@ func NewAuditUsecase(repo AuditEventRepo) (*AuditUsecase, error) {
 
 // ListEvents validates basic query constraints and delegates pagination/filtering to audit.service.
 func (uc *AuditUsecase) ListEvents(ctx context.Context, req *auditeventpb.ListEventsRequest) (*auditeventpb.ListEventsResponse, error) {
-	actor, ok := security.ActorFrom(ctx)
-	if !ok || !actor.Valid() || actor.Type != security.ActorTypeHuman {
-		return nil, ErrUnauthenticated
+	if _, err := requireHumanActor(ctx); err != nil {
+		return nil, err
 	}
 	if req == nil {
 		req = &auditeventpb.ListEventsRequest{}
@@ -62,9 +60,8 @@ func (uc *AuditUsecase) ListEvents(ctx context.Context, req *auditeventpb.ListEv
 
 // GetEvent retrieves one platform audit event by validated resource name.
 func (uc *AuditUsecase) GetEvent(ctx context.Context, name auditeventpb.EventName) (*auditeventpb.Event, error) {
-	actor, ok := security.ActorFrom(ctx)
-	if !ok || !actor.Valid() || actor.Type != security.ActorTypeHuman {
-		return nil, ErrUnauthenticated
+	if _, err := requireHumanActor(ctx); err != nil {
+		return nil, err
 	}
 	formatted, err := name.Format()
 	if err != nil {
@@ -75,9 +72,8 @@ func (uc *AuditUsecase) GetEvent(ctx context.Context, name auditeventpb.EventNam
 
 // ListServices retrieves distinct producer service identifiers for human administrators.
 func (uc *AuditUsecase) ListServices(ctx context.Context) ([]string, error) {
-	actor, ok := security.ActorFrom(ctx)
-	if !ok || !actor.Valid() || actor.Type != security.ActorTypeHuman {
-		return nil, ErrUnauthenticated
+	if _, err := requireHumanActor(ctx); err != nil {
+		return nil, err
 	}
 	resp, err := uc.repo.ListServices(ctx, &auditeventpb.ListServicesRequest{})
 	if err != nil {

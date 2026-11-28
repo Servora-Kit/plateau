@@ -532,6 +532,12 @@ func buildAuditEnabledAdminInstance(
 	}
 	t.Cleanup(closeIAMRepo)
 
+	iamClientRepo, closeIAMClientRepo, err := data.NewIAMOAuthClientRepo(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(closeIAMClientRepo)
+
 	auditRepo, closeAuditRepo, err := data.NewAuditEventRepo(d)
 	if err != nil {
 		t.Fatal(err)
@@ -574,6 +580,10 @@ func buildAuditEnabledAdminInstance(
 	if err != nil {
 		t.Fatal(err)
 	}
+	oauthClientUC, err := biz.NewOAuthClientUsecase(iamClientRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
 	auditUC, err := biz.NewAuditUsecase(auditRepo)
 	if err != nil {
 		t.Fatal(err)
@@ -600,6 +610,10 @@ func buildAuditEnabledAdminInstance(
 	if err != nil {
 		t.Fatal(err)
 	}
+	oauthClientSvc, err := service.NewOAuthClientService(oauthClientUC)
+	if err != nil {
+		t.Fatal(err)
+	}
 	auditSvc, err := service.NewAuditService(auditUC)
 	if err != nil {
 		t.Fatal(err)
@@ -616,6 +630,7 @@ func buildAuditEnabledAdminInstance(
 		authorizer,
 		authSvc,
 		userSvc,
+		oauthClientSvc,
 		auditSvc,
 		logger,
 	)
@@ -792,15 +807,18 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 		t.Fatalf("missing admin_session cookie after callback (status=%d loc=%q)", adminCBRes.StatusCode, adminCBRes.Header.Get("Location"))
 	}
 
-	// 3. Read-only endpoints (GetSession, ListUsers) must succeed and produce zero audit events.
+	// 3. Read-only endpoints (GetSession, ListUsers, ListOAuthClients) must succeed and produce zero audit events.
 	if sRes, _ := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/auth/session", adminOrigin, "", adminCookie); sRes.StatusCode != http.StatusOK {
 		t.Fatalf("GetSession status = %d", sRes.StatusCode)
 	}
 	if lRes, _ := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/users", adminOrigin, "", adminCookie); lRes.StatusCode != http.StatusOK {
 		t.Fatalf("ListUsers status = %d", lRes.StatusCode)
 	}
+	if lcRes, _ := doJSON(t, http.MethodGet, adminOrigin+"/v1/admin/oauth-clients", adminOrigin, "", adminCookie); lcRes.StatusCode != http.StatusOK {
+		t.Fatalf("ListOAuthClients status = %d", lcRes.StatusCode)
+	}
 
-	// 4. Cross-service mutations: CreateUser, UpdateUser, SetUserPassword, plus non-admin 403 rejection.
+	// 4. Cross-service mutations: CreateUser, UpdateUser, SetUserPassword, OAuthClient create/secret, plus non-admin 403 rejection.
 	const (
 		bobPass      = "{{SECRET_0009bobinit}}"
 		bobResetPass = "{{SECRET_0010bobreset}}"
@@ -829,6 +847,40 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 		adminCookie)
 	if setPwdRes.StatusCode != http.StatusOK {
 		t.Fatalf("SetUserPassword status=%d body=%s", setPwdRes.StatusCode, string(setPwdRaw))
+	}
+
+	createCliRes, createCliRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/oauth-clients", adminOrigin, `{
+		"oauthClientId": "audit-e2e-app",
+		"initialSecretName": "审计测试初始密钥",
+		"oauthClient": {
+			"displayName": "Audit E2E App",
+			"applicationType": "APPLICATION_TYPE_WEB",
+			"tokenEndpointAuthMethod": "TOKEN_ENDPOINT_AUTH_METHOD_CLIENT_SECRET_BASIC",
+			"redirectUris": ["https://audit-e2e.example.com/callback"],
+			"allowedGrantTypes": ["authorization_code"],
+			"allowedScopes": ["openid", "profile"]
+		}
+	}`, adminCookie)
+	if createCliRes.StatusCode != http.StatusOK {
+		t.Fatalf("CreateOAuthClient status=%d body=%s", createCliRes.StatusCode, string(createCliRaw))
+	}
+	var createdCliPayload struct {
+		ClientSecret string `json:"clientSecret"`
+	}
+	if err := json.Unmarshal(createCliRaw, &createdCliPayload); err != nil || createdCliPayload.ClientSecret == "" {
+		t.Fatalf("CreateOAuthClient decode err=%v body=%s", err, string(createCliRaw))
+	}
+
+	rotSecRes, rotSecRaw := doJSON(t, http.MethodPost, adminOrigin+"/v1/admin/oauthClients/audit-e2e-app/secrets", adminOrigin,
+		`{"secretName":"审计测试轮换密钥"}`, adminCookie)
+	if rotSecRes.StatusCode != http.StatusOK {
+		t.Fatalf("CreateOAuthClientSecret status=%d body=%s", rotSecRes.StatusCode, string(rotSecRaw))
+	}
+	var rotSecPayload struct {
+		SecretValue string `json:"secretValue"`
+	}
+	if err := json.Unmarshal(rotSecRaw, &rotSecPayload); err != nil || rotSecPayload.SecretValue == "" {
+		t.Fatalf("CreateOAuthClientSecret decode err=%v body=%s", err, string(rotSecRaw))
 	}
 
 	// Forge a non-admin SCS session on Admin and verify GET /v1/admin/audit/events returns 403 and emits authz denied event.
@@ -864,6 +916,7 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 				allEvents = payload.GetEvents()
 				hasAdminUpdate := false
 				hasIAMUpdate := false
+				hasAdminClientCreate := false
 				hasAuthzDenied := false
 				for _, ev := range allEvents {
 					if ev.GetOperation() == "/plateau.admin.user.v1.UserService/UpdateUser" && ev.GetService() == "//admin.service" {
@@ -872,11 +925,14 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 					if ev.GetOperation() == "/plateau.iam.user.v1.UserService/UpdateUser" && ev.GetService() == "//iam.service" {
 						hasIAMUpdate = true
 					}
+					if ev.GetOperation() == "/plateau.admin.client.v1.OAuthClientService/CreateOAuthClient" && ev.GetService() == "//admin.service" {
+						hasAdminClientCreate = true
+					}
 					if ev.GetOperation() == "/plateau.admin.audit.v1.AuditService/ListEvents" && ev.GetEventType() == "plateau.security.authz.denied.v1" {
 						hasAuthzDenied = true
 					}
 				}
-				if hasAdminUpdate && hasIAMUpdate && hasAuthzDenied {
+				if hasAdminUpdate && hasIAMUpdate && hasAdminClientCreate && hasAuthzDenied {
 					break
 				}
 			}
@@ -897,6 +953,10 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 			"/plateau.admin.user.v1.UserService/GetUser",
 			"/plateau.iam.user.v1.UserService/ListUsers",
 			"/plateau.iam.user.v1.UserService/GetUser",
+			"/plateau.admin.client.v1.OAuthClientService/ListOAuthClients",
+			"/plateau.admin.client.v1.OAuthClientService/GetOAuthClient",
+			"/plateau.iam.client.v1.OAuthClientService/ListOAuthClients",
+			"/plateau.iam.client.v1.OAuthClientService/GetOAuthClient",
 			"/plateau.admin.auth.v1.AuthService/GetSession",
 			"/plateau.iam.account.v1.AccountService/GetProfile",
 			"/plateau.iam.authn.v1.AuthnService/CreateAuthFlow",
@@ -931,6 +991,8 @@ func TestCrossServiceAuditEndToEnd(t *testing.T) {
 			wrongPass,
 			bobPass,
 			bobResetPass,
+			createdCliPayload.ClientSecret,
+			rotSecPayload.SecretValue,
 			oidcClientSecret,
 			oidcCookieSecret,
 			iamCookie.Value,

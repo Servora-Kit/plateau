@@ -6,6 +6,7 @@ import (
 
 	adminauditpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/audit/v1"
 	adminauthpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/auth/v1"
+	adminclientpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/client/v1"
 	adminuserpb "github.com/Servora-Kit/plateau/api/gen/go/plateau/admin/user/v1"
 	"github.com/Servora-Kit/plateau/app/admin/service/internal/service"
 	"github.com/Servora-Kit/plateau/security"
@@ -34,6 +35,7 @@ func NewHTTPServer(
 	authorizer *openfga.Authorizer,
 	authSvc *service.AuthService,
 	userSvc *service.UserService,
+	oauthClientSvc *service.OAuthClientService,
 	auditSvc *service.AuditService,
 	l *slog.Logger,
 ) (*khttp.Server, error) {
@@ -52,9 +54,9 @@ func NewHTTPServer(
 		Build()
 	ms = append(
 		ms,
-		session.Server(sessionAuthn, security.WithRulesFuncs(adminauthpb.AuthnRules, adminuserpb.AuthnRules, adminauditpb.AuthnRules)),
-		audit.Server(auditor, security.WithRulesFuncs(adminauthpb.AuditRules, adminuserpb.AuditRules, adminauditpb.AuditRules)),
-		openfga.Server(authorizer, security.WithRulesFuncs(adminauthpb.AuthzRules, adminuserpb.AuthzRules, adminauditpb.AuthzRules)),
+		session.Server(sessionAuthn, security.WithRulesFuncs(adminauthpb.AuthnRules, adminuserpb.AuthnRules, adminclientpb.AuthnRules, adminauditpb.AuthnRules)),
+		audit.Server(auditor, security.WithRulesFuncs(adminauthpb.AuditRules, adminuserpb.AuditRules, adminclientpb.AuditRules, adminauditpb.AuditRules)),
+		openfga.Server(authorizer, security.WithRulesFuncs(adminauthpb.AuthzRules, adminuserpb.AuthzRules, adminclientpb.AuthzRules, adminauditpb.AuthzRules)),
 	)
 
 	opts := []svrhttp.ServerOption{
@@ -66,6 +68,7 @@ func NewHTTPServer(
 			authSvc.RegisterOIDCHTTP(s, auditor)
 			adminauthpb.RegisterAuthServiceHTTPServer(s, authSvc)
 			adminuserpb.RegisterUserServiceHTTPServer(s, userSvc)
+			adminclientpb.RegisterOAuthClientServiceHTTPServer(s, oauthClientSvc)
 			adminauditpb.RegisterAuditServiceHTTPServer(s, auditSvc)
 		}),
 	}
