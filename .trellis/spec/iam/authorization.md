@@ -2,5 +2,5 @@
 
 - 将已验证的 `security.Actor` 通过可信 mapper 转换为授权模型定义的主体标识；无效或未知类型失败，不从未验证输入生成主体。
 - PDP 适配仅负责策略判定；资源关系管理（PAP）和受保护操作处的执行（PEP）归对应领域与接收服务，身份认证或 client 构造不能替代授权。
-- 人员管理关系与服务主体的操作能力分开建模；模型和部署遵循 [平台 OpenFGA 规范](../plateau/infra/openfga.md)，服务认证条件见 [OIDC](oidc.md)。
+- 人员管理关系与服务主体的操作能力分开建模（IAM 服务主体关系含 `manage_users`、`expunge_users`、`manage_clients`，其中 `plateau.iam.client.v1.OAuthClientService` 仅暴露内部 gRPC 并要求 `manage_clients`）；模型和部署遵循 [平台 OpenFGA 规范](../plateau/infra/openfga.md)，服务认证条件见 [OIDC](oidc.md)。
 - 身份目录变更不自动授予业务权限；tuple 生命周期归资源领域，测试夹具不作为运行关系数据。

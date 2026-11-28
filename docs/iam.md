@@ -25,7 +25,15 @@ oidc:
       audiences: [iam, audit]
 ```
 
-访问令牌默认五分钟，可用 `oidc.service_access_token_ttl` 设置正时长，例如 `300s`。配置中的 Duration 遵循 Protobuf JSON 的秒格式。用户 OIDC 客户端继续配置回调、scope、`trusted: true` 及授权码/刷新流程。静态配置在部署加载时同步；换密钥保留 client_id，移除客户端停止新签发，已有服务令牌在到期前仍可验证。
+访问令牌默认五分钟，可用 `oidc.service_access_token_ttl` 设置正时长，例如 `300s`。配置中的 Duration 遵循 Protobuf JSON 的秒格式。
+
+### 双源 OAuth 客户端（`STATIC` 与 `DYNAMIC`）
+
+IAM 同时支持配置文件引导客户端（`source=static`）与管理台在线注册客户端（`source=dynamic`）：
+
+- **静态客户端对账**：`oidc.yaml` 允许配置 `0..N` 个引导客户端（如 `admin`）。启动期 `OIDCInitializer` 仅同步 `source=static` 记录：移除配置项时级联撤销该静态客户端关联的令牌会话后物理删除，保留全部 `source=dynamic` 客户端不变；若静态 `client_id` 与已有动态客户端冲突则拒绝启动。静态客户端在管理台只读展示，禁止在线修改、轮换密钥或删除。
+- **动态客户端与多密钥轮换**：通过 IAM 内部 gRPC `plateau.iam.client.v1.OAuthClientService`（由 Admin BFF `/v1/admin/oauth-clients*` 代理）管理，支持 `WEB`（机密或公共）、`USER_AGENT`（SPA 强制 `none` + PKCE S256）与 `NATIVE`（允许自定义 Scheme 及 RFC 8252 本地回环动态端口回调）三类应用。机密客户端密钥采用 `pcs_` 前缀高熵随机串，库内仅存 SHA-256 摘要与前缀，单客户端最多并存 5 把密钥以支持零停机平滑轮换，且删除有效密钥时强制保留至少 1 把未过期密钥。
+- **第一方免审与第三方授权同意**：`trusted: true` 的第一方应用登录后直接签发授权码；`trusted: false` 的第三方应用在首次授权、请求新增 Scope 或携带 `prompt=consent` 时重定向至 `/consent/?request_id=<id>`，由用户确认后持久化 `oauth_consents` 并支持在个人中心 `/account/applications/` 查看与一键撤销（原子销毁授权同意及该客户端下全部活跃令牌会话）。
 
 Cookie 默认 Secure、HttpOnly、host-only、Path=/、SameSite=Lax。IAM 保留登录引用、真实认证时间和撤销状态；SCS 管理令牌、Cookie、闲置期限和绝对期限。数据库及官方 PostgreSQL Store 共用应用拥有的连接池，表由 Ent Schema 创建。
 
@@ -40,7 +48,7 @@ Cookie 默认 Secure、HttpOnly、host-only、Path=/、SameSite=Lax。IAM 保留
 
 ## 显式授权
 
-部署模型使用 `manifests/openfga/fga.mod`。IAM 关系包含 `service:<client_id> manage_users iam:global` 与独立的永久删除关系 `service:<client_id> expunge_users iam:global`（不从 `manage_users` 派生）；Audit 关系包含 `service:<client_id> read_events audit:global`；Admin 示例中的 `user:<id> admin admin:global` 派生 `access`、`manage_users`、`expunge_users` 与 `read_audit`。客户端注册不会产生权限。
+部署模型使用 `manifests/openfga/fga.mod`。IAM 关系包含 `service:<client_id> manage_users iam:global`、独立的永久删除关系 `service:<client_id> expunge_users iam:global`（不从 `manage_users` 派生）以及 OAuth 客户端管理关系 `service:<client_id> manage_clients iam:global`；Audit 关系包含 `service:<client_id> read_events audit:global`；Admin 示例中的 `user:<id> admin admin:global` 派生 `access`、`manage_users`、`expunge_users`、`manage_clients` 与 `read_audit`。客户端注册不会产生权限。
 
 OpenFGA 采用三层分离管理：Store（`init`）、授权模型（`init` / `apply`）与平台服务静态关系元组（`sync-tuples`，读取 `manifests/openfga/tuples/platform-services.yaml`）。`openfga-init` 与 `openfga-model-apply` 保持零预设元组以保障集成测试隔离：
 
@@ -64,7 +72,7 @@ just --dotenv-path /tmp/iam-test.env ENV_FILE=/tmp/iam-test.env openfga-model-ap
 
 开发模型直接替换，旧平台授权数据不迁移。CMS 模型由 Admin 示例替代。
 
-开发库遇到不兼容的会话或协议表结构变更时，先停止 IAM，就地同步表/列重命名或直接删除并重建短期会话表（`login_sessions`、`auth_flows`、`oidc_authorization_requests`、`oauth_authorization_codes`、`oauth_token_sessions`、`oauth_access_tokens`、`oauth_refresh_tokens`），下次启动由 Ent `Schema.Create` 自动建表（含 SCS 的 `sessions` 表）。`Schema.Create` 仅执行幂等建表与补列，不自动删除已废弃的必填列，也不维护版本化迁移脚本；重建短期会话表时保留用户、登录标识、密码验证材料、OAuth 客户端及签名密钥，浏览器重新登录即可。
+开发库遇到不兼容的会话或协议表结构变更时，先停止 IAM，就地同步表/列重命名或直接删除并重建短期会话表（`login_sessions`、`auth_flows`、`oidc_authorization_requests`、`oauth_authorization_codes`、`oauth_token_sessions`、`oauth_access_tokens`、`oauth_refresh_tokens`），下次启动由 Ent `Schema.Create` 自动建表（含 SCS 的 `sessions` 表）。若旧本地开发库的 `oauth_clients` 表仍残留已移除的非空 `secret_hash` 列，升级多密钥模型时一并删除旧 `oauth_clients` 表后重启 IAM，由 `Schema.Create` 与 `OIDCInitializer` 自动重建 `oauth_clients`、`oauth_client_secrets` 与 `oauth_consents`。`Schema.Create` 仅执行幂等建表与补列，不自动删除已废弃的必填列，也不维护版本化迁移脚本；常规重建短期会话表时保留用户、登录标识、密码验证材料、OAuth 客户端及签名密钥，浏览器重新登录即可。
 
 ## 调用方与接收方
 
